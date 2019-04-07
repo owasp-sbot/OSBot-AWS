@@ -53,7 +53,12 @@ class Create_Code_Build:
             'environment' : {'type'                    : 'LINUX_CONTAINER'                  ,
                             'image'                    : '244560807427.dkr.ecr.eu-west-2.amazonaws.com/gs-docker-codebuild:latest'     ,
                             'computeType'              : 'BUILD_GENERAL1_LARGE'            },
+                            # 'imagePullCredentialsType': 'SERVICE_ROLE' # this is not working (and it should)
             'serviceRole' : self.service_role
+
+            # VERY Important at the moment the 'imagePullCredentialsType' value is not being set programmatically (which will cause the docker image from not being pulled)
+            # At the moment this needs to be done manually at (i.e. reconfigure the container to use
+            # https://eu-west-2.console.aws.amazon.com/codesuite/codebuild/projects/osbot-aws/edit/environment?region=eu-west-2
         }
 
         return self.code_build.codebuild.create_project(**kvargs)
@@ -69,7 +74,6 @@ class Create_Code_Build:
                                                                    "Resource": [ cloud_watch_arn ]}]},
                     "Download_Image"         : { "Version": "2012-10-17",
                                                  "Statement": [{   "Effect": "Allow",
-                                                                   #"Principal": { "AWS": "arn:aws:iam::244560807427:root"},
                                                                    "Action": [   "ecr:GetAuthorizationToken",
                                                                                  "ecr:BatchCheckLayerAvailability",
                                                                                  "ecr:GetDownloadUrlForLayer",
@@ -93,7 +97,7 @@ class Create_Code_Build:
                     # "Update_Lambda"         : { "Version"  : "2012-10-17",
                     #                             "Statement": [ {    "Effect": "Allow", "Action" : ["s3:PutObject"         ], "Resource": ["arn:aws:s3:::gs-lambda-tests/dinis/lambdas/gsbot_gsuite_lambdas_gdocs.zip"] },
                     #                                            {    "Effect": "Allow", "Action" : ["lambda:CreateFunction"], "Resource": ["arn:aws:lambda:eu-west-2:244560807427:function:gsbot_gsuite_lambdas_gdocs"] } ]}}
-
+    
         policies_arns  = list(self.code_build.iam.role_policies().values())
         policies_names = list(self.code_build.iam.role_policies().keys())
         self.code_build.iam.role_policies_detach(policies_arns)
