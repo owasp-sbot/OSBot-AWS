@@ -46,12 +46,14 @@ class test_IAM_Role(TestCase):
 
         assert self.iam_role.create_for_code_build() == { 'data'     : 'role already exists',
                                                           'role_name': self.temp_role_name,
+                                                          'role_arn' : expected_arn,
                                                           'status'   : 'warning'}
         assert self.iam_role.iam.role_delete() is True
 
     def test_create_for_lambda(self):
-        result  = self.iam_role.create_for_lambda()
-        service = result.get('data').get('AssumeRolePolicyDocument').get('Statement')[0].get('Principal').get('Service')
+        self.iam_role.create_for_lambda().get('role_arn')
+        role_info = self.iam_role.iam.role_info()
+        service = role_info.get('AssumeRolePolicyDocument').get('Statement')[0].get('Principal').get('Service')
         assert service == 'lambda.amazonaws.com'
         assert self.iam_role.iam.role_delete() is True
 

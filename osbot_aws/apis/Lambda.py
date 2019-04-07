@@ -171,10 +171,10 @@ class Lambda:
     def set_folder_code         (self, value): self.folder_code = value ;return self
     def set_trace_mode          (self, value): self.trace_mode  = value ;return self
 
-    def set_s3_bucket_and_key(self, s3_bucket, s3_key):
-        self.set_s3_bucket(s3_bucket)
-        self.set_s3_key   (s3_key   )
-        return self
+    # def set_s3_bucket_and_key(self, s3_bucket, s3_key):
+    #     self.set_s3_bucket(s3_bucket)
+    #     self.set_s3_key   (s3_key   )
+    #     return self
 
 
     def upload(self):
@@ -182,7 +182,6 @@ class Lambda:
         #    self.aws.s3_upload_folder(self.source, self.s3_bucket, self.s3_key)
         #else:
             #copy_tree(self.source, self.path_libs)  # for now copy all files into dependencies folders (need to improve this by using temp folders)
-
         self.s3().folder_upload(self.folder_code, self.s3_bucket, self.s3_key)
         return self.s3().file_exists(self.s3_bucket, self.s3_key)
 
@@ -190,10 +189,14 @@ class Lambda:
         return self.update_with_src().invoke(payload)
 
     def update(self):
-        if (self.exists() is False):
-            return self.upload().create(upload_source = False)
+        if self.exists() is False:
+            return self.upload().create()
 
-        self.upload().aws.lambda_update_function(self.name, self.s3_bucket, self.s3_key)
+        self.upload()
+        return self.aws_lambda.update_function_code(FunctionName= self.name     ,
+                                                    S3Bucket    = self.s3_bucket,
+                                                    S3Key       = self.s3_key   )
+
         return self
 
     def update_with_lib(self):

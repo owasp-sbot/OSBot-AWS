@@ -22,7 +22,6 @@ class test_Ec2(TestCase):
 
     def test_subnets(self):
         result = self.ec2.subnets()
-        Dev.pprint(result)
         assert len(result) > 0
 
     def test_vpcs(self):

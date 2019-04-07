@@ -79,17 +79,16 @@ class Test_Lambda(unittest.TestCase):
         assert self.test_lambda.delete() is True                                                                    # confirm Lambda was deleted
 
     def test_invoke_raw(self):
-        temp_lambda = Temp_Lambda().create()
-        result   = temp_lambda.lambdas.invoke_raw({'name' : temp_lambda.name})
-        data     = result.get('data')
-        name     = result.get('name')
-        status   = result.get('status')
-        response = result.get('response')
-        assert status == 'ok'
-        assert name   == temp_lambda.name
-        assert data   == 'hello {0}'.format(temp_lambda.name)
-        assert response.get('StatusCode') == 200
-        temp_lambda.delete()
+        with Temp_Lambda() as temp_lambda:
+            result   = temp_lambda.lambdas.invoke_raw({'name' : temp_lambda.name})
+            data     = result.get('data')
+            name     = result.get('name')
+            status   = result.get('status')
+            response = result.get('response')
+            assert status == 'ok'
+            assert name   == temp_lambda.name
+            assert data   == 'hello {0}'.format(temp_lambda.name)
+            assert response.get('StatusCode') == 200
 
     def test_invoke(self):
         with Temp_Lambda() as temp_lambda:
@@ -113,17 +112,6 @@ class Test_Lambda(unittest.TestCase):
         assert Files.contents(Files.find(unzip_location+'/*').pop()) == tmp_folder.lambda_code  # confirm unzipped file's contents
 
         tmp_folder.delete_s3_file()
-
-
-    # def test_constructor(self):
-    #     assert self.test_lambda.role      == 'arn:aws:iam::244560807427:role/lambda_with_s3_access'
-    #     assert self.test_lambda.s3_bucket == 'gs-lambda-tests'
-    #     assert self.test_lambda.name      == self.name
-    #     assert self.test_lambda.handler   == self.handler
-    #     assert self.test_lambda.s3_key    == 'dinis/lambdas/{0}.zip'.format(self.name)
-    #
-    #     assert os.path.exists(self.test_lambda.source) is True
-
 
 
     # def test_upload_update(self):

@@ -22,10 +22,10 @@ class test_Logs(TestCase):
 
     def test_groups(self):
         assert len(list(self.logs.groups())) > 1
-        Dev.pprint(self.logs.groups())
+        assert len(self.logs.groups()) > 100
 
     def test_logs(self):
         group_name  = 'awslogs-temp_task_on_temp_cluster_X29B3K'
         stream_name = 'awslogs-example/gs-docker-codebuild/f8ccf213-b642-466c-8458-86af9933eca9'
         messages    = self.logs.get_messages(group_name, stream_name)
-        Dev.pprint(messages)
+        assert len(messages) > 10
