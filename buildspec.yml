@@ -1,0 +1,7 @@
+version: 0.1
+phases:
+  build:
+    commands:
+      - echo "**** Starting build"
+      - echo "**** Running tests"
+      #- cd tests ; pytest -v -s
