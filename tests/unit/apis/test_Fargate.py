@@ -1,16 +1,11 @@
-import sys ;
-
-from pbx_gs_python_utils.utils.Misc import Misc
-
-sys.path.append('..')
+import sys ; sys.path.append('..')
 
 from unittest import TestCase
-
 from pbx_gs_python_utils.utils.Dev import Dev
+from pbx_gs_python_utils.utils.Misc import Misc
+from osbot_aws.apis.Fargate import Fargate
 
-from pbx_gs_python_utils.utils.aws.Fargate import Fargate
-
-
+@unittest.skip("Needs test that create and destroy the test data")
 class test_Fargate(TestCase):
     def setUp(self):
         self.fargate = Fargate(account_id='244560807427')

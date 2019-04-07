@@ -1,10 +1,12 @@
-import sys ; sys.path.append('..')
+import sys ;
+
+from osbot_aws.apis.Ec2 import Ec2
+
+sys.path.append('..')
 
 from unittest import TestCase
 
 from pbx_gs_python_utils.utils.Dev import Dev
-
-from pbx_gs_python_utils.utils.aws.Ec2 import Ec2
 
 
 class test_Ec2(TestCase):
@@ -16,7 +18,7 @@ class test_Ec2(TestCase):
 
     def test_instances_details(self):
         result = self.ec2.instances_details()
-        Dev.pprint(result)
+        assert len(result) > 5
 
     def test_security_groups(self):
         result = self.ec2.security_groups()

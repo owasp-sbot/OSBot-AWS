@@ -1,9 +1,11 @@
+import unittest
 from time import sleep
 from unittest                                   import TestCase
 from pbx_gs_python_utils.utils.Assert           import Assert
 from pbx_gs_python_utils.utils.Dev              import Dev
-from pbx_gs_python_utils.utils.aws.CodeBuild    import CodeBuild
-from pbx_gs_python_utils.utils.aws.IAM          import IAM
+
+from osbot_aws.apis.CodeBuild import CodeBuild
+from osbot_aws.apis.IAM import IAM
 
 delete_on_setup    = False
 delete_on_teardown = False
@@ -18,7 +20,7 @@ assume_policy      = {'Statement': [ { 'Action': 'sts:AssumeRole',
                                                  'Effect': 'Allow',
                                                  'Principal': { 'Service': 'codebuild.amazonaws.com'}}]}
 
-#CodeBuildBasePolicy-GSBot_code_build-eu-west-2
+@unittest.skip("Needs test that create and destroy the test data")
 class Test_CodeBuild(TestCase):
 
     @classmethod
@@ -57,6 +59,7 @@ class Test_CodeBuild(TestCase):
         ids = list(self.code_build.all_builds_ids(use_paginator=True))
         Assert(ids).is_bigger_than(1000)
 
+    @unittest.skip("Reduce the number of policies created and improve tests")
     def test_create_policies(self):
         policies = {
             "Download_Image"         : { "Version": "2012-10-17",

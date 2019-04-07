@@ -1,6 +1,6 @@
 from coverage.backunittest import TestCase
 
-from pbx_gs_python_utils.utils.aws.Cloud_Watch import Cloud_Watch
+from osbot_aws.apis.Cloud_Watch import Cloud_Watch
 
 
 class test_Cloud_Watch(TestCase):

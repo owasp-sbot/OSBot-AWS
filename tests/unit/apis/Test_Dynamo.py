@@ -1,7 +1,8 @@
 import unittest
-from aws.dynamo import *
 #from pprint     import pformat
+from osbot_aws.apis.Dynamo import Dynamo, Dynamo_Table
 
+@unittest.skip("Needs test that create and destroy the test data")
 class Test_Dynamo(unittest.TestCase):
     def setUp(self):
         self.dynamo     = Dynamo()
@@ -75,15 +76,6 @@ class Test_Dynamo_Table(unittest.TestCase):
 
     def test_status(self):
         assert self.table.status() == 'ACTIVE'
-
-
-    # Use cases
-    def test_5k_ips(self):
-        table = Dynamo_Table('test-table','ip')
-        keys = table.keys()
-        assert len(keys) == 5044
-        results = table.get_batch(keys)
-        assert len(next(results)) == 100
 
 
 class Test_Dynamo_Delete(unittest.TestCase):

@@ -1,6 +1,8 @@
 import json
 
 import boto3
+from pbx_gs_python_utils.utils.Misc import Misc
+
 
 class IAM:
 
@@ -32,7 +34,10 @@ class IAM:
         if self.policy_exists(policy_name) is False:
             if type(policy_document) is not str:
                 policy_document = json.dumps(policy_document)
-            return self.iam.create_policy(PolicyName=policy_name, PolicyDocument=policy_document)
+            data       = self.iam.create_policy(PolicyName=policy_name, PolicyDocument=policy_document).get('Policy')
+            policy_arn = data.get('Arn')
+            return {'status': 'ok'     , 'policy_name' : policy_name, 'policy_arn' : policy_arn                  , 'data': data }
+        return { 'status'   : 'warning', 'policy_name' : policy_name, 'policy_arn' : self.policy_arn(policy_name), 'data': 'policy already existed'}
 
     def policy_delete(self, policy_name):
         if self.policy_exists(policy_name) is False: return False
@@ -50,6 +55,9 @@ class IAM:
 
     def policies(self):
         return list(self.get_data('list_policies', 'Policies', True))
+
+    def role_arn(self):
+        return Misc.get_value(self.role_info(), 'Arn')
 
     def role_exists(self):
         return self.role_info() is not None
@@ -72,20 +80,20 @@ class IAM:
         self.iam.delete_role(RoleName=self.role_name)
         return self.role_exists() is False
 
+    def role_policy_attach(self,policy_arn):
+        return self.iam.attach_role_policy(RoleName=self.role_name, PolicyArn=policy_arn)
+
+    def role_policy_detach(self, policy_arn):
+        self.iam.detach_role_policy(RoleName=self.role_name, PolicyArn=policy_arn)
 
     def role_policies_detach(self, policies_arn):
-        if type(policies_arn) is list:
-            for policy_arn in policies_arn:
-                self.iam.detach_role_policy(RoleName=self.role_name, PolicyArn=policy_arn)
-        else:
-            self.iam.detach_role_policy(RoleName=self.role_name, PolicyArn=policies_arn)
+        for policy_arn in policies_arn:
+            self.iam.role_policy_detach(policy_arn)
+
 
     def role_policies_attach(self, policies_arn):
-        if type(policies_arn) is list:
-            for policy_arn in policies_arn:
-                self.iam.attach_role_policy(RoleName=self.role_name, PolicyArn=policy_arn)
-        else:
-            self.iam.attach_role_policy(RoleName=self.role_name, PolicyArn=policies_arn)
+        for policy_arn in policies_arn:
+            self.role_policy_attach(policy_arn)
 
     def role_policies(self):
         policies = {}

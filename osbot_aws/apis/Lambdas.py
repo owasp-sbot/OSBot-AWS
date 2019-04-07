@@ -2,56 +2,98 @@ import shutil
 import sys
 from    distutils.dir_util  import copy_tree
 from    os.path             import join,abspath
+
+import boto3
 from    pbx_gs_python_utils.utils.Files         import Files
 from    pbx_gs_python_utils.utils.aws.Aws_Cli   import Aws_Cli
 from    pbx_gs_python_utils.utils.aws.s3        import S3
 
+from osbot_aws._tmp_utils.Temp_Misc import Temp_Misc
+
 
 class Lambdas:
-    def __init__(self,name, handler = None, memory = None, timeout = None, path_libs = None, runtime = None, **kwargs):
-        self.aws = Aws_Cli(**kwargs)
-        # default values
-        self.role       = 'arn:aws:iam::244560807427:role/lambda_with_s3_access'
-        self.s3_bucket  = 'gs-lambda-tests'
-        self.source     = abspath(join(__file__,'../../..'))
-        if path_libs:
-            self.path_libs = abspath(join(self.source,path_libs))
-        else:
-            self.path_libs = None
-        if runtime:
-            self.runtime = runtime
-        else:
-            self.runtime = 'python3.6'
-
-
-        # values expected to be provided
+    def __init__(self, name, **kwargs):
+        self.aws_lambda     = boto3.client('lambda', region_name=kwargs.get('region_name'))
+        self.runtime        = 'python3.6'
+        self.memory         = 3008
+        self.timeout        = 60
         self.original_name  = name
+        self.handler        = name + '.run'
         self.name           = name.replace('.','_')
-        if handler is not None:
-            self.handler = handler
-        else:
-            self.handler = '{0}.run'.format(name)
+        self.role           = None
+        self.s3_bucket      = None
+        self.s3_key         = None
 
-        self.s3_key     = 'dinis/lambdas/{0}.zip'.format(self.name)
+    # def __init__(self,name, handler = None, memory = None, timeout = None, path_libs = None, runtime = None, **kwargs):
+    #     self.aws = Aws_Cli(**kwargs)
+    #     # default values
+    #     self.role       = 'arn:aws:iam::244560807427:role/lambda_with_s3_access'
+    #     self.s3_bucket  = 'gs-lambda-tests'
+    #     self.source     = abspath(join(__file__,'../../..'))
+    #     if path_libs:
+    #         self.path_libs = abspath(join(self.source,path_libs))
+    #     else:
+    #         self.path_libs = None
+    #     if runtime:
+    #         self.runtime = runtime
+    #     else:
+    #         self.runtime = 'python3.6'
+    #
+    #
+    #     # values expected to be provided
+    #     self.original_name  = name
+    #     self.name           = name.replace('.','_')
+    #     if handler is not None:
+    #         self.handler = handler
+    #     else:
+    #         self.handler = '{0}.run'.format(name)
+    #
+    #     self.s3_key     = 'dinis/lambdas/{0}.zip'.format(self.name)
+    #
+    #     if memory is not None:
+    #         self.memory = memory
+    #     else:
+    #         self.memory = 1024
+    #     if timeout is not None:
+    #         self.timeout = timeout
+    #     else:
+    #         self.timeout = 60
+    #
+    #     # starting to move values to kwargs
+    #     if kwargs.get('bucket'): self.s3_bucket = kwargs['bucket']
 
-        if memory is not None:
-            self.memory = memory
-        else:
-            self.memory = 1024
-        if timeout is not None:
-            self.timeout = timeout
-        else:
-            self.timeout = 60
-
-        # starting to move values to kwargs
-        if kwargs.get('bucket'): self.s3_bucket = kwargs['bucket']
 
 
-    def create(self, upload_source = True):
-        if upload_source:
-            self.aws.s3_upload_folder(self.source, self.s3_bucket, self.s3_key)
-        self.aws.lambda_create_function(self.name, self.role, self.handler, self.s3_bucket, self.s3_key, self.memory, self.timeout, runtime = self.runtime)
-        return self
+    #def create(self, upload_source = True):
+        # if upload_source:
+        #     self.aws.s3_upload_folder(self.source, self.s3_bucket, self.s3_key)
+        # self.aws.lambda_create_function(self.name, self.role, self.handler, self.s3_bucket, self.s3_key, self.memory, self.timeout, runtime = self.runtime)
+        # return self
+
+    def create_function(self): #, name, role, handler, s3_bucket, s3_key, memory = 512, timeout = 25 , runtime = 'python3.6'):
+        missing_fields = Temp_Misc.get_missing_fields(self,['name', 'runtime', 'role','handler', 'memory','timeout','s3_bucket', 's3_key'])
+        if len(missing_fields) > 0:
+            return { 'error': 'missing fields in create_function: {0}'.format(missing_fields) }
+
+
+
+        if self.exists() is True:
+            return {'status': 'warning', 'name': self.name, 'data': 'lambda function already exists'}
+        try:
+            data = self.aws_lambda.create_function( FunctionName  = self.name                       ,
+                                                    Runtime       = self.runtime                    ,
+                                                    Role          = self.role                       ,
+                                                    Handler       = self.handler                    ,
+                                                    MemorySize    = self.memory                     ,
+                                                    Timeout       = self.timeout                    ,
+                                                    TracingConfig = { 'Mode':'Active' }             ,
+                                                    Code          = { "S3Bucket" : self.s3_bucket   ,
+                                                                      "S3Key"    : self.s3_key     })
+
+            return { 'status': 'ok', 'name': self.name , 'data' : data }
+        except Exception as error:
+            return {'status': 'error', 'data': '{0}'.format(error)}
+
 
     def delete(self):
         self.aws.lambda_delete_function(self.name)
@@ -62,7 +104,12 @@ class Lambdas:
     #     return self
 
     def exists(self):
-        return self.aws.lambda_function_exists(self.name)
+        try:
+            self.aws_lambda.get_function(FunctionName=self.name)
+            return True
+        except:
+            return False
+
 
     def function_Arn(self):
         return self.info().get('Configuration').get('FunctionArn')
@@ -76,6 +123,12 @@ class Lambdas:
 
     def invoke_async(self, payload = {}):
         return self.aws.lambda_invoke_function_async(self.name, payload)
+
+
+    def set_role       (self, value): self.role      = value ;return self
+    def set_s3_bucket  (self, value): self.s3_bucket = value ;return self
+    def set_s3_key     (self, value): self.s3_key    = value ;return self
+
 
     def upload(self):
         #if self.path_libs is None:
