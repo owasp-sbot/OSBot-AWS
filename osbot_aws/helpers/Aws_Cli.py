@@ -11,11 +11,11 @@ class Aws_Cli:
 
         #
 
-    def lambda_delete_function      (self, name                                                                 ):
-        if self.lambda_function_exists(name):
-            self.aws_lambda.delete_function( FunctionName = name)
-        return self
-        #
+    # def lambda_delete_function      (self, name                                                                 ):
+    #     if self.lambda_function_exists(name):
+    #         self.aws_lambda.delete_function( FunctionName = name)
+    #     return self
+    #     #
 
     def lambda_functions            (self                                                                       ):
         data = {}
@@ -27,8 +27,8 @@ class Aws_Cli:
 
         #
 
-    def lambda_function_info        (self, name                                                                 ):
-        return self.aws_lambda.get_function(FunctionName = name)
+    # def lambda_function_info        (self, name                                                                 ):
+    #     return self.aws_lambda.get_function(FunctionName = name)
 
     def lambda_invoke_function      (self, name, payload                                                        ):
         response      = self.aws_lambda.invoke(FunctionName=name, Payload = json.dumps(payload) )
@@ -59,9 +59,3 @@ class Aws_Cli:
         #
 
     #def s3_add_notification        (self, s)
-
-    def s3_upload_folder            (self, folder, s3_bucket, s3_key                                            ):
-        file = Aws_Utils().zip_folder(folder)
-        self.aws_s3.upload_file(file, s3_bucket, s3_key)
-        os.remove(file)
-        return self

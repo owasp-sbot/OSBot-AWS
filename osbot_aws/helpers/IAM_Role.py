@@ -13,7 +13,7 @@ class IAM_Role:
 
     def create_for_service(self,service):
         if self.iam.role_exists():
-            return {'status':'warning', 'data': 'role already exists', 'role_name': self.iam.role_name}
+            return {'status':'warning', 'data': 'role already exists', 'role_name': self.iam.role_name , 'role_arn': self.iam.role_arn()}
         else:
             policy_document = {'Statement': [{'Action': 'sts:AssumeRole',
                                               'Effect': 'Allow',

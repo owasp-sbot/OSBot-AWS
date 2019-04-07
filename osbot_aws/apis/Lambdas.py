@@ -5,24 +5,37 @@ from    os.path             import join,abspath
 
 import boto3
 from    pbx_gs_python_utils.utils.Files         import Files
-from    pbx_gs_python_utils.utils.aws.Aws_Cli   import Aws_Cli
-from    pbx_gs_python_utils.utils.aws.s3        import S3
 
 from osbot_aws._tmp_utils.Temp_Misc import Temp_Misc
+from osbot_aws.apis.S3 import S3
 
 
 class Lambdas:
-    def __init__(self, name, **kwargs):
-        self.aws_lambda     = boto3.client('lambda', region_name=kwargs.get('region_name'))
+    def __init__(self, name):
         self.runtime        = 'python3.6'
         self.memory         = 3008
         self.timeout        = 60
+        self.region_name    = 'eu-west-2'
+        self.trace_mode     = 'Active'
         self.original_name  = name
         self.handler        = name + '.run'
         self.name           = name.replace('.','_')
+        self.folder_code    = None
         self.role           = None
         self.s3_bucket      = None
         self.s3_key         = None
+        self._boto_lambda   = None
+        self._s3            = None
+
+    def boto_lambda(self):
+        if self._boto_lambda is None:
+            self._boto_lambda = boto3.client('lambda', region_name=self.region_name)
+        return self._boto_lambda
+
+    def s3(self):
+        if self._s3 is None:
+            self._s3 = S3()
+        return self._s3
 
     # def __init__(self,name, handler = None, memory = None, timeout = None, path_libs = None, runtime = None, **kwargs):
     #     self.aws = Aws_Cli(**kwargs)
@@ -75,29 +88,44 @@ class Lambdas:
         if len(missing_fields) > 0:
             return { 'error': 'missing fields in create_function: {0}'.format(missing_fields) }
 
-
+        (name, runtime, role, handler, memory_size, timeout, tracing_config, code) = self.create_params()
 
         if self.exists() is True:
             return {'status': 'warning', 'name': self.name, 'data': 'lambda function already exists'}
+
+        if self.s3().file_exists(code.get('S3Bucket'), code.get('S3Key')) is False:
+            return {'status': 'error', 'name': self.name, 'data': 'could not find provided s3 bucket and s3 key'}
+
         try:
-            data = self.aws_lambda.create_function( FunctionName  = self.name                       ,
-                                                    Runtime       = self.runtime                    ,
-                                                    Role          = self.role                       ,
-                                                    Handler       = self.handler                    ,
-                                                    MemorySize    = self.memory                     ,
-                                                    Timeout       = self.timeout                    ,
-                                                    TracingConfig = { 'Mode':'Active' }             ,
-                                                    Code          = { "S3Bucket" : self.s3_bucket   ,
-                                                                      "S3Key"    : self.s3_key     })
+            data = self.boto_lambda().create_function(  FunctionName  = name           ,
+                                                        Runtime       = runtime        ,
+                                                        Role          = role           ,
+                                                        Handler       = handler        ,
+                                                        MemorySize    = memory_size    ,
+                                                        Timeout       = timeout        ,
+                                                        TracingConfig = tracing_config ,
+                                                        Code          = code)
 
             return { 'status': 'ok', 'name': self.name , 'data' : data }
         except Exception as error:
             return {'status': 'error', 'data': '{0}'.format(error)}
 
+    def create_params(self):
+        FunctionName  = self.name
+        Runtime       = self.runtime
+        Role          = self.role
+        Handler       = self.handler
+        MemorySize    = self.memory
+        Timeout       = self.timeout
+        TracingConfig = { 'Mode': self.trace_mode }
+        Code          = { "S3Bucket" : self.s3_bucket, "S3Key": self.s3_key}
+        return FunctionName, Runtime, Role, Handler, MemorySize, Timeout, TracingConfig, Code
 
     def delete(self):
-        self.aws.lambda_delete_function(self.name)
-        return self
+        if self.exists() is False:
+            return False
+        self.boto_lambda().delete_function(FunctionName=self.name)
+        return self.exists() is False
 
     # def delete_local_zip(self):
     #     os.remove(self.zip_file)
@@ -105,7 +133,7 @@ class Lambdas:
 
     def exists(self):
         try:
-            self.aws_lambda.get_function(FunctionName=self.name)
+            self.info()
             return True
         except:
             return False
@@ -115,7 +143,7 @@ class Lambdas:
         return self.info().get('Configuration').get('FunctionArn')
 
     def info(self):
-        return self.aws.lambda_function_info(self.name)
+        return self.boto_lambda().get_function(FunctionName=self.name)
 
     def invoke(self, payload = {}):
         (result, response) = self.aws.lambda_invoke_function(self.name, payload)
@@ -125,9 +153,16 @@ class Lambdas:
         return self.aws.lambda_invoke_function_async(self.name, payload)
 
 
-    def set_role       (self, value): self.role      = value ;return self
-    def set_s3_bucket  (self, value): self.s3_bucket = value ;return self
-    def set_s3_key     (self, value): self.s3_key    = value ;return self
+    def set_role                (self, value): self.role        = value ;return self
+    def set_s3_bucket           (self, value): self.s3_bucket   = value ;return self
+    def set_s3_key              (self, value): self.s3_key      = value ;return self
+    def set_folder_code         (self, value): self.folder_code = value ;return self
+    def set_trace_mode          (self, value): self.trace_mode  = value ;return self
+
+    def set_s3_bucket_and_key(self, s3_bucket, s3_key):
+        self.set_s3_bucket(s3_bucket)
+        self.set_s3_key   (s3_key   )
+        return self
 
 
     def upload(self):
@@ -136,9 +171,8 @@ class Lambdas:
         #else:
             #copy_tree(self.source, self.path_libs)  # for now copy all files into dependencies folders (need to improve this by using temp folders)
 
-        self.aws.s3_upload_folder(self.source, self.s3_bucket, self.s3_key)
-        print(self.s3_bucket, self.s3_key)
-        return self
+        self.s3().folder_upload(self.folder_code, self.s3_bucket, self.s3_key)
+        return self.s3().file_exists(self.s3_bucket, self.s3_key)
 
     def upload_and_invoke(self, payload = {}):
         return self.update_with_src().invoke(payload)

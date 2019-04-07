@@ -15,6 +15,13 @@ class S3:
         self.boto_client_s3  = None
         self.tmp_file_folder = 's3_temp_files'
 
+    # helpers
+    def s3(self):
+        if self.boto_client_s3 is None : self.boto_client_s3 = boto3.client('s3')
+        return self.boto_client_s3
+
+    # main methods
+
     def buckets(self):
         data = []
         for bucket in self.s3().list_buckets().get('Buckets'):
@@ -108,35 +115,35 @@ class S3:
         result = self.s3().delete_object(Bucket=bucket, Key=key)              # delete file from s3
         return result.get('ResponseMetadata').get('HTTPStatusCode') == 204
 
-    def file_details            (self, bucket, key                                  ):
+    def file_details(self, bucket, key):
         return self.s3().head_object(Bucket = bucket, Key= key);
 
-    def file_size_in_Mb         (self, bucket, key                                  ):
+    def file_size_in_Mb(self, bucket, key):
         details = self.file_details(bucket,key)
         return '{0:.1f} Mb'.format(int(details['ResponseMetadata']['HTTPHeaders']['content-length']) / 1024 / 1024)
 
-    def file_exists             (self, bucket, key                                  ):
+    def file_exists(self, bucket, key):
         try:
             self.s3().head_object(Bucket=bucket, Key=key)                     # calls head_object function
-            return True                                                         # if it works, file exists (return true)
-        except ClientError:                                                     # if we get an ClientError exception
-            return False                                                        # file doesn't exists (return false)
+            return True                                                       # if it works, file exists (return true)
+        except:                                                               # if we get an exception
+            return False                                                      # file doesn't exists (return false)
 
-    def file_move               (self,src_bucket, src_key, dest_bucket, dest_key    ):
+    def file_move               (self,src_bucket, src_key, dest_bucket, dest_key):
         self.file_copy(src_bucket, src_key, dest_bucket, dest_key)
         self.file_delete(src_bucket, src_key)
         return self.file_exists(dest_bucket, dest_key)
 
-    def file_upload             (self,file , bucket, folder                         ):
+    def file_upload             (self,file , bucket, folder):
         if not os.path.isfile(file):                                            # check that file to upload exists locally
             return None                                                         # if not return None
 
         key = os.path.join(folder, os.path.basename(file))                      # create key from folder and file's filename
 
-        self.s3().upload_file(file, bucket, key)                                # upload file
+        self.file_upload_to_key(file, bucket, key)                                # upload file
         return key                                                              # return path to file uploaded (if succeeded)
 
-    def file_upload_to_key     (self, file, bucket, key                             ):
+    def file_upload_to_key(self, file, bucket, key):
         self.s3().upload_file(file, bucket, key)                                # upload file
         return True                                                             # return true (if succeeded)
 
@@ -146,18 +153,16 @@ class S3:
         return key
 
 
-    def folder_upload          (self, folder, s3_bucket, s3_key                                            ):
+    def folder_upload (self, folder, s3_bucket, s3_key):
         file = Files.zip_folder(folder)
-        self.file_upload(file, s3_bucket, s3_key)
+        self.file_upload_to_key(file, s3_bucket, s3_key)
         os.remove(file)
         return self
 
-    def s3(self):
-        if self.boto_client_s3 is None : self.boto_client_s3 = boto3.client('s3')
-        return self.boto_client_s3
 
-def split_s3_url(s3_url):
-    url = urlparse(s3_url)
-    bucket = url.netloc
-    path = url.path.lstrip('/')
-    return bucket, path
+
+# def split_s3_url(s3_url):
+#     url = urlparse(s3_url)
+#     bucket = url.netloc
+#     path = url.path.lstrip('/')
+#     return bucket, path

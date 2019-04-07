@@ -1,6 +1,7 @@
 import os
 import unittest
-from   aws.s3 import S3
+
+from osbot_aws.apis.S3 import S3
 
 
 class Test_S3(unittest.TestCase):
@@ -9,8 +10,8 @@ class Test_S3(unittest.TestCase):
         assert self.s3.__class__.__name__ == 'S3'
         self.temp_file_name     = "aaa.txt"
         self.temp_file_contents = "some contents"
-        self.test_bucket        = "gs-team-tests"
-        self.test_folder        = "dinis"
+        self.test_bucket        = "gs-lambda-tests"
+        self.test_folder        = "unit_tests"
 
     def _test_file(self):
         temp_file = os.path.abspath(self.temp_file_name)
@@ -21,15 +22,14 @@ class Test_S3(unittest.TestCase):
 
     def test_buckets       (self):
         names = self.s3.buckets()
-        assert "gs-logs-pb" in names
+        assert self.test_bucket in names
         assert len(names) > 6
 
     def test_find_files    (self):
-        test_bucket = "gs-logs-pb"
-        prefix      = 'akamai'
-        filter      = 'waf'
-        files       = self.s3.find_files(test_bucket, prefix, filter)
-        assert len(files) > 10
+        prefix      = 'unit_tests'
+        find_filter = 'dev'
+        files       = self.s3.find_files(self.test_bucket, prefix, find_filter)
+        assert len(files) > 1
 
 
     def test_file_contents_delete_exists_upload   (self):
