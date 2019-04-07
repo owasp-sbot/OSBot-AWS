@@ -97,7 +97,7 @@ class Create_Code_Build:
                     # "Update_Lambda"         : { "Version"  : "2012-10-17",
                     #                             "Statement": [ {    "Effect": "Allow", "Action" : ["s3:PutObject"         ], "Resource": ["arn:aws:s3:::gs-lambda-tests/dinis/lambdas/gsbot_gsuite_lambdas_gdocs.zip"] },
                     #                                            {    "Effect": "Allow", "Action" : ["lambda:CreateFunction"], "Resource": ["arn:aws:lambda:eu-west-2:244560807427:function:gsbot_gsuite_lambdas_gdocs"] } ]}}
-    
+
         policies_arns  = list(self.code_build.iam.role_policies().values())
         policies_names = list(self.code_build.iam.role_policies().keys())
         self.code_build.iam.role_policies_detach(policies_arns)
@@ -133,7 +133,6 @@ class test_Create_Code_Build(TestCase):
         build_id = self.api.code_build.build_start()
         result = self.api.code_build.build_wait_for_completion(build_id, max_attempts=100, log_status=True)
         Dev.pprint(result)
-    # use cases
 
     def test_create_policies_and_trigger_build(self):
         self.api.create_policies()
