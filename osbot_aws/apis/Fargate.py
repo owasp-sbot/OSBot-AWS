@@ -3,8 +3,10 @@ from time import sleep
 import boto3
 
 from pbx_gs_python_utils.utils.Dev import Dev
-from pbx_gs_python_utils.utils.aws.Cloud_Watch import Cloud_Watch
-from pbx_gs_python_utils.utils.aws.IAM import IAM
+
+from osbot_aws.apis.Cloud_Watch import Cloud_Watch
+from osbot_aws.apis.IAM import IAM
+
 
 class Fargate:
 

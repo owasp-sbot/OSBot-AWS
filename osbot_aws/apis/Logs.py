@@ -1,7 +1,6 @@
 import boto3
 
-from pbx_gs_python_utils.utils.Dev import Dev
-from pbx_gs_python_utils.utils.aws.Boto_Helpers import Boto_Helpers
+from osbot_aws.apis.Boto_Helpers import Boto_Helpers
 
 
 class Logs(Boto_Helpers):

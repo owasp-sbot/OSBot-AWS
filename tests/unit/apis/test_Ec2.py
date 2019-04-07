@@ -1,11 +1,7 @@
-import sys ;
+import sys ; sys.path.append('..')
 
 from osbot_aws.apis.Ec2 import Ec2
-
-sys.path.append('..')
-
 from unittest import TestCase
-
 from pbx_gs_python_utils.utils.Dev import Dev
 
 

@@ -1,6 +1,6 @@
+import sys; sys.path.append('..')
 from unittest import TestCase
-
-from pbx_gs_python_utils.utils.aws.helpers.Fargate_Cluster import Fargate_Cluster
+from osbot_aws.helpers.Fargate_Cluster import Fargate_Cluster
 
 
 class test_Fargate_Cluster(TestCase):

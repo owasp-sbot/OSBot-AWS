@@ -1,7 +1,8 @@
+import sys; sys.path.append('..')
 from unittest import TestCase
 
 from pbx_gs_python_utils.utils.Dev import Dev
-from pbx_gs_python_utils.utils.aws.Logs import Logs
+from osbot_aws.apis.Logs import Logs
 
 
 class test_Logs(TestCase):
