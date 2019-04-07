@@ -1,8 +1,7 @@
 import json
 import shutil
 import sys
-from    distutils.dir_util  import copy_tree
-from    os.path             import join,abspath
+from   distutils.dir_util  import copy_tree
 
 import boto3
 from    pbx_gs_python_utils.utils.Files         import Files
@@ -12,7 +11,7 @@ from osbot_aws.apis.S3 import S3
 
 
 class Lambda:
-    def __init__(self, name=None):
+    def __init__(self, name):
         self.runtime        = 'python3.6'
         self.memory         = 3008
         self.timeout        = 60
@@ -156,18 +155,15 @@ class Lambda:
             return { 'status': 'ok'   , 'name': self.name, 'data' : result , 'response': response }
         except Exception as error:
             return { 'status': 'error', 'name': self.name, 'data' : '{0}'.format(error) }
-        #(result, response) = self.aws.lambda_invoke_function(self.name, payload)
-        #return result
+
+    def invoke(self, payload = {}):
+        result = self.invoke_raw(payload)
+        if result.get('status') == 'ok':
+            return result.get('data')
+        return None
 
     def invoke_async(self, payload = {}):
         return self.aws.lambda_invoke_function_async(self.name, payload)
-
-    def list(self):
-
-        data = {}
-        for function in self.boto_lambda().list_functions().get('Functions'):
-            data[function['FunctionName']] = function
-        return data
 
     def set_role                (self, value): self.role        = value ;return self
     def set_s3_bucket           (self, value): self.s3_bucket   = value ;return self
@@ -219,16 +215,16 @@ class Lambda:
         self.source = src_tmp
         return self.update()
 
-def exec_string_in_lambda(lambda_code):
-    name = 'lambda_from_string'                  # should make this a random value
-    handler = 'lambdas.dev.exec_string.run'
-    temp_lambda = Lambdas(name, handler, 3008)
-    result      = temp_lambda.upload_and_invoke({"code": lambda_code})
-    temp_lambda.delete()
-    return result
-
-def invoke_lambda(file, payload):
-    return Lambdas(file).upload_and_invoke(payload)
+# def exec_string_in_lambda(lambda_code):
+#     name = 'lambda_from_string'                  # should make this a random value
+#     handler = 'lambdas.dev.exec_string.run'
+#     temp_lambda = Lambdas(name, handler, 3008)
+#     result      = temp_lambda.upload_and_invoke({"code": lambda_code})
+#     temp_lambda.delete()
+#     return result
+#
+# def invoke_lambda(file, payload):
+#     return Lambdas(file).upload_and_invoke(payload)
 
 def load_dependencies(targets):
     for target in targets:

@@ -17,11 +17,11 @@ class Aws_Cli:
     #     return self
     #     #
 
-    def lambda_functions            (self                                                                       ):
-        data = {}
-        for function in self.aws_lambda.list_functions().get('Functions'):
-            data[function['FunctionName']] = function
-        return data
+    # def lambda_functions            (self                                                                       ):
+    #     data = {}
+    #     for function in self.aws_lambda.list_functions().get('Functions'):
+    #         data[function['FunctionName']] = function
+    #     return data
 
 
 

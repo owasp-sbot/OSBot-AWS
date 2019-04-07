@@ -12,8 +12,9 @@ class IAM_Role:
         return self.create_for_service('codebuild.amazonaws.com')
 
     def create_for_service(self,service):
-        if self.iam.role_exists():
-            return {'status':'warning', 'data': 'role already exists', 'role_name': self.iam.role_name , 'role_arn': self.iam.role_arn()}
+        role_arn =  self.iam.role_arn()
+        if role_arn:
+            return {'status':'warning', 'data': 'role already exists', 'role_name': self.iam.role_name , 'role_arn': role_arn}
         else:
             policy_document = {'Statement': [{'Action': 'sts:AssumeRole',
                                               'Effect': 'Allow',
