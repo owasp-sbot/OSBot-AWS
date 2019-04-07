@@ -1,6 +1,5 @@
+import sys ; sys.path.append('..')
 from unittest import TestCase
-
-from pbx_gs_python_utils.utils.Dev import Dev
 
 from osbot_aws.apis.Lambda import Lambda
 from osbot_aws.apis.Lambdas import Lambdas
