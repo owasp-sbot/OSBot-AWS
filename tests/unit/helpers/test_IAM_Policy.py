@@ -13,11 +13,11 @@ class test_IAM_Policy(TestCase):
 
 
     def test_add_cloud_watch(self):
-        expected_statements = [{"Effect"  : "Allow",
-                                "Action"  : ["logs:CreateLogStream","logs:PutLogEvents"],
-                                "Resource": ['abc']}]
+        expected_statements = [ { 'Action': [ 'logs:CreateLogGroup','logs:CreateLogStream','logs:PutLogEvents'],
+                                  'Effect': 'Allow','Resource': ['abc']}]
 
         assert self.iam_policy.add_cloud_watch('abc')       == self.iam_policy
+
         assert self.iam_policy.statement().get('Statement') == expected_statements
 
     def test_create(self):
@@ -38,7 +38,7 @@ class test_IAM_Policy(TestCase):
         assert data.get('DefaultVersionId') == 'v1'
         assert data.get('PolicyName'      ) == self.iam_policy.policy_name
 
-        assert self.iam_policy.statement_from_aws () == [{'Action': ['logs:CreateLogStream', 'logs:PutLogEvents'],
+        assert self.iam_policy.statement_from_aws () == [{'Action': ['logs:CreateLogGroup','logs:CreateLogStream','logs:PutLogEvents'],
                                                           'Effect': 'Allow',
                                                           'Resource': ['arn:aws:abc']}]
         assert self.iam_policy.delete() is True

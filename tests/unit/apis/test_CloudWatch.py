@@ -11,3 +11,4 @@ class test_Cloud_Watch(TestCase):
     def test__init__(self):
         type(self.cloud_watch.cloudwatch).__name__ == 'CloudWatch'
 
+

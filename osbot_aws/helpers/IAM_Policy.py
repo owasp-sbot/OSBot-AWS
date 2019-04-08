@@ -11,7 +11,7 @@ class IAM_Policy:
         self.account_id  = account_id
 
     def add_cloud_watch(self, resource_arn):
-        return self.add_statement_allow(["logs:CreateLogStream","logs:PutLogEvents"], [resource_arn])
+        return self.add_statement_allow(["logs:CreateLogGroup","logs:CreateLogStream","logs:PutLogEvents"], [resource_arn])
 
     def add_statement(self, effect, actions, resources):
         self.statements.append({"Effect"   : effect    ,

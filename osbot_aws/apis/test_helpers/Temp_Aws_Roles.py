@@ -7,7 +7,8 @@ class Temp_Aws_Roles:
         self.role_name__for_lambda_invocation = self.temp_prefix + 'for_lambda_invocation'
         pass
 
-    def for_lambda_invocation(self):
+    def for_lambda_invocation(self, delete_existing=False):
         iam_role = IAM_Role(self.role_name__for_lambda_invocation)
-        #iam_role.iam.role_delete()
+        if delete_existing:
+            iam_role.iam.role_delete()
         return iam_role.create_for__lambda().get('role_arn')

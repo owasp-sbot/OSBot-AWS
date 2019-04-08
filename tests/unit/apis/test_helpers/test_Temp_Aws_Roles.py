@@ -14,7 +14,7 @@ class test_Temp_Aws_Roles(TestCase):
     def test_for_lambda_invocation(self):
         role_name = self.temp_aws_roles.role_name__for_lambda_invocation
         role_arn  = 'arn:aws:iam::{0}:role/{1}'.format(self.account_id, role_name)
-        assert role_arn == self.temp_aws_roles.for_lambda_invocation()
+        assert role_arn == self.temp_aws_roles.for_lambda_invocation(delete_existing=True)
         self.iam = IAM().set_role_name(role_name)
         policies_statements = self.iam.role_policies_statements(just_statements=True)
         resource = policies_statements[0].get('Resource')[0]

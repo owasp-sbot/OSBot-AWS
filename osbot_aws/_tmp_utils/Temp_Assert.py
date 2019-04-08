@@ -10,4 +10,4 @@ class Temp_Assert:
 
     def is_today(self):
         assert type(self._assert.target) == datetime.datetime
-        assert str(self._assert.target.date())  == str(datetime.datetime.now().date())
+        assert str(self._assert.target.date())  == str(datetime.datetime.utcnow().date())

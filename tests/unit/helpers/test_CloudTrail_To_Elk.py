@@ -4,7 +4,7 @@ from unittest import TestCase
 from osbot_aws.apis.Cloud_Trail import Cloud_Trail
 
 @unittest.skip("Needs test that create and destroy the test data, and move send_to_elk to an helper class")
-class test_Logs(TestCase):
+class test_CloudTrail_To_Elk(TestCase):
 
     def setUp(self):
         self.cloud_trail = Cloud_Trail()

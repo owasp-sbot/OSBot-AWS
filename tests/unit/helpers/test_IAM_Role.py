@@ -58,18 +58,11 @@ class test_IAM_Role(TestCase):
         service = role_info.get('AssumeRolePolicyDocument').get('Statement')[0].get('Principal').get('Service')
         assert service == 'lambda.amazonaws.com'
 
-        # temp_policy_name = 'temp_policy_{0}'.format(self.temp_role_name)
-        # cloud_watch_arn  = "arn:aws:logs:{0}:{0}:log-group:/aws/lambda/*".format('eu-west-2','244560807427')
-        #
-        # policy_arn       = IAM_Policy(temp_policy_name).add_cloud_watch(cloud_watch_arn).create().get('policy_arn')
-        #
-        # self.iam_role.iam.role_policy_attach(policy_arn)
-
         policy_statement = list(self.iam_role.iam.role_policies_statements().values()).pop()
 
-        assert policy_statement ==  [{ 'Action'  : [ 'logs:CreateLogStream','logs:PutLogEvents'],
+        assert policy_statement ==  [{ 'Action'  : [ 'logs:CreateLogGroup','logs:CreateLogStream','logs:PutLogEvents'],
                                        'Effect'  : 'Allow',
                                        'Resource': [ 'arn:aws:logs:{0}:{1}:log-group:/aws/lambda/*'.format(region, account_id)]}]
 
-        assert self.iam_role.iam.role_delete()                                       is True            # delete role and policies
+        assert self.iam_role.iam.role_delete() is True            # delete role and policies
 
