@@ -133,11 +133,9 @@ class IAM:
         return self.role_exists() is False
 
     def role_policies_detach_and_delete(self):
-        policies = self.role_policies()
-        policies_names = policies.keys()
-        policies_arns  =  policies.values()
+        policies_arns = self.role_policies().values()
         self.role_policies_detach(policies_arns)
-        self.policies_delete(policies_names)
+        self.policies_delete     (policies_arns)
 
     def role_policy_attach(self,policy_arn):
         return self.iam().attach_role_policy(RoleName=self.role_name, PolicyArn=policy_arn)

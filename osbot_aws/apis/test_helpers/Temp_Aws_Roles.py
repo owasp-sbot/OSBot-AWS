@@ -9,4 +9,4 @@ class Temp_Aws_Roles:
 
     def for_lambda_invocation(self):
         iam_role = IAM_Role(self.role_name__for_lambda_invocation)
-        return iam_role.create_for_lambda().get('role_arn')
+        return iam_role.create_for__lambda().get('role_arn')

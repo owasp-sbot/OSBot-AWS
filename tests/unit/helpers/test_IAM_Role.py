@@ -18,9 +18,9 @@ class test_IAM_Role(TestCase):
     def test___init__(self):
         assert self.iam_role.iam.role_name == self.temp_role_name
 
-    def test_create_for_code_build(self):
+    def test_create_for__code_build(self):
         self.iam_role.iam.role_delete()
-        result      = self.iam_role.create_for_code_build()
+        result      = self.iam_role.create_for__code_build()
         status      = result.get('status')
         data        = result.get('data')
         role_arn    = result.get('role_arn')
@@ -45,42 +45,30 @@ class test_IAM_Role(TestCase):
 
         Temp_Assert(create_date).is_today()
 
-        assert self.iam_role.create_for_code_build() == { 'data'     : 'role already exists',
+        assert self.iam_role.create_for__code_build() == { 'data'     : 'role already exists',
                                                           'role_name': self.temp_role_name,
                                                           'role_arn' : expected_arn,
                                                           'status'   : 'warning'}
         assert self.iam_role.iam.role_delete() is True
 
-#    User: arn:aws:sts::244560807427:assumed-role/temp_role_for_lambda_invocation/temp_lambda_K698AJ
-#    is not authorized to perform:
-#    logs:CreateLogStream on resource: log-stream:2019/04/08/[$LATEST]3ce3a3b8ab5c45fb853683467d035cc9",
-
-    def test_create_for_lambda(self):
-        self.iam_role.create_for_lambda().get('role_arn')
+    def test_create_for__lambda(self):
+        self.iam_role.create_for__lambda().get('role_arn')
         role_info = self.iam_role.iam.role_info()
         service = role_info.get('AssumeRolePolicyDocument').get('Statement')[0].get('Principal').get('Service')
         assert service == 'lambda.amazonaws.com'
 
-
-
-        temp_policy_name = 'temp_policy_{0}'.format(self.temp_role_name)
-
-        cloud_watch_arn  = "arn:aws:logs:{0}:{0}:log-group:/aws/lambda/*".format('eu-west-2','244560807427')
-
-        policy_arn = IAM_Policy(temp_policy_name).add_cloud_watch(cloud_watch_arn).create().get('policy_arn')
-
-        #Dev.pprint(policy_arn)
-
-        # policy_statement = { "Version": "2012-10-17",
-        #                      "Statement": [{ "Effect": "Allow",
-        #                                      "Action": ["logs:CreateLogStream",
-        #                                                 "logs:PutLogEvents"],
-        #                                      "Resource": [cloud_watch_arn] }]}
+        # temp_policy_name = 'temp_policy_{0}'.format(self.temp_role_name)
+        # cloud_watch_arn  = "arn:aws:logs:{0}:{0}:log-group:/aws/lambda/*".format('eu-west-2','244560807427')
         #
-        # policy_arn = self.iam_role.iam.policy_create(temp_policy_name, policy_statement).get('policy_arn')
-        self.iam_role.iam.role_policy_attach(policy_arn)
+        # policy_arn       = IAM_Policy(temp_policy_name).add_cloud_watch(cloud_watch_arn).create().get('policy_arn')
+        #
+        # self.iam_role.iam.role_policy_attach(policy_arn)
 
-        Dev.pprint(self.iam_role.iam.role_policies())
+        policy_statement = list(self.iam_role.iam.role_policies_statements().values()).pop()
 
-        assert self.iam_role.iam.role_delete() is True
+        assert policy_statement ==  [{ 'Action'  : [ 'logs:CreateLogStream','logs:PutLogEvents'],
+                                       'Effect'  : 'Allow',
+                                       'Resource': [ 'arn:aws:logs:eu-west-2:eu-west-2:log-group:/aws/lambda/*']}]
+
+        assert self.iam_role.iam.role_delete()                                       is True            # delete role and policies
 

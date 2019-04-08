@@ -37,7 +37,7 @@ class Test_Lambda(unittest.TestCase):
                                                'status': 'error'                                       }
 
     def test_create_function(self):
-        role_arn   = IAM_Role(lambda_name + '__tmp_role').create_for_lambda().get('role_arn')
+        role_arn   = IAM_Role(lambda_name + '__tmp_role').create_for__lambda().get('role_arn')
         tmp_folder = Temp_Folder_Code(lambda_name)
         (
                 self.test_lambda.set_role        (role_arn         )
