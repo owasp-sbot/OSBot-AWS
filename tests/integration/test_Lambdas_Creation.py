@@ -11,9 +11,9 @@ class test_Lambdas_Creation(TestCase):
 
     def test_lambdas_cloud_watch_logs(self):
         with Temp_Lambda() as _:
-            pass
+            #_.delete_on_exit = False
             #Dev.pprint(_.create_log)
-            #result = _.invoke_raw()
+            result = _.invoke_raw()
             #Dev.pprint(result)
 
     def test_delete_temp_lambdas(self):

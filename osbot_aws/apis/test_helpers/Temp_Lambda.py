@@ -14,11 +14,12 @@ tmp_s3_key    =  'unit_tests/lambdas/{0}.zip'.format(lambda_name)
 
 class Temp_Lambda:
     def __init__(self):
-        self.name         = "temp_lambda_{0}".format(Misc.random_string_and_numbers())
-        self.temp_lambda  = Lambda(self.name)
-        self.tmp_folder   = Temp_Folder_Code(self.name)
-        self.role_arn     = Temp_Aws_Roles().for_lambda_invocation()
-        self.create_log   = None
+        self.name           = "temp_lambda_{0}".format(Misc.random_string_and_numbers())
+        self.temp_lambda    = Lambda(self.name)
+        self.tmp_folder     = Temp_Folder_Code(self.name)
+        self.role_arn       = Temp_Aws_Roles().for_lambda_invocation()
+        self.create_log     = None
+        self.delete_on_exit = True
 
     def __enter__(self):
         (
@@ -34,12 +35,13 @@ class Temp_Lambda:
         return self
 
     def __exit__(self, type, value, traceback):
-        assert self.temp_lambda.delete() is True
+        if self.delete_on_exit:
+            assert self.temp_lambda.delete() is True
 
-    def invoke(self, params={}):
+    def invoke(self, params=None):
         return self.temp_lambda.invoke(params)
 
-    def invoke_raw(self, params={}):
+    def invoke_raw(self, params=None):
         return self.temp_lambda.invoke_raw(params)
 
 class Temp_Folder_Code:

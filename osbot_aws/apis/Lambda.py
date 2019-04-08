@@ -145,8 +145,9 @@ class Lambda:
     def info(self):
         return self.boto_lambda().get_function(FunctionName=self.name)
 
-    def invoke_raw(self, payload = {}):
+    def invoke_raw(self, payload = None):
         try:
+            if payload is None: payload = {}
             response      = self.boto_lambda().invoke(FunctionName=self.name, Payload = json.dumps(payload) )
 
             result_bytes  = response.get('Payload').read()
@@ -156,13 +157,15 @@ class Lambda:
         except Exception as error:
             return { 'status': 'error', 'name': self.name, 'data' : '{0}'.format(error) }
 
-    def invoke(self, payload = {}):
+    def invoke(self, payload = None):
+        if payload is None: payload = {}
         result = self.invoke_raw(payload)
         if result.get('status') == 'ok':
             return result.get('data')
         return None
 
-    def invoke_async(self, payload = {}):
+    def invoke_async(self, payload = None):
+        if payload is None: payload = {}
         return self.aws.lambda_invoke_function_async(self.name, payload)
 
     def set_role                (self, value): self.role        = value ;return self

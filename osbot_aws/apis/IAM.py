@@ -154,18 +154,23 @@ class IAM:
 
     def role_policies(self):
         policies = {}
-        for item in self.get_data('list_attached_role_policies', 'AttachedPolicies', True, RoleName=self.role_name):
-            policies[item.get('PolicyName')] = item.get('PolicyArn')
+        if self.role_name:
+            for item in self.get_data('list_attached_role_policies', 'AttachedPolicies', True, RoleName=self.role_name):
+                policies[item.get('PolicyName')] = item.get('PolicyArn')
         return policies
 
-    def role_policies_statements(self):
-        policy_statments = {}
+    def role_policies_statements(self, just_statements = False):
+        if just_statements:
+            statements = []
+            for items in self.role_policies_statements().values():
+                statements.extend(items)
+            return statements
+
+        policy_statements = {}
         for policy_name, policy_arn in self.role_policies().items():
-            policy_statments[policy_name] = self.policy_statement(policy_arn)
-            # Dev.pprint(policy_name)
-            # Dev.pprint(self.policy_details(policy_arn))
-        return policy_statments
-            #Dev.pprint(policy_name, policy_arn)
+            policy_statements[policy_name] = self.policy_statement(policy_arn)
+        return policy_statements
+
 
     def roles(self):
         return list(self.get_data('list_roles', 'Roles', True))

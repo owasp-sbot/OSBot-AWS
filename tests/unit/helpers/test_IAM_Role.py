@@ -6,6 +6,7 @@ from osbot_aws._tmp_utils.Temp_Assert import Temp_Assert
 from osbot_aws.helpers.IAM_Policy import IAM_Policy
 from osbot_aws.helpers.IAM_Role import IAM_Role
 
+region         = 'eu-west-2'
 account_id     = '244560807427'
 
 class test_IAM_Role(TestCase):
@@ -68,7 +69,7 @@ class test_IAM_Role(TestCase):
 
         assert policy_statement ==  [{ 'Action'  : [ 'logs:CreateLogStream','logs:PutLogEvents'],
                                        'Effect'  : 'Allow',
-                                       'Resource': [ 'arn:aws:logs:eu-west-2:eu-west-2:log-group:/aws/lambda/*']}]
+                                       'Resource': [ 'arn:aws:logs:{0}:{1}:log-group:/aws/lambda/*'.format(region, account_id)]}]
 
         assert self.iam_role.iam.role_delete()                                       is True            # delete role and policies
 
