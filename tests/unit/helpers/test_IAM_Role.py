@@ -50,10 +50,31 @@ class test_IAM_Role(TestCase):
                                                           'status'   : 'warning'}
         assert self.iam_role.iam.role_delete() is True
 
+#    User: arn:aws:sts::244560807427:assumed-role/temp_role_for_lambda_invocation/temp_lambda_K698AJ
+#    is not authorized to perform:
+#    logs:CreateLogStream on resource: log-stream:2019/04/08/[$LATEST]3ce3a3b8ab5c45fb853683467d035cc9",
+
     def test_create_for_lambda(self):
         self.iam_role.create_for_lambda().get('role_arn')
         role_info = self.iam_role.iam.role_info()
         service = role_info.get('AssumeRolePolicyDocument').get('Statement')[0].get('Principal').get('Service')
         assert service == 'lambda.amazonaws.com'
+
+
+
+        temp_policy_name = 'temp_policy_{0}'.format(self.temp_role_name)
+
+        cloud_watch_arn  = "arn:aws:logs:{0}:{0}:log-group:/aws/lambda/*".format('eu-west-2','244560807427')
+        policy_statement = { "Version": "2012-10-17",
+                             "Statement": [{ "Effect": "Allow",
+                                             "Action": ["logs:CreateLogStream",
+                                                        "logs:PutLogEvents"],
+                                             "Resource": [cloud_watch_arn] }]}
+
+        policy_arn = self.iam_role.iam.policy_create(temp_policy_name, policy_statement).get('policy_arn')
+        self.iam_role.iam.role_policy_attach(policy_arn)
+        Dev.pprint(self.iam_role.iam.role_policies())
+        #self.iam_role.iam.role_policy_detach(policy_arn)
+        #assert self.iam_role.iam.policy_delete(temp_policy_name) is True
         assert self.iam_role.iam.role_delete() is True
 

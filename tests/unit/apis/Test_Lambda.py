@@ -65,7 +65,7 @@ class Test_Lambda(unittest.TestCase):
 
         expected_arn = 'arn:aws:lambda:{0}:{1}:function:{2}'.format(region,account_id,lambda_name)              # expected arn value
 
-        (Assert(data).field_is_equal('CodeSize'     , 212                    )                                  # confirm lambda creation details
+        (Assert(data).field_is_equal('CodeSize'     , 209                    )                                  # confirm lambda creation details
                      .field_is_equal('FunctionArn'  , expected_arn           )
                      .field_is_equal('FunctionName' , lambda_name            )
                      .field_is_equal('Handler'      , lambda_name + '.run'   )
@@ -97,7 +97,7 @@ class Test_Lambda(unittest.TestCase):
             result = temp_lambda.temp_lambda.invoke({'name': temp_lambda.name})
             assert result == 'hello {0}'.format(temp_lambda.name)
 
-    def test_udpdate(self):
+    def test_update(self):
         with Temp_Lambda() as temp_lambda:
             tmp_text = Misc.random_string_and_numbers(prefix='updated code ')
             temp_lambda.tmp_folder.create_temp_file('def run(event, context): return "{0}"'.format(tmp_text))

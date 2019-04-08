@@ -46,16 +46,18 @@ class Test_IAM(TestCase):
     def test_policies(self):
         assert len(self.iam.policies())  > 500
 
-    def test_policy_create__policy_delete__policy_info(self):
+    def test_policy_create__policy_delete__policy_details(self):
         policy_name     = 'test_policy'
+        self.iam.policy_delete(policy_name)
         policy_document =  {    "Version": "2012-10-17",
-                                "Statement": [ {
-                                                    "Sid": "VisualEditor0",
-                                                    "Effect": "Allow",
-                                                    "Action": "lambda:InvokeFunction",
-                                                    "Resource": "arn:aws:lambda:*:*:function:*" }]}
+                                "Statement": [ { "Effect": "Allow",
+                                                 "Action": "lambda:InvokeFunction",
+                                                 "Resource": "arn:aws:lambda:*:*:function:*" }]}
         assert self.iam.policy_create(policy_name, policy_document).get('status') == 'ok'
         assert self.iam.policy_info('test_policy').get('PolicyName') == 'test_policy'
+
+        assert self.iam.policy_details(policy_name).get('Document') == policy_document
+
         assert self.iam.policy_delete(policy_name) is True
 
     def test_policy_info(self):

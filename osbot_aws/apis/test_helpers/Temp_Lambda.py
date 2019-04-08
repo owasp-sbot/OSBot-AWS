@@ -18,6 +18,7 @@ class Temp_Lambda:
         self.temp_lambda  = Lambda(self.name)
         self.tmp_folder   = Temp_Folder_Code(self.name)
         self.role_arn     = Temp_Aws_Roles().for_lambda_invocation()
+        self.create_log   = None
 
     def __enter__(self):
         (
@@ -28,12 +29,18 @@ class Temp_Lambda:
                             .set_trace_mode ('PassThrough'          )
         )
         self.temp_lambda.upload()
-        self.temp_lambda.create()
+        self.create_log = self.temp_lambda.create()
         assert self.temp_lambda.exists() == True
         return self
 
     def __exit__(self, type, value, traceback):
         assert self.temp_lambda.delete() is True
+
+    def invoke(self, params={}):
+        return self.temp_lambda.invoke(params)
+
+    def invoke_raw(self, params={}):
+        return self.temp_lambda.invoke_raw(params)
 
 class Temp_Folder_Code:
     def __init__(self, file_name):
