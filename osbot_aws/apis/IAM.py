@@ -1,20 +1,32 @@
 import json
 
 import boto3
+from pbx_gs_python_utils.utils.Dev import Dev
 from pbx_gs_python_utils.utils.Misc import Misc
 
 
 class IAM:
 
     def __init__(self, user_name=None, role_name=None):
-        self._iam      = None
-        self.user_name = user_name
-        self.role_name = role_name
+        self._iam        = None
+        self._account_id = None
+        self.user_name   = user_name
+        self.role_name   = role_name
 
+    # helpers
     def iam(self):
         if self._iam is None:
             self._iam = boto3.client('iam')
         return self._iam
+
+    def account_id(self):
+        if self._account_id is None:
+            sts = boto3.client('sts')
+            called_indentity = sts.get_caller_identity()
+            self._account_id = called_indentity.get('Account')
+        return self._account_id
+
+    # main method
 
     def get_data(self, method, field_id, use_paginator, **kwargs):
         paginator = self.iam().get_paginator(method)
@@ -24,52 +36,70 @@ class IAM:
             if use_paginator is False:
                 return
 
-    def account_id(self):
-        sts = boto3.client('sts')
-        account_id = sts.get_caller_identity()
-        return account_id.get('Account')
+
 
     def groups(self):
         return list(self.get_data('list_groups', 'Groups', True))
 
-    def policy_arn(self, policy_name):
-        return 'arn:aws:iam::{0}:policy/{1}'.format(self.account_id(), policy_name)
+    def policy_arn(self, policy_name, policy_path='/',account_id=None):
+        if policy_name is None: return policy_name
+        if account_id is None: account_id = self.account_id()
+        if policy_path is None or policy_path == '/':
+            return 'arn:aws:iam::{0}:policy/{1}'.format(account_id, policy_name)
+        return 'arn:aws:iam::{0}:policy{1}/{2}' .format(account_id, policy_path, policy_name)
 
-    def policy_create(self, policy_name, policy_document):
-        if self.policy_exists(policy_name) is False:
+    def policy_create(self, policy_name, policy_document, policy_path='/', account_id=None):
+        policy_arn = self.policy_arn(policy_name, policy_path,account_id)
+        if self.policy_exists(policy_arn) is False:
             if type(policy_document) is not str:
                 policy_document = json.dumps(policy_document)
             try:
                 data       = self.iam().create_policy(PolicyName=policy_name, PolicyDocument=policy_document).get('Policy')
                 policy_arn = data.get('Arn')
-                return {'status': 'ok'     , 'policy_name': policy_name, 'policy_arn': policy_arn                  , 'data': data                    }
+                return {'status': 'ok'     , 'policy_name': policy_name, 'policy_arn': policy_arn                  , 'data': data                     }
             except Exception as error:
-                return {'status': 'error'  , 'policy_name': policy_name, 'policy_arn': None                        , 'data': '{0}'.format(error)     }
-        return {        'status': 'warning', 'policy_name': policy_name, 'policy_arn': self.policy_arn(policy_name), 'data': 'policy already existed'}
+                return {'status': 'error'  , 'policy_name': policy_name, 'policy_arn': None                        , 'data': '{0}'.format(error)      }
+        return {        'status': 'warning', 'policy_name': policy_name, 'policy_arn': policy_arn                  , 'data': 'policy already existed' }
 
-    def policy_delete(self, policy_name):
-        if self.policy_exists(policy_name) is False: return False
-        self.iam().delete_policy(PolicyArn= self.policy_arn(policy_name))
-        return self.policy_exists(policy_name) is False
+    def policy_delete(self, policy_arn):
+        if self.policy_exists(policy_arn) is False: return False
+        self.iam().delete_policy(PolicyArn= policy_arn)
+        return self.policy_exists(policy_arn) is False
 
-    def policy_info(self, policy_name):
+    def policy_delete_by_name(self, policy_name, policy_path='/',account_id=None):
+        policy_arn = self.policy_arn(policy_name,policy_path,account_id)
+        if self.policy_exists(policy_arn) is False: return False
+        self.iam().delete_policy(PolicyArn= policy_arn)
+        return self.policy_exists(policy_arn) is False
+
+    def policy_info(self, policy_arn):
         try:
-            return self.iam().get_policy(PolicyArn=self.policy_arn(policy_name)).get('Policy')
+            return self.iam().get_policy(PolicyArn=policy_arn).get('Policy')
         except:
             return None
 
-    def policy_details(self, policy_name):
+    def policy_details(self, policy_arn):
         try:
-            policy_info    = self.policy_info(policy_name)
+            policy_info    = self.policy_info(policy_arn)
             if policy_info:
                 policy_arn     = policy_info.get('Arn')
-                policy_version = policy_info.get('DefaultVersionId')
-                return self.iam().get_policy_version(PolicyArn=policy_arn, VersionId=policy_version).get('PolicyVersion')
+                version_id     = policy_info.get('DefaultVersionId')
+                policy_version = self.iam().get_policy_version(PolicyArn=policy_arn, VersionId=version_id).get('PolicyVersion')
+                return {'policy_arn': policy_arn, 'policy_name': policy_info.get('PolicyName'), 'policy_info' : policy_info, 'policy_version': policy_version}
         except:
             return None
 
-    def policy_exists(self, policy_name):
-        return self.policy_info(policy_name) is not None
+    def policy_statement(self, policy_arn):
+        policy_details = self.policy_details(policy_arn)
+        if policy_details:
+            return policy_details.get('policy_version').get('Document').get('Statement')
+
+    def policy_exists(self, policy_arn):
+        return self.policy_info(policy_arn) is not None
+
+    def policy_exists_by_name(self, policy_name, policy_path='/', account_id=None):
+        calculated_policy_arn = self.policy_arn(policy_name, policy_path, account_id)   # since there doesn't seem to be a way to search for a policy by name
+        return self.policy_info(calculated_policy_arn) is not None
 
     def policies(self):
         return list(self.get_data('list_policies', 'Policies', True))
@@ -130,6 +160,15 @@ class IAM:
             policies[item.get('PolicyName')] = item.get('PolicyArn')
         return policies
 
+    def role_policies_statements(self):
+        policy_statments = {}
+        for policy_name, policy_arn in self.role_policies().items():
+            policy_statments[policy_name] = self.policy_statement(policy_arn)
+            # Dev.pprint(policy_name)
+            # Dev.pprint(self.policy_details(policy_arn))
+        return policy_statments
+            #Dev.pprint(policy_name, policy_arn)
+
     def roles(self):
         return list(self.get_data('list_roles', 'Roles', True))
 
@@ -154,10 +193,6 @@ class IAM:
         self.iam().delete_user(UserName=self.user_name)
         return self.user_exists() is False
 
-    def set_user_name(self,user_name):
-        self.user_name = user_name
-        return self
-
-    def set_role_name(self, role_name):
-        self.role_name = role_name
-        return self
+    def set_account_id(self, value): self._account_id = value ;return self
+    def set_user_name (self, value): self.user_name   = value ;return self
+    def set_role_name (self, value): self.role_name   = value; return self

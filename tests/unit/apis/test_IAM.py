@@ -16,10 +16,14 @@ policy_document  = {'Statement': [ { 'Action': 'sts:AssumeRole',
                                                  'Effect': 'Allow',
                                                  'Principal': { 'Service': 'codebuild.amazonaws.com'}}]}
 
+
 class Test_IAM(TestCase):
 
     @classmethod
     def setUpClass(cls):
+        import warnings
+        warnings.filterwarnings("ignore", category=ResourceWarning, message="unclosed.*<ssl.SSLSocket.*>")
+
         iam = IAM(user_name=test_user, role_name=test_role)
         if iam.user_exists() is False:
             iam.user_create()
@@ -37,28 +41,55 @@ class Test_IAM(TestCase):
             assert iam.role_arn()    is None
 
     def setUp(self):
+        import warnings
+        warnings.filterwarnings("ignore", category=ResourceWarning, message="unclosed.*<ssl.SSLSocket.*>")
         self.iam = IAM(user_name=test_user,role_name=test_role )
 
     def test_groups(self):
         assert len(self.iam.groups()) > 5
 
-    @unittest.skip
     def test_policies(self):
         assert len(self.iam.policies())  > 500
 
+    def test_policy_arn(self):
+        #account_id = self.iam.account_id()
+        assert self.iam.policy_arn('aaa'          ) == 'arn:aws:iam::{0}:policy/aaa'    .format(account_id)
+        assert self.iam.policy_arn('aaa/bbb'      ) == 'arn:aws:iam::{0}:policy/aaa/bbb'.format(account_id)
+        assert self.iam.policy_arn('aa','/bb'     ) == 'arn:aws:iam::{0}:policy/bb/aa'  .format(account_id)
+        assert self.iam.policy_arn('aa','/bb','cc') == 'arn:aws:iam::cc:policy/bb/aa'
+        assert self.iam.policy_arn(None)      is None
+
+        self.iam.set_account_id('12345')
+        assert self.iam.policy_arn('aaa'    ) == 'arn:aws:iam::{0}:policy/aaa'    .format('12345')
+
     def test_policy_create__policy_delete__policy_details(self):
         policy_name     = 'test_policy'
-        self.iam.policy_delete(policy_name)
-        policy_document =  {    "Version": "2012-10-17",
-                                "Statement": [ { "Effect": "Allow",
-                                                 "Action": "lambda:InvokeFunction",
-                                                 "Resource": "arn:aws:lambda:*:*:function:*" }]}
-        assert self.iam.policy_create(policy_name, policy_document).get('status') == 'ok'
-        assert self.iam.policy_info('test_policy').get('PolicyName') == 'test_policy'
+        self.iam.policy_delete_by_name(policy_name)
+        new_policy_document =  {    "Version": "2012-10-17",
+                                    "Statement": [ { "Effect": "Allow",
+                                                     "Action": "lambda:InvokeFunction",
+                                                     "Resource": "arn:aws:lambda:*:*:function:*" }]}
+        result              = self.iam.policy_create(policy_name, new_policy_document)
+        expected_policy_arn = self.iam.policy_arn(policy_name)
 
-        assert self.iam.policy_details(policy_name).get('Document') == policy_document
+        status     = result.get('status')
+        policy_arn = result.get('policy_arn')
 
-        assert self.iam.policy_delete(policy_name) is True
+        assert status     == 'ok'
+        assert policy_arn == expected_policy_arn
+
+        assert self.iam.policy_info   (policy_arn).get('PolicyName'        ) == 'test_policy'
+        assert self.iam.policy_details(policy_arn).get('policy_version').get('Document') == new_policy_document
+
+        assert self.iam.policy_delete(policy_arn) is True
+
+
+    def test_policy_name_exists(self):
+        assert self.iam.policy_exists_by_name('aaa'                                        ) is False
+        assert self.iam.policy_exists_by_name('AWSBatchServiceRole'                        ) is False
+        assert self.iam.policy_exists_by_name('AWSBatchServiceRole','/service-role'        ) is False
+        assert self.iam.policy_exists_by_name('AWSBatchServiceRole', '/service-role', 'aws') is True
+
 
     def test_policy_info(self):
         assert self.iam.policy_info('AAAAAA') is None
@@ -105,6 +136,11 @@ class Test_IAM(TestCase):
         policies = self.iam.role_policies()
         assert len(set(policies)) == 0
 
+    def test_role_policies(self):
+        iam = IAM(role_name='AWSBatchServiceRole')
+        assert iam.role_policies() == {'AWSBatchServiceRole': 'arn:aws:iam::aws:policy/service-role/AWSBatchServiceRole'}
+        assert len(iam.role_policies_statements().get('AWSBatchServiceRole')[0].get('Action')) == 59
+
     def test_role_policies_attach__role_policies_detach(self):
         policy_name = 'test_policy'
         policy_document = {"Version": "2012-10-17",                                     # refactor this with policy helper
@@ -118,9 +154,9 @@ class Test_IAM(TestCase):
         assert list(self.iam.role_policies())      == ['test_policy']
         self.iam.role_policy_detach(policy_arn)
 
-        assert self.iam.policy_exists(policy_name) is True
-        assert self.iam.policy_delete(policy_name) is True          # this will not delete a policy that is attached
-        assert self.iam.policy_exists(policy_name) is False
+        assert self.iam.policy_exists(policy_arn) is True
+        assert self.iam.policy_delete(policy_arn) is True          # this will not delete a policy that is attached
+        assert self.iam.policy_exists(policy_arn) is False
 
     def test_roles(self):
         assert len(self.iam.roles())  > 70
