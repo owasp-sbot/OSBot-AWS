@@ -34,7 +34,7 @@ class test_IAM_Policy(TestCase):
         result = self.iam_policy.create()
         assert result.get('status') == 'ok'
 
-        Dev.pprint(self.iam_policy.iam.policy_info(policy_name))
+        #Dev.pprint(self.iam_policy.iam.policy_info(policy_name))
 
 
     def test_statement(self):

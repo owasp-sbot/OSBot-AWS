@@ -11,7 +11,8 @@ class test_Lambdas_Creation(TestCase):
 
     def test_lambdas_cloud_watch_logs(self):
         with Temp_Lambda() as _:
-            Dev.pprint(_.create_log)
+            pass
+            #Dev.pprint(_.create_log)
             #result = _.invoke_raw()
             #Dev.pprint(result)
 
