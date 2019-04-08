@@ -2,6 +2,8 @@ import unittest
 from pbx_gs_python_utils.utils.Assert        import Assert
 from pbx_gs_python_utils.utils.Dev import Dev
 from pbx_gs_python_utils.utils.Files         import Files
+from pbx_gs_python_utils.utils.Misc import Misc
+
 from osbot_aws.apis.Lambda                   import Lambda
 from osbot_aws.apis.test_helpers.Temp_Lambda import Temp_Folder_Code, Temp_Lambda
 from osbot_aws.helpers.IAM_Role              import IAM_Role
@@ -80,7 +82,7 @@ class Test_Lambda(unittest.TestCase):
 
     def test_invoke_raw(self):
         with Temp_Lambda() as temp_lambda:
-            result   = temp_lambda.lambdas.invoke_raw({'name' : temp_lambda.name})
+            result   = temp_lambda.temp_lambda.invoke_raw({'name' : temp_lambda.name})
             data     = result.get('data')
             name     = result.get('name')
             status   = result.get('status')
@@ -92,8 +94,21 @@ class Test_Lambda(unittest.TestCase):
 
     def test_invoke(self):
         with Temp_Lambda() as temp_lambda:
-            result = temp_lambda.lambdas.invoke({'name': temp_lambda.name})
-            Dev.pprint(result,temp_lambda.name)
+            result = temp_lambda.temp_lambda.invoke({'name': temp_lambda.name})
+            assert result == 'hello {0}'.format(temp_lambda.name)
+
+    def test_udpdate(self):
+        with Temp_Lambda() as temp_lambda:
+            tmp_text = Misc.random_string_and_numbers(prefix='updated code ')
+            temp_lambda.tmp_folder.create_temp_file('def run(event, context): return "{0}"'.format(tmp_text))
+
+            result = temp_lambda.temp_lambda.update()
+            status = result.get('status')
+            data   = result.get('data')
+
+            assert set(data) == { 'CodeSha256', 'CodeSize', 'Description', 'FunctionArn', 'FunctionName', 'Handler', 'LastModified', 'MemorySize', 'ResponseMetadata', 'RevisionId', 'Role', 'Runtime', 'Timeout', 'TracingConfig', 'Version'}
+            assert status    == 'ok'
+            assert temp_lambda.temp_lambda.invoke() == tmp_text
 
     def test_upload(self):
         tmp_folder = Temp_Folder_Code(lambda_name)

@@ -14,41 +14,41 @@ tmp_s3_key    =  'unit_tests/lambdas/{0}.zip'.format(lambda_name)
 
 class Temp_Lambda:
     def __init__(self):
-        self.name       = "temp_lambda_{0}".format(Misc.random_string_and_numbers())
-        self.lambdas    = Lambda(self.name)
-        self.tmp_folder = Temp_Folder_Code(self.name)
-        self.role_arn   = Temp_Aws_Roles().for_lambda_invocation()
+        self.name         = "temp_lambda_{0}".format(Misc.random_string_and_numbers())
+        self.temp_lambda  = Lambda(self.name)
+        self.tmp_folder   = Temp_Folder_Code(self.name)
+        self.role_arn     = Temp_Aws_Roles().for_lambda_invocation()
 
     def __enter__(self):
         (
-            self.lambdas.set_role       (self.role_arn          )
-                        .set_s3_bucket  (tmp_s3_bucket          )
-                        .set_s3_key     (tmp_s3_key             )
-                        .set_folder_code(self.tmp_folder.folder )
-                        .set_trace_mode ('PassThrough'          )
+            self.temp_lambda.set_role       (self.role_arn)
+                            .set_s3_bucket  (tmp_s3_bucket          )
+                            .set_s3_key     (tmp_s3_key             )
+                            .set_folder_code(self.tmp_folder.folder )
+                            .set_trace_mode ('PassThrough'          )
         )
-        self.lambdas.upload()
-        self.lambdas.create()
-        assert self.lambdas.exists() == True
+        self.temp_lambda.upload()
+        self.temp_lambda.create()
+        assert self.temp_lambda.exists() == True
         return self
 
     def __exit__(self, type, value, traceback):
-        assert self.lambdas.delete() is True
+        assert self.temp_lambda.delete() is True
 
 class Temp_Folder_Code:
     def __init__(self, file_name):
-        self.file_name = file_name
-        self.s3        = S3()
-        self.folder    = Files.temp_folder('tmp_lambda_')
-        self.lambda_code   = """def run(event, context):
-                                    return 'hello {0}'.format(event.get('name'))"""
+        self.file_name    = file_name
+        self.s3           = S3()
+        self.folder       = Files.temp_folder('tmp_lambda_')
+        self.lambda_code = "def run(event, context): return 'hello {0}'.format(event.get('name'))"
+        self.tmp_file     = None
         self.create_temp_file()
 
-    def create_temp_file(self):
-        tmp_file = Files.path_combine(self.folder, '{0}.py'.format(self.file_name))
-        Files.write(tmp_file, self.lambda_code)
-        assert Files.exists(tmp_file)
-        #assert self.s3_file_exists() is False
+    def create_temp_file(self, new_code=None):
+        if new_code: self.lambda_code = new_code
+        self.tmp_file = Files.path_combine(self.folder, '{0}.py'.format(self.file_name))
+        Files.write(self.tmp_file, self.lambda_code)
+        assert Files.exists(self.tmp_file)
         return self
 
     def s3_file_exists(self):

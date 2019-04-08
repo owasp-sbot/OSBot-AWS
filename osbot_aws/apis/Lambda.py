@@ -193,11 +193,15 @@ class Lambda:
             return self.upload().create()
 
         self.upload()
-        return self.aws_lambda.update_function_code(FunctionName= self.name     ,
-                                                    S3Bucket    = self.s3_bucket,
-                                                    S3Key       = self.s3_key   )
+        try:
+            result = self.boto_lambda().update_function_code(FunctionName= self.name     ,
+                                                             S3Bucket    = self.s3_bucket,
+                                                             S3Key       = self.s3_key   )
+            return {'status': 'ok'    , 'name': self.name, 'data': result             }
 
-        return self
+        except Exception as error:
+            return { 'status': 'error', 'name': self.name, 'data': '{0}'.format(error)}
+
 
     def update_with_lib(self):
         src_tmp     = '/tmp/src_{0}'.format(self.original_name.split('.').pop())  # there were a couple issues with long folder names
