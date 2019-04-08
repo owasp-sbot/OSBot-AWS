@@ -40,10 +40,20 @@ class Logs(Boto_Helpers):
         return groups
 
     def stream_create(self):
-        return self.logs().create_log_stream(logGroupName=self.log_group_name, logStreamName= self.stream_name)
+        if self.stream_exists() is True: return False
+        self.logs().create_log_stream(logGroupName=self.log_group_name, logStreamName= self.stream_name)
+        return self.stream_exists()
+
+    def stream_delete(self):
+        if self.stream_exists() is False: return False
+        self.logs().delete_log_stream(logGroupName=self.log_group_name, logStreamName= self.stream_name)
+        return self.stream_exists() is False
+
+    def stream_exists(self):
+        return len(self.streams()) > 0
 
     def streams(self):
-        return self.logs().describe_log_streams(logGroupName=self.log_group_name)
+        return self.logs().describe_log_streams(logGroupName=self.log_group_name, logStreamNamePrefix=self.stream_name).get('logStreams')
 
     def get_messages(self,group_name, stream_name):
         messages = []
