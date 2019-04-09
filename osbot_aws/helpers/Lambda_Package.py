@@ -40,6 +40,7 @@ class Lambda_Package:
     def add_folder(self, source):
         destination = Files.path_combine(self.tmp_folder,Files.file_name(source))
         Temp_Files.folder_copy(source, destination)
+        self.remove_files('__pycache__')
 
     def get_files(self):
         all_files = []
@@ -49,6 +50,11 @@ class Lambda_Package:
                 all_files.append(file_path)
         return all_files
 
+    def remove_files(self,pattern):
+        for file in self.get_files():
+            if pattern in file:
+                file_to_delete = Files.path_combine(self.tmp_folder,file[1:])
+                Files.delete(file_to_delete)
 
     def use_lambda_file(self,lambda_file):
         file_path = Files.path_combine(self.get_root_folder(), lambda_file)

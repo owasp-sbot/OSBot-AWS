@@ -26,7 +26,9 @@ class test_Lambda_Package(TestCase):
 
     def test_add_folder(self):
         self.package.add_folder(self.package.get_root_folder())
-        Dev.pprint(self.package.get_files())
+        self.package._lambda.handler='osbot_aws.lambdas.dev.check_aws_api.run'
+        self.package.update()
+        assert self.package.invoke() == "checking aws api: <class 'osbot_aws._tmp_utils.Temp_Misc.Temp_Misc'>"
 
 
     def test_get_root_folder(self):
