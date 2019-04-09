@@ -1,5 +1,6 @@
 from osbot_aws.apis.Lambda import Lambda
 from osbot_aws.apis.test_helpers.Temp_Aws_Roles import Temp_Aws_Roles
+from osbot_aws.apis.test_helpers.Temp_Lambda import Temp_Folder_Code
 
 
 class Lambda_Package:
@@ -18,3 +19,8 @@ class Lambda_Package:
 
     def delete(self):
         return self._lambda.delete()
+
+    def use_temp_folder_code(self):
+        tmp_folder = Temp_Folder_Code(self.lambda_name)
+        self._lambda.set_folder_code(tmp_folder.folder)
+        return tmp_folder

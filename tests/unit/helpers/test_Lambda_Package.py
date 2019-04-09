@@ -22,10 +22,7 @@ class test_Lambda_Package(TestCase):
         assert type(self.package._lambda).__name__ == 'Lambda'
 
     def test_with_temp_folder(self):
-        self.tmp_folder = Temp_Folder_Code(self.lambda_name)
-        self.package._lambda.set_folder_code(self.tmp_folder.folder )
-        self.package._lambda.upload()
-        self.package.create()
-        assert self.package._lambda.exists() is True
-
-        Dev.pprint(self.package._lambda.invoke())
+        self.package.use_temp_folder_code()
+        #Dev.pprint(self.package._lambda.update())
+        assert self.package._lambda.update().get('status') == 'ok'
+        #assert self.package._lambda.invoke() == 'hello None'

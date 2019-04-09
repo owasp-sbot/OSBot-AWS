@@ -194,7 +194,8 @@ class Lambda:
 
     def update(self):
         if self.exists() is False:
-            return self.upload().create()
+            self.upload()
+            return self.create()
 
         self.upload()
         try:
