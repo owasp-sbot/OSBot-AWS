@@ -166,7 +166,7 @@ class Lambda:
 
     def invoke_async(self, payload = None):
         if payload is None: payload = {}
-        return self.aws.lambda_invoke_function_async(self.name, payload)
+        return self.boto_lambda().invoke(FunctionName=self.name, Payload=json.dumps(payload), InvocationType='Event')
 
     def set_role                (self, value): self.role        = value    ; return self
     def set_s3_bucket           (self, value): self.s3_bucket   = value    ; return self

@@ -96,6 +96,11 @@ class Test_Lambda(unittest.TestCase):
             result = temp_lambda.temp_lambda.invoke({'name': temp_lambda.name})
             assert result == 'hello {0}'.format(temp_lambda.name)
 
+    def test_invoke_async(self):
+        with Temp_Lambda() as temp_lambda:
+            result = temp_lambda.temp_lambda.invoke_async({'name': temp_lambda.name})
+            assert result.get('StatusCode') == 202
+
     def test_update(self):
         with Temp_Lambda() as temp_lambda:
             tmp_text = Misc.random_string_and_numbers(prefix='updated code ')

@@ -40,8 +40,8 @@ class Aws_Cli:
 
         #
 
-    def lambda_invoke_function_async(self, name, payload                                                        ):
-        return  self.aws_lambda.invoke(FunctionName=name, Payload = json.dumps(payload), InvocationType='Event')
+    # def lambda_invoke_function_async(self, name, payload                                                        ):
+    #     return  self.aws_lambda.invoke(FunctionName=name, Payload = json.dumps(payload), InvocationType='Event')
 
     def lambda_update_function      (self, name, s3_bucket,s3_key                                               ):
         return self.aws_lambda.update_function_code(FunctionName = name,
