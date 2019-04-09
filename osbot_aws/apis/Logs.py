@@ -1,4 +1,10 @@
+import calendar
+import datetime
+import time
+
 import boto3
+import botocore
+from pbx_gs_python_utils.utils.Dev import Dev
 
 from osbot_aws.apis.Boto_Helpers import Boto_Helpers
 
@@ -9,10 +15,37 @@ class Logs(Boto_Helpers):
         self.stream_name    = stream_name
         self._logs          = None
 
+    # helper methods
     def logs(self):
         if self._logs is None:
             self._logs = boto3.client('logs')
         return self._logs
+
+    def timestamp_utc_now(self):        # bug: this is not working 100% (I'm getting 1h early)
+        #calendar.timegm(time.gmtime())
+        return int(datetime.datetime.utcnow().strftime('%s')) * 1000
+
+    # main methods
+    def event_add(self, message, timestamp=None, sequence_token=None):
+        if timestamp is None: timestamp = self.timestamp_utc_now()
+        return self.events_add([{'message': message, 'timestamp':timestamp}], sequence_token)
+
+    def events_add(self, events, sequence_token=None):
+        try:
+            if sequence_token:
+                result  = self.logs().put_log_events(logGroupName=self.log_group_name,logStreamName=self.stream_name,logEvents=events, sequenceToken=sequence_token)
+            else:
+                result  = self.logs().put_log_events(logGroupName=self.log_group_name,logStreamName=self.stream_name,logEvents=events)
+            nextSequenceToken = result.get('nextSequenceToken')
+            if result.get('rejectedLogEventsInfo') is not None:
+                return {'status': 'error', 'nextSequenceToken' : nextSequenceToken, 'data': result.get('rejectedLogEventsInfo')}
+            return {'status': 'ok', 'nextSequenceToken' : nextSequenceToken}
+        except Exception as error:
+            return {'status': 'error', 'data': '{0}'.format(error)}
+
+
+    def events(self):
+        return self.logs().get_log_events(logGroupName=self.log_group_name, logStreamName=self.stream_name).get('events')
 
     def group_create(self):
         if self.group_exists(): return True
@@ -55,8 +88,8 @@ class Logs(Boto_Helpers):
     def streams(self):
         return self.logs().describe_log_streams(logGroupName=self.log_group_name, logStreamNamePrefix=self.stream_name).get('logStreams')
 
-    def get_messages(self,group_name, stream_name):
+    def messages(self):
         messages = []
-        for event in self.logs().get_log_events(logGroupName=group_name, logStreamName=stream_name).get('events'):
+        for event in self.logs().get_log_events(logGroupName=self.log_group_name, logStreamName=self.stream_name).get('events'):
             messages.append(event.get('message'))
         return messages
