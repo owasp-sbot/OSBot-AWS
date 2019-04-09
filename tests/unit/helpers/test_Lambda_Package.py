@@ -1,5 +1,7 @@
+import sys ; sys.path.append('..')
 from unittest import TestCase
 
+from pbx_gs_python_utils.utils.Assert import Assert
 from pbx_gs_python_utils.utils.Dev import Dev
 from pbx_gs_python_utils.utils.Files import Files
 from pbx_gs_python_utils.utils.Misc import Misc
@@ -23,7 +25,9 @@ class test_Lambda_Package(TestCase):
         assert type(self.package._lambda).__name__ == 'Lambda'
 
     def test_add_folder(self):
-        assert Files.exists(self.package.get_root_folder())
+        self.package.add_folder(self.package.get_root_folder())
+
+
 
     def test_get_root_folder(self):
         assert self.package.get_root_folder().endswith('osbot_aws') is True
@@ -35,6 +39,11 @@ class test_Lambda_Package(TestCase):
 
     def test_use_lambda_file(self):
         assert self.package.use_lambda_file('lambdas/dev/hello_world.py').get('status') == 'ok'
+
+        files = self.package.get_files()
+        assert len(files) == 1
+        assert Files.file_name(files.pop()) == '{0}.py'.format(self.package.lambda_name)
+
         assert self.package.update().get('status') == 'ok'
         assert self.package.invoke({'name':'world'}) == 'From lambda code, hello world'
 

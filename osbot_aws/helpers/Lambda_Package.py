@@ -34,8 +34,11 @@ class Lambda_Package:
 
     # main methods
 
-    #def add_folder(self, folder):
+    def add_folder(self, folder):
+        pass
 
+    def get_files(self):
+        return Files.find('{0}/**.*'.format(self.tmp_folder))
 
     def use_lambda_file(self,lambda_file):
         file_path = Files.path_combine(self.get_root_folder(), lambda_file)
