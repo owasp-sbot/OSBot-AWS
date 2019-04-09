@@ -20,7 +20,7 @@ class test_Lambdas_Creation(TestCase):
             assert logs.group_exists() is True
             logs.stream_name  = logs.streams()[0].get('logStreamName')
 
-            sleep(0.5)                      # wait for logs to be updated
+            sleep(1.0)                      # wait for logs to be updated (0.5 has failed in CodeBuild)
             messages = logs.messages()
             assert len(messages) > 0
             assert 'START RequestId: ' in messages.pop()
