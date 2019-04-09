@@ -20,14 +20,22 @@ class Lambda_Package:
                      .set_role       (self.role_arn     )
                      .set_folder_code(self.tmp_folder  ))
 
+    # helper methods
+    @staticmethod
+    def get_root_folder():
+        return Files.path_combine(__file__, '../..')
+
+    # Lambda class wrappers
+
     def create(self             ): return self._lambda.create()
     def delete(self             ): return self._lambda.delete()
     def invoke(self, params=None): return self._lambda.invoke(params)
     def update(self             ): return self._lambda.update()
 
-    @staticmethod
-    def get_root_folder():
-        return Files.path_combine(__file__,'../..')
+    # main methods
+
+    #def add_folder(self, folder):
+
 
     def use_lambda_file(self,lambda_file):
         file_path = Files.path_combine(self.get_root_folder(), lambda_file)
@@ -39,7 +47,7 @@ class Lambda_Package:
 
         return  { 'status': 'ok', 'file_path': file_path, 'target_file': target_file }
 
-    def use_temp_folder_code(self):
-        self.tmp_folder = Temp_Folder_Code(self.lambda_name).folder
-        self._lambda.set_folder_code(self.tmp_folder)
-        return self
+    # def use_temp_folder_code(self):
+    #     self.tmp_folder = Temp_Folder_Code(self.lambda_name).folder
+    #     self._lambda.set_folder_code(self.tmp_folder)
+    #     return self
