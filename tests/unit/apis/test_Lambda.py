@@ -44,7 +44,6 @@ class Test_Lambda(unittest.TestCase):
                                  .set_s3_bucket  (tmp_s3_bucket    )
                                  .set_s3_key     (tmp_s3_key       )
                                  .set_folder_code(tmp_folder.folder)
-                                 .set_trace_mode ('PassThrough'    )                                                 # remove default XRays enable setting (since it requires more privs)
         )
         assert self.test_lambda.create_params() == (  lambda_name, 'python3.6'         ,
                                                       role_arn   , lambda_name + '.run',

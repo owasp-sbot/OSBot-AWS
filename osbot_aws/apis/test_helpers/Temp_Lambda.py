@@ -27,7 +27,6 @@ class Temp_Lambda:
                             .set_s3_bucket  (tmp_s3_bucket          )
                             .set_s3_key     (tmp_s3_key             )
                             .set_folder_code(self.tmp_folder.folder )
-                            .set_trace_mode ('PassThrough'          )
         )
         self.temp_lambda.upload()
         self.create_log = self.temp_lambda.create()

@@ -16,7 +16,7 @@ class Lambda:
         self.memory         = 3008
         self.timeout        = 60
         self.region_name    = 'eu-west-2'
-        self.trace_mode     = 'Active'
+        self.trace_mode     = 'PassThrough'                     # x-rays disabled
         self.original_name  = name
         self.handler        = name + '.run'
         self.name           = name.replace('.','_')
@@ -168,11 +168,12 @@ class Lambda:
         if payload is None: payload = {}
         return self.aws.lambda_invoke_function_async(self.name, payload)
 
-    def set_role                (self, value): self.role        = value ;return self
-    def set_s3_bucket           (self, value): self.s3_bucket   = value ;return self
-    def set_s3_key              (self, value): self.s3_key      = value ;return self
-    def set_folder_code         (self, value): self.folder_code = value ;return self
-    def set_trace_mode          (self, value): self.trace_mode  = value ;return self
+    def set_role                (self, value): self.role        = value    ; return self
+    def set_s3_bucket           (self, value): self.s3_bucket   = value    ; return self
+    def set_s3_key              (self, value): self.s3_key      = value    ; return self
+    def set_folder_code         (self, value): self.folder_code = value    ; return self
+    def set_trace_mode          (self, value): self.trace_mode  = value    ; return self
+    def set_xrays_on            (self       ): self.trace_mode  = 'Active' ; return self
 
     # def set_s3_bucket_and_key(self, s3_bucket, s3_key):
     #     self.set_s3_bucket(s3_bucket)

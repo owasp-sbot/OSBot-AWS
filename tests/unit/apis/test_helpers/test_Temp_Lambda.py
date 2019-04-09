@@ -8,5 +8,5 @@ class test_Temp_Lambda(TestCase):
 
     def test_simple_execution(self):
         with Temp_Lambda() as _:
-            Dev.pprint(_.temp_lambda.name)
+            assert 'temp_lambda_' in _.temp_lambda.name
             assert _.invoke() == 'hello None'
