@@ -24,6 +24,15 @@ class test_Lambda_Package(TestCase):
     def test__init__(self):
         assert type(self.package._lambda).__name__ == 'Lambda'
 
+    def test_add_file(self):
+        lambda_file = Files.path_combine(__file__,'../../../../osbot_aws/lambdas/dev/hello_world.py')
+        assert Files.exists(lambda_file)
+        self.package.add_file(lambda_file)
+        assert self.package.get_files() == ['/hello_world.py']
+        self.package._lambda.handler = 'hello_world.run'
+        self.package.update()
+        assert self.package.invoke() == 'From lambda code, hello None'
+
     def test_add_folder(self):
         self.package.add_folder(self.package.get_root_folder())
         self.package._lambda.handler='osbot_aws.lambdas.dev.check_aws_api.run'

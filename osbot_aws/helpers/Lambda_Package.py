@@ -37,6 +37,8 @@ class Lambda_Package:
     def update(self             ): return self._lambda.update()
 
     # main methods
+    def add_file(self, source):
+        Files.copy(source, self.tmp_folder)
 
     def add_folder(self, source):
         destination = Files.path_combine(self.tmp_folder,Files.file_name(source))

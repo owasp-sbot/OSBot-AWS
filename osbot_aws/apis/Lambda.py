@@ -208,24 +208,24 @@ class Lambda:
             return { 'status': 'error', 'name': self.name, 'data': '{0}'.format(error)}
 
 
-    def update_with_lib(self):
-        src_tmp     = '/tmp/src_{0}'.format(self.original_name.split('.').pop())  # there were a couple issues with long folder names
-        Files.folder_delete_all(src_tmp)
-        src_tmp_lib = '{0}/pbx_gs_python_utils'.format(src_tmp)
-        copy_tree(self.source, src_tmp_lib)
-        self.source = src_tmp
-        return self.update()
-
-    def update_with_src(self, path_to_src = None):                                   # use this when wanting to add a local folder to the lambda source code
-        src_tmp = '/tmp/src_{0}'.format(self.original_name.split('.').pop())  # there were a couple issues with long folder names
-        Files.folder_delete_all(src_tmp)
-        src_tmp_lib = '{0}/pbx_gs_python_utils'.format(src_tmp)
-        copy_tree(self.source, src_tmp_lib)
-
-        if path_to_src is None: path_to_src = Files.path_combine(__file__, '../../../../../../src')
-        copy_tree(path_to_src, src_tmp)
-        self.source = src_tmp
-        return self.update()
+    # def update_with_lib(self):
+    #     src_tmp     = '/tmp/src_{0}'.format(self.original_name.split('.').pop())  # there were a couple issues with long folder names
+    #     Files.folder_delete_all(src_tmp)
+    #     src_tmp_lib = '{0}/pbx_gs_python_utils'.format(src_tmp)
+    #     copy_tree(self.source, src_tmp_lib)
+    #     self.source = src_tmp
+    #     return self.update()
+    #
+    # def update_with_src(self, path_to_src = None):                                   # use this when wanting to add a local folder to the lambda source code
+    #     src_tmp = '/tmp/src_{0}'.format(self.original_name.split('.').pop())  # there were a couple issues with long folder names
+    #     Files.folder_delete_all(src_tmp)
+    #     src_tmp_lib = '{0}/pbx_gs_python_utils'.format(src_tmp)
+    #     copy_tree(self.source, src_tmp_lib)
+    #
+    #     if path_to_src is None: path_to_src = Files.path_combine(__file__, '../../../../../../src')
+    #     copy_tree(path_to_src, src_tmp)
+    #     self.source = src_tmp
+    #     return self.update()
 
 # def exec_string_in_lambda(lambda_code):
 #     name = 'lambda_from_string'                  # should make this a random value
