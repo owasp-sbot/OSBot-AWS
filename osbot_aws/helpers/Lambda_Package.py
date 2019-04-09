@@ -1,6 +1,9 @@
+import os
+
 from pbx_gs_python_utils.utils.Dev import Dev
 from pbx_gs_python_utils.utils.Files import Files
 
+from osbot_aws._tmp_utils.Temp_Files import Temp_Files
 from osbot_aws.apis.Lambda import Lambda
 from osbot_aws.apis.test_helpers.Temp_Aws_Roles import Temp_Aws_Roles
 from osbot_aws.apis.test_helpers.Temp_Lambda import Temp_Folder_Code
@@ -34,11 +37,18 @@ class Lambda_Package:
 
     # main methods
 
-    def add_folder(self, folder):
-        Files.copy(folder, self.tmp_folder)
+    def add_folder(self, source):
+        destination = Files.path_combine(self.tmp_folder,Files.file_name(source))
+        Temp_Files.folder_copy(source, destination)
 
     def get_files(self):
-        return Files.find('{0}/**.*'.format(self.tmp_folder))
+        all_files = []
+        for root, dirs, files in os.walk(self.tmp_folder):
+            for file in files:
+                file_path = Files.path_combine(root,file).replace(self.tmp_folder,'')
+                all_files.append(file_path)
+        return all_files
+
 
     def use_lambda_file(self,lambda_file):
         file_path = Files.path_combine(self.get_root_folder(), lambda_file)
