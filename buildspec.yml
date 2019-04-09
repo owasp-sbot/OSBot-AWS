@@ -4,5 +4,5 @@ phases:
     commands:
       - echo "**** Starting build"
       - echo "**** Running tests"
-      #- cd tests ; pytest -v -s
-      - cd tests ; pytest -v -s unit/helpers/test_Lambda_Package.py
+      - cd tests ; pytest -v -s
+      #- cd tests ; pytest -v -s unit/helpers/test_Lambda_Package.py

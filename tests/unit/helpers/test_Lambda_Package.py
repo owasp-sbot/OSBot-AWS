@@ -45,8 +45,7 @@ class test_Lambda_Package(TestCase):
         assert Files.file_name(files.pop()) == '{0}.py'.format(self.package.lambda_name)
 
         assert self.package.update().get('status') == 'ok'
-        #assert self.package.invoke({'name':'world'}) == 'From lambda code, hello world'
-        Dev.pprint(self.package.invoke({'name': 'AAAAAAAAA'}))
+        assert self.package.invoke({'name':'world'}) == 'From lambda code, hello world'
 
 
     def test_use_lambda_file__bad_file(self):
