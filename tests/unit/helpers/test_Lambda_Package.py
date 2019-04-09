@@ -30,6 +30,14 @@ class test_Lambda_Package(TestCase):
         self.package.update()
         assert self.package.invoke() == "checking aws api: <class 'osbot_aws._tmp_utils.Temp_Misc.Temp_Misc'>"
 
+    def test_add_pbx_gs_python_utils(self):
+        self.package.add_root_folder()
+        self.package.add_pbx_gs_python_utils()
+        assert len(self.package.get_files()) > 120
+        self.package._lambda.handler = 'osbot_aws.lambdas.dev.check_python_utils.run'
+        self.package.update()
+        assert 'checking python utils: /tmp' in self.package.invoke()
+
 
     def test_get_root_folder(self):
         assert self.package.get_root_folder().endswith('osbot_aws') is True

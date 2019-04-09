@@ -1,5 +1,6 @@
 import os
 
+import pbx_gs_python_utils
 from pbx_gs_python_utils.utils.Dev import Dev
 from pbx_gs_python_utils.utils.Files import Files
 
@@ -41,6 +42,16 @@ class Lambda_Package:
         destination = Files.path_combine(self.tmp_folder,Files.file_name(source))
         Temp_Files.folder_copy(source, destination)
         self.remove_files('__pycache__')
+        return self
+
+    def add_root_folder(self):
+        self.add_folder(self.get_root_folder())
+        return self
+
+    def add_pbx_gs_python_utils(self):
+        lib_path = Files.folder_name(pbx_gs_python_utils.__file__)
+        self.add_folder(lib_path)
+        return self
 
     def get_files(self):
         all_files = []
