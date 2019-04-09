@@ -1,9 +1,7 @@
-import sys ;
+import sys ; sys.path.append('..')
 from time import sleep
 
 from osbot_aws.apis.Logs import Logs
-
-sys.path.append('..')
 from unittest import TestCase
 
 from pbx_gs_python_utils.utils.Dev import Dev
