@@ -42,11 +42,6 @@ class test_Lambda_Package(TestCase):
     def test_get_root_folder(self):
         assert self.package.get_root_folder().endswith('osbot_aws') is True
 
-    # def test_use_temp_folder_code(self):
-    #     self.package.use_temp_folder_code()
-    #     assert self.package.update().get('status') == 'ok'
-    #     assert self.package.invoke() == 'hello None'
-
     def test_use_lambda_file(self):
         assert self.package.use_lambda_file('lambdas/dev/hello_world.py').get('status') == 'ok'
 

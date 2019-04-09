@@ -73,11 +73,4 @@ class Lambda_Package:
             return { 'status': 'error', 'data': 'could not find lambda file `{0}` in root folder `{1}`'.format(lambda_file, self.get_root_folder())}
         target_file = Files.path_combine(self.tmp_folder, '{0}.py'.format(self.lambda_name))
         Files.copy(file_path,target_file)
-        #Dev.pprint(__file__)
-
         return  { 'status': 'ok', 'file_path': file_path, 'target_file': target_file }
-
-    # def use_temp_folder_code(self):
-    #     self.tmp_folder = Temp_Folder_Code(self.lambda_name).folder
-    #     self._lambda.set_folder_code(self.tmp_folder)
-    #     return self
