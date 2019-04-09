@@ -6,7 +6,7 @@ from   distutils.dir_util  import copy_tree
 import boto3
 from    pbx_gs_python_utils.utils.Files         import Files
 
-from osbot_aws._tmp_utils.Temp_Misc import Temp_Misc
+from osbot_aws.tmp_utils.Temp_Misc import Temp_Misc
 from osbot_aws.apis.S3 import S3
 
 

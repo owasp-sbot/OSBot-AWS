@@ -2,7 +2,7 @@ from unittest import TestCase
 
 from pbx_gs_python_utils.utils.Dev import Dev
 
-from osbot_aws._tmp_utils.Temp_Assert import Temp_Assert
+from osbot_aws.tmp_utils.Temp_Assert import Temp_Assert
 from osbot_aws.helpers.IAM_Policy import IAM_Policy
 from osbot_aws.helpers.IAM_Role import IAM_Role
 
