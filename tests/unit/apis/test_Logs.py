@@ -32,7 +32,7 @@ class test_Logs(TestCase):
         self.logs.stream_create()
 
     def test_events(self):
-        assert self.logs.events() == []
+        assert self.logs.events().get('events') == []
         message_1 = 'an message'
         message_2 = 'another message'
         result = self.logs.event_add(message_1)
@@ -40,7 +40,7 @@ class test_Logs(TestCase):
         assert 'An error occurred (DataAlreadyAcceptedException)' in self.logs.event_add('an message').get('data')
         assert self.logs.event_add(message_2,sequence_token=result.get('nextSequenceToken')).get('status') == 'ok'
         sleep(1)                              # wait for log events to be processed
-        assert len(self.logs.events()) ==2
+        assert len(self.logs.events().get('events')) ==2
         assert self.logs.messages() == [message_1, message_2]
 
     def test_log_group_create_delete_exists_info(self):

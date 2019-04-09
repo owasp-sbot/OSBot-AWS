@@ -10,7 +10,7 @@ from osbot_aws.apis.Boto_Helpers import Boto_Helpers
 
 
 class Logs(Boto_Helpers):
-    def __init__(self,log_group_name, stream_name):
+    def __init__(self,log_group_name, stream_name=None):
         self.log_group_name = log_group_name
         self.stream_name    = stream_name
         self._logs          = None
@@ -45,7 +45,7 @@ class Logs(Boto_Helpers):
 
 
     def events(self):
-        return self.logs().get_log_events(logGroupName=self.log_group_name, logStreamName=self.stream_name).get('events')
+        return self.logs().get_log_events(logGroupName=self.log_group_name, logStreamName=self.stream_name)
 
     def group_create(self):
         if self.group_exists(): return True
@@ -86,6 +86,8 @@ class Logs(Boto_Helpers):
         return len(self.streams()) > 0
 
     def streams(self):
+        if self.stream_name is None:
+            return self.logs().describe_log_streams(logGroupName=self.log_group_name).get('logStreams')
         return self.logs().describe_log_streams(logGroupName=self.log_group_name, logStreamNamePrefix=self.stream_name).get('logStreams')
 
     def messages(self):
