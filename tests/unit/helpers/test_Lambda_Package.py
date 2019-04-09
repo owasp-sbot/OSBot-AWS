@@ -21,8 +21,21 @@ class test_Lambda_Package(TestCase):
     def test__init__(self):
         assert type(self.package._lambda).__name__ == 'Lambda'
 
-    def test_with_temp_folder(self):
+    def test_get_root_folder(self):
+        assert self.package.get_root_folder().endswith('osbot_aws') is True
+
+    def test_use_temp_folder_code(self):
         self.package.use_temp_folder_code()
-        #Dev.pprint(self.package._lambda.update())
-        assert self.package._lambda.update().get('status') == 'ok'
-        #assert self.package._lambda.invoke() == 'hello None'
+        assert self.package.update().get('status') == 'ok'
+        assert self.package.invoke() == 'hello None'
+
+    def test_use_lambda_file(self):
+        assert self.package.use_lambda_file('lambdas/dev/hello_world.py').get('status') == 'ok'
+        assert self.package.update().get('status') == 'ok'
+        assert self.package.invoke({'name':'world'}) == 'From lambda code, hello world'
+
+
+    def test_use_lambda_file__bad_file(self):
+        result = self.package.use_lambda_file('lambdas/dev/aaaaaaa')
+        assert result.get('status') == 'error'
+        assert 'could not find lambda file `lambdas/dev/aaaaaaa`' in result.get('data')

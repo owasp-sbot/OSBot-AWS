@@ -1,2 +1,2 @@
 def run(event, context):
-    return 'hello {0}'.format(event.get('name'))
+    return 'From lambda code, hello {0}'.format(event.get('name'))
