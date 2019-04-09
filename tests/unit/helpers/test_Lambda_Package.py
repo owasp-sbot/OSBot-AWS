@@ -25,8 +25,8 @@ class test_Lambda_Package(TestCase):
         assert type(self.package._lambda).__name__ == 'Lambda'
 
     def test_add_folder(self):
-        self.package.add_folder(self.package.get_root_folder())
-
+        #self.package.add_folder(self.package.get_root_folder())
+        Dev.pprint(self.package.get_files())
 
 
     def test_get_root_folder(self):

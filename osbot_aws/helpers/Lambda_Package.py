@@ -35,7 +35,7 @@ class Lambda_Package:
     # main methods
 
     def add_folder(self, folder):
-        pass
+        Files.copy(folder, self.tmp_folder)
 
     def get_files(self):
         return Files.find('{0}/**.*'.format(self.tmp_folder))

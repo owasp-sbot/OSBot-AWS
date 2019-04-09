@@ -1,3 +1,4 @@
+import unittest
 from unittest import TestCase
 
 from pbx_gs_python_utils.utils.Dev import Dev
@@ -11,6 +12,7 @@ class test_Temp_Aws_Roles(TestCase):
         self.temp_aws_roles = Temp_Aws_Roles()
         self.account_id     = '244560807427'
 
+    @unittest.skip('causes side effect with other tests, due to the fact that AWS takes a while to sync the privileges internally')
     def test_for_lambda_invocation(self):
         role_name = self.temp_aws_roles.role_name__for_lambda_invocation
         role_arn  = 'arn:aws:iam::{0}:role/{1}'.format(self.account_id, role_name)
