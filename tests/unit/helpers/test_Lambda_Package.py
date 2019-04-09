@@ -47,6 +47,8 @@ class test_Lambda_Package(TestCase):
         assert self.package.update().get('status') == 'ok'
         assert self.package.invoke({'name':'world'}) == 'From lambda code, hello world'
 
+        Dev.pprint(self.package.invoke({'name':'AAAAAAAAA'}))
+
     def test_use_lambda_file__bad_file(self):
         result = self.package.use_lambda_file('lambdas/dev/aaaaaaa')
         assert result.get('status') == 'error'
