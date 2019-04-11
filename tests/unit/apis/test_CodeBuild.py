@@ -20,7 +20,7 @@ assume_policy      = {'Statement': [ { 'Action': 'sts:AssumeRole',
                                                  'Effect': 'Allow',
                                                  'Principal': { 'Service': 'codebuild.amazonaws.com'}}]}
 
-#@unittest.skip("Needs test that create and destroy the test data")
+@unittest.skip("Needs permission change to run in CodeBuilds")
 class test_CodeBuild(TestCase):
 
     @classmethod

@@ -13,7 +13,7 @@ from osbot_aws.apis.Lambdas import Lambdas
 
 class test_Lambdas_Creation(TestCase):
 
-    @unittest.skip('Use of sleep and fails occasioanlly in CodeBuild')
+    @unittest.skip('Use of sleep and fails occasionally in CodeBuild')
     def test_lambdas_cloud_watch_logs(self):
         with Temp_Lambda() as _:
             assert _.invoke() == 'hello None'
