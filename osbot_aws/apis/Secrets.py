@@ -3,9 +3,12 @@ import json
 import boto3
 import pprint
 
+from osbot_aws.apis.Session import Session
+
+
 class Secrets:
     def __init__(self, id):
-        self.aws_secrets = boto3.client('secretsmanager')
+        self.aws_secrets = Session().client('secretsmanager')
         self.id = id
 
     def create(self, value):

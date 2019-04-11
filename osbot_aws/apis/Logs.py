@@ -7,6 +7,7 @@ import botocore
 from pbx_gs_python_utils.utils.Dev import Dev
 
 from osbot_aws.apis.Boto_Helpers import Boto_Helpers
+from osbot_aws.apis.Session import Session
 
 
 class Logs(Boto_Helpers):
@@ -18,7 +19,7 @@ class Logs(Boto_Helpers):
     # helper methods
     def logs(self):
         if self._logs is None:
-            self._logs = boto3.client('logs')
+            self._logs = Session().client('logs')
         return self._logs
 
     def timestamp_utc_now(self):        # bug: this is not working 100% (I'm getting 1h early)

@@ -20,8 +20,8 @@ assume_policy      = {'Statement': [ { 'Action': 'sts:AssumeRole',
                                                  'Effect': 'Allow',
                                                  'Principal': { 'Service': 'codebuild.amazonaws.com'}}]}
 
-@unittest.skip("Needs test that create and destroy the test data")
-class Test_CodeBuild(TestCase):
+#@unittest.skip("Needs test that create and destroy the test data")
+class test_CodeBuild(TestCase):
 
     @classmethod
     def setUpClass(cls):
@@ -59,7 +59,7 @@ class Test_CodeBuild(TestCase):
         ids = list(self.code_build.all_builds_ids(use_paginator=True))
         Assert(ids).is_bigger_than(1000)
 
-    @unittest.skip("Reduce the number of policies created and improve tests")
+    #@unittest.skip("Reduce the number of policies created and improve tests")
     def test_create_policies(self):
         policies = {
             "Download_Image"         : { "Version": "2012-10-17",

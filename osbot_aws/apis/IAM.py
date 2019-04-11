@@ -4,11 +4,14 @@ import boto3
 from pbx_gs_python_utils.utils.Dev import Dev
 from pbx_gs_python_utils.utils.Misc import Misc
 
+from osbot_aws.apis.Session import Session
+
 
 class IAM:
 
     def __init__(self, user_name=None, role_name=None):
         self._iam        = None
+        self._sts        = None
         self._account_id = None
         self.user_name   = user_name
         self.role_name   = role_name
@@ -16,17 +19,29 @@ class IAM:
     # helpers
     def iam(self):
         if self._iam is None:
-            self._iam = boto3.client('iam')
+            self._iam = Session().client('iam')
         return self._iam
+
+    def sts(self):
+        if self._sts is None:
+            self._sts = Session().client('sts')
+        return self._sts
+
+    # main method
 
     def account_id(self):
         if self._account_id is None:
-            sts = boto3.client('sts')
-            called_indentity = sts.get_caller_identity()
-            self._account_id = called_indentity.get('Account')
+            self._account_id = self.caller_identity().get('Account')
         return self._account_id
 
-    # main method
+    # def assume_role(self, role_arn,role_session_name):
+    #     data = self.sts().assume_role(RoleArn = role_arn, RoleSessionName=role_session_name)
+    #     return data
+
+    def caller_identity(self):
+        data = self.sts().get_caller_identity()
+        del data['ResponseMetadata']
+        return data
 
     def get_data(self, method, field_id, use_paginator, **kwargs):
         paginator = self.iam().get_paginator(method)
@@ -35,8 +50,6 @@ class IAM:
                 yield id
             if use_paginator is False:
                 return
-
-
 
     def groups(self):
         return list(self.get_data('list_groups', 'Groups', True))

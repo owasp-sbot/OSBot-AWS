@@ -2,9 +2,12 @@ import boto3
 import json
 import time
 
+from osbot_aws.apis.Session import Session
+
+
 class Athena:
     def __init__(self):
-        self.aws_athena = boto3.client('athena')
+        self.aws_athena = Session().client('athena')
 
     def execute_query_and_return_csv(self, query, database,s3_output):
         query_id = self.start_query(query, database, s3_output)

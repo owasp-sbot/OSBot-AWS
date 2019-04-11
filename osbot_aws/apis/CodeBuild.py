@@ -1,14 +1,17 @@
 import  boto3
 from    time                                import sleep
+
+from    osbot_aws.apis.IAM                  import IAM
 from    pbx_gs_python_utils.utils.Dev       import Dev
 from    pbx_gs_python_utils.utils.Misc      import Misc
-from    pbx_gs_python_utils.utils.aws.IAM   import IAM
+
+from osbot_aws.apis.Session import Session
 
 
 class CodeBuild:
 
     def __init__(self, project_name, role_name):
-        self.codebuild    = boto3.client('codebuild')
+        self.codebuild    = Session().client('codebuild')
         self.iam          = IAM(role_name=role_name)
         self.project_name = project_name
         return
@@ -45,21 +48,15 @@ class CodeBuild:
         return None
 
 
-    def policies_create(self, policies):
+    def policies_create(self, policies):                        # does not update, only add new ones
+        policies_arns = []
         role_policies = list(self.iam.role_policies().keys())
         for base_name, policy in policies.items():
             policy_name = "{0}_{1}".format(base_name, self.project_name)
             if policy_name in role_policies:
                 continue
-            self.policy_create(policy_name,policy)
-
-
-    def policy_create(self, policy_name,policy):
-        if self.iam.policy_info(policy_name) is None:
-            self.iam.policy_create(policy_name, policy)
-        policy_arn = self.iam.policy_info(policy_name).get('Arn')
-        self.iam.role_policies_attach(policy_arn)
-        return policy_arn
+            policies_arns.append(self.iam.policy_create(policy_name,policy).get('policy_arn'))
+        return policies_arns
 
     def project_builds(self,ids):
         return self.codebuild.batch_get_builds(ids=ids)

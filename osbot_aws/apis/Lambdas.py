@@ -1,6 +1,7 @@
 import boto3
 
 from osbot_aws.apis.Boto_Helpers import Boto_Helpers
+from osbot_aws.apis.Session import Session
 
 
 class Lambdas(Boto_Helpers):
@@ -10,7 +11,7 @@ class Lambdas(Boto_Helpers):
 
     def boto_lambda(self):
         if self._boto_lambda is None:
-            self._boto_lambda = boto3.client('lambda', region_name=self.region_name)
+            self._boto_lambda = Session().client('lambda')
         return self._boto_lambda
 
     def list(self):

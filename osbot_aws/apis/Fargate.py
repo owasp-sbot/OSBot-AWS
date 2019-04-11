@@ -6,12 +6,13 @@ from pbx_gs_python_utils.utils.Dev import Dev
 
 from osbot_aws.apis.Cloud_Watch import Cloud_Watch
 from osbot_aws.apis.IAM import IAM
+from osbot_aws.apis.Session import Session
 
 
 class Fargate:
 
     def __init__(self,account_id):
-        self.ecs        = boto3.client('ecs')
+        self.ecs        = Session().client('ecs')
         self.account_id = account_id
 
     def cluster_create(self, cluster_name):

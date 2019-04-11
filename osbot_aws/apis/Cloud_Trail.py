@@ -5,12 +5,13 @@ import boto3
 from pbx_gs_python_utils.utils.Dev import Dev
 
 from osbot_aws.apis.Boto_Helpers import Boto_Helpers
+from osbot_aws.apis.Session import Session
 
 
 class Cloud_Trail(Boto_Helpers):
 
     def __init__(self):
-        self.cloudtrail = boto3.client('cloudtrail')
+        self.cloudtrail = Session().client('cloudtrail')
 
     def events(self):
         endtime = datetime.datetime.utcnow()

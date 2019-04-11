@@ -2,10 +2,12 @@ import unittest
 from time import sleep
 from unittest import TestCase
 
+from osbot_aws.apis.IAM import IAM
+
+from osbot_aws.apis.CodeBuild import CodeBuild
 from pbx_gs_python_utils.utils.Assert        import Assert
 from pbx_gs_python_utils.utils.Dev           import Dev
-from pbx_gs_python_utils.utils.aws.CodeBuild import CodeBuild
-from pbx_gs_python_utils.utils.aws.IAM       import IAM
+
 
 
 class Create_Code_Build:

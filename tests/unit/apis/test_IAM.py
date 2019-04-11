@@ -1,3 +1,4 @@
+import sys; sys.path.append('..')
 import unittest
 from unittest import TestCase
 
@@ -5,6 +6,8 @@ from pbx_gs_python_utils.utils.Assert import Assert
 from pbx_gs_python_utils.utils.Dev import Dev
 
 from osbot_aws.apis.IAM import IAM
+from osbot_aws.Globals import Globals
+
 
 account_id       = '244560807427'
 delete_created   = True
@@ -44,6 +47,27 @@ class Test_IAM(TestCase):
         import warnings
         warnings.filterwarnings("ignore", category=ResourceWarning, message="unclosed.*<ssl.SSLSocket.*>")
         self.iam = IAM(user_name=test_user,role_name=test_role )
+
+    @unittest.skip
+    def test_account_id(self):
+        assert type(self.iam.account_id()) is str
+        account_id_1 = self.iam.account_id()
+        Globals.aws_session_profile_name='gs-detect-aws'
+        self.iam._account_id = None
+        self.iam._sts        = None
+        account_id_2 = self.iam.account_id()
+        assert account_id_1 != account_id_2
+        Globals.aws_session_profile_name = 'default'
+
+
+
+    # def test_assume_role(self):       # getting `(AccessDenied) when calling the AssumeRole operation: Access denied`
+    #     role_arn          = 'arn:aws:iam::244560807427:role/temp_role_for_lambda_invocation'  # needs to be non account_id specific
+    #     role_session_name = 'temp_role_for_test'
+    #     Dev.pprint(self.iam.assume_role(role_arn,role_session_name))
+
+    def test_caller_identity(self):
+        assert set(self.iam.caller_identity()) == {'UserId', 'Account', 'Arn'}
 
     def test_groups(self):
         assert len(self.iam.groups()) > 5

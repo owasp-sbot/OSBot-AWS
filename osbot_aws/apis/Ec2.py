@@ -1,9 +1,11 @@
 import boto3
 
+from osbot_aws.apis.Session import Session
+
 
 class Ec2:
     def __init__(self):
-        self.ec2          = boto3.client('ec2')
+        self.ec2          = Session().client('ec2')
         self.ec2_resource = boto3.resource('ec2')
 
 

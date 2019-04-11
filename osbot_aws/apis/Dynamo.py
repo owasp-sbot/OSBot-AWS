@@ -1,10 +1,13 @@
 import boto3
 from   boto3    import resource
 
+from osbot_aws.apis.Session import Session
+
+
 class Dynamo:
     def __init__(self):
         self.resource   = resource('dynamodb')
-        self.client     = boto3.client('dynamodb')
+        self.client     = Session().client('dynamodb')
 
     def create(self, table_name, key):
         keySchema             = [ {'AttributeName'    : key        , 'KeyType'           : 'HASH' } ]

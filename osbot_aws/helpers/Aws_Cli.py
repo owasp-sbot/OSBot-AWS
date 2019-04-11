@@ -5,8 +5,8 @@ import shutil
 
 class Aws_Cli:
     def __init__(self, **kwargs):
-        self.aws_lambda = boto3.client('lambda', region_name = kwargs.get('region_name'))
-        self.aws_s3     = boto3.client('s3'    , region_name = kwargs.get('region_name'))
+        self.aws_lambda = Session().client('lambda', region_name = kwargs.get('region_name'))
+        self.aws_s3     = Session().client('s3'    , region_name = kwargs.get('region_name'))
 
 
         #

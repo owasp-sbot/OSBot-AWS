@@ -9,6 +9,8 @@ from   urllib.parse          import urlparse
 
 from    pbx_gs_python_utils.utils.Files import Files
 
+from osbot_aws.apis.Session import Session
+
 
 class S3:
     def __init__(self):
@@ -17,7 +19,7 @@ class S3:
 
     # helpers
     def s3(self):
-        if self.boto_client_s3 is None : self.boto_client_s3 = boto3.client('s3')
+        if self.boto_client_s3 is None : self.boto_client_s3 = Session().client('s3')
         return self.boto_client_s3
 
     # main methods

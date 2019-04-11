@@ -29,8 +29,6 @@ class test_Lambdas_Creation(TestCase):
 
 
 
-
-
     def test_delete_temp_lambdas(self):
         names = [name for name in Lambdas().list().keys() if (name.startswith('temp_lambda_'))]
         for name in names:
