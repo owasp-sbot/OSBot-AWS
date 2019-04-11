@@ -2,3 +2,4 @@ misc.xml
 .idea
 .pytest_cache
 __pycache__
+_dev_env

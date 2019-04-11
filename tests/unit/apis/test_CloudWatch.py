@@ -1,5 +1,4 @@
-import sys; sys.path.append('..')
-from coverage.backunittest import TestCase
+from unittest import TestCase
 from osbot_aws.apis.Cloud_Watch import Cloud_Watch
 
 

@@ -1,5 +1,8 @@
 version: 0.1
 phases:
+  install:
+    build:
+      - pip3 uninstall -y osbot-aws       # remove since we want to use the version for the source code (not from the docker instance)
   build:
     commands:
       - echo "**** Starting build"
