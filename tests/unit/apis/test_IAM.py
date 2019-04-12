@@ -48,16 +48,24 @@ class Test_IAM(TestCase):
         warnings.filterwarnings("ignore", category=ResourceWarning, message="unclosed.*<ssl.SSLSocket.*>")
         self.iam = IAM(user_name=test_user,role_name=test_role )
 
-    @unittest.skip
+    #@unittest.skip
     def test_account_id(self):
-        assert type(self.iam.account_id()) is str
-        account_id_1 = self.iam.account_id()
-        Globals.aws_session_profile_name='gs-detect-aws'
+        account_id_1 = self.iam.account_id('gs-detect-aws')
+        assert Globals.aws_session_profile_name == 'gs-detect-aws'
+
         self.iam._account_id = None
         self.iam._sts        = None
-        account_id_2 = self.iam.account_id()
+
+        account_id_2 = self.iam.account_id('default')
+        assert Globals.aws_session_profile_name == 'default'
         assert account_id_1 != account_id_2
-        Globals.aws_session_profile_name = 'default'
+
+        self.iam._account_id = None
+        self.iam._sts = None
+
+        account_id_3 = self.iam.account_id()
+        assert Globals.aws_session_profile_name == 'default'
+        assert account_id_2 == account_id_3
 
 
 

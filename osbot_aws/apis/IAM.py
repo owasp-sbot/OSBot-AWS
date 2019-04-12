@@ -4,6 +4,7 @@ import boto3
 from pbx_gs_python_utils.utils.Dev import Dev
 from pbx_gs_python_utils.utils.Misc import Misc
 
+from osbot_aws.Globals import Globals
 from osbot_aws.apis.Session import Session
 
 
@@ -29,7 +30,9 @@ class IAM:
 
     # main method
 
-    def account_id(self):
+    def account_id(self, profile_name=None):
+        if profile_name is not None:                            # if profile_name is set
+            Globals.aws_session_profile_name = profile_name     # set it globally (since this will be used by all boto3 clients)
         if self._account_id is None:
             self._account_id = self.caller_identity().get('Account')
         return self._account_id
