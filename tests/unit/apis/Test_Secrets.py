@@ -7,7 +7,7 @@ from pbx_gs_python_utils.utils.Misc import Misc
 from osbot_aws.apis.Secrets import Secrets
 
 
-class Test_Lamda_Ip_Details(TestCase):
+class test_Secrets(TestCase):
 
     def setUp(self):
         self.id    = 'an_secret'

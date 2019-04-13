@@ -3,6 +3,11 @@
 export COVERALLS_REPO_TOKEN=T8G6bB0sBkk5q2C12PRKnzeeEOAW3OGCL
 export COVERALLS_SERVICE_NAME=$(git describe --always)
 
+rm tests/.coverage
+rm .coverage
+rm tests/report.json
+
 cd tests && pytest -v --cov=osbot_aws --json=report.json
+
 cp tests/.coverage .
 coveralls
