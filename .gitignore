@@ -3,3 +3,5 @@ misc.xml
 .pytest_cache
 __pycache__
 _dev_env
+.coverage
+report.json

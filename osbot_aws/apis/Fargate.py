@@ -137,9 +137,9 @@ class Fargate:
 
         iam.role_create(role_policy)
         iam.policy_delete(policy_name)
-        policy_arn = iam.policy_create(policy_name,policy).get('Policy').get('Arn')
+        policy_arn = iam.policy_create(policy_name,policy).get('policy_arn')
 
-        iam.role_policies_attach(policy_arn)
+        iam.role_policy_attach(policy_arn)
 
 
 

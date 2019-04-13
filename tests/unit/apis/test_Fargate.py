@@ -51,10 +51,10 @@ class test_Fargate(TestCase):
     def test_task_run(self):
         # ec2 = Ec2()
         cluster           = 'FargateCluster'
-        subnet_id = ' subnet-49391932'
+        subnet_id         = ' subnet-49391932'
         security_group_id = 'sg-e6ea548e'
 
-        task_name = 'create_and_run_task:44'
+        task_name = 'create_and_run_task:45'
         task_arn = 'arn:aws:ecs:eu-west-2:244560807427:task-definition/{0}'.format(task_name)
 
         task_run_arn = self.fargate.task_run(cluster,task_arn, subnet_id, security_group_id).get('taskArn')

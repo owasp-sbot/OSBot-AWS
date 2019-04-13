@@ -81,6 +81,3 @@ class Test_S3(unittest.TestCase):
         assert self.s3.file_contents          (dest_bucket  , dest_key                         ) == file_contents
         assert self.s3.file_delete            (src_bucket   , src_key                          ) is True
         assert self.s3.file_delete            (dest_bucket  , dest_key                         ) is True
-
-if __name__ == '__main__':
-    unittest.main()

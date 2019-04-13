@@ -3,6 +3,8 @@ import json
 import boto3
 import pprint
 
+from pbx_gs_python_utils.utils.Dev import Dev
+
 from osbot_aws.apis.Session import Session
 
 
@@ -12,8 +14,12 @@ class Secrets:
         self.id = id
 
     def create(self, value):
-        self.aws_secrets.create_secret( Name = self.id, SecretString = value)
-        return self.exists()
+        try:
+            self.aws_secrets.create_secret( Name = self.id, SecretString = value)
+            return self.exists()
+        except:
+            return False
+
 
     def deleted(self):
         details = self.details()
@@ -23,6 +29,10 @@ class Secrets:
 
     def delete(self):
         self.aws_secrets.delete_secret(SecretId = self.id)
+        return self.exists() is False
+
+    def delete_no_recovery(self):
+        self.aws_secrets.delete_secret(SecretId=self.id, ForceDeleteWithoutRecovery=True)
         return self.exists() is False
 
     def details(self):
@@ -37,6 +47,10 @@ class Secrets:
     def print(self):
         details = self.details()
         print(pprint.pformat(details))
+
+    def set_id(self, value):
+        self.id = value
+        return self
 
     def undelete(self):
         return self.aws_secrets.restore_secret(SecretId = self.id)
