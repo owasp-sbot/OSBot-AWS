@@ -27,6 +27,12 @@ class Logs(Boto_Helpers):
         return int(datetime.datetime.utcnow().strftime('%s')) * 1000
 
     # main methods
+
+    def create(self):
+        self.group_create()
+        self.stream_create()
+        return self
+
     def event_add(self, message, timestamp=None, sequence_token=None):
         if timestamp is None: timestamp = self.timestamp_utc_now()
         return self.events_add([{'message': message, 'timestamp':timestamp}], sequence_token)

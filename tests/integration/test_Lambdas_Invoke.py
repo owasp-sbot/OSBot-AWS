@@ -1,6 +1,8 @@
 import json
+import unittest
 from time import sleep
 
+from pbx_gs_python_utils.utils.Dev import Dev
 from pbx_gs_python_utils.utils.Misc     import Misc
 
 from osbot_aws.apis.Logs                import Logs
@@ -22,7 +24,8 @@ class test_Lambdas_Invoke(TestCase):
         assert Lambda('lambdas_gsbot_gsbot_graph').invoke_raw().get('status') == 'ok'
 
 
-    def test_lambda_write_cloud_watch(self):
+    @unittest.skip('Long running test (20Secs) move to separate class')
+    def test_lambda_write_cloud_watch__with_asserts(self):
         group_name      = '/unit-tests/test_log_group'
         stream_name     = Misc.random_string_and_numbers(prefix='tmp_stream_')
         message         = 'this is a message sent from an lambda function'
@@ -59,10 +62,8 @@ class test_Lambdas_Invoke(TestCase):
         payload = { 'group_name' : group_name  ,
                     'stream_name': stream_name ,
                     'message'    : message     }
-        lambda_obj = Lambda_Package(lambda_name)        .update_with_root_folder()
+        lambda_obj = Lambda_Package(lambda_name)        #.update_with_root_folder()
         result     = lambda_obj.invoke(payload)
-        from pbx_gs_python_utils.utils.Dev import Dev
-        Dev.pprint(result)
         
         sleep(1)                                        # wait for Cloudwatch to update
         assert result.get('status') == 'ok'
@@ -74,10 +75,24 @@ class test_Lambdas_Invoke(TestCase):
         assert set(iam_role.role_policies()) == {'AWSXrayWriteOnlyAccess'                    ,
                                                 'policy_temp_role_for_lambda_invocation'    }
 
+    def test_lambda_write_cloud_watch(self):
+        group_name      = '/aws/lambda/unit-tests/test_log_group'
+        stream_name     = Misc.random_string_and_numbers(prefix='tmp_stream_')
+        message         = 'this is a message sent from an lambda function'
+        lambda_name     = 'osbot_aws.lambdas.dev.write_cloud_watch_log'
+        logs            = Logs(group_name=group_name, stream_name=stream_name).create()
+        lambda_obj      = Lambda_Package(lambda_name)
+
+        payload = {'group_name': group_name, 'stream_name': stream_name, 'message': message}
+
+        assert lambda_obj.invoke(payload).get('status') == 'ok'
+
+        #sleep(0.8)
+        # assert logs.messages() == ['this is a message sent from an lambda function']
+        assert logs.group_delete() is True
 
 
 
-        #Dev.pprint(result)
 
     # An error occurred (AccessDeniedException) when calling the '
     #               'DescribeLogStreams operation: User: '
