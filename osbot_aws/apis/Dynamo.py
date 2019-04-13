@@ -18,7 +18,7 @@ class Dynamo:
                                   AttributeDefinitions  = attributeDefinitions ,
                                   ProvisionedThroughput = provisionedThroughput)
         self.client.get_waiter('table_exists') \
-            .wait(TableName=table_name, WaiterConfig={'Delay': 2, 'MaxAttempts': 10})
+            .wait(TableName=table_name, WaiterConfig={'Delay': 5, 'MaxAttempts': 10})
 
     def delete(self, table_name):
         self.client.delete_table(TableName = table_name)

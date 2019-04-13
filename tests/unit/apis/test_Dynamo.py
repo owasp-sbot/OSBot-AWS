@@ -23,7 +23,7 @@ from osbot_aws.apis.Dynamo import Dynamo, Dynamo_Table
 #         result = self.dynamo.list()
 #         assert 'temp-table' in result
 
-class Test_Dynamo_Table(unittest.TestCase):
+class test_Dynamo(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
