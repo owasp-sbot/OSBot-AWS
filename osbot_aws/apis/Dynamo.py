@@ -84,8 +84,8 @@ class Dynamo_Table:
         except:
             return None
 
-    def keys(self):
-        if self._keys:
+    def keys(self, use_cache=True):
+        if self._keys and use_cache:
             return self._keys
         def get_scan_batch (start_key):
             if start_key:
