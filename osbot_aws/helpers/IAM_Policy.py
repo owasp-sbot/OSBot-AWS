@@ -22,10 +22,10 @@ class IAM_Policy:
     def add_statement_allow(self, actions, resources):
         return self.add_statement('Allow', actions,resources)
 
-    def create(self):
+    def create(self,delete_before_create=False):
         if self.policy_name is None:
             return {'status':'error', 'data':'policy name is None'}
-        return self.iam.policy_create(self.policy_name, self.statement())
+        return self.iam.policy_create(self.policy_name, self.statement(), delete_before_create=delete_before_create)
 
     def delete(self):
         return self.iam.policy_delete(self.policy_arn())

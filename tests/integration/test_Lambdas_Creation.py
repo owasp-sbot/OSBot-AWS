@@ -18,7 +18,7 @@ class test_Lambdas_Creation(TestCase):
         with Temp_Lambda() as _:
             assert _.invoke() == 'hello None'
             log_name = '/aws/lambda/{0}'.format(_.name)
-            logs     = Logs(log_group_name=log_name)
+            logs     = Logs(group_name=log_name)
             assert logs.group_exists() is True
             logs.stream_name  = logs.streams()[0].get('logStreamName')
 

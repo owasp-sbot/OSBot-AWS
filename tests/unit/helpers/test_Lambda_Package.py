@@ -1,13 +1,8 @@
 import sys ; sys.path.append('..')
 from unittest import TestCase
 
-from pbx_gs_python_utils.utils.Assert import Assert
-from pbx_gs_python_utils.utils.Dev import Dev
 from pbx_gs_python_utils.utils.Files import Files
 from pbx_gs_python_utils.utils.Misc import Misc
-
-from osbot_aws.apis.test_helpers.Temp_Aws_Roles import Temp_Aws_Roles
-from osbot_aws.apis.test_helpers.Temp_Lambda import Temp_Folder_Code
 from osbot_aws.helpers.Lambda_Package import Lambda_Package
 
 
@@ -66,3 +61,8 @@ class test_Lambda_Package(TestCase):
         result = self.package.use_lambda_file('lambdas/dev/aaaaaaa')
         assert result.get('status') == 'error'
         assert 'could not find lambda file `lambdas/dev/aaaaaaa`' in result.get('data')
+
+
+    def test_update_with_root_folder(self):
+        name = 'osbot_aws.lambdas.dev.check_python_utils'
+        assert 'checking python utils: /tmp' in Lambda_Package(name).update_with_root_folder().invoke()

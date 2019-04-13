@@ -44,7 +44,7 @@ class test_Secrets(TestCase):
         self.secrets.delete()
         assert self.secrets.exists() is False
 
-    def test_print(self):
+    def test_print(self,):
         def my_print(value):                                        # hook method
             assert "{'ARN': 'arn:aws:secretsmanager:" in value      # confirm data sent to print
             assert "'Name': 'an_secret'"              in value

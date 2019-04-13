@@ -11,8 +11,8 @@ from osbot_aws.apis.Session import Session
 
 
 class Logs(Boto_Helpers):
-    def __init__(self,log_group_name, stream_name=None):
-        self.log_group_name = log_group_name
+    def __init__(self, group_name, stream_name=None):
+        self.log_group_name = group_name
         self.stream_name    = stream_name
         self._logs          = None
 
@@ -49,7 +49,7 @@ class Logs(Boto_Helpers):
         return self.logs().get_log_events(logGroupName=self.log_group_name, logStreamName=self.stream_name)
 
     def group_create(self):
-        if self.group_exists(): return True
+        if self.group_exists(): return False
         self.logs().create_log_group(logGroupName=self.log_group_name)
         return self.group_exists()
 

@@ -1,72 +1,19 @@
-import unittest
-from time import sleep
-from unittest import TestCase
-
-from osbot_aws.apis.IAM import IAM
-
-from osbot_aws.apis.CodeBuild import CodeBuild
-from pbx_gs_python_utils.utils.Assert        import Assert
-from pbx_gs_python_utils.utils.Dev           import Dev
+from time                                import sleep
+from unittest                            import TestCase
+from osbot_aws.apis.IAM                  import IAM
+from osbot_aws.helpers.Create_Code_Build import Create_Code_Build
 
 
+class test_Create_Code_Build(TestCase):
 
-class Create_Code_Build:
+    def setUp(self):
+        self.project_name    = 'osbot_aws'
+        self.account_id      = IAM().account_id()
+        self.api             = Create_Code_Build(account_id=self.account_id, project_name=self.project_name)
 
-    def __init__(self):
-        self.account_id         = '244560807427'                                # move to config value or AWS Secret
-        self.project_name       = 'osbot-aws'
-        self.project_repo       = 'https://github.com/pbx-gs/{0}'.format(self.project_name)
-        self.service_role       = 'arn:aws:iam::{0}:role/{1}'                  .format(self.account_id, self.project_name)
-        self.project_arn        = 'arn:aws:codebuild:eu-west-2:{0}:project/{1}'.format(self.account_id, self.project_name     )
-        self.assume_policy      = {'Statement': [{'Action'   : 'sts:AssumeRole'                     ,
-                                                  'Effect'   : 'Allow'                              ,
-                                                  'Principal': {'Service': 'codebuild.amazonaws.com'}}]}
-
-        self.code_build = CodeBuild(role_name=self.project_name, project_name=self.project_name)
-        self.iam        = IAM      (role_name=self.project_name                                )
-
-    def setup(self,delete_on_setup=False):
-        if delete_on_setup:
-            self.code_build.project_delete()
-            self.iam.role_delete()
-        if self.code_build.project_exists() is False:
-            assert self.code_build.project_exists() is False
-            self.iam.role_create(self.assume_policy)                     # create role
-            assert self.iam.role_info().get('Arn') == self.service_role  # confirm the role exists
-            sleep(1)
-            self.create_project()  # use this version
-
-    def teardown(self, delete_on_teardown=False):
-
-        assert self.code_build.project_exists() is True
-        assert self.iam.role_exists() is True
-        if delete_on_teardown:
-            self.code_build.project_delete()
-            self.iam.role_delete()
-            assert self.code_build.project_exists() is False
-            assert self.iam.role_exists() is False
-
-    def create_project(self):
-        kvargs = {
-            'name'        : self.project_name,
-            'source'      : { 'type'                   : 'GITHUB',
-                           'location'                  : self.project_repo                 },
-            'artifacts'   : {'type'                    : 'NO_ARTIFACTS'                    },
-            'environment' : {'type'                    : 'LINUX_CONTAINER'                  ,
-                            'image'                    : '244560807427.dkr.ecr.eu-west-2.amazonaws.com/gs-docker-codebuild:latest'     ,
-                            'computeType'              : 'BUILD_GENERAL1_LARGE'            },
-                            # 'imagePullCredentialsType': 'SERVICE_ROLE' # this is not working (and it should)
-            'serviceRole' : self.service_role
-
-            # VERY Important at the moment the 'imagePullCredentialsType' value is not being set programmatically (which will cause the docker image from not being pulled)
-            # At the moment this needs to be done manually at (i.e. reconfigure the container to use
-            # https://eu-west-2.console.aws.amazon.com/codesuite/codebuild/projects/osbot-aws/edit/environment?region=eu-west-2
-        }
-
-        return self.code_build.codebuild.create_project(**kvargs)
-
-    def create_policies(self):
-        cloud_watch_arn = "arn:aws:logs:eu-west-2:244560807427:log-group:/aws/codebuild/{0}:log-stream:*".format(self.project_name)
+    # this needs to be updated to take into account the policies manually added to the arn:aws:iam::244560807427:role/osbot-aws
+    # via the AWS Console API
+    def test_create_polcies(self):
         policies = {"Cloud-Watch-Policy"     : { "Version": "2012-10-17",
                                                  "Statement": [{   "Sid": "GsBotPolicy",
                                                                    "Effect": "Allow",
@@ -85,10 +32,6 @@ class Create_Code_Build:
                                                                                  "ecr:DescribeImages",
                                                                                  "ecr:BatchGetImage"],
                                                                    "Resource": "*"}]}}
-                    # "Invoke_Lambda_Functions": { "Version": "2012-10-17",
-                    #                              "Statement": [ { "Effect": "Allow",
-                    #                                               "Action": "lambda:InvokeFunction",
-                    #                                               "Resource": "arn:aws:lambda:*:*:function:*" }]},
                     # "Secret-Manager"        : {
                     #                             "Version"  : "2012-10-17",
                     #                             "Statement": [{   "Effect"  : "Allow",
@@ -100,47 +43,11 @@ class Create_Code_Build:
                     #                             "Statement": [ {    "Effect": "Allow", "Action" : ["s3:PutObject"         ], "Resource": ["arn:aws:s3:::gs-lambda-tests/dinis/lambdas/gsbot_gsuite_lambdas_gdocs.zip"] },
                     #                                            {    "Effect": "Allow", "Action" : ["lambda:CreateFunction"], "Resource": ["arn:aws:lambda:eu-west-2:244560807427:function:gsbot_gsuite_lambdas_gdocs"] } ]}}
 
-        policies_arns  = list(self.code_build.iam.role_policies().values())
-        policies_names = list(self.code_build.iam.role_policies().keys())
-        self.code_build.iam.role_policies_detach(policies_arns)
-        for policies_name in policies_names:
-            self.code_build.iam.policy_delete(policies_name)
 
-        self.code_build.policies_create(policies)
+    def test_create(self):
+        policies = self.api.policies__with_ecr()
+        self.api.create_role_and_policies(policies)
+        sleep(5)                                                        # to give time for AWS to sync up internally
+        self.api.create_project_with_container__gs_docker_codebuild()
+        self.api.code_build.build_start()
 
-
-class test_Create_Code_Build(TestCase):
-
-    @classmethod
-    def setUpClass(cls):
-        Create_Code_Build().setup(delete_on_setup=False)
-
-    @classmethod
-    def tearDownClass(cls):
-        Create_Code_Build().teardown(delete_on_teardown = False)
-
-    def setUp(self):
-        self.api = Create_Code_Build()
-
-    def test__init__(self):
-        Assert(self.api.project_name).is_equal('osbot-aws'                          )         # confirm init vars setup
-        Assert(self.api.project_repo).is_equal('https://github.com/pbx-gs/osbot-aws')
-        assert 'osbot-aws' in self.api.code_build.projects()                                  # confirm project has been created
-        assert self.api.iam.role_exists() is True                                             # confirm role has been created
-
-    def test_create_policies(self):
-        self.api.create_policies()
-
-    def test_build_start(self):
-        build_id = self.api.code_build.build_start()
-        result = self.api.code_build.build_wait_for_completion(build_id, max_attempts=100, log_status=True)
-        Dev.pprint(result)
-
-    def test_create_policies_and_trigger_build(self):
-        self.api.create_policies()
-        build_id = self.api.code_build.build_start()
-        result = self.api.code_build.build_wait_for_completion(build_id,max_attempts=100,log_status=True)
-        Dev.pprint(result)
-
-    def test_get_project_details(self):
-        Dev.pprint(self.api.code_build.project_info())

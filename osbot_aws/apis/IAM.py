@@ -64,8 +64,17 @@ class IAM:
             return 'arn:aws:iam::{0}:policy/{1}'.format(account_id, policy_name)
         return 'arn:aws:iam::{0}:policy{1}/{2}' .format(account_id, policy_path, policy_name)
 
-    def policy_create(self, policy_name, policy_document, policy_path='/', account_id=None):
+    def policy_create_version(self, policy_name, policy_document, policy_path='/', account_id=None): # todo: add support for deleting previous versions
+        policy_arn = self.policy_arn(policy_name, policy_path, account_id)
+        if type(policy_document) is not str:
+            policy_document = json.dumps(policy_document)
+        data = self.iam().create_policy_version(PolicyArn=policy_arn, PolicyDocument=policy_document,SetAsDefault=True).get('Policy')
+        return {'status': 'ok', 'policy_name': policy_name, 'policy_arn': policy_arn, 'data': data}
+
+    def policy_create(self, policy_name, policy_document, policy_path='/', account_id=None, delete_before_create=False):
         policy_arn = self.policy_arn(policy_name, policy_path,account_id)
+        if delete_before_create:
+            self.policy_delete(policy_arn)
         if self.policy_exists(policy_arn) is False:
             if type(policy_document) is not str:
                 policy_document = json.dumps(policy_document)
@@ -79,6 +88,7 @@ class IAM:
 
     def policy_delete(self, policy_arn):
         if self.policy_exists(policy_arn) is False: return False
+        self.policy_detach_roles(policy_arn)
         self.iam().delete_policy(PolicyArn= policy_arn)
         return self.policy_exists(policy_arn) is False
 
@@ -104,6 +114,12 @@ class IAM:
                 return {'policy_arn': policy_arn, 'policy_name': policy_info.get('PolicyName'), 'policy_info' : policy_info, 'policy_version': policy_version}
         except:
             return None
+
+    def policy_detach_roles(self,policy_arn):
+        policy_roles = self.iam().list_entities_for_policy(PolicyArn=policy_arn).get('PolicyRoles')
+        for role in policy_roles:
+            IAM(role_name=role.get('RoleName')).role_policy_detach(policy_arn)
+        return self
 
     def policy_statement(self, policy_arn):
         policy_details = self.policy_details(policy_arn)

@@ -76,3 +76,9 @@ class Lambda_Package:
         target_file = Files.path_combine(self.tmp_folder, '{0}.py'.format(self.lambda_name))
         Files.copy(file_path,target_file)
         return  { 'status': 'ok', 'file_path': file_path, 'target_file': target_file }
+
+    def update_with_root_folder(self):
+        self.add_root_folder()
+        self.add_pbx_gs_python_utils()
+        self.update()
+        return self
