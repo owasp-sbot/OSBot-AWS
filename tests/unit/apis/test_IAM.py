@@ -48,7 +48,7 @@ class Test_IAM(TestCase):
         warnings.filterwarnings("ignore", category=ResourceWarning, message="unclosed.*<ssl.SSLSocket.*>")
         self.iam = IAM(user_name=test_user,role_name=test_role )
 
-    #@unittest.skip
+    @unittest.skip("Doesn't work in CodeBuild since there is only one configuration in there")
     def test_account_id(self):
         account_id_1 = self.iam.account_id('gs-detect-aws')
         assert Globals.aws_session_profile_name == 'gs-detect-aws'
