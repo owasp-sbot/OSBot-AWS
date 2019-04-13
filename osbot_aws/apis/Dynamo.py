@@ -1,5 +1,6 @@
 import boto3
 from   boto3    import resource
+from pbx_gs_python_utils.utils.Misc import Misc
 
 from osbot_aws.apis.Session import Session
 
@@ -7,33 +8,55 @@ from osbot_aws.apis.Session import Session
 class Dynamo:
     def __init__(self):
         self.resource   = resource('dynamodb')
-        self.client     = Session().client('dynamodb')
+        self._dynamo    = None
+        self._streams   = None
 
-    def create(self, table_name, key):
+    # helpers
+
+    def dynamo(self):
+        if self._dynamo is None:
+            self._dynamo = Session().client('dynamodb')
+        return self._dynamo
+
+    def dynamo_streams(self):
+        if self._streams is None:
+            self._streams = Session().client('dynamodbstreams')
+        return self._streams
+    # main methods
+
+    def create(self, table_name, key, with_streams=False):
         keySchema             = [ {'AttributeName'    : key        , 'KeyType'           : 'HASH' } ]
         attributeDefinitions  = [ {'AttributeName'    : key        , 'AttributeType'     : 'S'    } ]
         provisionedThroughput = { 'ReadCapacityUnits' : 5          , 'WriteCapacityUnits': 5      }
-        self.client.create_table( TableName             = table_name           ,
-                                  KeySchema             = keySchema            ,
-                                  AttributeDefinitions  = attributeDefinitions ,
-                                  ProvisionedThroughput = provisionedThroughput)
-        self.client.get_waiter('table_exists') \
+        kwargs   = { 'TableName'            : table_name           ,
+                     'KeySchema'            : keySchema            ,
+                     'AttributeDefinitions' : attributeDefinitions ,
+                     'ProvisionedThroughput': provisionedThroughput }
+        if with_streams:
+            kwargs['StreamSpecification'] = {'StreamEnabled': True, 'StreamViewType': 'NEW_IMAGE' }
+        self.dynamo().create_table( **kwargs)
+
+        self.dynamo().get_waiter('table_exists') \
             .wait(TableName=table_name, WaiterConfig={'Delay': 5, 'MaxAttempts': 10})
+        return self
 
     def delete(self, table_name):
-        self.client.delete_table(TableName = table_name)
-        self.client.get_waiter('table_not_exists')      \
-                   .wait(TableName=table_name, WaiterConfig={'Delay': 2, 'MaxAttempts':10 })
+        self.dynamo().delete_table(TableName = table_name)
+        self.dynamo().get_waiter('table_not_exists')      \
+                   .wait(TableName=table_name, WaiterConfig={'Delay': 10, 'MaxAttempts':10 })
+        return self
 
     def list(self):
-        return self.client.list_tables()['TableNames']
+        return self.dynamo().list_tables()['TableNames']
+
+    def streams(self):
+        return self.dynamo_streams().list_streams().get('Streams')
 
 class Dynamo_Table:
     def __init__(self,table_name, key):
         self.table_name = table_name
         self.key        = key
         self.dynamo     = Dynamo()
-        self.client     = self.dynamo.client
         self.resource   = self.dynamo.resource
         self.table      = self.resource.Table(self.table_name)
         self.chuck_size = 100
@@ -80,7 +103,7 @@ class Dynamo_Table:
 
     def info(self):
         try:
-            return self.client.describe_table(TableName = self.table_name)
+            return self.dynamo.dynamo().describe_table(TableName = self.table_name)
         except:
             return None
 
@@ -110,6 +133,23 @@ class Dynamo_Table:
 
         return keys
 
-    def status(self):
+    def stream_arn(self):
+        streams   = self.dynamo.dynamo_streams().list_streams(TableName=self.table_name).get('Streams')
+        first_one = Misc.array_pop(streams,0)
+        return Misc.get_value(first_one,'StreamArn')
 
+    def stream_info(self):
+        stream_arn = self.stream_arn()
+        if stream_arn:
+            return self.dynamo.dynamo_streams().describe_stream(StreamArn=stream_arn).get('StreamDescription')
+
+    def stream_get_data_latest(self):
+        stream_info    = self.stream_info()
+        shard_id       = stream_info.get('Shards').pop(0).get('ShardId')
+        shard_iterator = self.dynamo.dynamo_streams().get_shard_iterator(StreamArn=self.stream_arn(), ShardId=shard_id, ShardIteratorType='LATEST').get('ShardIterator')
+        return           self.dynamo.dynamo_streams().get_records(ShardIterator=shard_iterator)
+
+        #shard_iterator = get_shard_iterator
+
+    def status(self):
         return self.info()['Table']['TableStatus']

@@ -3,6 +3,7 @@ import unittest
 from time import sleep
 
 from pbx_gs_python_utils.utils.Dev import Dev
+from pbx_gs_python_utils.utils.Misc import Misc
 
 from osbot_aws.apis.Dynamo import Dynamo, Dynamo_Table
 
@@ -106,6 +107,33 @@ class test_Dynamo(unittest.TestCase):
 
     def test_status(self):
         assert self.table.status() == 'ACTIVE'
+
+# this is not working as expected (namely the `test_streams` part)
+@unittest.skip
+class test_Dynamo_Streams(unittest.TestCase):
+
+    def setUp(self):
+        self.table_name        = 'temp-table-with-streams'  #Misc.random_string_and_numbers(prefix='temp-table-with-streams_')
+        self.table_key         = 'an_field'
+        with_streams      = True
+        self.dynamo_table = Dynamo_Table(self.table_name, self.table_key)
+        self.dynamo       = Dynamo()
+        if self.dynamo_table.exists() is False:
+            self.dynamo.create(self.table_name, self.table_key, with_streams)
+
+    def test_stream_arn(self):
+        assert self.dynamo_table.stream_arn().startswith('arn:aws:dynamodb:') is True
+
+    def test_stream_info(self):
+        Dev.pprint(self.dynamo_table.stream_info())
+
+    def test_stream_get_data_latest(self):
+        self.dynamo_table.add({ self.table_key : 'key-1', 'answer-1': 42 })
+        Dev.pprint(self.dynamo_table.stream_get_data_latest())
+
+    def test_streams(self):
+        assert len(self.dynamo.streams()) > 1
+
 
 
 # class Test_Dynamo_Delete(unittest.TestCase):
