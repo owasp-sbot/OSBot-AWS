@@ -30,14 +30,26 @@ class Queue:
         return self
 
     def attributes(self):
-        return self.sqs().get_queue_attributes(QueueUrl=self.url(),AttributeNames=['All']).get('Attributes')
+        try:
+            return self.sqs().get_queue_attributes(QueueUrl=self.url(),AttributeNames=['All']).get('Attributes')
+        except:
+            return None
 
     def attributes_update(self, new_attributes):
         return self.sqs().set_queue_attributes(QueueUrl=self.url(), Attributes=new_attributes)
 
 
-    def create(self,attributes):
-       return self.sqs().create_queue(QueueName=self.queue_name,Attributes=attributes).get('QueueUrl')
+    def create(self,attributes=None):
+        if attributes is None: attributes = {}
+        return self.sqs().create_queue(QueueName=self.queue_name,Attributes=attributes).get('QueueUrl')
+
+    def delete(self):
+        if self.exists() is False: return False
+        self.sqs().delete_queue(QueueUrl=self.url())
+        return self.exists() is False
+
+    def exists(self):
+        return self.attributes() is not None
 
     def get_message(self, delete_message=True):
         message = self.message_raw()
@@ -111,3 +123,8 @@ class Queue:
         if data_json:
             return json.loads(data_json)
         return None
+
+    def set_queue_name(self, queue_name):
+        self.queue_name = queue_name
+        self._url       = None          # need to reset this value or the old value will still be used
+        return self

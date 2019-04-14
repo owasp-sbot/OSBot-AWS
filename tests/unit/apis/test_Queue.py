@@ -10,19 +10,20 @@ from osbot_aws.apis.Queue import Queue
 
 class test_Queue(TestCase):
 
-    queue_name = 'unit_tests_temp_queue'
-    #queue_name = Misc.random_string_and_numbers('unit_tests_temp_queue_')
+    #queue_name = 'unit_tests_temp_queue'
+    queue_name = Misc.random_string_and_numbers(prefix='unit_tests_temp_queue_')
 
     @classmethod
     def setUpClass(cls):
         queue = Queue(test_Queue.queue_name)
-        queue.get_n_message(10)  # clean up queue
-        #queue.create({})
+        #queue.get_n_message(10)  # clean up queue
+        queue.create()
+        assert queue.exists() is True
 
     @classmethod
     def tearDownClass(cls):
         queue = Queue(test_Queue.queue_name)
-        pass
+        assert queue.delete() is True
 
     def setUp(self):
         self.queue = Queue(test_Queue.queue_name)
@@ -37,8 +38,14 @@ class test_Queue(TestCase):
                                                    'LastModifiedTimestamp', 'MaximumMessageSize','MessageRetentionPeriod',
                                                    'QueueArn', 'ReceiveMessageWaitTimeSeconds','VisibilityTimeout'}
 
+        assert self.queue.set_queue_name('aaaa_bbbb').attributes() is None
+
     def test_create(self):
-        assert self.queue.create({}) == self.queue.url()
+        assert self.queue.create() == self.queue.url()
+
+    def test_exists(self):
+        assert self.queue.exists() is True
+        assert self.queue.set_queue_name('aaaa_bbbb').exists() is False
 
     def test_list(self):
         assert len(self.queue.list()) > 0
@@ -67,7 +74,7 @@ class test_Queue(TestCase):
     def test_push_pull(self):
         self.queue.push( {'var_1': 'value_1' , 'var_2': 'value_2'})
         assert self.queue.get_message() == '{"var_1": "value_1", "var_2": "value_2"}'       # is json string
-        
+
         self.queue.push({'var_3': 'value_3', 'var_4': 'value_4'})
         assert self.queue.pull()        == {'var_3': 'value_3' , 'var_4': 'value_4'}        # is python object
 
