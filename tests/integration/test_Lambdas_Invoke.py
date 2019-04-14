@@ -65,13 +65,43 @@ class test_Lambdas_Invoke(TestCase):
         # add_sqs_send_message_priv(lambda_obj.role_arn)
 
 
-    #def test_lambda_write_to_queue(self):
-    #    lambda_name = 'osbot_aws.lambdas.dev.write_queue'
-    #    confirm_tmp_reuse.py
+    def test_confirm_tmp_reuse(self):
+        lambda_name = 'osbot_aws.lambdas.pocs.confirm_tmp_reuse'                # lambda to execute
 
+        lambda_obj = Lambda_Package(lambda_name).update_with_root_folder()      # create lambda and upload code
 
+        payload_1 = { 'file_name': 'file_1.txt'}                                # first file to create
+        result_1  = lambda_obj.invoke(payload_1)                                # invoke lambda function
 
+        payload_2 = {'file_name': 'file_2.txt'}                                 # 2nd file to create
+        result_2  = lambda_obj.invoke(payload_2)                                # invoke lambda function again (no update)
 
+        lambda_obj = Lambda_Package(lambda_name).update_with_root_folder()      # update lambda code
+        payload_3 = {'file_name': 'file_3.txt'}                                 # 3rd file to create
+        result_3   = lambda_obj.invoke(payload_3)                               # invoke lambda function (after update)
+
+        assert len(result_1) is 1                                               # confirm we have 1 temp file in 1st execution
+        assert len(result_2) is 2                                               # confirm we have 2 temp files in 2nd execution
+        assert len(result_3) is 1                                               # confirm we have 1 temp files in 3rd execution
+
+        assert '/tmp/file_1.txt' in result_1                                    # confirm 1st file was there on 1st execution
+
+        assert '/tmp/file_1.txt' in result_2                                    # confirm 1st file was there on 2nd execution
+        assert '/tmp/file_2.txt' in result_2                                    # confirm 2nd file was there on 2nd execution
+
+        assert '/tmp/file_3.txt' in result_3                                    # confirm 3rd file was there on 3rd execution
+
+        lambda_obj.delete()                                                     # delete lambda
+
+    def test_confirm_process_stay_alive(self):
+
+        lambda_name = 'osbot_aws.lambdas.pocs.confirm_process_stay_alive'       # lambda to execute
+
+        lambda_obj = Lambda_Package(lambda_name).update_with_root_folder()      # create lambda and upload code
+
+        result = lambda_obj.invoke()
+
+        Dev.pprint(result)
 
 
 
@@ -121,7 +151,7 @@ class test_Lambdas_Invoke(TestCase):
                     'message'    : message     }
         lambda_obj = Lambda_Package(lambda_name)        #.update_with_root_folder()
         result     = lambda_obj.invoke(payload)
-        
+
         sleep(1)                                        # wait for Cloudwatch to update
         assert result.get('status') == 'ok'
         assert logs.messages() == [message]
