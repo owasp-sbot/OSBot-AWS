@@ -6,8 +6,8 @@ from osbot_aws.apis.Session import Session
 
 
 class Queue:
-    def __init__(self, queue_name):
-        self._url       = None
+    def __init__(self, queue_name=None, url=None):
+        self._url       = url
         self._sqs       = None
         self.queue_name = queue_name
 
@@ -39,9 +39,15 @@ class Queue:
         return self.sqs().set_queue_attributes(QueueUrl=self.url(), Attributes=new_attributes)
 
 
-    def create(self,attributes=None):
+    def create_raw(self,attributes=None):
         if attributes is None: attributes = {}
         return self.sqs().create_queue(QueueName=self.queue_name,Attributes=attributes).get('QueueUrl')
+
+    def create(self,attributes=None):
+        queue_url = self.create_raw(attributes)
+        if queue_url:
+            return self
+        return None
 
     def delete(self):
         if self.exists() is False: return False
