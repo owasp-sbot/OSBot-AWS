@@ -41,7 +41,8 @@ class test_Queue(TestCase):
         assert self.queue.set_queue_name('aaaa_bbbb').attributes() is None
 
     def test_create(self):
-        assert self.queue.create() == self.queue.url()
+        assert self.queue.create_raw() == self.queue.url()
+        assert self.queue.create()     == self.queue
 
     def test_exists(self):
         assert self.queue.exists() is True
