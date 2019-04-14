@@ -65,7 +65,13 @@ class test_Lambdas_Invoke(TestCase):
         # add_sqs_send_message_priv(lambda_obj.role_arn)
 
 
-    def test_confirm_tmp_reuse(self):
+
+
+
+    
+    # SKIPPED tests
+
+    def _test_confirm_tmp_reuse(self):
         lambda_name = 'osbot_aws.lambdas.pocs.confirm_tmp_reuse'                # lambda to execute
 
         lambda_obj = Lambda_Package(lambda_name).update_with_root_folder()      # create lambda and upload code
@@ -93,15 +99,25 @@ class test_Lambdas_Invoke(TestCase):
 
         lambda_obj.delete()                                                     # delete lambda
 
-    def test_confirm_process_stay_alive(self):
+    @unittest.skip
+    def _test_confirm_process_stay_alive(self):
 
         lambda_name = 'osbot_aws.lambdas.pocs.confirm_process_stay_alive'       # lambda to execute
 
         lambda_obj = Lambda_Package(lambda_name).update_with_root_folder()      # create lambda and upload code
 
-        result = lambda_obj.invoke()
+        result_1 = lambda_obj.invoke({'port': "11111"})
+        result_2 = lambda_obj.invoke({'port': "22222"})
+        result_3 = lambda_obj.invoke({'port': "33333"})
+        result_4 = lambda_obj.invoke({'port': "44444"})
 
-        Dev.pprint(result)
+        Dev.print(result_1.get('stdout'))
+        #sleep(2)
+        Dev.print(result_2.get('stdout'))
+        #sleep(2)
+        Dev.print(result_3.get('stdout'))
+        #sleep(2)
+        Dev.print(result_4.get('stdout'))
 
 
 
@@ -109,7 +125,7 @@ class test_Lambdas_Invoke(TestCase):
 
 
 
-    # SKIPPED tests
+
 
     @unittest.skip('Long running test (20Secs) move to separate class')
     def _test_lambda_write_cloud_watch__with_asserts(self):
