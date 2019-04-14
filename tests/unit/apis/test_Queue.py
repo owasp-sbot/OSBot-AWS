@@ -10,11 +10,22 @@ from osbot_aws.apis.Queue import Queue
 
 class test_Queue(TestCase):
 
+    queue_name = 'unit_tests_temp_queue'
+    #queue_name = Misc.random_string_and_numbers('unit_tests_temp_queue_')
+
+    @classmethod
+    def setUpClass(cls):
+        queue = Queue(test_Queue.queue_name)
+        queue.get_n_message(10)  # clean up queue
+        #queue.create({})
+
+    @classmethod
+    def tearDownClass(cls):
+        queue = Queue(test_Queue.queue_name)
+        pass
 
     def setUp(self):
-        self.queue_name = 'unit_tests_temp_queue'
-        self.queue = Queue(self.queue_name)
-        self.queue.get_n_message(10)                    # clean up queue
+        self.queue = Queue(test_Queue.queue_name)
 
     def test__init__(self):
         assert type(self.queue).__name__       == 'Queue'
