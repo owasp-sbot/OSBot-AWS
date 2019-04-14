@@ -46,18 +46,39 @@ class test_Queue(TestCase):
     def test_message_send(self):
         message_1 = Misc.random_string_and_numbers(prefix='Hello_')
         message_2 = Misc.random_string_and_numbers(prefix='World_')
-        self.queue.message_send(message_1)                        \
-                  .message_send(message_2)
+        self.queue.add(message_1)                                 \
+                  .add(message_2)
         messages = [self.queue.get_message(),self.queue.get_message()]
         assert message_1 in messages
         assert message_2 in messages
         assert self.queue.get_message() is None
 
 
+    def test_get_message_with_attributes(self):
+        body = 'this is the body of the message.... 132'
+        attributes = {'var_1': 'value_1', 'var_2': 'value_2'}
+
+        self.queue.message_send(body,attributes)
+        data = self.queue.get_message_with_attributes()
+        assert body       == data[0]
+        assert attributes == data[1]
+        assert attributes.get('var_1') == 'value_1'
+
+    def test_push_pull(self):
+        self.queue.push( {'var_1': 'value_1' , 'var_2': 'value_2'})
+        assert self.queue.get_message() == '{"var_1": "value_1", "var_2": "value_2"}'       # is json string
+        
+        self.queue.push({'var_3': 'value_3', 'var_4': 'value_4'})
+        assert self.queue.pull()        == {'var_3': 'value_3' , 'var_4': 'value_4'}        # is python object
+
+        self.queue.push([{'var_5': 'value_5'}, {'var_6': 'value_7'}])                       # push an array
+        assert self.queue.pull() == [{'var_5': 'value_5'}, {'var_6': 'value_7'}]            # comes back as an array
+
+
 
     # Skipped test (created during development, move to separate class)
     @unittest.skip('The most relevant part of this test is shown in the console, and the values are not deterministic')
-    def test_prove_that_ApproximateNumberOfMessages_is_Approximate(self):
+    def _test_prove_that_ApproximateNumberOfMessages_is_Approximate(self):
         self.queue.get_n_message(10)
         message_1 = Misc.random_string_and_numbers(prefix='Hello_')
         message_2 = Misc.random_string_and_numbers(prefix='World 42_')
