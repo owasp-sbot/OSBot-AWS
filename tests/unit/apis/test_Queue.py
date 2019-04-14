@@ -48,10 +48,10 @@ class test_Queue(TestCase):
         message_2 = Misc.random_string_and_numbers(prefix='World_')
         self.queue.message_send(message_1)                        \
                   .message_send(message_2)
-        assert self.queue.get_message() == message_1
-        assert self.queue.get_message() == message_2
+        messages = [self.queue.get_message(),self.queue.get_message()]
+        assert message_1 in messages
+        assert message_2 in messages
         assert self.queue.get_message() is None
-
 
 
 
