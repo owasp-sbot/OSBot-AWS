@@ -63,17 +63,56 @@ class test_Lambdas_Invoke(TestCase):
 
         # add_sqs_send_message_priv(lambda_obj.role_arn)
 
+
+    # NOT WORKING
+    @unittest.skip
     def _test_s3_bucket_to_sqs(self):
         s3 = S3()
-        queue_1 = Queue('unit_tests_temp_queue__from_s3').create()
-        s3_bucket = 'bucket-42-temp'
-        region    = 'eu-west-2'
+        queue        = Queue('unit_tests_temp_queue') #.create()
+        bucket_name  = 'bucket-42-temp'
+        region       = 'eu-west-2'
+        lambda_obj   = Lambda_Package('osbot_aws.lambdas.pocs.send_event_data_to_queue').update_with_root_folder()
+        lambda_arn   = lambda_obj._lambda.function_Arn()
+        bucket_arn   = s3.bucket_arn(bucket_name)
+        queue_arn    = queue.arn()
+        #lambda_obj.invoke({'a':43})
 
-        assert s3.bucket_exists(s3_bucket) is False()
-        Dev.pprint(s3.bucket_create(s3_bucket,region))
-        Dev.pprint(s3.bucket_exists(s3_bucket))
-        Dev.pprint(s3.bucket_delete(s3_bucket))
-        Dev.pprint(s3.bucket_exists(s3_bucket))
+        #s3.bucket_create(s3_bucket, region)
+        def add_notification(source_arn):
+            result = lambda_obj._lambda.boto_lambda().add_permission(
+                FunctionName=lambda_arn,
+                StatementId='1',
+                Action='lambda:InvokeFunction',
+                Principal='s3.amazonaws.com',
+                SourceArn= source_arn,
+                SourceAccount = IAM().account_id()
+            )
+            Dev.pprint(result)
+            #Dev.pprint(result == {  'Statement': '{"Sid":"1","Effect":"Allow","Principal":{"Service":"s3.amazonaws.com"},"Action":"lambda:InvokeFunction","Resource":"arn:aws:lambda:eu-west-2:244560807427:function:osbot_aws_lambdas_pocs_send_event_data_to_queue","Condition":{"StringEquals":{"AWS:SourceAccount":"244560807427"},"ArnLike":{"AWS:SourceArn":"arn:aws:sqs:eu-west-2:244560807427:unit_tests_temp_queue"}}}'})
+
+        #add_notification(bucket_arn)
+
+        #return
+
+
+        # resource = s3.s3_bucket_notification(bucket_name)
+        # config = { 'LambdaFunctionConfigurations': [{ 'LambdaFunctionArn': lambda_arn           ,
+        #                                               'Events'           : ['s3:ObjectCreated:*']}]}
+        # Dev.pprint(config)
+        # Dev.pprint(resource.put(NotificationConfiguration=config))
+
+        #Dev.pprint(resource.lambda_function_configurations)
+
+        #Dev.pprint(s3.s3().get_bucket_notification_configuration(Bucket=bucket_name))
+
+        #bucket_notification = s3.BucketNotification('bucket_name')
+        #Dev.pprint(bucket_notification)
+
+        #s3.boto_client_s3().bucket_notification()
+
+        Dev.pprint(queue.pull())
+        Dev.pprint(queue.pull())
+        #assert s3.bucket_delete(s3_bucket) is True
 
     # SKIPPED tests
 

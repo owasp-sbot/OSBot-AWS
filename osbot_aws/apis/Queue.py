@@ -29,6 +29,9 @@ class Queue:
         self.message_send(body,attributes)
         return self
 
+    def arn(self):
+        return self.attributes().get('QueueArn')
+
     def attributes(self):
         try:
             return self.sqs().get_queue_attributes(QueueUrl=self.url(),AttributeNames=['All']).get('Attributes')

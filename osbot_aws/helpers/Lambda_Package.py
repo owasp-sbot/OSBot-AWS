@@ -77,7 +77,9 @@ class Lambda_Package:
         Files.copy(file_path,target_file)
         return  { 'status': 'ok', 'file_path': file_path, 'target_file': target_file }
 
-    def update_with_root_folder(self):
+    def update_with_root_folder(self,delete_before=False):
+        if delete_before:
+            self.delete()
         self.add_root_folder()
         self.add_pbx_gs_python_utils()
         self.update()
