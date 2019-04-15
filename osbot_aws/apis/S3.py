@@ -23,6 +23,27 @@ class S3:
         return self.boto_client_s3
 
     # main methods
+    def bucket_create(self, bucket,region):
+        try:
+            location=self.s3().create_bucket(Bucket=bucket,CreateBucketConfiguration={'LocationConstraint': region }).get('Location')
+            return { 'status':'ok', 'data':location}
+        except Exception as error:
+            return {'status': 'error', 'data': '{0}'.format(error)}
+
+    def bucket_delete(self, bucket):
+        if self.bucket_exists(bucket) is False:
+            return False
+        self.s3().delete_bucket(Bucket=bucket)
+        return self.bucket_exists(bucket) is False
+
+    def bucket_exists(self, bucket):
+        try:
+            self.s3().head_bucket(Bucket=bucket)
+            return True
+        except:
+            return False
+
+
 
     def buckets(self):
         data = []

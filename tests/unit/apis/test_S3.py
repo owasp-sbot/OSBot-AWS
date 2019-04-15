@@ -1,6 +1,8 @@
 import os
 import unittest
 
+from osbot_aws.tmp_utils.Temp_Misc import Temp_Misc
+
 from osbot_aws.apis.S3 import S3
 
 
@@ -20,7 +22,17 @@ class Test_S3(unittest.TestCase):
         assert os.path.isfile(temp_file) is True
         return temp_file
 
-    def test_buckets       (self):
+    def test_bucket_create_delete(self):
+        bucket_name = Temp_Misc.random_text('temp_bucket').lower().replace('_','-')
+        bucket_url  = 'http://{0}.s3.amazonaws.com/'.format(bucket_name)
+        region      = 'eu-west-2'
+        assert self.s3.bucket_exists(bucket_name) is False
+        assert self.s3.bucket_create(bucket_name, region) == { 'status':'ok', 'data':bucket_url}
+        assert self.s3.bucket_exists(bucket_name) is True
+        assert self.s3.bucket_delete(bucket_name) is True
+        assert self.s3.bucket_exists(bucket_name) is False
+
+    def test_buckets(self):
         names = self.s3.buckets()
         assert self.test_bucket in names
         assert len(names) > 6

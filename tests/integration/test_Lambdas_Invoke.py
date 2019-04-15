@@ -2,6 +2,7 @@ import json
 import unittest
 from time import sleep
 
+from osbot_aws.apis.S3 import S3
 from pbx_gs_python_utils.utils.Dev import Dev
 from pbx_gs_python_utils.utils.Misc     import Misc
 
@@ -53,8 +54,6 @@ class test_Lambdas_Invoke(TestCase):
         assert lambda_obj.invoke(payload) == {'status': 'ok'}
         assert Queue(queue_name).pull()   == message
 
-
-
         # def add_sqs_send_message_priv(role_arn):
         #     role = IAM(role_name='temp_role_for_lambda_invocation')
         #     resource = 'arn:aws:sqs:{0}:{1}:*'.format('eu-west-2', role.account_id())
@@ -64,13 +63,57 @@ class test_Lambdas_Invoke(TestCase):
 
         # add_sqs_send_message_priv(lambda_obj.role_arn)
 
+    def _test_s3_bucket_to_sqs(self):
+        s3 = S3()
+        queue_1 = Queue('unit_tests_temp_queue__from_s3').create()
+        s3_bucket = 'bucket-42-temp'
+        region    = 'eu-west-2'
 
+        assert s3.bucket_exists(s3_bucket) is False()
+        Dev.pprint(s3.bucket_create(s3_bucket,region))
+        Dev.pprint(s3.bucket_exists(s3_bucket))
+        Dev.pprint(s3.bucket_delete(s3_bucket))
+        Dev.pprint(s3.bucket_exists(s3_bucket))
 
-
-
-    
     # SKIPPED tests
 
+    @unittest.skip
+    def _test_sqs_to_lamdba_to_sqs(self):
+        queue_1 = Queue('unit_tests_temp_queue__1').create()
+        queue_2 = Queue('unit_tests_temp_queue__2').create()
+        lambda_obj = Lambda_Package('osbot_aws.lambdas.pocs.send_event_data_to_queue')   #.update_with_root_folder()
+        payload = {'queue_url': queue_2.url(), 'message': 'test 123'}
+
+        #queue_1.attributes_update({'VisibilityTimeout': '61'}) # needs to be bigger than lambda timeout
+
+        queue_1_arn  = queue_1.attributes().get('QueueArn')
+        function_arn = lambda_obj._lambda.function_Arn()
+        #Dev.pprint(lambda_obj.role_arn)            # needed to add the extra priv to pull SQS messages
+
+        #result = lambda_obj._lambda.boto_lambda().list_event_source_mappings(EventSourceArn=queue_1_arn)
+        # result = lambda_obj._lambda.boto_lambda().create_event_source_mapping(
+        #     EventSourceArn=queue_1_arn,
+        #     FunctionName=function_arn,
+        #     Enabled=True,
+        #     BatchSize=1
+        # )
+
+        queue_1.push('some message 1')
+        queue_1.push('some message 2')
+        queue_1.push('some message 3')
+        queue_1.push('some message 4')
+        #lambda_obj.invoke(payload)
+        sleep(2)
+
+        Dev.pprint(queue_2.pull())
+        Dev.pprint(queue_2.pull())
+        Dev.pprint(queue_2.pull())
+        Dev.pprint(queue_2.pull())
+
+        queue_1.delete()
+        queue_2.delete()
+
+    @unittest.skip
     def _test_confirm_tmp_reuse(self):
         lambda_name = 'osbot_aws.lambdas.pocs.confirm_tmp_reuse'                # lambda to execute
 
@@ -106,18 +149,45 @@ class test_Lambdas_Invoke(TestCase):
 
         lambda_obj = Lambda_Package(lambda_name).update_with_root_folder()      # create lambda and upload code
 
-        result_1 = lambda_obj.invoke({'port': "11111"})
-        result_2 = lambda_obj.invoke({'port': "22222"})
-        result_3 = lambda_obj.invoke({'port': "33333"})
-        result_4 = lambda_obj.invoke({'port': "44444"})
+        result_1 = lambda_obj.invoke({'port': 11111, 'count': 3
+                                      })
+        result_2 = lambda_obj.invoke()
+        sleep(1)
+        result_3 = lambda_obj.invoke()
+        sleep(10)
+        result_4 = lambda_obj.invoke()
 
-        Dev.print(result_1.get('stdout'))
-        #sleep(2)
-        Dev.print(result_2.get('stdout'))
-        #sleep(2)
-        Dev.print(result_3.get('stdout'))
-        #sleep(2)
-        Dev.print(result_4.get('stdout'))
+        print()
+        print('\n***1st Execution***\n'               , result_1)
+        print('\n***2nd Execution (no delay)***\n'    , result_2)
+        print('\n***3rd Execution (1 sec delay) ***\n', result_3)
+        print('\n***4th Execution (10 sec delay)***\n', result_4)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        # result_1 = lambda_obj.invoke({'port': "11111"})
+        # result_2 = lambda_obj.invoke({'port': "22222"})
+        # result_3 = lambda_obj.invoke({'port': "33333"})
+        # result_4 = lambda_obj.invoke({'port': "44444"})
+        #
+        # Dev.print(result_1.get('stdout'))
+        # #sleep(2)
+        # Dev.print(result_2.get('stdout'))
+        # #sleep(2)
+        # Dev.print(result_3.get('stdout'))
+        # #sleep(2)
+        # Dev.print(result_4.get('stdout'))
 
 
 
