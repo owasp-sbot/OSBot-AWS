@@ -15,12 +15,20 @@ from osbot_aws.apis.Session import Session
 class S3:
     def __init__(self):
         self.boto_client_s3  = None
+        self.boto_resource_s3 = None
         self.tmp_file_folder = 's3_temp_files'
 
     # helpers
     def s3(self):
         if self.boto_client_s3 is None : self.boto_client_s3 = Session().client('s3')
         return self.boto_client_s3
+
+    def s3_resource(self):
+        if self.boto_resource_s3 is None : self.boto_resource_s3 = Session().resource('s3')
+        return self.boto_resource_s3
+
+    def s3_bucket_notification(self,bucket_name):
+        return self.s3_resource().BucketNotification(bucket_name)
 
     # main methods
     def bucket_create(self, bucket,region):
