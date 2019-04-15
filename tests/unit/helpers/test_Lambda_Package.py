@@ -32,7 +32,7 @@ class test_Lambda_Package(TestCase):
         self.package.add_folder(self.package.get_root_folder())
         self.package._lambda.handler='osbot_aws.lambdas.dev.check_aws_api.run'
         self.package.update()
-        assert self.package.invoke() == "checking aws api: <class 'osbot_aws.tmp_utils.Temp_Misc.Temp_Misc'>"
+        assert self.package.invoke() == "checking aws api: <class 'osbot_aws.Globals.Globals'>"
 
     def test_add_pbx_gs_python_utils(self):
         self.package.add_root_folder()
