@@ -1,5 +1,5 @@
 import os
-
+import importlib
 import pbx_gs_python_utils
 from pbx_gs_python_utils.utils.Dev import Dev
 from pbx_gs_python_utils.utils.Files import Files
@@ -84,3 +84,14 @@ class Lambda_Package:
         self.add_pbx_gs_python_utils()
         self.update()
         return self
+
+    def update_code(self):
+        base_folder = self.lambda_name.split('.').pop(0)                    # will point to the top level module
+        module_path = importlib.import_module(base_folder).__path__.pop()   # get folder of module
+
+        self.add_folder(module_path)                                        # add module's folder
+        self.add_root_folder()                                              # add osbot-aws folder
+        self.add_pbx_gs_python_utils()                                      # add pbx-gs-python-utils folder
+        self.update()                                                       # zip files up and update lambda
+        return self
+
