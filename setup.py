@@ -6,7 +6,6 @@ with open("README.md", "r") as fh:
 setuptools.setup(
     version                       = "0.6.41"               , # change this on every release
     name                          = "osbot_aws"  ,
-
     author                        = "Dinis Cruz",
     author_email                  = "dinis.cruz@owasp.org",
     description                   = "OWASP Security Bot - AWS",

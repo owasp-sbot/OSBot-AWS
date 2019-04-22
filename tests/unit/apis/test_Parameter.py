@@ -19,7 +19,7 @@ class test_Parameters(TestCase):
     def tearDown(self):
         if self.result is not None:
             Dev.pprint(self.result)
-        #self.param.delete()                         #  todo: move this to class methods
+        self.param.delete()                         #  todo: move this to class methods
 
     def test_ssm(self):
         assert type(self.param.ssm()).__name__ == 'SSM'
