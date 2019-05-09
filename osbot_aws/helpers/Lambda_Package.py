@@ -47,7 +47,7 @@ class Lambda_Package:
         return self
 
     def add_module(self,module_name):
-        module_path = importlib.import_module(module_name).__path__.pop()  # get folder of module
+        module_path = importlib.import_module(module_name).__path__[0]     # get folder of module
         self.add_folder(module_path)                                       # add module's folder
         return self
 

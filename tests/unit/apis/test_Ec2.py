@@ -14,7 +14,7 @@ class test_Ec2(TestCase):
 
     def test_instances_details(self):
         result = self.ec2.instances_details()
-        assert len(result) > 5
+        assert len(result) > 1
 
     def test_security_groups(self):
         result = self.ec2.security_groups()
