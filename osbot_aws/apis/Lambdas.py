@@ -2,11 +2,11 @@ import boto3
 
 from osbot_aws.apis.Boto_Helpers import Boto_Helpers
 from osbot_aws.apis.Session import Session
-
+from osbot_aws.Globals import Globals
 
 class Lambdas(Boto_Helpers):
     def __init__(self):
-        self.region_name  = 'eu-west-2'
+        self.region_name  = Globals.aws_session_region_name
         self._boto_lambda = None
 
     def boto_lambda(self):

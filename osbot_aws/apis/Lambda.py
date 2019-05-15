@@ -9,7 +9,7 @@ from    pbx_gs_python_utils.utils.Files         import Files
 from osbot_aws.apis.Session import Session
 from osbot_aws.tmp_utils.Temp_Misc import Temp_Misc
 from osbot_aws.apis.S3 import S3
-
+from osbot_aws.Globals import Globals
 
 class Lambda:
     def __init__(self, name):
@@ -245,8 +245,8 @@ def load_dependencies(targets):
 
 def load_dependency(target):
     s3         = S3()
-    s3_bucket  = 'gs-lambda-tests'
-    s3_key     = 'dinis/lambdas-dependencies/{0}.zip'.format(target)
+    s3_bucket  = Globals.lambda_s3_bucket
+    s3_key     = 'OSBot/lambdas-dependencies/{0}.zip'.format(target)
     tmp_dir    = Files.path_combine('/tmp/lambdas-dependencies', target)
 
     if s3.file_exists(s3_bucket,s3_key) is False:
@@ -261,8 +261,8 @@ def load_dependency(target):
 def upload_dependency(target):
     s3        = S3()
     s3_bucket = 'gs-lambda-tests'
-    s3_folder = 'dinis/lambdas-dependencies/'
-    s3_file   = 'dinis/lambdas-dependencies/{0}.zip'.format(target)
+    s3_folder = 'OSBot/lambdas-dependencies/'
+    s3_file   = 'OSBot/lambdas-dependencies/{0}.zip'.format(target)
     path_libs = Files.path_combine('../../../_lambda_dependencies/', target)
     if Files.not_exists(path_libs):
         raise Exception("In Lambda upload_dependency, could not find dependency for: {0}".format(target))
