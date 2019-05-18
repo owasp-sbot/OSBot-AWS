@@ -266,5 +266,5 @@ def upload_dependency(target):
     path_libs = Files.path_combine('../../../_lambda_dependencies/', target)
     if Files.not_exists(path_libs):
         raise Exception("In Lambda upload_dependency, could not find dependency for: {0}".format(target))
-    s3.folder_upload(path_libs, s3_bucket, s3_folder)
+    s3.folder_upload(path_libs, s3_bucket, s3_file)
     return s3.file_exists(s3_bucket, s3_file)
