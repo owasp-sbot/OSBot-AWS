@@ -8,8 +8,8 @@ class test_Create_Code_Build(TestCase):
 
     def setUp(self):
         self.project_name    = 'osbot_aws'
-        self.account_id      = IAM().account_id()
-        self.api             = Create_Code_Build(account_id=self.account_id, project_name=self.project_name)
+        #self.account_id      = IAM().account_id()
+        self.api             = Create_Code_Build(project_name=self.project_name)
 
     # this needs to be updated to take into account the policies manually added to the arn:aws:iam::244560807427:role/osbot-aws
     # via the AWS Console API

@@ -1,16 +1,26 @@
 from time import sleep
 
+from osbot_aws.apis.IAM import IAM
+
 from osbot_aws.apis.CodeBuild import CodeBuild
 
 #todo: add Create_Code_Build tests from gs-docker-codebuild project
 class Create_Code_Build:
 
-    def __init__(self,account_id,project_name):
-        self.account_id         = account_id
+    def __init__(self, project_name, github_org='owasp-sbot', source_version='master', build_spec='buildspec.yml', docker_type='LINUX_CONTAINER',docker_image='aws/codebuild/docker:18.09.0',compute_type='BUILD_GENERAL1_SMALL'):
+        self.iam                = IAM()
+        self.build_spec         = build_spec
+        self.github_org         = github_org
+        self.source_version     = source_version
+        self.docker_type        = docker_type
+        self.docker_image       = docker_image
+        self.compute_type       = compute_type
         self.project_name       = project_name
-        self.project_repo       = 'https://github.com/pbx-gs/{0}'.format(self.project_name)
-        self.service_role       = 'arn:aws:iam::{0}:role/{1}'                  .format(self.account_id, self.project_name)
-        self.project_arn        = 'arn:aws:codebuild:eu-west-2:{0}:project/{1}'.format(self.account_id, self.project_name     )
+        self.account_id         = self.iam.account_id()
+        self.region             = self.iam.region()
+        self.project_repo       = f'https://github.com/{self.github_org}/{self.project_name}'
+        self.service_role       = f'arn:aws:iam::{self.account_id}:role/{self.project_name}'
+        self.project_arn        = f'arn:aws:codebuild:{self.region}:{self.account_id}:project/{self.project_name}'
         self.assume_policy      = {'Statement': [{'Action'   : 'sts:AssumeRole'                     ,
                                                   'Effect'   : 'Allow'                              ,
                                                   'Principal': {'Service': 'codebuild.amazonaws.com'}}]}
@@ -25,49 +35,53 @@ class Create_Code_Build:
 
     def create_project_with_container__docker(self):
         kvargs = {
-            'name'        : self.project_name,
-            'source'      : { 'type'         : 'GITHUB',
-                              'location'     : self.project_repo                 },
-            'artifacts'   : {'type'          : 'NO_ARTIFACTS'                    },
-            'environment' : {'type'          : 'LINUX_CONTAINER'                  ,
-                            'image'          : 'aws/codebuild/docker:18.09.0'     ,
-                            'computeType'    : 'BUILD_GENERAL1_LARGE'            },
-            'serviceRole' : self.service_role
+            'name'         : self.project_name,
+            'source'       : { 'type'         : 'GITHUB',
+                               'location'     : self.project_repo                  ,
+                               'buildspec'    : self.build_spec                   },
+            'sourceVersion': self.source_version                                   ,
+            'artifacts'    : {'type'          : 'NO_ARTIFACTS'                    },
+            'environment'  : {'type'          : self.docker_type                   ,
+                              'image'         : self.docker_image                  ,
+                              'computeType'   : self.compute_type                  },
+            'serviceRole'  : self.service_role
         }
 
         return self.code_build.codebuild.create_project(**kvargs)
 
     def create_project_with_container__gs_docker_codebuild(self):
         kvargs = {
-            'name'        : self.project_name,
-            'source'      : { 'type'                   : 'GITHUB',
-                           'location'                  : self.project_repo                 },
-            'artifacts'   : {'type'                    : 'NO_ARTIFACTS'                    },
-            'environment' : {'type'                    : 'LINUX_CONTAINER'                  ,
-                            'image'                    : '{0}.dkr.ecr.eu-west-2.amazonaws.com/gs-docker-codebuild:latest'.format(self.account_id)     ,
-                            'computeType'              : 'BUILD_GENERAL1_LARGE'            ,
-                            'imagePullCredentialsType' : 'SERVICE_ROLE'                    },
-            'serviceRole' : self.service_role
+            'name'         : self.project_name,
+            'source'       : { 'type'                   : 'GITHUB',
+                               'location'               : self.project_repo                  ,
+                               'buildspec'              : self.build_spec                   },
+            'sourceVersion': self.source_version                                             ,
+            'artifacts'    : {'type'                    : 'NO_ARTIFACTS'                    },
+            'environment'  : {'type'                    : self.docker_type                   ,
+                             'image'                    : f'{self.account_id}.dkr.ecr.{self.region}.amazonaws.com/{self.project_name}:latest'.lower(),
+                             'computeType'              : self.compute_type                  ,
+                             'imagePullCredentialsType' : 'SERVICE_ROLE'                    },
+            'serviceRole'  : self.service_role
         }
         return self.code_build.codebuild.create_project(**kvargs)
 
     def policies__for_docker_build(self):
-        cloud_watch_arn = "arn:aws:logs:eu-west-2:{0}:log-group:/aws/codebuild/{1}:log-stream:*".format(self.account_id, self.project_name)
+        cloud_watch_arn = f"arn:aws:logs:{self.region}:{self.account_id}:log-group:/aws/codebuild/{self.project_name}:log-stream:*"
         policies = {"Cloud-Watch-Policy": {"Version": "2012-10-17",
                                            "Statement": [{"Sid": "GsBotPolicy",
                                                           "Effect": "Allow",
                                                           "Action": ["logs:CreateLogGroup",
                                                                      "logs:CreateLogStream",
                                                                      "logs:PutLogEvents"],
-                                                          "Resource": [cloud_watch_arn]}]},
+                                                          "Resource": [ cloud_watch_arn ]}]},
                     "Secret-Manager": {
                         "Version": "2012-10-17",
                         "Statement": [{"Sid": "GsBotPolicy",
                                        "Effect": "Allow",
                                        "Action": ["secretsmanager:GetSecretValue", "secretsmanager:DescribeSecret"],
                                        "Resource": [
-                                           "arn:aws:secretsmanager:eu-west-2:244560807427:secret:slack-gs-bot-*",
-                                           "arn:aws:secretsmanager:eu-west-2:244560807427:secret:elastic_gsuite_data-*"]}]},
+                                           f"arn:aws:secretsmanager:{self.region}:{self.account_id}:secret:slack-gs-bot-*",
+                                           f"arn:aws:secretsmanager:{self.region}:{self.account_id}:secret:gw-elastic-server-*"]}]},  # todo: refactor
                     "Create-Docker-Image": {
                         "Version": "2012-10-17",
                         "Statement": [{"Effect": "Allow",
@@ -86,7 +100,7 @@ class Create_Code_Build:
         return policies
 
     def policies__with_ecr(self):
-        cloud_watch_arn = "arn:aws:logs:eu-west-2:{0}:log-group:/aws/codebuild/{1}:log-stream:*".format(self.account_id,self.project_name)
+        cloud_watch_arn = f"arn:aws:logs:{self.region}:{self.account_id}:log-group:/aws/codebuild/{self.project_name}:log-stream:*"
         policies = {"Cloud-Watch-Policy"     : { "Version": "2012-10-17",
                                                  "Statement": [{   "Effect": "Allow",
                                                                    "Action": [ "logs:CreateLogGroup"  ,
@@ -107,7 +121,7 @@ class Create_Code_Build:
         return policies
 
     def policies__with_ecr_and_3_secrets(self):
-        cloud_watch_arn = "arn:aws:logs:eu-west-2:{0}:log-group:/aws/codebuild/{1}:log-stream:*".format(self.account_id,self.project_name)
+        cloud_watch_arn = f"arn:aws:logs:{self.region}:{self.account_id}:log-group:/aws/codebuild/{self.project_name}:log-stream:*"
         policies = {"Cloud-Watch-Policy"     : { "Version": "2012-10-17",
                                                  "Statement": [{   "Sid": "GsBotPolicy",
                                                                    "Effect": "Allow",
@@ -128,10 +142,11 @@ class Create_Code_Build:
                                                                    "Resource": "*"}]},
                     "Secret-Manager"        : { "Version"  : "2012-10-17",
                                                 "Statement": [{   "Effect"  : "Allow",
-                                                                  "Action"  : [ "secretsmanager:GetSecretValue","secretsmanager:DescribeSecret"          ],
-                                                                  "Resource": [ "arn:aws:secretsmanager:eu-west-2:244560807427:secret:slack-gs-bot-*"     ,
-                                                                                "arn:aws:secretsmanager:eu-west-2:244560807427:secret:elastic*"           ,
-                                                                                "arn:aws:secretsmanager:eu-west-2:244560807427:secret:gsuite*"        ]}]}}
+                                                                  "Action"  : [  "secretsmanager:GetSecretValue","secretsmanager:DescribeSecret"          ],
+                                                                  "Resource": [ f"arn:aws:secretsmanager:{self.region}:{self.account_id}:secret:slack-gs-bot-*"     ,
+                                                                                f"arn:aws:secretsmanager:{self.region}:{self.account_id}:secret:gw-elastic*"        ,
+                                                                                f"arn:aws:secretsmanager:{self.region}:{self.account_id}:secret:gsuite*"            ,
+                                                                                f"arn:aws:secretsmanager:{self.region}:{self.account_id}:secret:git__*"         ]}]}}
         return policies
 
 

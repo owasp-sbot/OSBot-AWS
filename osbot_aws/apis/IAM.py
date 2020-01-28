@@ -14,6 +14,8 @@ class IAM:
         self._iam        = None
         self._sts        = None
         self._account_id = None
+        self._session    = None
+        self._region     = None
         self.user_name   = user_name
         self.role_name   = role_name
 
@@ -23,10 +25,17 @@ class IAM:
             self._iam = Session().client('iam')
         return self._iam
 
+    def session(self):
+        if self._session is None:
+            self._session = Session().session()
+        return self._session
+
     def sts(self):
         if self._sts is None:
             self._sts = Session().client('sts')
         return self._sts
+
+
 
     # main method
 
@@ -37,6 +46,10 @@ class IAM:
             self._account_id = self.caller_identity().get('Account')
         return self._account_id
 
+    def region(self):
+        if self._region is None:
+            self._region = self.session().region_name
+        return self._region
     # def assume_role(self, role_arn,role_session_name):
     #     data = self.sts().assume_role(RoleArn = role_arn, RoleSessionName=role_session_name)
     #     return data

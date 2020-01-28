@@ -6,6 +6,16 @@ from osbot_aws.Globals import Globals
 
 class Session:
 
+    def session(self):
+        profile_name = Globals.aws_session_profile_name
+        region_name = Globals.aws_session_region_name
+
+        profiles = get_session()._build_profile_map()
+        if profile_name in profiles:
+            return boto3.Session(profile_name=profile_name, region_name=region_name)
+        else:
+            return boto3.Session()
+
     def client_boto3(self,service_name):
         try:
             profile_name = Globals.aws_session_profile_name
