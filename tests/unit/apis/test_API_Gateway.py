@@ -26,9 +26,13 @@ class test_API_Gateway(Test_Helper):
         assert account.get('throttleSettings')  == {'burstLimit': 5000, 'rateLimit': 10000.0}
 
     def test_api_keys(self):
-        keys = self.api_gateway.api_keys('name')
+        keys = self.api_gateway.api_keys('name',include_values=True)
         assert len(keys) > 1
         assert list(keys.values()).pop().get('enabled') == True
+
+    def test_api_key(self):
+        assert 'value' in set(self.api_gateway.api_key(self.test_api_key_id, include_value=True))
+        
 
     def test_deployments(self):
         items = self.api_gateway.deployments(self.test_api_id)

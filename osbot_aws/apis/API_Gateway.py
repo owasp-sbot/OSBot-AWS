@@ -43,8 +43,11 @@ class API_Gateway:
     def account(self):
         return self.api_gateway.get_account()
 
-    def api_keys(self, index_by='id'):
-        return self._call_method_return_items(method_name="get_api_keys", index_by=index_by)
+    def api_keys(self, index_by='id',include_values=False):
+        return self._call_method_return_items(method_name="get_api_keys", params={'includeValues':include_values}, index_by=index_by)
+
+    def api_key(self, api_key, include_value=False):
+        return self.api_gateway.get_api_key(apiKey=api_key,includeValue=include_value)
 
     def deployments(self, api_id):
         return self._call_method_return_items(method_name="get_deployments", params={'restApiId':api_id})
