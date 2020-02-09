@@ -49,6 +49,17 @@ class API_Gateway:
     def api_key(self, api_key, include_value=False):
         return self.api_gateway.get_api_key(apiKey=api_key,includeValue=include_value)
 
+    def api_key_create(self,key_name):
+        return self.api_gateway.create_api_key(name=key_name)
+
+    def api_key_delete(self, key_id=None, key_name=None):
+        if key_id:
+            return self.api_gateway.delete_api_key(apiKey=key_id)
+        if key_name:
+            for key_id, value in self.api_keys().items():
+                if value.get('name') == key_name:
+                    return self.api_gateway.delete_api_key(apiKey=key_id)
+
     def deployments(self, api_id):
         return self._call_method_return_items(method_name="get_deployments", params={'restApiId':api_id})
 
@@ -66,6 +77,12 @@ class API_Gateway:
 
     def resources(self, api_id):
         return self._get_using_api_id('resources', api_id)
+
+    def rest_api_create(self, api_name):
+        return self.api_gateway.create_rest_api(name=api_name)
+
+    def rest_api_delete(self, api_id):
+        return self.api_gateway.delete_rest_api(restApiId=api_id)
 
     def rest_apis(self, index_by='id'):
         return self._call_method_return_items(method_name="get_rest_apis",index_by=index_by)
@@ -98,16 +115,9 @@ class API_Gateway:
             results[key] = key_results
         return results
 
+    # this method helps to create a table that is usable by graph engines like Google Charts
     def usage__as_chart_data(self,usage_plan_id, days):
         api_keys = self.api_keys()
-        # index_value = api_keys[key].get(index_by)
-        [['Year', 'Line 1', 'Line 2', 'Line 3'],
-         ['2004', 500, 400, 30],
-         ['2005', 1170, 460, 400],
-         ['2006', 660, 1120, 100],
-         ['2007', 1030, 540, 200],
-         ['2008', 1030, 540, 250],
-         ['2009', 1030, 540, 100]]
 
         usage = self.usage(usage_plan_id, days)
         headers = ['Days','Totals']
@@ -115,7 +125,6 @@ class API_Gateway:
         for key in keys:
             name = api_keys[key].get('name')
             headers.append(name)
-        #headers.append('Totals')
         rows = [headers]
 
         if len(keys) > 0:

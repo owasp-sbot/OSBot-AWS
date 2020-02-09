@@ -1,4 +1,5 @@
 from datetime import date, timedelta
+from time import sleep
 
 from gw_bot.helpers.Test_Helper import Test_Helper
 from osbot_aws.apis.API_Gateway import API_Gateway
@@ -19,20 +20,36 @@ class test_API_Gateway(Test_Helper):
         assert type(self.api_gateway.api_gateway).__name__ == 'APIGateway'
 
     def test_account(self):
+        #from osbot_jupyter.utils.Trace_Call import Trace_Call
+        #trace = Trace_Call()
+        #trace.include_filter=['osbot*', 'gwbot*','boto*','ConnectionPool*']
+        #self.result = trace.invoke_method(self.api_gateway.account)
+
         account = self.api_gateway.account()
         assert account.get('apiKeyVersion')     == '4'
         assert account.get('cloudwatchRoleArn') == 'arn:aws:iam::311800962295:role/api-gateway-write-to-cloud-watch'
         assert account.get('features')          == ['UsagePlans']
         assert account.get('throttleSettings')  == {'burstLimit': 5000, 'rateLimit': 10000.0}
 
+    def test_api_key(self):
+        assert 'value' in set(self.api_gateway.api_key(self.test_api_key_id, include_value=True))
+
+    def test_api_key_create__delete(self):
+        key_name = 'temp new key'
+        api_keys = self.api_gateway.api_keys()                      # store current api_keys
+        api_key  = self.api_gateway.api_key_create(key_name)        # create key
+        self.api_gateway.api_key_delete(key_id=api_key.get('id'))   # delete it using `id`
+        self.api_gateway.api_key_create(key_name)                   # create it again
+        self.api_gateway.api_key_delete(key_name=key_name)          # delete it using `name`
+        assert api_keys == self.api_gateway.api_keys()              # confirm api_keys are unchanged
+
+
+
+
     def test_api_keys(self):
         keys = self.api_gateway.api_keys('name',include_values=True)
         assert len(keys) > 1
         assert list(keys.values()).pop().get('enabled') == True
-
-    def test_api_key(self):
-        assert 'value' in set(self.api_gateway.api_key(self.test_api_key_id, include_value=True))
-        
 
     def test_deployments(self):
         items = self.api_gateway.deployments(self.test_api_id)
@@ -54,6 +71,16 @@ class test_API_Gateway(Test_Helper):
 
     def test_resources(self):
         assert len(self.api_gateway.resources(self.test_api_id)) > 1
+
+    def test_rest_api_create__delete(self):
+        rest_api = self.api_gateway.rest_api_create('temp test api ABC')            # create rest_api
+        sleep(1)                                                                    # wait a little before deleting
+        self.result = self.api_gateway.rest_api_delete(rest_api.get('id'))          # delete it
+
+        try:
+            pass
+        except Exception as error:
+            self.result = f'{error}'
 
     def test_rest_apis(self):
         items = self.api_gateway.rest_apis(index_by='id')
