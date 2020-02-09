@@ -33,7 +33,7 @@ class test_API_Gateway(Test_Helper):
         assert len(items) > 2
 
     def test_domain_names(self):
-        assert self.api_gateway.domain_names() == []
+        assert len(self.api_gateway.domain_names()) > 0
 
     #not working: 'Invalid Method identifier specified'
     def test_integration(self):
@@ -56,27 +56,9 @@ class test_API_Gateway(Test_Helper):
     def test_stages(self):
         self.result = self.api_gateway.stages(self.test_api_id)
 
-
-
-
-
-
-
-
-
-
-
     def test_usage(self):
         days = 100
         self.result = self.api_gateway.usage(self.test_usage_plan_id, days)
-
-
-
-
-
-
-
-
 
     def test_usage_plans(self):
         assert self.api_gateway.usage_plans().get(self.test_usage_plan_id).get('name') == '1k month'

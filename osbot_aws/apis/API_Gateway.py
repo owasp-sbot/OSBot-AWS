@@ -18,8 +18,7 @@ class API_Gateway:
             data = {}
             print('-----')
             for item in raw_data.get(data_key):
-                print(type(item), item)
-                #data[item.get(index_by)] = item
+                data[item.get(index_by)] = item
             return data
         except Exception as error:
             return {'error' : f'{error}'}
@@ -96,10 +95,6 @@ class API_Gateway:
                 key_results[row_date] = value[days-i][0]
             results[key] = key_results
         return results
-
-
-
-
 
     def usage_plans(self):
         return self._get('usage_plans')
