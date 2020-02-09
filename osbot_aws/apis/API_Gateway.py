@@ -11,6 +11,7 @@ class API_Gateway:
     # helper methods
 
     # see this tweet to understand the use of the 'data_key' param https://twitter.com/DinisCruz/status/1226113182240038912
+    # see this tweet thread to see more info about performance issues with this api https://twitter.com/DinisCruz/status/1226504297439023104
     # todo: add support for getting all the data using the position field
     def _call_method_return_items(self, method_name, params={}, index_by='id', data_key='items'):
         try:
