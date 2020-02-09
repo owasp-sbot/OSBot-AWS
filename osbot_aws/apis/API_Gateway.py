@@ -76,11 +76,23 @@ class API_Gateway:
     def models(self, api_id):
         return self._get_using_api_id('models', api_id)
 
-    def resources(self, api_id):
-        return self._get_using_api_id('resources', api_id)
+    def resource(self, api_id, path):
+        return self.resources(api_id, index_by='path').get(path)
+
+    def resource_create(self, api_id, parent_id, path):
+        return self.api_gateway.create_resource(restApiId=api_id, parentId=parent_id,pathPart=path)
+
+    def resource_delete(self, api_id, resource_id):
+        return self.api_gateway.delete_resource(restApiId=api_id, resourceId=resource_id)
+
+    def resources(self, api_id, index_by='id'):
+        return self._get_using_api_id('resources', api_id=api_id, index_by=index_by)
 
     def rest_api_create(self, api_name):
-        return self.api_gateway.create_rest_api(name=api_name)
+        rest_apis = self.rest_apis(index_by='name')                 # get existing Rest APIs
+        if api_name in rest_apis:                                   # see if it already exists
+            return rest_apis.get(api_name)                          # return if it does
+        return self.api_gateway.create_rest_api(name=api_name)      # if not created it
 
     def rest_api_delete(self, api_id):
         return self.api_gateway.delete_rest_api(restApiId=api_id)

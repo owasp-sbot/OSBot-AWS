@@ -43,9 +43,6 @@ class test_API_Gateway(Test_Helper):
         self.api_gateway.api_key_delete(key_name=key_name)          # delete it using `name`
         assert api_keys == self.api_gateway.api_keys()              # confirm api_keys are unchanged
 
-
-
-
     def test_api_keys(self):
         keys = self.api_gateway.api_keys('name',include_values=True)
         assert len(keys) > 1
@@ -69,6 +66,27 @@ class test_API_Gateway(Test_Helper):
     def test_models(self):
         assert len(self.api_gateway.models(self.test_api_id)) > 1
 
+    def test_resource_create(self):
+        api_name    = 'temp-unit-test-api'
+        new_path    = 'test-path'
+
+        # create Rest API
+        rest_api    = self.api_gateway.rest_api_create(api_name)
+        api_id      = rest_api.get('id')
+        path_id     = self.api_gateway.resource(api_id, '/').get('id')
+
+        # create resource
+        new_path_id = self.api_gateway.resource_create(api_id,path_id,new_path).get('id')
+
+        # confirm resource exists
+        assert self.api_gateway.resource(api_id, f'/{new_path}').get('id') == new_path_id
+
+        # delete resource and Rest API
+        self.api_gateway.resource_delete(api_id, new_path_id)
+        sleep(2)                                                # without this we get the botocore.errorfactory.TooManyRequestsException
+        self.api_gateway.rest_api_delete(api_id)
+
+
     def test_resources(self):
         assert len(self.api_gateway.resources(self.test_api_id)) > 1
 
@@ -76,7 +94,6 @@ class test_API_Gateway(Test_Helper):
         rest_api = self.api_gateway.rest_api_create('temp test api ABC')            # create rest_api
         sleep(1)                                                                    # wait a little before deleting
         self.result = self.api_gateway.rest_api_delete(rest_api.get('id'))          # delete it
-
         try:
             pass
         except Exception as error:
