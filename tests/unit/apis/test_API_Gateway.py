@@ -59,9 +59,14 @@ class test_API_Gateway(Test_Helper):
     def test_integration(self):
        self.result = self.api_gateway.integration(self.test_api_id, self.test_resource_id, 'POST')
 
-    #not working: 'Invalid Method identifier specified'
     def test_method(self):
-       self.result = self.api_gateway.method(self.test_api_id, self.test_resource_id, 'POST')
+        api_name         = 'VP-SaaS-Proxy'
+        path             = '/{proxy+}'
+        api_id           = self.api_gateway.rest_api_id(api_name)
+        resource_id      = self.api_gateway.resource_id(api_id, path)
+        resource_method  = self.api_gateway.resource_methods(api_id, path).pop()
+        method           = self.api_gateway.method(api_id, resource_id, resource_method)
+        assert method.get('httpMethod') == resource_method
 
     def test_models(self):
         assert len(self.api_gateway.models(self.test_api_id)) > 1
@@ -89,6 +94,8 @@ class test_API_Gateway(Test_Helper):
 
     def test_resources(self):
         assert len(self.api_gateway.resources(self.test_api_id)) > 1
+        assert self.api_gateway.resources('VP-SaaS-Proxy').get('id') == self.test_api_id
+        assert self.api_gateway.resources('AAAA-BBB') == {'error': 'API not found: AAAA-BBB'}
 
     def test_rest_api_create__delete(self):
         rest_api = self.api_gateway.rest_api_create('temp test api ABC')            # create rest_api

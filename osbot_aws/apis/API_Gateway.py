@@ -71,13 +71,22 @@ class API_Gateway:
        return self._call_method_return_items('get_integration', params={'restApiId': api_id, 'resourceId': resource_id, 'httpMethod': http_method})
 
     def method(self, api_id, resource_id, http_method):
-        return self._call_method_return_items('get_method', params={'restApiId': api_id, 'resourceId': resource_id, 'httpMethod': http_method})
+        return self.api_gateway.get_method(restApiId=api_id, resourceId= resource_id, httpMethod= http_method)
+
+    # def method_create(self):
+    #     return 'TO DO'
 
     def models(self, api_id):
         return self._get_using_api_id('models', api_id)
 
     def resource(self, api_id, path):
-        return self.resources(api_id, index_by='path').get(path)
+        return self.resources(api_id, index_by='path').get(path,{})
+
+    def resource_id(self, api_id, path):
+        return self.resource(api_id,path).get('id')
+
+    def resource_methods(self, api_id, path):
+        return list(set(self.resource(api_id,path).get('resourceMethods',[])))
 
     def resource_create(self, api_id, parent_id, path):
         return self.api_gateway.create_resource(restApiId=api_id, parentId=parent_id,pathPart=path)
@@ -85,8 +94,18 @@ class API_Gateway:
     def resource_delete(self, api_id, resource_id):
         return self.api_gateway.delete_resource(restApiId=api_id, resourceId=resource_id)
 
-    def resources(self, api_id, index_by='id'):
-        return self._get_using_api_id('resources', api_id=api_id, index_by=index_by)
+    def resources(self, api_id_or_name, index_by='id'):
+        result = self._get_using_api_id('resources', api_id=api_id_or_name, index_by=index_by)
+        if result.get('error') is None:
+            return result
+        rest_apis = self.rest_apis(index_by='name')
+        if api_id_or_name in rest_apis:
+            api_id = rest_apis.get(api_id_or_name).get('id')
+            return self._get_using_api_id('resources', api_id=api_id, index_by=index_by)
+        return {'error': f'API not found: {api_id_or_name}'}
+
+    def rest_api(self, api_name):
+        return self.rest_apis(index_by='name').get(api_name,{})
 
     def rest_api_create(self, api_name):
         rest_apis = self.rest_apis(index_by='name')                 # get existing Rest APIs
@@ -96,6 +115,9 @@ class API_Gateway:
 
     def rest_api_delete(self, api_id):
         return self.api_gateway.delete_rest_api(restApiId=api_id)
+
+    def rest_api_id(self, api_name):
+        return self.rest_api(api_name).get('id')
 
     def rest_apis(self, index_by='id'):
         return self._call_method_return_items(method_name="get_rest_apis",index_by=index_by)
