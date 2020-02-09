@@ -81,20 +81,54 @@ class API_Gateway:
 
 
 
-    def usage(self, usage_plan_id, days, index_by='id'):
+    def usage(self, usage_plan_id, days):
         if days > 90:
             days =90
         results = {}
-        api_keys = self.api_keys()
         raw_data = self.usage_raw(usage_plan_id, days)
         for key, value in raw_data.items():
             key_results = {}
             for i in range(0,days):
                 row_date = (date.today() - timedelta(days=i)).strftime("%Y-%m-%d")
                 key_results[row_date] = value[days-i][0]
-            index_value = api_keys[key].get(index_by)
-            results[index_value] = key_results
+
+            results[key] = key_results
         return results
+
+    def usage__as_chart_data(self,usage_plan_id, days):
+        api_keys = self.api_keys()
+        # index_value = api_keys[key].get(index_by)
+        [['Year', 'Line 1', 'Line 2', 'Line 3'],
+         ['2004', 500, 400, 30],
+         ['2005', 1170, 460, 400],
+         ['2006', 660, 1120, 100],
+         ['2007', 1030, 540, 200],
+         ['2008', 1030, 540, 250],
+         ['2009', 1030, 540, 100]]
+
+        usage = self.usage(usage_plan_id, days)
+        headers = ['Days']
+        keys = sorted(list(set(usage)))
+        for key in keys:
+            name = api_keys[key].get('name')
+            headers.append(name)
+        headers.append('Totals')
+        rows = [headers]
+
+        if len(keys) > 0:
+            days = usage[keys[0]].keys()
+            for day in days:
+                row_key = day.replace('2020-','')
+                row = [row_key]
+                total = 0
+                for key in keys:
+                    value = usage[key][day]
+                    row.append(value)
+                    total += value
+                row.append(total)
+                rows.insert(1,row)
+                
+        return rows
 
     def usage_plans(self):
         return self._get('usage_plans')

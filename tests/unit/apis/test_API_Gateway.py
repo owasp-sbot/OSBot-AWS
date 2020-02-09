@@ -10,8 +10,10 @@ class test_API_Gateway(Test_Helper):
         super().setUp()
         self.api_gateway        = API_Gateway()
         self.test_api_id        = 'xugc5ib648'  # VP-SaaS-Proxy
+        self.test_api_key_id    = '24owcfrcjc'
         self.test_resource_id   = 'lf80sgepa5'
         self.test_usage_plan_id = '7a6fl9'
+
 
     def test__init__(self):
         assert type(self.api_gateway.api_gateway).__name__ == 'APIGateway'
@@ -58,7 +60,14 @@ class test_API_Gateway(Test_Helper):
 
     def test_usage(self):
         days = 10
-        self.result = self.api_gateway.usage(self.test_usage_plan_id, days, index_by='name')
+        usage = self.api_gateway.usage(self.test_usage_plan_id, days)
+        assert len(usage) > 1
+        assert len(usage[self.test_api_key_id]) == days
+
+    def test_usage__as_chart_data(self):
+        days = 10
+        print('-----')
+        self.result = self.api_gateway.usage__as_chart_data(self.test_usage_plan_id, days)
 
     def test_usage_plans(self):
         assert self.api_gateway.usage_plans().get(self.test_usage_plan_id).get('name') == '1k month'
