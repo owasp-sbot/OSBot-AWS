@@ -107,12 +107,12 @@ class API_Gateway:
          ['2009', 1030, 540, 100]]
 
         usage = self.usage(usage_plan_id, days)
-        headers = ['Days']
+        headers = ['Days','Totals']
         keys = sorted(list(set(usage)))
         for key in keys:
             name = api_keys[key].get('name')
             headers.append(name)
-        headers.append('Totals')
+        #headers.append('Totals')
         rows = [headers]
 
         if len(keys) > 0:
@@ -125,7 +125,7 @@ class API_Gateway:
                     value = usage[key][day]
                     row.append(value)
                     total += value
-                row.append(total)
+                row.insert(1,total)
                 rows.insert(1,row)
                 
         return rows
