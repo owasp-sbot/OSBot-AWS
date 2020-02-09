@@ -27,7 +27,6 @@ class API_Gateway:
         try:
             raw_data = getattr(self.api_gateway, method_name)(**params)
             data = {}
-            print('-----')
 
             for key,value in raw_data.get(data_key).items():
                 data[key] = value
