@@ -57,8 +57,8 @@ class test_API_Gateway(Test_Helper):
         self.result = self.api_gateway.stages(self.test_api_id)
 
     def test_usage(self):
-        days = 100
-        self.result = self.api_gateway.usage(self.test_usage_plan_id, days)
+        days = 10
+        self.result = self.api_gateway.usage(self.test_usage_plan_id, days, index_by='name')
 
     def test_usage_plans(self):
         assert self.api_gateway.usage_plans().get(self.test_usage_plan_id).get('name') == '1k month'

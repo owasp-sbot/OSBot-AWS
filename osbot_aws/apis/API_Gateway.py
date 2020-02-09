@@ -81,17 +81,19 @@ class API_Gateway:
 
 
 
-    def usage(self, usage_plan_id, days):
+    def usage(self, usage_plan_id, days, index_by='id'):
         if days > 90:
             days =90
         results = {}
+        api_keys = self.api_keys()
         raw_data = self.usage_raw(usage_plan_id, days)
         for key, value in raw_data.items():
             key_results = {}
             for i in range(0,days):
                 row_date = (date.today() - timedelta(days=i)).strftime("%Y-%m-%d")
                 key_results[row_date] = value[days-i][0]
-            results[key] = key_results
+            index_value = api_keys[key].get(index_by)
+            results[index_value] = key_results
         return results
 
     def usage_plans(self):
