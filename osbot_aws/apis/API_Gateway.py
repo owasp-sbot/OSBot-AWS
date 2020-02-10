@@ -68,13 +68,16 @@ class API_Gateway:
         return self.api_gateway.get_domain_names().get('items')
 
     def integration(self, api_id, resource_id, http_method):
-       return self._call_method_return_items('get_integration', params={'restApiId': api_id, 'resourceId': resource_id, 'httpMethod': http_method})
+        return self.api_gateway.get_integration(restApiId=api_id, resourceId=resource_id, httpMethod=http_method)
 
     def method(self, api_id, resource_id, http_method):
         return self.api_gateway.get_method(restApiId=api_id, resourceId= resource_id, httpMethod= http_method)
 
-    # def method_create(self):
-    #     return 'TO DO'
+    def method_create(self, api_id, resource_id, http_method, authorization_type='NONE'):
+        return self.api_gateway.put_method(restApiId=api_id, resourceId=resource_id, httpMethod=http_method, authorizationType=authorization_type)
+
+    def method_delete(self, api_id, resource_id, http_method):
+        return self.api_gateway.delete_method(restApiId=api_id, resourceId=resource_id, httpMethod=http_method)
 
     def models(self, api_id):
         return self._get_using_api_id('models', api_id)

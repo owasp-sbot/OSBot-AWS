@@ -57,7 +57,12 @@ class test_API_Gateway(Test_Helper):
 
     #not working: 'Invalid Method identifier specified'
     def test_integration(self):
-       self.result = self.api_gateway.integration(self.test_api_id, self.test_resource_id, 'POST')
+        api_name    = 'Slack GW-Bot'  #'Jira Sync' #'VP-SaaS-Proxy'
+        path        = '/slack-handler' #'/jira-on-change' # '/{proxy+}'
+        http_method = 'POST'
+        api_id = self.api_gateway.rest_api_id(api_name)
+        resource_id = self.api_gateway.resource_id(api_id, path)
+        self.result = self.api_gateway.integration(api_id, resource_id, http_method)
 
     def test_method(self):
         api_name         = 'VP-SaaS-Proxy'
@@ -67,6 +72,18 @@ class test_API_Gateway(Test_Helper):
         resource_method  = self.api_gateway.resource_methods(api_id, path).pop()
         method           = self.api_gateway.method(api_id, resource_id, resource_method)
         assert method.get('httpMethod') == resource_method
+
+    def test_method_create__delete(self):
+        api_name = 'temp-unit-test-api'
+        path     = '/'
+        method   = 'POST'
+        api_id      = self.api_gateway.rest_api_create(api_name).get('id')                  # create api
+        resource_id = self.api_gateway.resource(api_id, path).get('id')                     # get resource id
+        self.result = self.api_gateway.method_create(api_id, resource_id,method)            # create method
+        assert method in self.api_gateway.resource_methods(api_id, path)                    # confirm it exists
+        self.result = self.api_gateway.method_delete(api_id, resource_id,method)            # delete method
+        assert [] == self.api_gateway.resource_methods(api_id, path)                        # confirm it doesn't exist
+        self.api_gateway.rest_api_delete(api_id)                                            # delete api
 
     def test_models(self):
         assert len(self.api_gateway.models(self.test_api_id)) > 1
@@ -126,3 +143,14 @@ class test_API_Gateway(Test_Helper):
 
     def test_usage_plans(self):
         assert self.api_gateway.usage_plans().get(self.test_usage_plan_id).get('name') == '1k month'
+
+
+    # helper methods
+
+    def test_create_rest_api(self):
+
+
+        path     = '/'
+        method   = 'POST'
+
+        self.result = self.api_gateway.create_rest_api(api_name)['delete']()
