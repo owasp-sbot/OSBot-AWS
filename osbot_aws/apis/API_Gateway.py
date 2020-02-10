@@ -68,6 +68,11 @@ class API_Gateway:
     def deployments(self, api_id):
         return self._call_method_return_items(method_name="get_deployments", params={'restApiId':api_id})
 
+    def deployment_create(self, api_id, stage):
+        params = {'restApiId': api_id,
+                  'stageName': stage}
+        return self._call_method('create_deployment',params)
+
     def domain_names(self):
         return self.api_gateway.get_domain_names().get('items')
 
@@ -99,12 +104,13 @@ class API_Gateway:
         except Exception as error:
             return f'{error}'
 
-    def integration_create__lambda(self, api_id, resource_id, aws_region, aws_acct_id, lambda_name, http_method='POST'):
-        input_type = 'AWS'
+    def integration_create__lambda(self, api_id, resource_id, aws_region, aws_acct_id, lambda_name, http_method):
+        input_type = 'AWS_PROXY'
         uri = f'arn:aws:apigateway:{aws_region}:lambda:path/2015-03-31/functions/arn:aws:lambda:{aws_region}:{aws_acct_id}:function:{lambda_name}/invocations'
+        integration_http_method = 'POST'
         try:
             return self.api_gateway.put_integration(restApiId=api_id, resourceId=resource_id, httpMethod=http_method,
-                                                    integrationHttpMethod=http_method,type=input_type, uri=uri)
+                                                    integrationHttpMethod=integration_http_method,type=input_type, uri=uri)
         except Exception as error:
             return f'{error}'
 
@@ -167,6 +173,19 @@ class API_Gateway:
     def models(self, api_id):
         return self._get_using_api_id('models', api_id)
 
+    def stage(self, api_id, stage_name):
+        return self._call_method("get_stage", {'restApiId' : api_id, 'stageName':stage_name})
+
+    def stage_url(self,api_id, region, stage, resource=''):
+        return f'https://{api_id}.execute-api.{region}.amazonaws.com/{stage}/{resource}'
+
+    def stages(self, api_id, index_by='deploymentId'):
+       return self._get_using_api_id('stages', api_id, index_by=index_by, data_key='item')
+
+
+    #def stages(self, api_id, index_by='deploymentId'):
+    #    return self._call_method_return_items(method_name="get_stages", params={'restApiId':api_id},index_by=index_by)
+
     def resource(self, api_id, path):
         return self.resources(api_id, index_by='path').get(path,{})
 
@@ -221,9 +240,6 @@ class API_Gateway:
 
     def rest_apis(self, index_by='id'):
         return self._call_method_return_items(method_name="get_rest_apis",index_by=index_by)
-
-    def stages(self, api_id):
-        return self._get_using_api_id('stages', api_id, index_by='deploymentId', data_key='item')
 
     def usage_raw(self, usage_plan_id, days):
         start_date = (date.today() - timedelta(days=days)).strftime("%Y-%m-%d")

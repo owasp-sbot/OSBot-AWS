@@ -14,11 +14,13 @@ class test_API_Gateway(Test_Helper):
 
     def setUp(self):
         super().setUp()
-        self.api_gateway        = API_Gateway()
-        self.test_api_id        = 'xugc5ib648'  # VP-SaaS-Proxy
-        self.test_api_key_id    = '24owcfrcjc'
-        self.test_resource_id   = 'lf80sgepa5'
-        self.test_usage_plan_id = '7a6fl9'
+        self.api_gateway   = API_Gateway()
+        self.rest_api      = Rest_API('temp_rest_api').create()
+        self.api_id        = self.rest_api.id()
+
+        #self.test_api_key_id    = '24owcfrcjc'
+        #self.test_resource_id   = 'lf80sgepa5'
+        #self.test_usage_plan_id = '7a6fl9'
 
 
     def test__init__(self):
@@ -57,6 +59,11 @@ class test_API_Gateway(Test_Helper):
         items = self.api_gateway.deployments(self.test_api_id)
         assert len(items) > 2
 
+    def test_deployment_create(self):
+        stage  = 'Test_QA'
+        api_id = Rest_API('temp_rest_api').create().id()
+        self.result = self.api_gateway.deployment_create(api_id, stage)
+
     def test_domain_names(self):
         assert len(self.api_gateway.domain_names()) > 0
 
@@ -78,7 +85,7 @@ class test_API_Gateway(Test_Helper):
 
     def test_integration_create__http(self):
         uri                = 'http://httpbin.org/robots.txt'
-        rest_api           = Rest_API('temp_rest_api').delete().create()
+        rest_api           = Rest_API('temp_rest_api').create()
         method             = 'GET'
         integration_method = 'GET'
         api_id             = rest_api.id()
@@ -87,15 +94,48 @@ class test_API_Gateway(Test_Helper):
         self.result = self.api_gateway.integration_create__http(api_id=api_id, resource_id=resource_id, uri=uri, http_method=method, integration_http_method=integration_method)
 
     def test_integration_create__lambda(self):
+        from osbot_aws.apis.Lambda import Lambda
+        _lambda = Lambda('gw_bot.lambdas.dev.hello_world')
+        lambda_arn = _lambda.function_Arn()
+
         iam         = IAM()
         aws_region  = iam.region()
         aws_acct_id = iam.account_id()
-        lambda_name = 'temp_lambda'
+        lambda_name = 'gw_bot_lambdas_dev_hello_world'
         rest_api    = Rest_API('temp_rest_api').create()
-        api_id      = rest_api.id()
-        resource_id = rest_api.resource_id('/')
-        self.result = self.api_gateway.integration_create__lambda(api_id     =api_id     , resource_id=resource_id, aws_region=aws_region,
-                                                                  aws_acct_id=aws_acct_id, lambda_name=lambda_name)
+        #api_id      = rest_api.id()
+        resource_id = self.rest_api.resource_id('/')
+        http_method = 'GET'
+        self.api_gateway.method_create(self.api_id, resource_id, http_method)
+        self.result = self.api_gateway.integration_create__lambda(api_id     =self.api_id, resource_id=resource_id, aws_region=aws_region,
+                                                                 aws_acct_id=aws_acct_id, lambda_name=lambda_name, http_method=http_method)
+
+
+        # create permission to allow lambda function to be invoked by API Gateway
+        function_name= _lambda.function_Arn()#'gw_bot.lambdas.dev.hello_world'
+        statement_id='allow-api-gateway-invoke'
+        action='lambda:InvokeFunction'
+        principal='apigateway.amazonaws.com'
+        source_arn='arn:aws:execute-api:eu-west-1:311800962295:dep46w5lu1/*/GET/'
+        self.result = _lambda.add_permission(function_name, statement_id,action,principal,source_arn)
+
+        # add method and integration responses to lambda function
+        response_models = {'application/json': 'Empty'}
+        response_templates = {'application/json': ''}
+        self.api_gateway.method_response_create(self.api_id, resource_id, http_method, '200', response_models)
+        #self.api_gateway.integration_response_create(self.api_id,resource_id, http_method,'200', response_templates)
+
+        # test method execution
+        #self.result = self.api_gateway.method_invoke_test(self.api_id, resource_id, http_method)
+
+        self.result = self.api_gateway.deployment_create(self.api_id,'QA-Lambda')
+
+#        stage_url = self.api_gateway.stage_url(self.api_id,aws_region,'QA-Lambda')
+
+#        from pbx_gs_python_utils.utils.Http import GET
+#        self.result = GET(stage_url)
+        #self.result = stage_url
+
 
     def test_integration_response(self):
         rest_api    = Rest_API('temp_rest_api').create()
@@ -157,7 +197,14 @@ class test_API_Gateway(Test_Helper):
         #self.result = self.api_gateway.method_invoke_test(api_id, resource_id, http_method)
 
     def test_models(self):
-        assert len(self.api_gateway.models(self.test_api_id)) > 1
+        assert len(self.api_gateway.models(self.api_id)) > 1
+
+    def test_stage(self):
+        stage_name  = list(set(self.api_gateway.stages(self.api_id, index_by='stageName'))).pop()
+        self.result = self.api_gateway.stage(self.api_id, stage_name)
+
+    def test_stages(self):
+        self.result = self.api_gateway.stages(self.api_id, index_by='stageName')
 
     def test_resource_create(self):
         api_name    = 'temp-unit-test-api'
@@ -181,8 +228,8 @@ class test_API_Gateway(Test_Helper):
 
 
     def test_resources(self):
-        assert len(self.api_gateway.resources(self.test_api_id)) > 1
-        assert self.api_gateway.resources('VP-SaaS-Proxy').get('id') == self.test_api_id
+        assert len(self.api_gateway.resources(self.api_id)) > 1
+        assert self.api_gateway.resources('VP-SaaS-Proxy').get('id') == self.api_id
         assert self.api_gateway.resources('AAAA-BBB') == {'error': 'API not found: AAAA-BBB'}
 
     def test_rest_api_create__delete(self):
@@ -196,10 +243,7 @@ class test_API_Gateway(Test_Helper):
 
     def test_rest_apis(self):
         items = self.api_gateway.rest_apis(index_by='id')
-        assert self.test_api_id in items
-
-    def test_stages(self):
-        self.result = self.api_gateway.stages(self.test_api_id)
+        assert self.api_id in items
 
     def test_usage(self):
         days = 10

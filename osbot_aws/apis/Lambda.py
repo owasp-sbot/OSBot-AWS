@@ -84,6 +84,22 @@ class Lambda:
         # self.aws.lambda_create_function(self.name, self.role, self.handler, self.s3_bucket, self.s3_key, self.memory, self.timeout, runtime = self.runtime)
         # return self
 
+    def add_permission(self, function_name, statement_id,action,principal,source_arn):
+        try:
+            params = {  'FunctionName': function_name,
+                        'StatementId' : statement_id,
+                        'Action'      : action,
+                        'Principal'   : principal,
+                        'SourceArn'   : source_arn,
+        #'SourceAccount='string',
+        #'EventSourceToken='string',
+        #'Qualifier='string',
+        #'RevisionId='string''
+                           }
+            return self.boto_lambda().add_permission(**params)
+        except Exception as error:
+            return {'error': f'{error}'}
+
     def create(self): #, name, role, handler, s3_bucket, s3_key, memory = 512, timeout = 25 , runtime = 'python3.6'):
         missing_fields = Temp_Misc.get_missing_fields(self,['name', 'runtime', 'role','handler', 'memory','timeout','s3_bucket', 's3_key'])
         if len(missing_fields) > 0:
