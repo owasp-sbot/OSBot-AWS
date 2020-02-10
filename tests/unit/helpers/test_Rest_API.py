@@ -8,6 +8,14 @@ class test_Rest_API(Test_Helper):
         super().setUp()
         self.rest_api = Rest_API(self.name)
 
+    def test_add_method_http(self):
+        from_path   =  '/'
+        from_method = 'GET'
+        to_method   = 'GET'
+        to_uri      = 'http://httpbin.org/robots.txt'
+        self.rest_api.add_method_http(from_path, from_method, to_method, to_uri)
+        self.result = self.rest_api.test_method(from_path, from_method)
+
     def test_create(self):
         self.result = self.rest_api.create()
 
@@ -17,5 +25,8 @@ class test_Rest_API(Test_Helper):
     def test_exists(self):
         self.result = self.rest_api.exists()
 
-    def test_resource(self):
-        self.result = self.rest_api.resource_id('/  ')
+    #def test_resource(self):
+    #
+
+    def test_resource_id(self):
+        self.result = self.rest_api.resource_id('/')

@@ -9,7 +9,11 @@ class API_Gateway:
         self.api_gateway = Session().client('apigateway')
 
     # helper methods
-
+    def _call_method(self, method_name, params):
+        try:
+            return getattr(self.api_gateway, method_name)(**params)
+        except Exception as error:
+            return {'error': f'{error}'}
     # see this tweet to understand the use of the 'data_key' param https://twitter.com/DinisCruz/status/1226113182240038912
     # see this tweet thread to see more info about performance issues with this api https://twitter.com/DinisCruz/status/1226504297439023104
     # todo: add support for getting all the data using the position field
@@ -70,14 +74,95 @@ class API_Gateway:
     def integration(self, api_id, resource_id, http_method):
         return self.api_gateway.get_integration(restApiId=api_id, resourceId=resource_id, httpMethod=http_method)
 
+    def integration_create__http(self, api_id, resource_id, uri, http_method='GET', integration_http_method='GET'):
+        input_type        = 'HTTP'
+        # methodIntegration = {'httpMethod' : 'GET' }
+        try:
+        #     return self.api_gateway.put_integration(
+        #         restApiId             = 'dw51p7dutg',
+        #         resourceId            = '4k04b51pm9',
+        #         httpMethod            = "POST",
+        #         type                  = "HTTP",
+        #         integrationHttpMethod = "POST",
+        #         uri                   = "http://httpbin.org/robots.txt",
+        #         connectionType        = 'INTERNET',
+        #         requestParameters     = {},
+        #         passthroughBehavior   = 'WHEN_NO_MATCH' ,
+        #         cacheNamespace        = '4k04b51pm9')
+
+            return self.api_gateway.put_integration(restApiId=api_id,
+                                                    resourceId=resource_id,
+                                                    httpMethod=http_method,
+                                                    integrationHttpMethod=integration_http_method,
+                                                    type=input_type,
+                                                    uri=uri)
+        except Exception as error:
+            return f'{error}'
+
+    def integration_create__lambda(self, api_id, resource_id, aws_region, aws_acct_id, lambda_name, http_method='POST'):
+        input_type = 'AWS'
+        uri = f'arn:aws:apigateway:{aws_region}:lambda:path/2015-03-31/functions/arn:aws:lambda:{aws_region}:{aws_acct_id}:function:{lambda_name}/invocations'
+        try:
+            return self.api_gateway.put_integration(restApiId=api_id, resourceId=resource_id, httpMethod=http_method,
+                                                    integrationHttpMethod=http_method,type=input_type, uri=uri)
+        except Exception as error:
+            return f'{error}'
+
+    def integration_response(self, api_id, resource_id, http_method, status_code):
+        params = {'restApiId': api_id,
+                  'resourceId': resource_id,
+                  'httpMethod': http_method,
+                  'statusCode': status_code,
+                  }
+        return self._call_method('get_integration_response', params)
+
+    def integration_response_create(self, api_id, resource_id, http_method, status_code,response_templates):
+        params = {'restApiId'        : api_id,
+                  'resourceId'       : resource_id,
+                  'httpMethod'       : http_method,
+                  'statusCode'       : status_code,
+                  'responseTemplates': response_templates
+                  }
+        return self._call_method('put_integration_response', params)
+
     def method(self, api_id, resource_id, http_method):
-        return self.api_gateway.get_method(restApiId=api_id, resourceId= resource_id, httpMethod= http_method)
+        try:
+            return self.api_gateway.get_method(restApiId=api_id, resourceId= resource_id, httpMethod= http_method)
+        except Exception as error:
+            return {'error': f'{error}'}
 
     def method_create(self, api_id, resource_id, http_method, authorization_type='NONE'):
-        return self.api_gateway.put_method(restApiId=api_id, resourceId=resource_id, httpMethod=http_method, authorizationType=authorization_type)
+        return self._call_method("put_method", { 'restApiId': api_id, 'resourceId':resource_id, 'httpMethod':http_method, 'authorizationType':authorization_type})
+#        return self.api_gateway.put_method(restApiId=api_id, resourceId=resource_id, httpMethod=http_method, authorizationType=authorization_type)
 
     def method_delete(self, api_id, resource_id, http_method):
         return self.api_gateway.delete_method(restApiId=api_id, resourceId=resource_id, httpMethod=http_method)
+
+    def method_invoke_test(self, api_id,resource_id,http_method, path_with_query_string='',body='',headers={}):
+        params = { 'restApiId'          : api_id ,
+                   'resourceId'         : resource_id,
+                   'httpMethod'         : http_method,
+                   'pathWithQueryString': path_with_query_string,
+                   'body'               : body   ,
+                   'headers'            : headers}
+        return self._call_method("test_invoke_method", params)
+
+    def method_response(self,api_id,resource_id,http_method,status_code):
+        params = { 'restApiId' : api_id ,
+                   'resourceId': resource_id,
+                   'httpMethod': http_method,
+                   'statusCode': status_code,
+                   }
+        return self._call_method('get_method_response', params)
+
+    def method_response_create(self,api_id,resource_id,http_method,status_code,response_models):
+        params = { 'restApiId'     : api_id ,
+                   'resourceId'    : resource_id ,
+                   'httpMethod'    : http_method ,
+                   'statusCode'    : status_code ,
+                   'responseModels': response_models
+                   }
+        return self._call_method('put_method_response', params)
 
     def models(self, api_id):
         return self._get_using_api_id('models', api_id)
@@ -111,16 +196,28 @@ class API_Gateway:
         return self.rest_apis(index_by='name').get(api_name,{})
 
     def rest_api_create(self, api_name):
-        rest_apis = self.rest_apis(index_by='name')                 # get existing Rest APIs
-        if api_name in rest_apis:                                   # see if it already exists
-            return rest_apis.get(api_name)                          # return if it does
-        return self.api_gateway.create_rest_api(name=api_name)      # if not created it
+        rest_apis = self.rest_apis(index_by='name')                   # get existing Rest APIs
+        if api_name in rest_apis:                                     # see if it already exists
+            return rest_apis.get(api_name)                            # return if it does
+        params = { 'name'                 : api_name               ,
+                   'endpointConfiguration': {"types": ["REGIONAL"]}}
+        return self.api_gateway.create_rest_api(**params)              # if not, create it
 
     def rest_api_delete(self, api_id):
-        return self.api_gateway.delete_rest_api(restApiId=api_id)
+        if self.rest_api_exists(api_id):
+            self.api_gateway.delete_rest_api(restApiId=api_id)
+
+    def rest_api_exists(self, api_id):
+        return self.rest_api_info(api_id).get('id') == api_id
 
     def rest_api_id(self, api_name):
         return self.rest_api(api_name).get('id')
+
+    def rest_api_info(self, api_id):
+        try:
+            return self.api_gateway.get_rest_api(restApiId=api_id)
+        except Exception as error:
+            return {'error': f'{error}'}
 
     def rest_apis(self, index_by='id'):
         return self._call_method_return_items(method_name="get_rest_apis",index_by=index_by)
@@ -128,16 +225,11 @@ class API_Gateway:
     def stages(self, api_id):
         return self._get_using_api_id('stages', api_id, index_by='deploymentId', data_key='item')
 
-
-
     def usage_raw(self, usage_plan_id, days):
         start_date = (date.today() - timedelta(days=days)).strftime("%Y-%m-%d")
         end_date   = date.today().strftime("%Y-%m-%d")
         raw_data   = self._call_method_return_arrays(method_name= 'get_usage',params={'usagePlanId':usage_plan_id ,'startDate'  : start_date   , 'endDate'    : end_date})
         return raw_data
-
-
-
 
     def usage(self, usage_plan_id, days):
         if days > 90:
@@ -182,3 +274,22 @@ class API_Gateway:
 
     def usage_plans(self):
         return self._get('usage_plans')
+
+
+
+  # 'apiKeyRequired': False,
+  # 'authorizationType': 'NONE',
+  # 'httpMethod': 'GET',
+  # 'methodIntegration': { 'cacheKeyParameters': [],
+  #                        'cacheNamespace': '4k04b51pm9',
+  #                        'connectionType': 'INTERNET',
+  #                        'httpMethod': 'GET',
+  #                        'integrationResponses': { '200': { 'responseTemplates': { 'application/json': None},
+  #                                                           'statusCode': '200'}},
+  #                        'passthroughBehavior': 'WHEN_NO_MATCH',
+  #                        'timeoutInMillis': 29000,
+  #                        'type': 'HTTP',
+  #                        'uri': 'https://www.google.com'},
+  # 'methodResponses': { '200': { 'responseModels': {'application/json': 'Empty'},
+  #                               'statusCode': '200'}},
+  # 'requestParameters': {}}

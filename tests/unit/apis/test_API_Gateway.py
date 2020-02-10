@@ -1,8 +1,13 @@
 from datetime import date, timedelta
 from time import sleep
 
+from osbot_aws.apis.IAM import IAM
+
+from osbot_aws.apis.Session import Session
+
 from gw_bot.helpers.Test_Helper import Test_Helper
 from osbot_aws.apis.API_Gateway import API_Gateway
+from osbot_aws.helpers.Rest_API import Rest_API
 
 
 class test_API_Gateway(Test_Helper):
@@ -60,9 +65,56 @@ class test_API_Gateway(Test_Helper):
         api_name    = 'Slack GW-Bot'  #'Jira Sync' #'VP-SaaS-Proxy'
         path        = '/slack-handler' #'/jira-on-change' # '/{proxy+}'
         http_method = 'POST'
-        api_id = self.api_gateway.rest_api_id(api_name)
+        api_id      = self.api_gateway.rest_api_id(api_name)
         resource_id = self.api_gateway.resource_id(api_id, path)
         self.result = self.api_gateway.integration(api_id, resource_id, http_method)
+
+    def test_method_invoke_test(self):
+        rest_api    = Rest_API('temp_rest_api').create()
+        api_id      = rest_api.id()
+        resource_id = rest_api.resource_id('/')
+        method      = 'GET'
+        self.result = self.api_gateway.method_invoke_test(api_id,resource_id,method)
+
+    def test_integration_create__http(self):
+        uri                = 'http://httpbin.org/robots.txt'
+        rest_api           = Rest_API('temp_rest_api').delete().create()
+        method             = 'GET'
+        integration_method = 'GET'
+        api_id             = rest_api.id()
+        resource_id        = rest_api.resource_id('/')
+        self.api_gateway.method_create(api_id, resource_id, method)
+        self.result = self.api_gateway.integration_create__http(api_id=api_id, resource_id=resource_id, uri=uri, http_method=method, integration_http_method=integration_method)
+
+    def test_integration_create__lambda(self):
+        iam         = IAM()
+        aws_region  = iam.region()
+        aws_acct_id = iam.account_id()
+        lambda_name = 'temp_lambda'
+        rest_api    = Rest_API('temp_rest_api').create()
+        api_id      = rest_api.id()
+        resource_id = rest_api.resource_id('/')
+        self.result = self.api_gateway.integration_create__lambda(api_id     =api_id     , resource_id=resource_id, aws_region=aws_region,
+                                                                  aws_acct_id=aws_acct_id, lambda_name=lambda_name)
+
+    def test_integration_response(self):
+        rest_api    = Rest_API('temp_rest_api').create()
+        api_id      = rest_api.id()
+        resource_id = rest_api.resource_id('/')
+        method      = 'POST'
+        status_code = '200'
+        self.result = self.api_gateway.integration_response(api_id, resource_id,method, status_code)
+
+    def test_integration_response_create(self):
+        rest_api           = Rest_API('temp_rest_api').create()
+        api_id             = rest_api.id()
+        resource_id        = rest_api.resource_id('/')
+        method             = 'GET'
+        status_code        = '200'
+        response_templates = {'application/json': ''}
+        self.result = self.api_gateway.integration_response_create(api_id, resource_id,method, status_code, response_templates)
+
+
 
     def test_method(self):
         api_name         = 'VP-SaaS-Proxy'
@@ -84,6 +136,25 @@ class test_API_Gateway(Test_Helper):
         self.result = self.api_gateway.method_delete(api_id, resource_id,method)            # delete method
         assert [] == self.api_gateway.resource_methods(api_id, path)                        # confirm it doesn't exist
         self.api_gateway.rest_api_delete(api_id)                                            # delete api
+
+    def test_method_response(self):
+        rest_api    = Rest_API('temp_rest_api').create()
+        api_id      = rest_api.id()
+        resource_id = rest_api.resource_id('/')
+        method      = 'GET'
+        status_code = '200'
+        self.result = self.api_gateway.method_response(api_id, resource_id,method, status_code)
+
+    def test_method_response_create(self):
+        rest_api        = Rest_API('temp_rest_api').create()
+        api_id          = rest_api.id()
+        resource_id     = rest_api.resource_id('/')
+        http_method     = 'GET'
+        status_code     = '200'
+        response_models = {'application/json': 'Empty'}
+        self.result = self.api_gateway.method_response_create(api_id,resource_id,http_method,status_code,response_models)
+
+        #self.result = self.api_gateway.method_invoke_test(api_id, resource_id, http_method)
 
     def test_models(self):
         assert len(self.api_gateway.models(self.test_api_id)) > 1
@@ -143,14 +214,3 @@ class test_API_Gateway(Test_Helper):
 
     def test_usage_plans(self):
         assert self.api_gateway.usage_plans().get(self.test_usage_plan_id).get('name') == '1k month'
-
-
-    # helper methods
-
-    def test_create_rest_api(self):
-
-
-        path     = '/'
-        method   = 'POST'
-
-        self.result = self.api_gateway.create_rest_api(api_name)['delete']()
