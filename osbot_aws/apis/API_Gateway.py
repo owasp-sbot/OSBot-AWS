@@ -52,18 +52,29 @@ class API_Gateway:
         return self._call_method_return_items(method_name="get_api_keys", params={'includeValues':include_values}, index_by=index_by)
 
     def api_key(self, api_key, include_value=False):
-        return self.api_gateway.get_api_key(apiKey=api_key,includeValue=include_value)
+        try:
+            return self.api_gateway.get_api_key(apiKey=api_key,includeValue=include_value)
+        except:
+            return None
 
     def api_key_create(self,key_name):
         return self.api_gateway.create_api_key(name=key_name)
 
-    def api_key_delete(self, key_id=None, key_name=None):
-        if key_id:
-            return self.api_gateway.delete_api_key(apiKey=key_id)
-        if key_name:
-            for key_id, value in self.api_keys().items():
-                if value.get('name') == key_name:
-                    return self.api_gateway.delete_api_key(apiKey=key_id)
+    def api_key_delete(self, key_id_or_name):
+        if self.api_exists(key_id_or_name):                                     # see if it an api_key value
+            self.api_gateway.delete_api_key(apiKey=key_id_or_name)
+            return True
+
+        for key_id, value in self.api_keys().items():                           # try to find api_key value
+            if value.get('name') == key_id_or_name:                             # via its name
+                self.api_gateway.delete_api_key(apiKey=key_id)
+                return True
+        return False
+
+    def api_exists(self, api_key):
+        if self.api_key(api_key):
+            return True
+        return False
 
     def deployments(self, api_id):
         return self._call_method_return_items(method_name="get_deployments", params={'restApiId':api_id})

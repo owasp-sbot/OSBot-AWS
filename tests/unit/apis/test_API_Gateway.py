@@ -45,9 +45,9 @@ class test_API_Gateway(Test_Helper):
         key_name = 'temp new key'
         api_keys = self.api_gateway.api_keys()                      # store current api_keys
         api_key  = self.api_gateway.api_key_create(key_name)        # create key
-        self.api_gateway.api_key_delete(key_id=api_key.get('id'))   # delete it using `id`
+        self.api_gateway.api_key_delete(api_key.get('id'))          # delete it using `id`
         self.api_gateway.api_key_create(key_name)                   # create it again
-        self.api_gateway.api_key_delete(key_name=key_name)          # delete it using `name`
+        self.api_gateway.api_key_delete(key_name)                   # delete it using `name`
         assert api_keys == self.api_gateway.api_keys()              # confirm api_keys are unchanged
 
     def test_api_keys(self):
