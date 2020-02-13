@@ -246,15 +246,31 @@ class test_API_Gateway(Test_Helper):
         assert self.api_id in items
 
     def test_usage(self):
+        usage_plan_id = self.api_gateway.usage_plans('name').get('1k month').get('id')
         days = 10
-        usage = self.api_gateway.usage(self.test_usage_plan_id, days)
+        usage = self.api_gateway.usage(usage_plan_id, days)
         assert len(usage) > 1
-        assert len(usage[self.test_api_key_id]) == days
+        #assert len(usage[usage_plan_id]) == days
 
     def test_usage__as_chart_data(self):
         days = 10
         print('-----')
         self.result = self.api_gateway.usage__as_chart_data(self.test_usage_plan_id, days)
 
+    def test_usage_plan_keys(self):
+        usage_plan_id = self.api_gateway.usage_plans('name').get('1k day').get('id')
+        self.result = self.api_gateway.usage_plan_keys(usage_plan_id)
+
+    def test_usage_plan_add_key(self):
+        key_name = 'temp_key_name'
+        usage_plan_id    = self.api_gateway.usage_plans('name').get('1k day').get('id')
+        temp_key_id      = self.api_gateway.api_key_create(key_name).get('id')
+        usage_plan_key   = self.api_gateway.usage_plan_add_key(usage_plan_id, temp_key_id).get('id')
+
+        assert usage_plan_key in self.api_gateway.usage_plan_keys(usage_plan_id)
+        self.result      = self.api_gateway.usage_plan_remove_key(usage_plan_id, temp_key_id)
+        assert usage_plan_key not in self.api_gateway.usage_plan_keys(usage_plan_id)
+        self.api_gateway.api_key_delete(key_name)
+
     def test_usage_plans(self):
-        assert self.api_gateway.usage_plans().get(self.test_usage_plan_id).get('name') == '1k month'
+        assert  self.api_gateway.usage_plans('name').get('1k day').get('quota') == {'limit': 1000, 'offset': 0, 'period': 'DAY'}

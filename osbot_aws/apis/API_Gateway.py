@@ -57,8 +57,8 @@ class API_Gateway:
         except:
             return None
 
-    def api_key_create(self,key_name):
-        return self.api_gateway.create_api_key(name=key_name)
+    def api_key_create(self,key_name, enabled=True):
+        return self.api_gateway.create_api_key(name=key_name,enabled=enabled)
 
     def api_key_delete(self, key_id_or_name):
         if self.api_exists(key_id_or_name):                                     # see if it an api_key value
@@ -299,10 +299,22 @@ class API_Gateway:
                 
         return rows
 
-    def usage_plans(self):
-        return self._get('usage_plans')
+    def usage_plan_keys(self, usage_plan_id):
+        return self._get('usage_plan_keys', {'usagePlanId':usage_plan_id})
 
 
+    def usage_plan_add_key(self,usage_plan_id, key_id):
+
+         return self._call_method('create_usage_plan_key', { 'usagePlanId': usage_plan_id,
+                                                             'keyId'      : key_id,
+                                                             'keyType'    : 'API_KEY'})
+
+    def usage_plan_remove_key(self, usage_plan_id, key_id):
+         return self._call_method('delete_usage_plan_key', { 'usagePlanId': usage_plan_id,
+                                                             'keyId'      : key_id  })
+
+    def usage_plans(self, index_by='id'):
+        return self._get('usage_plans', index_by=index_by)
 
   # 'apiKeyRequired': False,
   # 'authorizationType': 'NONE',
