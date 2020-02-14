@@ -1,5 +1,9 @@
 from datetime import date, timedelta
 
+from osbot_aws.apis.Lambda import Lambda
+
+from osbot_aws.apis.IAM import IAM
+
 from osbot_aws.apis.Session import Session
 
 
@@ -92,20 +96,7 @@ class API_Gateway:
 
     def integration_create__http(self, api_id, resource_id, uri, http_method='GET', integration_http_method='GET'):
         input_type        = 'HTTP'
-        # methodIntegration = {'httpMethod' : 'GET' }
         try:
-        #     return self.api_gateway.put_integration(
-        #         restApiId             = 'dw51p7dutg',
-        #         resourceId            = '4k04b51pm9',
-        #         httpMethod            = "POST",
-        #         type                  = "HTTP",
-        #         integrationHttpMethod = "POST",
-        #         uri                   = "http://httpbin.org/robots.txt",
-        #         connectionType        = 'INTERNET',
-        #         requestParameters     = {},
-        #         passthroughBehavior   = 'WHEN_NO_MATCH' ,
-        #         cacheNamespace        = '4k04b51pm9')
-
             return self.api_gateway.put_integration(restApiId=api_id,
                                                     resourceId=resource_id,
                                                     httpMethod=http_method,
@@ -115,7 +106,11 @@ class API_Gateway:
         except Exception as error:
             return f'{error}'
 
-    def integration_create__lambda(self, api_id, resource_id, aws_region, aws_acct_id, lambda_name, http_method):
+    def integration_create__lambda(self, api_id, resource_id, lambda_name, http_method):
+        iam         = IAM()
+        aws_acct_id = iam.account_id()
+        aws_region  = iam.region()
+
         input_type = 'AWS_PROXY'
         uri = f'arn:aws:apigateway:{aws_region}:lambda:path/2015-03-31/functions/arn:aws:lambda:{aws_region}:{aws_acct_id}:function:{lambda_name}/invocations'
         integration_http_method = 'POST'
@@ -124,6 +119,21 @@ class API_Gateway:
                                                     integrationHttpMethod=integration_http_method,type=input_type, uri=uri)
         except Exception as error:
             return f'{error}'
+
+    def integration_add_permission_to_lambda(self,api_id, lambda_name):
+        # create permission to allow lambda function to be invoked by API Gateway
+        iam           = IAM()
+        aws_acct_id   = iam.account_id()
+        aws_region    = iam.region()
+        aws_lambda    = Lambda(lambda_name)
+        function_name = aws_lambda.function_Arn()#'gw_bot.lambdas.dev.hello_world'
+        statement_id  = 'allow-api-gateway-invoke'
+        action        = 'lambda:InvokeFunction'
+        principal     = 'apigateway.amazonaws.com'
+        source_arn    = f'arn:aws:execute-api:{aws_region}:{aws_acct_id}:{api_id}/*/GET/'
+
+        aws_lambda.delete_permission(function_name,statement_id) # remove in case there was already a permission with this name
+        return aws_lambda.add_permission(function_name, statement_id,action,principal,source_arn)
 
     def integration_response(self, api_id, resource_id, http_method, status_code):
         params = {'restApiId': api_id,
@@ -308,10 +318,12 @@ class API_Gateway:
          return self._call_method('create_usage_plan_key', { 'usagePlanId': usage_plan_id,
                                                              'keyId'      : key_id,
                                                              'keyType'    : 'API_KEY'})
+    def usage_plan_id(self, usage_plan_name):
+        return self.usage_plans(index_by='name').get(usage_plan_name,{}).get('id')
 
     def usage_plan_remove_key(self, usage_plan_id, key_id):
          return self._call_method('delete_usage_plan_key', { 'usagePlanId': usage_plan_id,
-                                                             'keyId'      : key_id  })
+                                                             'keyId'      : key_id       })
 
     def usage_plans(self, index_by='id'):
         return self._get('usage_plans', index_by=index_by)

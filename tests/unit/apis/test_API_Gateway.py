@@ -95,35 +95,19 @@ class test_API_Gateway(Test_Helper):
 
     def test_integration_create__lambda(self):
         from osbot_aws.apis.Lambda import Lambda
-        _lambda = Lambda('gw_bot.lambdas.dev.hello_world')
-        lambda_arn = _lambda.function_Arn()
-
-        iam         = IAM()
-        aws_region  = iam.region()
-        aws_acct_id = iam.account_id()
+        #_lambda = Lambda('gw_bot.lambdas.dev.hello_world')
         lambda_name = 'gw_bot_lambdas_dev_hello_world'
-        rest_api    = Rest_API('temp_rest_api').create()
+        #rest_api    = Rest_API('temp_rest_api').create()
         #api_id      = rest_api.id()
         resource_id = self.rest_api.resource_id('/')
         http_method = 'GET'
         self.api_gateway.method_create(self.api_id, resource_id, http_method)
-        self.result = self.api_gateway.integration_create__lambda(api_id     =self.api_id, resource_id=resource_id, aws_region=aws_region,
-                                                                 aws_acct_id=aws_acct_id, lambda_name=lambda_name, http_method=http_method)
-
-
-        # create permission to allow lambda function to be invoked by API Gateway
-        function_name= _lambda.function_Arn()#'gw_bot.lambdas.dev.hello_world'
-        statement_id='allow-api-gateway-invoke'
-        action='lambda:InvokeFunction'
-        principal='apigateway.amazonaws.com'
-        source_arn='arn:aws:execute-api:eu-west-1:311800962295:dep46w5lu1/*/GET/'
-        self.result = _lambda.add_permission(function_name, statement_id,action,principal,source_arn)
+        self.api_gateway.integration_create__lambda(api_id     =self.api_id, resource_id=resource_id, lambda_name=lambda_name, http_method=http_method)
+        self.integration_add_permission_to_lambda(lambda_name)
 
         # add method and integration responses to lambda function
         response_models = {'application/json': 'Empty'}
-        response_templates = {'application/json': ''}
         self.api_gateway.method_response_create(self.api_id, resource_id, http_method, '200', response_models)
-        #self.api_gateway.integration_response_create(self.api_id,resource_id, http_method,'200', response_templates)
 
         # test method execution
         #self.result = self.api_gateway.method_invoke_test(self.api_id, resource_id, http_method)

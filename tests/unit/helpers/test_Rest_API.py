@@ -30,3 +30,23 @@ class test_Rest_API(Test_Helper):
 
     def test_resource_id(self):
         self.result = self.rest_api.resource_id('/')
+
+class test_Rest_API__Create_Key_Generator(Test_Helper):
+
+    def setUp(self):
+        super().setUp()
+
+    def test_setup_lambda_route(self):
+        name        = 'api-key-generator-for-shopify'
+        lambda_name = 'gw_bot_lambdas_gw_store_create_api_gw_api_key'
+        rest_api    = Rest_API(name).create()
+        rest_api.add_method_lambda('/','GET',lambda_name)
+        rest_api.deploy()
+        self.result = rest_api.test_method('/','GET')
+        #self.result = rest_api.api_gateway.integration_add_permission_to_lambda(lambda_name)
+
+    def test_just_invoke(self):
+        name = 'api-key-generator-for-shopify'
+        self.result = Rest_API(name).test_method().get('body')
+
+

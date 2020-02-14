@@ -91,10 +91,6 @@ class Lambda:
                         'Action'      : action,
                         'Principal'   : principal,
                         'SourceArn'   : source_arn,
-        #'SourceAccount='string',
-        #'EventSourceToken='string',
-        #'Qualifier='string',
-        #'RevisionId='string''
                            }
             return self.boto_lambda().add_permission(**params)
         except Exception as error:
@@ -143,6 +139,14 @@ class Lambda:
             return False
         self.boto_lambda().delete_function(FunctionName=self.name)
         return self.exists() is False
+
+    def delete_permission(self, function_name, statement_id):
+        try:
+            params = {  'FunctionName': function_name,
+                        'StatementId' : statement_id,                        }
+            return self.boto_lambda().remove_permission(**params)
+        except Exception as error:
+            return {'error': f'{error}'}
 
     # def delete_local_zip(self):
     #     os.remove(self.zip_file)

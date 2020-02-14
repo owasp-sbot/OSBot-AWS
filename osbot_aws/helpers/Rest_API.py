@@ -1,3 +1,7 @@
+from pbx_gs_python_utils.utils.Http import GET
+
+from osbot_aws.apis.IAM import IAM
+
 from osbot_aws.apis.API_Gateway import API_Gateway
 
 
@@ -15,6 +19,9 @@ class Rest_API:
         self.api_gateway.rest_api_delete(self.id())
         self.api_id = None
         return self
+
+    def deploy(self, stage='Prod'):
+        return self.api_gateway.deployment_create(self.id(),stage)
 
     def id(self):
         if self.api_id is None:
@@ -38,6 +45,23 @@ class Rest_API:
                  'method_response_create'     : method_response_create      ,
                  'integration_response_create': integration_response_create }
 
+    def add_method_lambda(self, from_path, from_method, lambda_name):
+        resource_id        = self.resource_id(from_path)
+        status_code        = '200'
+        response_models    = {'application/json': 'Empty'}
+        response_templates = {'application/json': ''}
+        method_create               = self.api_gateway.method_create(self.api_id, resource_id,from_method)
+        integration_create__lambda  = self.api_gateway.integration_create__lambda(self.id(), resource_id, lambda_name,from_method)
+        integration_add_permission  = self.api_gateway.integration_add_permission_to_lambda(self.id(), lambda_name)
+        method_response_create      = self.api_gateway.method_response_create(self.id(),resource_id,from_method, status_code,response_models)
+        integration_response_create = self.api_gateway.integration_response_create(self.id(),resource_id, from_method,status_code, response_templates)
+        return { 'method_create'              : method_create               ,
+                 'integration_create__lambda' : integration_create__lambda    ,
+                 'integration_add_permission' : integration_add_permission,
+                 'method_response_create'     : method_response_create      ,
+                 'integration_response_create': integration_response_create }
+
+
     def method(self, path, method):
         resource_id = self.resource_id(path)
         return self.api_gateway.method(self.id(), resource_id, method)
@@ -45,5 +69,12 @@ class Rest_API:
     def resource_id(self, path):
         return self.api_gateway.resource(self.id(), path).get('id')
 
-    def test_method(self, path,method):
-        return self.api_gateway.method_invoke_test(self.api_id,self.resource_id(path), method)
+    def test_method(self, path='/',method='GET'):
+        return self.api_gateway.method_invoke_test(self.id(),self.resource_id(path), method)
+
+    def url(self,path='', stage='Prod'):
+        region = IAM().region()
+        return self.api_gateway.stage_url(self.id(), region, stage, resource=path)
+
+    def invoke_GET(self, path='', stage='Prod'):
+        return GET(self.url(path,stage))
