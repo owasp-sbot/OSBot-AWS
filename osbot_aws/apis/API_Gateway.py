@@ -126,14 +126,14 @@ class API_Gateway:
         aws_acct_id   = iam.account_id()
         aws_region    = iam.region()
         aws_lambda    = Lambda(lambda_name)
-        function_name = aws_lambda.function_Arn()#'gw_bot.lambdas.dev.hello_world'
+        function_arn  = aws_lambda.function_Arn()#'gw_bot.lambdas.dev.hello_world'
         statement_id  = 'allow-api-gateway-invoke'
         action        = 'lambda:InvokeFunction'
         principal     = 'apigateway.amazonaws.com'
         source_arn    = f'arn:aws:execute-api:{aws_region}:{aws_acct_id}:{api_id}/*/GET/'
 
-        aws_lambda.delete_permission(function_name,statement_id) # remove in case there was already a permission with this name
-        return aws_lambda.add_permission(function_name, statement_id,action,principal,source_arn)
+        aws_lambda.delete_permission(function_arn,statement_id) # remove in case there was already a permission with this name
+        return aws_lambda.add_permission(function_arn, statement_id,action,principal,source_arn)
 
     def integration_response(self, api_id, resource_id, http_method, status_code):
         params = {'restApiId': api_id,

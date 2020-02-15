@@ -6,8 +6,6 @@ import tempfile
 from   io import BytesIO
 from   gzip import GzipFile
 from   botocore.errorfactory import ClientError
-from   urllib.parse          import urlparse
-
 from    pbx_gs_python_utils.utils.Files import Files
 
 from osbot_aws.apis.Session import Session
@@ -51,9 +49,19 @@ class S3:
         #return self.boto_notification
         return self.s3().get_bucket_notification_configuration(Bucket=bucket_name)
 
-    def bucket_notification_create(self, bucket_name, lambda_arn, events, prefix):
+    def bucket_notification_set_lambda_permission(self, s3_bucket, lambda_arn):
+        from osbot_aws.apis.Lambda import Lambda
+        statement_id = 'allow_s3_notifications_to_invoke_function'
+        action       = 'lambda:InvokeFunction'
+        principal    = 's3.amazonaws.com'
+        aws_lambda   = Lambda()
+        aws_lambda.delete_permission(lambda_arn, statement_id)
+        return aws_lambda.add_permission(lambda_arn, statement_id,action,principal,)
+
+    def bucket_notification_create(self, s3_bucket, lambda_arn, events, prefix):
         try:
-            params = { 'Bucket' : bucket_name,
+            self.bucket_notification_set_lambda_permission(s3_bucket, lambda_arn)  # configure permissions
+            params = { 'Bucket' : s3_bucket,
                        'NotificationConfiguration': {
                             'LambdaFunctionConfigurations': [{
                                                               'LambdaFunctionArn': lambda_arn,

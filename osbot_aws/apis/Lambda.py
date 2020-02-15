@@ -12,7 +12,7 @@ from osbot_aws.apis.S3 import S3
 
 
 class Lambda:
-    def __init__(self, name):
+    def __init__(self, name=''):
         self.runtime        = 'python3.6'
         self.memory         = 3008
         self.timeout        = 60
@@ -38,60 +38,14 @@ class Lambda:
             self._s3 = S3()
         return self._s3
 
-    # def __init__(self,name, handler = None, memory = None, timeout = None, path_libs = None, runtime = None, **kwargs):
-    #     self.aws = Aws_Cli(**kwargs)
-    #     # default values
-    #     self.role       = 'arn:aws:iam::244560807427:role/lambda_with_s3_access'
-    #     self.s3_bucket  = 'gs-lambda-tests'
-    #     self.source     = abspath(join(__file__,'../../..'))
-    #     if path_libs:
-    #         self.path_libs = abspath(join(self.source,path_libs))
-    #     else:
-    #         self.path_libs = None
-    #     if runtime:
-    #         self.runtime = runtime
-    #     else:
-    #         self.runtime = 'python3.6'
-    #
-    #
-    #     # values expected to be provided
-    #     self.original_name  = name
-    #     self.name           = name.replace('.','_')
-    #     if handler is not None:
-    #         self.handler = handler
-    #     else:
-    #         self.handler = '{0}.run'.format(name)
-    #
-    #     self.s3_key     = 'dinis/lambdas/{0}.zip'.format(self.name)
-    #
-    #     if memory is not None:
-    #         self.memory = memory
-    #     else:
-    #         self.memory = 1024
-    #     if timeout is not None:
-    #         self.timeout = timeout
-    #     else:
-    #         self.timeout = 60
-    #
-    #     # starting to move values to kwargs
-    #     if kwargs.get('bucket'): self.s3_bucket = kwargs['bucket']
-
-
-
-    #def create(self, upload_source = True):
-        # if upload_source:
-        #     self.aws.s3_upload_folder(self.source, self.s3_bucket, self.s3_key)
-        # self.aws.lambda_create_function(self.name, self.role, self.handler, self.s3_bucket, self.s3_key, self.memory, self.timeout, runtime = self.runtime)
-        # return self
-
-    def add_permission(self, function_name, statement_id,action,principal,source_arn):
+    def add_permission(self, function_arn, statement_id,action,principal,source_arn=None):
         try:
-            params = {  'FunctionName': function_name,
+            params = {  'FunctionName': function_arn,
                         'StatementId' : statement_id,
                         'Action'      : action,
-                        'Principal'   : principal,
-                        'SourceArn'   : source_arn,
-                           }
+                        'Principal'   : principal }
+            if source_arn:
+                params['SourceArn'] = source_arn
             return self.boto_lambda().add_permission(**params)
         except Exception as error:
             return {'error': f'{error}'}

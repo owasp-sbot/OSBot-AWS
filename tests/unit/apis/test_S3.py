@@ -43,11 +43,21 @@ class Test_S3(Test_Helper):
     def test_bucket_notification(self):
         #.lambda_function_configurations
         bucket_name = 'gw-tf-cloud-trails'
+        self.result = self.s3.bucket_notification(bucket_name)
+
+    def test_bucket_notification_create(self):
+        bucket_name = 'gw-tf-cloud-trails'
         lambda_arm  = 'arn:aws:lambda:eu-west-1:311800962295:function:gw_bot_lambdas_aws_on_s3_event'
         events      = ['s3:ObjectCreated:*']
         prefix      = ''
-        self.result = self.s3.bucket_notification(bucket_name)
+        #self.result = self.s3.bucket_notification(bucket_name)
+
         self.result = self.s3.bucket_notification_create(bucket_name,lambda_arm, events,prefix)
+
+        # 'LambdaFunctionConfigurations': [ { 'Events': ['s3:ObjectCreated:*'],
+        #                                      'Id': '7db8de74-0b1f-483e-a56e-5f866844953b',
+        #'LambdaFunctionArn': 'arn:aws:lambda:eu-west-1:311800962295:function:gw_bot_lambdas_aws_on_s3_event'}],
+
 
         # resource = s3.s3_bucket_notification(bucket_name)
         # config = { 'LambdaFunctionConfigurations': [{ 'LambdaFunctionArn': lambda_arn           ,
