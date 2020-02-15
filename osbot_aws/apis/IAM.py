@@ -12,6 +12,7 @@ class IAM:
 
     def __init__(self, user_name=None, role_name=None):
         self._iam        = None
+        self._resource   = None
         self._sts        = None
         self._account_id = None
         self._session    = None
@@ -25,6 +26,11 @@ class IAM:
             self._iam = Session().client('iam')
         return self._iam
 
+    def resource(self):
+        if self._resource is None:
+            self._resource = Session().resource('iam')
+        return self._resource
+
     def session(self):
         if self._session is None:
             self._session = Session().session()
@@ -35,6 +41,13 @@ class IAM:
             self._sts = Session().client('sts')
         return self._sts
 
+    def _index_by(self, values, index_by=None):
+        if index_by is None:
+            return list(values)
+        results = {}
+        for item in values:
+            results[item.get(index_by)] = item
+        return results
 
 
     # main method
@@ -220,8 +233,8 @@ class IAM:
     def roles(self):
         return list(self.get_data('list_roles', 'Roles', True))
 
-    def users(self):
-        return list(self.get_data('list_users', 'Users', True))
+    def users(self, index_by=None):
+        return self._index_by(self.get_data('list_users', 'Users', True), index_by)
 
     def user_exists(self):
         return self.user_info() is not None
@@ -235,6 +248,7 @@ class IAM:
     def user_create(self):
         if self.user_exists() is False:
             return self.iam().create_user(UserName=self.user_name).get('User')
+        return self.user_info()
 
     def user_delete(self):
         if self.user_exists() is False: return False
