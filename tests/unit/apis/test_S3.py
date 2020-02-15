@@ -1,4 +1,8 @@
-import sys; sys.path.append('..')
+import sys;
+
+from gw_bot.helpers.Test_Helper import Test_Helper
+
+sys.path.append('..')
 import os
 import unittest
 
@@ -7,14 +11,17 @@ from osbot_aws.tmp_utils.Temp_Misc import Temp_Misc
 from osbot_aws.apis.S3 import S3
 
 
-class Test_S3(unittest.TestCase):
+class Test_S3(Test_Helper):
     def setUp(self):
+        super().setUp()
         self.s3 = S3()
-        assert self.s3.__class__.__name__ == 'S3'
         self.temp_file_name     = "aaa.txt"
         self.temp_file_contents = "some contents"
         self.test_bucket        = "gs-lambda-tests"
         self.test_folder        = "unit_tests"
+
+    def test__ctor__(self):
+        assert self.s3.__class__.__name__ == 'S3'
 
     def _test_file(self):
         temp_file = os.path.abspath(self.temp_file_name)
@@ -94,3 +101,28 @@ class Test_S3(unittest.TestCase):
         assert self.s3.file_contents          (dest_bucket  , dest_key                         ) == file_contents
         assert self.s3.file_delete            (src_bucket   , src_key                          ) is True
         assert self.s3.file_delete            (dest_bucket  , dest_key                         ) is True
+
+    def test_policy(self):
+        bucket_policy = self.s3.policy('gw-bot-trails')
+        #self.result = self.s3.policy_create('gw-bot-trails',bucket_policy)
+        self.result = bucket_policy
+
+    def test_policy_statements(self):
+        assert len(self.s3.policy_statements('gw-bot-trails', index_by='Effect').get('Allow')) == 6
+        assert len(self.s3.policy_statements('gw-bot-trails', group_by='Effect').get('Allow')) == 2
+
+    def test_policy_statements__new(self):
+        s3_bucket    = 'gw-bot-trails'
+        action       = 'action'
+        effect       = 'effect'
+        service      = 'service'
+        trail_name   = 'trail_name'
+        account_id   = 'account_id'
+        resource_arn = self.s3.policy_statements__resource_arn(s3_bucket, trail_name, account_id )
+        self.result  = self.s3.policy_statements__new(action, effect, service, resource_arn)
+
+    def test_policy_statements__without(self):
+        self.result = self.s3.policy_statements__without('gw-bot-trails', 'Action', 's3:PutObject')
+        assert len(self.result) == 1
+
+

@@ -28,16 +28,31 @@ class test_CloudTrail_To_Elk(Test_Helper):
     def test_tags(self):
         self.result = self.cloud_trail.tags([])
 
+    def test_trail(self):
+        trail_name = 'test_trail'
+        self.result = self.cloud_trail.trail(trail_name)
+
     def test_trail_create(self):
-        region         = IAM().region()
-        name           = 'test_trail'
+        iam            = IAM()
+        account_id     = iam.account_id()
+        region         = iam.region()
+        trail_name     = 'test_trail'
         s3_bucket      = 'gw-bot-trails'
-        s3_key_prefix  = name
-        sns_topic_name = 'test_sns_topic'
-        S3().bucket_create(s3_bucket,region)
+        s3_key_prefix  = trail_name
+        sns_topic_name = None
 
-        self.result = self.cloud_trail.trail_create(name, s3_bucket, s3_key_prefix, sns_topic_name)
+        self.result = self.cloud_trail.trail_create(trail_name, account_id, region, s3_bucket, s3_key_prefix)
 
+    def test_trail_delete(self):
+        trail_name  = 'test_trail'
+        self.result = self.cloud_trail.trail_delete(trail_name)
+
+    def test_trail_start_stop(self):
+        trail_name  = 'test_trail'
+        self.cloud_trail.trail_start(trail_name)
+        assert self.cloud_trail.trail(trail_name).get('IsLogging') is True
+        self.cloud_trail.trail_stop(trail_name)
+        assert self.cloud_trail.trail(trail_name).get('IsLogging') is False
 
     def test_trails(self):
         self.result = self.cloud_trail.trails()

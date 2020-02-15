@@ -1,4 +1,5 @@
 import gzip
+import json
 import os
 import boto3
 import tempfile
@@ -19,6 +20,23 @@ class S3:
         self.tmp_file_folder = 's3_temp_files'
 
     # helpers
+    def _filter(self, values, index_by=None, group_by=None):
+        if index_by:
+            indexed = {}
+            for value in values:
+                indexed[value.get(index_by)] = value
+            return indexed
+        if group_by:
+            indexed = {}
+            for value in values:
+                key = value.get(group_by)
+                if indexed.get(key) is None:
+                    indexed[key] = []
+                indexed[key].append(value)
+            return indexed
+
+        return values
+
     def s3(self):
         if self.boto_client_s3 is None : self.boto_client_s3 = Session().client('s3')
         return self.boto_client_s3
@@ -194,6 +212,40 @@ class S3:
         return self
 
 
+    def policy(self, s3_bucket):
+        return json.loads(self.s3().get_bucket_policy(Bucket=s3_bucket).get('Policy'))
+
+    def policy_statements(self, s3_bucket, index_by=None, group_by=None):
+        return self._filter(self.policy(s3_bucket).get('Statement'), index_by=index_by, group_by=group_by)
+
+    def policy_statements__resource_arn(self, s3_bucket, trail_name, account_id):
+        return f'arn:aws:s3:::{s3_bucket}/{trail_name}/AWSLogs/{account_id}/*'
+
+    def policy_statements__new(self, action, effect, service, resource_arn ):
+        return { 'Action'   : action,
+                 'Effect'   : effect,
+                 'Principal': {'Service': service },
+                 'Resource' : resource_arn}
+        # statements = self.policy_statements(s3_bucket)
+        # statements.append(statement)
+        # return statements
+
+    def policy_statements__without(self, s3_bucket, key, value):
+        statements = self.policy_statements(s3_bucket)
+        new_list = []
+        for statement in statements:
+            if statement.get(key) != value:
+                new_list.append(statement)
+        return new_list
+
+    def policy_create(self, s3_bucket, statements):
+        #if (type(statements) is str) is False:
+        #    statements = json.dumps(statements)
+
+        policy = json.dumps({ 'Statement': statements   ,
+                            'Version'  : '2012-10-17' })
+        return self.s3().put_bucket_policy(Bucket= s3_bucket, Policy=policy)
+        #return policy
 
 # def split_s3_url(s3_url):
 #     url = urlparse(s3_url)
