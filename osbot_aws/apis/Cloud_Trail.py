@@ -1,4 +1,6 @@
 import datetime
+import json
+
 from osbot_aws.apis.Boto_Helpers import Boto_Helpers
 from osbot_aws.apis.S3 import S3
 from osbot_aws.apis.Session import Session
@@ -17,6 +19,8 @@ class Cloud_Trail(Boto_Helpers):
     def date_minutes_ago(self, minutes):
         return datetime.datetime.utcnow() - datetime.timedelta(minutes=minutes)
 
+    def event_selectors(self, trail_name):
+        return  self.cloudtrail.get_event_selectors(TrailName=trail_name).get('EventSelectors')
 
     def events(self,start_time, end_time, max_results=50):
         return self.cloudtrail.lookup_events(LookupAttributes=[], StartTime=start_time,EndTime=end_time,MaxResults=max_results).get('Events')
@@ -31,6 +35,25 @@ class Cloud_Trail(Boto_Helpers):
 
     def tags(self, resource_ids=[]):
         return self.cloudtrail.list_tags(ResourceIdList=resource_ids)
+
+    def log_files(self, trail_name, account_id, region, year, month, day):
+        trail         = self.trail(trail_name)
+        log_type      = 'CloudTrail'
+        s3_bucket     = trail.get('S3BucketName')
+        s3_key_prefix = trail.get('S3KeyPrefix')
+        s3_prefix     = f'{s3_key_prefix}/AWSLogs/{account_id}/'                           \
+                        f'{log_type}/{region}/{year}/{month}/{day}/'
+        s3_files      = self.s3.find_files(s3_bucket, prefix=s3_prefix)
+        return s3_files
+
+    def log_files_records(self, trail_name, log_files):
+        trail     = self.trail(trail_name)
+        s3_bucket = trail.get('S3BucketName')
+        records   = []
+        for log_file in log_files:
+            contents = self.s3.file_contents_from_gzip(s3_bucket, log_file)
+            records.extend(json.loads(contents).get('Records'))
+        return records
 
     def trail(self, trail_name):
         trail        = self.cloudtrail.get_trail(Name=trail_name).get('Trail')
@@ -68,12 +91,16 @@ class Cloud_Trail(Boto_Helpers):
         return self.cloudtrail.get_trail_status(Name=trail_name)
 
     def trail_s3_bucket_configure(self, trail_name, s3_bucket, account_id, region):
+
+        self.s3.bucket_create(s3_bucket, region)                # make sure bucket exists
+                                                                # see https://docs.aws.amazon.com/awscloudtrail/latest/userguide/create-s3-bucket-policy-for-cloudtrail.html
         resource_arn = self.s3.policy_statements__resource_arn(s3_bucket, trail_name, account_id)
         statements   = self.s3.policy_statements__without(s3_bucket, 'Resource', resource_arn) # making sure we are not adding the same resource_arn twice
         statement    = self.s3.policy_statements__new('s3:PutObject', 'Allow', 'cloudtrail.amazonaws.com', resource_arn)
         statements.append(statement)
+        if 's3:GetBucketAcl' not in self.s3.policy_statements(s3_bucket, index_by='Action'):
+            statements.append(self.s3.policy_statements__new('s3:GetBucketAcl', 'Allow', 'cloudtrail.amazonaws.com', f"arn:aws:s3:::{s3_bucket}"))
 
-        self.s3.bucket_create(s3_bucket, region)                # make sure bucket exists
         self.s3.policy_create(s3_bucket,statements)             # add cloud trail policy
         return self
 

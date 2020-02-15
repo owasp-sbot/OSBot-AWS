@@ -40,6 +40,30 @@ class Test_S3(Test_Helper):
         assert self.s3.bucket_delete(bucket_name) is True
         assert self.s3.bucket_exists(bucket_name) is False
 
+    def test_bucket_notification(self):
+        #.lambda_function_configurations
+        bucket_name = 'gw-tf-cloud-trails'
+        lambda_arm  = 'arn:aws:lambda:eu-west-1:311800962295:function:gw_bot_lambdas_aws_on_s3_event'
+        events      = ['s3:ObjectCreated:*']
+        prefix      = ''
+        self.result = self.s3.bucket_notification(bucket_name)
+        self.result = self.s3.bucket_notification_create(bucket_name,lambda_arm, events,prefix)
+
+        # resource = s3.s3_bucket_notification(bucket_name)
+        # config = { 'LambdaFunctionConfigurations': [{ 'LambdaFunctionArn': lambda_arn           ,
+        #                                               'Events'           : ['s3:ObjectCreated:*']}]}
+        # Dev.pprint(config)
+        # Dev.pprint(resource.put(NotificationConfiguration=config))
+
+        # Dev.pprint(resource.lambda_function_configurations)
+
+        # Dev.pprint(s3.s3().get_bucket_notification_configuration(Bucket=bucket_name))
+
+        # bucket_notification = s3.BucketNotification('bucket_name')
+        # Dev.pprint(bucket_notification)
+
+        # s3.boto_client_s3().bucket_notification()
+
     def test_buckets(self):
         names = self.s3.buckets()
         assert self.test_bucket in names

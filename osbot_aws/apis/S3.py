@@ -15,8 +15,9 @@ from osbot_aws.apis.Session import Session
 
 class S3:
     def __init__(self):
-        self.boto_client_s3  = None
-        self.boto_resource_s3 = None
+        self.boto_client_s3    = None
+        self.boto_resource_s3  = None
+        self.boto_notification = None
         self.tmp_file_folder = 's3_temp_files'
 
     # helpers
@@ -45,8 +46,23 @@ class S3:
         if self.boto_resource_s3 is None : self.boto_resource_s3 = Session().resource('s3')
         return self.boto_resource_s3
 
-    def s3_bucket_notification(self,bucket_name):
-        return self.s3_resource().BucketNotification(bucket_name)
+    def bucket_notification(self, bucket_name):
+        #if self.boto_notification is None : self.boto_notification = self.s3_resource().BucketNotification(bucket_name=bucket_name)
+        #return self.boto_notification
+        return self.s3().get_bucket_notification_configuration(Bucket=bucket_name)
+
+    def bucket_notification_create(self, bucket_name, lambda_arn, events, prefix):
+        try:
+            params = { 'Bucket' : bucket_name,
+                       'NotificationConfiguration': {
+                            'LambdaFunctionConfigurations': [{
+                                                              'LambdaFunctionArn': lambda_arn,
+                                                              'Events'           : events,
+                                                              'Filter'           : { 'Key': { 'FilterRules': [ {'Name' : 'prefix',
+                                                                                                               'Value': prefix }]}}}]}}
+            return self.s3().put_bucket_notification_configuration(**params)
+        except Exception as error:
+            return {'error': f'{error}'}
 
     # main methods
     def bucket_arn(self,bucket):
@@ -112,7 +128,7 @@ class S3:
         obj = self.s3().get_object(Bucket=bucket, Key=key)                    # get object data from s3
         return obj['Body'].read().decode('utf-8')                               # extract body and decode it
 
-    def file_contents_as_gzip   (self, bucket, key                                  ):
+    def file_contents_from_gzip   (self, bucket, key                                  ):
         obj = self.s3().get_object(Bucket=bucket, Key=key)                    # get object data from s3
         bytestream = BytesIO(obj['Body'].read())
         return GzipFile(None, 'rb', fileobj=bytestream).read().decode('utf-8')
@@ -213,7 +229,10 @@ class S3:
 
 
     def policy(self, s3_bucket):
-        return json.loads(self.s3().get_bucket_policy(Bucket=s3_bucket).get('Policy'))
+        try:
+            return json.loads(self.s3().get_bucket_policy(Bucket=s3_bucket).get('Policy'))
+        except:
+            return {'Statement': []}
 
     def policy_statements(self, s3_bucket, index_by=None, group_by=None):
         return self._filter(self.policy(s3_bucket).get('Statement'), index_by=index_by, group_by=group_by)
