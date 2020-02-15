@@ -21,15 +21,18 @@ class IAM_User:
     def exists(self):
         return self.iam.user_exists()
 
+    def _get_attribs(self,target,attribs):
+        item = {}
+        for attrib in attribs:
+            item[attrib] = getattr(target, attrib)
+        return item
+
     def _index_by(self, target, attribs, index_by=None):
         try:
             all_data = getattr(target,'all')()
             results  = []
             for value in all_data:
-                item = {}
-                for attrib in attribs:
-                    item[attrib] = getattr(value, attrib)
-                results.append(item)
+                results.append(self._get_attribs(value,attribs))
             if index_by is None:
                 return results
             indexed = {}
@@ -39,6 +42,9 @@ class IAM_User:
         except Exception as error:
             return {'error': f'{error}'}
 
+    def access_keys(self,index_by=None):
+        attribs = ['user_name','id','access_key_id', 'create_date','status']
+        return self._index_by(self.user.access_keys, attribs, index_by)
 
     def groups(self, index_by=None):
         return self._index_by(self.user.groups, ['arn','create_date','group_id','group_name','path'], index_by)
@@ -46,11 +52,17 @@ class IAM_User:
     def id(self):
         return self.user.user_id
 
-    def policies(self):
-        data = self.user.policies.all()
-        for item in data:
-            print('------')
-        return type(data)
+    def info(self):
+        attribs = ['arn', 'create_date', 'password_last_used', 'path', 'permissions_boundary', 'tags', 'user_id', 'user_name']
+        return self._get_attribs(self.user, attribs)
+
+    def policies(self, index_by=None):
+        attribs = ['attachment_count', 'create_date', 'default_version_id', 'description', 'is_attachable', 'path', 'permissions_boundary_usage_count', 'policy_id', 'policy_name', 'update_date']
+        return self._index_by(self.user.attached_policies,attribs, index_by)
+
+    def user_policies(self, index_by=None):
+        attribs = ['attachment_count', 'create_date', 'default_version_id', 'description', 'is_attachable', 'path', 'permissions_boundary_usage_count', 'policy_id', 'policy_name', 'update_date']
+        return self._index_by(self.user.policies,attribs, index_by)
 
     def tags(self):
         return self.user.tags

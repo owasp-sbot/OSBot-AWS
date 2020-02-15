@@ -6,13 +6,13 @@ class test_IAM_User(Test_Helper):
 
     def setUp(self):
         super().setUp()
-        self.user_name = 'aawais@glasswallsolutions.com'# 'Unit_Test_User'
+        self.user_name = 'Unit_Test_User'
         self.user = IAM_User(self.user_name)
         self.user.create()
 
     def tearDown(self):
         super().tearDown()
-        #self.iam_user.delete()
+        self.user.delete()
 
     def test_arn(self):
         self.result = self.user.arn()
@@ -23,11 +23,17 @@ class test_IAM_User(Test_Helper):
         assert self.user.delete() is True
         assert self.user.exists() is False
 
+    def test_access_keys(self):
+        self.result = self.user.access_keys()
+
     def test_groups(self):
         self.result = self.user.groups(index_by='group_name')
 
     def test_id(self):
         self.result = self.user.id()
+
+    def test_info(self):
+        self.result = self.user.info()
 
     def test_policies(self):
         self.result = self.user.policies()
