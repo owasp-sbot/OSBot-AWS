@@ -16,10 +16,10 @@ class Session:
         else:
             return boto3.Session()
 
-    def client_boto3(self,service_name):
+    def client_boto3(self,service_name, profile_name=None, region_name=None):
         try:
-            profile_name = Globals.aws_session_profile_name
-            region_name  = Globals.aws_session_region_name
+            profile_name = profile_name or Globals.aws_session_profile_name
+            region_name  = region_name  or Globals.aws_session_region_name
 
             profiles = get_session()._build_profile_map()
             if profile_name in profiles:
@@ -30,10 +30,10 @@ class Session:
             return {'status': 'error', 'data': '{0}'.format(error) }
 
 
-    def resource_boto3(self,service_name):          # refactor with client_boto3
+    def resource_boto3(self,service_name, profile_name=None, region_name=None):          # refactor with client_boto3
         try:
-            profile_name = Globals.aws_session_profile_name
-            region_name  = Globals.aws_session_region_name
+            profile_name = profile_name or Globals.aws_session_profile_name
+            region_name  = region_name  or Globals.aws_session_region_name
 
             profiles = get_session()._build_profile_map()
             if profile_name in profiles:
@@ -43,8 +43,8 @@ class Session:
         except Exception as error:
             return {'status': 'error', 'data': '{0}'.format(error) }
 
-    def client(self, service_name):
-        return self.client_boto3(service_name).get('client')
+    def client(self, service_name, profile_name=None, region_name=None):
+        return self.client_boto3(service_name,profile_name,region_name).get('client')
 
-    def resource(self, service_name):
-        return self.resource_boto3(service_name).get('resource')
+    def resource(self, service_name,profile_name=None, region_name=None):
+        return self.resource_boto3(service_name,profile_name,region_name).get('resource')
