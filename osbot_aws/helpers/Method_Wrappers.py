@@ -6,8 +6,8 @@ def catch(function):
             return {'error': error }
     return wrapper
 
-# returns the list indexed by the key provided in index_by param
-def index_by(function):
+#todo: refactor with group_by (simplify these two methods and remove duplicate code)
+def index_by(function):                                 # returns the list provided indexed by the key provided in index_by
     def wrapper(*args,**kwargs):
         key = None
         if 'index_by' in kwargs:
@@ -22,8 +22,8 @@ def index_by(function):
         return values
     return wrapper
 
-# returns the list grouped by the key provided in index_by param
-def group_by(function):
+#todo: refactor with index_by
+def group_by(function):                                 # returns the list provided grouped by the key provided in group_by
     def wrapper(*args,**kwargs):
         key = None
         if 'group_by' in kwargs:

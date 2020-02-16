@@ -21,7 +21,7 @@ class test_ACM(Test_Helper):
 
     def test_record_sets(self):
         hosted_zone = '/hostedzone/ZMHOWKWA1ZN69'
-        self.result = self.route_53.record_sets(hosted_zone, group_by='Name')
+        self.result = self.route_53.record_sets(hosted_zone, group_by='Name opbnject')
 
     def test_domains(self):
         self.result = self.route_53.domains(index_by='DomainName')
