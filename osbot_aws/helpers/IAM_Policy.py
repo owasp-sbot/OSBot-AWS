@@ -2,13 +2,13 @@ from osbot_aws.apis.IAM import IAM
 
 
 class IAM_Policy:
-    def __init__(self, policy_name=None, policy_path=None, account_id=None):
+    def __init__(self, policy_name=None, policy_path=None):
         self.iam         = IAM()
         self.policy_name = policy_name
         self.version     = "2012-10-17"
         self.statements  = []
         self.policy_path = policy_path
-        self.account_id  = account_id
+        self.account_id  = self.iam.account_id()
 
     def add_cloud_watch(self, resource_arn):
         return self.add_statement_allow(["logs:CreateLogGroup","logs:CreateLogStream","logs:PutLogEvents"], [resource_arn])

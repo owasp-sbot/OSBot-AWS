@@ -4,7 +4,7 @@ from osbot_aws.apis.IAM import IAM
 
 
 class IAM_User:
-    def __init__(self,user_name=None):
+    def __init__(self, user_name=None):
         self.iam       = IAM(user_name=user_name)
         self.user      = self.iam.resource().User(name=user_name)
 
@@ -59,6 +59,12 @@ class IAM_User:
     def policies(self, index_by=None):
         attribs = ['attachment_count', 'create_date', 'default_version_id', 'description', 'is_attachable', 'path', 'permissions_boundary_usage_count', 'policy_id', 'policy_name', 'update_date']
         return self._index_by(self.user.attached_policies,attribs, index_by)
+
+    def set_password(self, password, reset_required=True):
+        try:
+            return self.iam.login_profile_create(password, reset_required=reset_required)
+        except Exception as error:
+            return {'error' : f'{error}'}
 
     def user_policies(self, index_by=None):
         attribs = ['attachment_count', 'create_date', 'default_version_id', 'description', 'is_attachable', 'path', 'permissions_boundary_usage_count', 'policy_id', 'policy_name', 'update_date']

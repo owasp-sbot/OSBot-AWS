@@ -83,6 +83,12 @@ class IAM:
     def groups(self):
         return list(self.get_data('list_groups', 'Groups', True))
 
+    def login_profile_create(self, password, reset_required=True):
+        return self.iam().create_login_profile(UserName=self.user_name, Password=password, PasswordResetRequired=reset_required)
+
+    def login_profile_delete(self):
+        return self.iam().delete_login_profile(UserName=self.user_name)
+
     def policy_arn(self, policy_name, policy_path='/',account_id=None):
         if policy_name is None: return policy_name
         if account_id is None: account_id = self.account_id()
@@ -236,6 +242,9 @@ class IAM:
     def users(self, index_by=None):
         return self._index_by(self.get_data('list_users', 'Users', True), index_by)
 
+    def user_attach_policy(self, policy_arn):
+        return self.iam().attach_user_policy(UserName=self.user_name, PolicyArn=policy_arn)
+
     def user_exists(self):
         return self.user_info() is not None
 
@@ -252,6 +261,7 @@ class IAM:
 
     def user_delete(self):
         if self.user_exists() is False: return False
+        self.login_profile_delete()
         self.iam().delete_user(UserName=self.user_name)
         return self.user_exists() is False
 

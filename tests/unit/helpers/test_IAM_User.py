@@ -12,7 +12,7 @@ class test_IAM_User(Test_Helper):
 
     def tearDown(self):
         super().tearDown()
-        self.user.delete()
+        #self.user.delete()
 
     def test_arn(self):
         self.result = self.user.arn()
@@ -37,6 +37,9 @@ class test_IAM_User(Test_Helper):
 
     def test_policies(self):
         self.result = self.user.policies()
+
+    def test_set_password(self):
+        self.result = self.user.set_password('***********', reset_required=False)
 
     def test_roles(self):
         self.result = self.user.iam.resource().User(self.user_name)
