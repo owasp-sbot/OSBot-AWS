@@ -6,9 +6,9 @@ from osbot_aws.Globals import Globals
 
 class Session:
 
-    def session(self):
-        profile_name = Globals.aws_session_profile_name
-        region_name = Globals.aws_session_region_name
+    def session(self,profile_name=None, region_name=None):
+        profile_name = profile_name or Globals.aws_session_profile_name
+        region_name  = region_name or Globals.aws_session_region_name
 
         profiles = get_session()._build_profile_map()
         if profile_name in profiles:

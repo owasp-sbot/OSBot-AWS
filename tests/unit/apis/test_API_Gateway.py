@@ -64,8 +64,26 @@ class test_API_Gateway(Test_Helper):
         api_id = Rest_API('temp_rest_api').create().id()
         self.result = self.api_gateway.deployment_create(api_id, stage)
 
+    def test_domain_name_add_path_mapping(self):
+        rest_api_id = self.api_gateway.rest_api_id('lambda-proxy')
+        domain_name = 'gw-proxy.com'
+        base_path   = ''
+        self.result = self.api_gateway.domain_name_add_path_mapping(rest_api_id=rest_api_id,domain_name=domain_name,base_path=base_path)
+
+    def test_domain_name_create(self):
+        domain_name     = 'gw-proxy.com'
+        certificate_arn = 'arn:aws:acm:eu-west-1:311800962295:certificate/cac6ccbe-e5a6-41b1-ab87-461ff1d88458'
+        endpoint_type   = 'REGIONAL'
+        self.result     = self.api_gateway.domain_name_create__regional(domain_name=domain_name, certificate_arn=certificate_arn)
+
+    def test_domain_name_delete(self):
+            domain_name = 'gw-proxy.com'
+            self.result = self.api_gateway.domain_name_delete(domain_name=domain_name)
+
+
     def test_domain_names(self):
-        assert len(self.api_gateway.domain_names()) > 0
+        self.result = self.api_gateway.domain_names(index_by='regionalDomainName')
+        #assert len(self.api_gateway.domain_names()) > 0
 
     #not working: 'Invalid Method identifier specified'
     def test_integration(self):

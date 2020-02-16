@@ -48,6 +48,14 @@ class API_Gateway:
     def _get_using_api_id(self, target, api_id, index_by='id', data_key='items'):
         return self._call_method_return_items(method_name=f"get_{target}", params={'restApiId': api_id}, index_by=index_by, data_key=data_key)
 
+    def _index_by(self, values, index_by=None):
+        if index_by is None:
+            return list(values)
+        results = {}
+        for item in values:
+            results[item.get(index_by)] = item
+        return results
+
     # main methods
     def account(self):
         return self.api_gateway.get_account()
@@ -88,8 +96,33 @@ class API_Gateway:
                   'stageName': stage}
         return self._call_method('create_deployment',params)
 
-    def domain_names(self):
-        return self.api_gateway.get_domain_names().get('items')
+    def domain_name_add_path_mapping(self, rest_api_id, domain_name, base_path, stage='Prod'):
+        try:
+            params = { 'domainName' : domain_name ,
+                       'basePath'   : base_path   ,
+                       'restApiId'  : rest_api_id ,
+                       'stage'      : stage       }
+            return self.api_gateway.create_base_path_mapping(**params)
+        except Exception as error:
+            return {'error': f'{error}'}
+    def domain_name_create__regional(self, domain_name, certificate_arn):
+        try:
+            params = { 'domainName'    : domain_name,
+                       'regionalCertificateArn': certificate_arn,
+                       'endpointConfiguration': { 'types': ['REGIONAL'] },
+                       'securityPolicy'    :'TLS_1_2'}
+            return self.api_gateway.create_domain_name(**params)
+        except Exception as error:
+            return {'error':  f'{error}'}
+
+    def domain_name_delete(self, domain_name):
+        try:
+            return self.api_gateway.delete_domain_name(domainName=domain_name)
+        except Exception as error:
+            return {'error':  f'{error}'}
+
+    def domain_names(self, index_by=None):
+        return self._index_by(self.api_gateway.get_domain_names().get('items'), index_by=index_by)
 
     def integration(self, api_id, resource_id, http_method):
         return self.api_gateway.get_integration(restApiId=api_id, resourceId=resource_id, httpMethod=http_method)

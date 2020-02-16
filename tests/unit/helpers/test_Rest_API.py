@@ -31,6 +31,7 @@ class test_Rest_API(Test_Helper):
     def test_resource_id(self):
         self.result = self.rest_api.resource_id('/')
 
+# this is the code that creates the lambda function used by the Shopify SendOWL Add on
 class test_Rest_API__Create_Key_Generator(Test_Helper):
 
     def setUp(self):
