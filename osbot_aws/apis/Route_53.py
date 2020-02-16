@@ -27,7 +27,7 @@ class Route_53:
 
     # Main methods
 
-    def add_record(self, name, record_type, dns_name,hosted_zone_id,alias_hosted_zone_id):
+    def record_set_upsert(self, name, record_type, dns_name,hosted_zone_id,alias_hosted_zone_id):
         try:
             params = {  "HostedZoneId" : hosted_zone_id,
                         "ChangeBatch": { "Changes": [{ "Action": "UPSERT",
@@ -40,6 +40,9 @@ class Route_53:
             return self.route_53().change_resource_record_sets(**params)
         except Exception as error:
             return { 'error' : f'{error}'}
+
+    def record_sets(self):
+        return '132'
 
     def domains(self, index_by=None):
         try:

@@ -12,7 +12,7 @@ from pbx_gs_python_utils.utils.Dev import Dev
 from gw_bot.helpers.Test_Helper import Test_Helper
 from osbot_aws.apis.Cloud_Trail import Cloud_Trail
 
-class test_CloudTrail_To_Elk(Test_Helper):
+class test_CloudTrail(Test_Helper):
 
     def setUp(self):
         super().setUp()
@@ -70,7 +70,7 @@ class test_CloudTrail_To_Elk(Test_Helper):
         region      = iam.region()
         year        = '2020'
         month       = '02'
-        day         = '15'
+        day         = '16'
         max         = 200
         log_files   = self.cloud_trail.log_files(self.trail_name, account_id, region, year, month, day)
         records     = self.cloud_trail.log_files_records(self.trail_name, log_files[0:max])
@@ -102,7 +102,7 @@ class test_CloudTrail_To_Elk(Test_Helper):
         log_type   = 'CloudTrail'
         year       = '2020'
         month      = '02'
-        day        = '15'
+        day        = '16'
         hour       = ''
         minute     = ''
         s3_prefix = f'{self.s3_key_prefix}/AWSLogs/{account_id}/'                           \
