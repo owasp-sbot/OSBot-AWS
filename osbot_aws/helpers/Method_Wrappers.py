@@ -1,4 +1,8 @@
+from functools import wraps
+
+
 def catch(function):
+    @wraps(function)
     def wrapper(*args,**kwargs):
         try:
             return function(*args,**kwargs)
@@ -8,6 +12,7 @@ def catch(function):
 
 #todo: refactor with group_by (simplify these two methods and remove duplicate code)
 def index_by(function):                                 # returns the list provided indexed by the key provided in index_by
+    @wraps(function)
     def wrapper(*args,**kwargs):
         key = None
         if 'index_by' in kwargs:
@@ -24,6 +29,7 @@ def index_by(function):                                 # returns the list provi
 
 #todo: refactor with index_by
 def group_by(function):                                 # returns the list provided grouped by the key provided in group_by
+    @wraps(function)
     def wrapper(*args,**kwargs):
         key = None
         if 'group_by' in kwargs:
