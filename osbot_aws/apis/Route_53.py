@@ -1,4 +1,5 @@
-from osbot_aws.apis.Session import Session
+from osbot_aws.apis.Session            import Session
+from osbot_aws.helpers.Method_Wrappers import catch, index_by, group_by
 
 
 class Route_53:
@@ -41,14 +42,19 @@ class Route_53:
         except Exception as error:
             return { 'error' : f'{error}'}
 
-    def record_sets(self):
-        return '132'
+    @catch
+    @group_by
+    def record_sets(self,hosted_zone):
+        return self.route_53().list_resource_record_sets(HostedZoneId=hosted_zone).get('ResourceRecordSets')
 
-    def domains(self, index_by=None):
-        try:
-            return self._index_by(self.route_53_domains().list_domains().get('Domains'),index_by=index_by)
-        except Exception as error:
-            return {'error': f'{error}'}
+    @catch
+    @index_by
+    def domains(self):
+        return self.route_53_domains().list_domains().get('Domains')
+
+    #def domains(self, index_by=None):
+    #    return self._index_by(self.route_53_domains().list_domains().get('Domains'),index_by=index_by)
+
 
     def hosted_zones(self, index_by=None):
         try:

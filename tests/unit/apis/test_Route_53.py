@@ -20,8 +20,9 @@ class test_ACM(Test_Helper):
         self.result = self.route_53.record_set_upsert(name, record_type, dns_name,hosted_zone_id,alias_hosted_zone_id)
 
     def test_record_sets(self):
-        self.result = self.route_53.record_sets()
-        
+        hosted_zone = '/hostedzone/ZMHOWKWA1ZN69'
+        self.result = self.route_53.record_sets(hosted_zone, group_by='Name')
+
     def test_domains(self):
         self.result = self.route_53.domains(index_by='DomainName')
 
