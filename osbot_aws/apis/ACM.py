@@ -1,4 +1,5 @@
 from osbot_aws.apis.Session import Session
+from osbot_aws.helpers.Method_Wrappers import catch,index_by
 
 
 class ACM:
@@ -6,22 +7,27 @@ class ACM:
     def __init__(self):
         self._acm       = None
 
-    # helpers
-
-    def _index_by(self, values, index_by=None):
-        if index_by is None:
-            return list(values)
-        results = {}
-        for item in values:
-            results[item.get(index_by)] = item
-        return results
-
     def acm(self):
         if self._acm is None:
             self._acm = Session().client('acm')
         return self._acm
 
-    # main methods
+    @catch
+    def certificate(self, certificate_arn, include_certs=False):
+        cert_info = self.acm().describe_certificate(CertificateArn=certificate_arn).get('Certificate')
+        if include_certs:
+            cert_data = self.acm().get_certificate(CertificateArn=certificate_arn)
+            cert_info['Certificate'     ] = cert_data.get('Certificate')
+            cert_info['CertificateChain'] = cert_data.get('CertificateChain')
 
-    def certificates(self, index_by=None):
-        return self._index_by(self.acm().list_certificates().get('CertificateSummaryList'),index_by=index_by)
+        return cert_info
+
+    @catch
+    def certificate_request(self, domain_name, validation_method='DNS'):
+        return self.acm().request_certificate(DomainName=domain_name, ValidationMethod=validation_method)
+
+
+    @catch
+    @index_by
+    def certificates(self):
+        return self.acm().list_certificates().get('CertificateSummaryList')
