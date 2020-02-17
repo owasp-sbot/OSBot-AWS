@@ -6,43 +6,23 @@ import tempfile
 from   io import BytesIO
 from   gzip import GzipFile
 from   botocore.errorfactory import ClientError
-from    pbx_gs_python_utils.utils.Files import Files
+from osbot_aws.helpers.Method_Wrappers import group_by, index_by, cache
+from   pbx_gs_python_utils.utils.Files import Files
 
 from osbot_aws.apis.Session import Session
 
 
 class S3:
     def __init__(self):
-        self.boto_client_s3    = None
-        self.boto_resource_s3  = None
-        self.boto_notification = None
         self.tmp_file_folder = 's3_temp_files'
 
-    # helpers
-    def _filter(self, values, index_by=None, group_by=None):
-        if index_by:
-            indexed = {}
-            for value in values:
-                indexed[value.get(index_by)] = value
-            return indexed
-        if group_by:
-            indexed = {}
-            for value in values:
-                key = value.get(group_by)
-                if indexed.get(key) is None:
-                    indexed[key] = []
-                indexed[key].append(value)
-            return indexed
-
-        return values
-
+    @cache
     def s3(self):
-        if self.boto_client_s3 is None : self.boto_client_s3 = Session().client('s3')
-        return self.boto_client_s3
+        return Session().client('s3')
 
+    @cache
     def s3_resource(self):
-        if self.boto_resource_s3 is None : self.boto_resource_s3 = Session().resource('s3')
-        return self.boto_resource_s3
+        return Session().resource('s3')
 
     def bucket_notification(self, bucket_name):
         #if self.boto_notification is None : self.boto_notification = self.s3_resource().BucketNotification(bucket_name=bucket_name)
@@ -242,8 +222,10 @@ class S3:
         except:
             return {'Statement': []}
 
-    def policy_statements(self, s3_bucket, index_by=None, group_by=None):
-        return self._filter(self.policy(s3_bucket).get('Statement'), index_by=index_by, group_by=group_by)
+    @index_by
+    @group_by
+    def policy_statements(self, s3_bucket):
+        return self.policy(s3_bucket).get('Statement')
 
     def policy_statements__resource_arn(self, s3_bucket, trail_name, account_id):
         return f'arn:aws:s3:::{s3_bucket}/{trail_name}/AWSLogs/{account_id}/*'
@@ -253,9 +235,6 @@ class S3:
                  'Effect'   : effect,
                  'Principal': {'Service': service },
                  'Resource' : resource_arn}
-        # statements = self.policy_statements(s3_bucket)
-        # statements.append(statement)
-        # return statements
 
     def policy_statements__without(self, s3_bucket, key, value):
         statements = self.policy_statements(s3_bucket)

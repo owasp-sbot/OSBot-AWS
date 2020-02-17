@@ -6,6 +6,7 @@ from pbx_gs_python_utils.utils.Misc import Misc
 
 from osbot_aws.Globals import Globals
 from osbot_aws.apis.Session import Session
+from osbot_aws.helpers.Method_Wrappers import index_by
 
 
 class IAM:
@@ -165,6 +166,7 @@ class IAM:
         calculated_policy_arn = self.policy_arn(policy_name, policy_path, account_id)   # since there doesn't seem to be a way to search for a policy by name
         return self.policy_info(calculated_policy_arn) is not None
 
+    @index_by
     def policies(self):
         return list(self.get_data('list_policies', 'Policies', True))
 

@@ -142,8 +142,8 @@ class Test_S3(Test_Helper):
         self.result = bucket_policy
 
     def test_policy_statements(self):
-        assert len(self.s3.policy_statements('gw-bot-trails', index_by='Effect').get('Allow')) == 6
-        assert len(self.s3.policy_statements('gw-bot-trails', group_by='Effect').get('Allow')) == 2
+        assert len(self.s3.policy_statements('gw-tf-cloud-trails', index_by='Effect').get('Allow')) == 4
+        assert len(self.s3.policy_statements('gw-tf-cloud-trails', group_by='Effect').get('Allow')) == 2
 
     def test_policy_statements__new(self):
         s3_bucket    = 'gw-bot-trails'

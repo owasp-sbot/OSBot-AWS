@@ -1,5 +1,14 @@
 from functools import wraps
 
+# todo: create signature based on request params so that we don't cache when the params are different
+def cache(function):
+    @wraps(function)
+    def wrapper(*args,**kwargs):
+        if hasattr(function, 'return_value') is False:                  # check if return_value has been set
+            function.return_value  = function(*args,**kwargs)           # invoke function and capture the return value
+        return function.return_value                                    # return the return value
+    return wrapper
+
 
 def catch(function):
     @wraps(function)

@@ -65,6 +65,9 @@ class Lambda_Package:
         self.add_folder(lib_path)
         return self
 
+    def arn(self):
+        return self._lambda.function_Arn()
+
     def get_files(self):
         all_files = []
         for root, dirs, files in os.walk(self.tmp_folder):
