@@ -1,5 +1,7 @@
 import json
 
+from osbot_aws.apis.Lambda import Lambda
+
 from osbot_aws.apis.IAM import IAM
 
 from osbot_aws.apis.Session import Session
@@ -18,6 +20,25 @@ class Firehose:
                 data = json.dumps(data)
             data += '\n'                    # need to do this or we will get a massive list of entries
         return data.encode()
+
+    @catch
+    def add_processing_lambda(self, stream_name, lambda_name):
+        function_arn = Lambda(lambda_name).function_Arn()
+        update_data =  { 'ProcessingConfiguration': {
+                            'Enabled'   : True,
+                            'Processors': [{ 'Type': 'Lambda',
+                                              'Parameters': [{
+                                                  'ParameterName' : 'LambdaArn',
+                                                  'PameterValue': function_arn}]}]}}
+        return self.destination_update(stream_name, update_data)
+
+    def add_processing_lambda_set_lambda_permission(self, lambda_arn):
+        statement_id = 'allow_firehose_to_invoke_lambda_function'
+        action       = 'lambda:InvokeFunction'
+        principal    = 'firehose.amazonaws.com'
+        aws_lambda   = Lambda()
+        aws_lambda.delete_permission(lambda_arn, statement_id)
+        return aws_lambda.add_permission(lambda_arn, statement_id,action,principal,)
 
     def add_record(self, stream_name, record):
         params = {'DeliveryStreamName': stream_name ,
@@ -43,6 +64,8 @@ class Firehose:
                    'ExtendedS3DestinationUpdate'    : update_data
                    }
         return self.firehose().update_destination(**params)
+
+
 
     @catch
     def stream(self, stream_name):
