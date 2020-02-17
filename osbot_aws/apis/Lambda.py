@@ -157,15 +157,11 @@ class Lambda:
 
 
     def upload(self):
-        #if self.path_libs is None:
-        #    self.aws.s3_upload_folder(self.source, self.s3_bucket, self.s3_key)
-        #else:
-            #copy_tree(self.source, self.path_libs)  # for now copy all files into dependencies folders (need to improve this by using temp folders)
         self.s3().folder_upload(self.folder_code, self.s3_bucket, self.s3_key)
         return self.s3().file_exists(self.s3_bucket, self.s3_key)
 
-    def upload_and_invoke(self, payload = {}):
-        return self.update_with_src().invoke(payload)
+    # def upload_and_invoke(self, payload = {}):
+    #     return self.update_with_src().invoke(payload)
 
     def update(self):
         if self.exists() is False:
@@ -174,14 +170,16 @@ class Lambda:
 
         self.upload()
         try:
-            result = self.boto_lambda().update_function_code(FunctionName= self.name     ,
-                                                             S3Bucket    = self.s3_bucket,
-                                                             S3Key       = self.s3_key   )
+            result = self.update_lambda_code()
             return {'status': 'ok'    , 'name': self.name, 'data': result             }
 
         except Exception as error:
             return { 'status': 'error', 'name': self.name, 'data': '{0}'.format(error)}
 
+    def update_lambda_code(self):
+        return self.boto_lambda().update_function_code(FunctionName = self.name     ,
+                                                       S3Bucket     = self.s3_bucket,
+                                                       S3Key        = self.s3_key   )
 
     # def update_with_lib(self):
     #     src_tmp     = '/tmp/src_{0}'.format(self.original_name.split('.').pop())  # there were a couple issues with long folder names

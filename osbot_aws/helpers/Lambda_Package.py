@@ -36,6 +36,9 @@ class Lambda_Package:
     def invoke(self, params=None): return self._lambda.invoke(params)
     def update(self             ): return self._lambda.update()
 
+    def update_lambda_code(self):
+        self._lambda.update_lambda_code()
+
     # main methods
     def add_file(self, source):
         Files.copy(source, self.tmp_folder)
