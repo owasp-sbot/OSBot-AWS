@@ -4,7 +4,7 @@ from osbot_aws.helpers.IAM_Role import IAM_Role
 class Temp_Aws_Roles:
     def __init__(self):
         self.temp_prefix                      = 'temp_role_'
-        self.role_name__for_lambda_invocation = self.temp_prefix + 'for_lambda_invocation'
+        self.role_name__for_lambda_invocation = self.temp_prefix + 'for_lambda_invocation' # todo: improve this logic
         pass
 
     def create__for_lambda_invocation(self, delete_existing=False):

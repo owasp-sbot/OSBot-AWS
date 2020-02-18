@@ -1,28 +1,28 @@
 import os
 import importlib
-import pbx_gs_python_utils
-from pbx_gs_python_utils.utils.Dev import Dev
+
+import pbx_gs_python_utils                                                      # needed for dependency import
+from osbot_aws.Globals import Globals
 from pbx_gs_python_utils.utils.Files import Files
 
 from osbot_aws.tmp_utils.Temp_Files import Temp_Files
 from osbot_aws.apis.Lambda import Lambda
 from osbot_aws.apis.test_helpers.Temp_Aws_Roles import Temp_Aws_Roles
-from osbot_aws.apis.test_helpers.Temp_Lambda import Temp_Folder_Code
 
 
 class Lambda_Package:
     def __init__(self,lambda_name):
         self.lambda_name   = lambda_name
         self.aws_lambda    = Lambda(self.lambda_name)
-        self.tmp_s3_bucket = 'gs-lambda-tests'
-        self.tmp_s3_key    = 'unit_tests/lambdas/{0}.zip'.format(self.lambda_name)
+        self.s3_bucket     = Globals.lambda_s3_bucket
+        self.s3_key        = f'{Globals.lambda_s3_key_prefix}/{self.lambda_name}.zip'
         self.role_arn      = Temp_Aws_Roles().for_lambda_invocation()
         self.tmp_folder    = Files.temp_folder('tmp_lambda_')
 
-        (self.aws_lambda.set_s3_bucket  (self.tmp_s3_bucket)
-                     .set_s3_key     (self.tmp_s3_key   )
-                     .set_role       (self.role_arn     )
-                     .set_folder_code(self.tmp_folder  ))
+        (self.aws_lambda.set_s3_bucket(self.s3_bucket    )
+                     .set_s3_key      (self.s3_key       )
+                     .set_role        (self.role_arn     )
+                     .set_folder_code (self.tmp_folder  ))
 
     # helper methods
     @staticmethod

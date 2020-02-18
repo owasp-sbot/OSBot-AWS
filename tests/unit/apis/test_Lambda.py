@@ -1,32 +1,27 @@
 import unittest
 
-from osbot_aws.apis.IAM import IAM
+
 from pbx_gs_python_utils.utils.Assert        import Assert
 from pbx_gs_python_utils.utils.Files         import Files
 from pbx_gs_python_utils.utils.Misc          import Misc
-
-from gw_bot.helpers.Test_Helper import Test_Helper
+from osbot_aws.apis.IAM                      import IAM
+from osbot_aws.Globals                       import Globals
+from gw_bot.helpers.Test_Helper              import Test_Helper
 from osbot_aws.apis.Lambda                   import Lambda
 from osbot_aws.apis.test_helpers.Temp_Lambda import Temp_Folder_Code, Temp_Lambda
 from osbot_aws.helpers.IAM_Role              import IAM_Role
 
-#todo: fix these global references and refactor out the lambda creation workflow into separate class
-# region        = 'eu-west-2'
-# account_id    ='244560807427'
-# lambda_name   = 'tmp_lambda_dev_test'
-# tmp_s3_bucket = 'gs-lambda-tests'
-# tmp_s3_key    =  'unit_tests/lambdas/{0}.zip'.format(lambda_name)
-
 class test_Lambda(Test_Helper):
 
     def setUp(self):
+        super().setUp()
         self.iam         = IAM()
         self.region      = self.iam.region()
         self.account_id  = self.iam.account_id()
         self.lambda_name = 'tmp_lambda_dev_test'
         self.setup       = super().setUp()
         self.s3_bucket   = self.setup.s3_bucket_lambdas
-        self.s3_key      = 'lambdas/{0}.zip'.format(self.lambda_name)
+        self.s3_key      = f'{Globals.lambda_s3_key_prefix}/{self.lambda_name}.zip' #'lambdas/{0}.zip'.format(self.lambda_name)
         self.aws_lambda  = Lambda(self.lambda_name)
 
     def test__init__(self):
@@ -39,12 +34,6 @@ class test_Lambda(Test_Helper):
     def test_create_function__no_params(self):
         assert self.aws_lambda.create() == {'error': "missing fields in create_function: ['role', 's3_bucket', 's3_key']"}
 
-    def test_create_function__bad_s3_key_(self):
-        self.aws_lambda.set_role('').set_s3_bucket('').set_s3_key('')
-        assert self.aws_lambda.create() == {'data'  : 'could not find provided s3 bucket and s3 key',
-                                               'name'  : 'tmp_lambda_dev_test'                         ,
-                                               'status': 'error'}
-
     def test_create_function(self):
         role_arn   = IAM_Role(self.lambda_name + '__tmp_role').create_for__lambda().get('role_arn')
         tmp_folder = Temp_Folder_Code(self.lambda_name)
@@ -54,12 +43,13 @@ class test_Lambda(Test_Helper):
                                  .set_s3_key     (self.s3_key       )
                                  .set_folder_code(tmp_folder.folder)
         )
-        assert self.aws_lambda.create_params() == (self.s3_key, 'python3.7'         ,
-                                                   role_arn   , self.s3_key + '.run',
-                                                   3008       , 60                  ,
-                                                   {'Mode': 'PassThrough'},
-                                                   { 'S3Bucket': self.s3_bucket ,'S3Key': self.s3_key})          # confirm values that will be passed to the boto3's create_function
 
+        assert self.aws_lambda.create_params() == (self.lambda_name, 'python3.7'              ,
+                                                   role_arn        , self.lambda_name + '.run',
+                                                   3008            , 60                       ,
+                                                   { 'Mode'    : 'PassThrough'               },
+                                                   { 'S3Bucket': self.s3_bucket               ,
+                                                     'S3Key'   : self.s3_key                 })  # confirm values that will be passed to the boto3's create_function
 
         assert self.aws_lambda.upload() is True
 
@@ -79,31 +69,37 @@ class test_Lambda(Test_Helper):
                      .field_is_equal('Handler'      , self.lambda_name + '.run')
                      .field_is_equal('MemorySize'   , 3008                     )
                      .field_is_equal('Role'         , role_arn                 )
-                     .field_is_equal('Runtime'      , 'python3.6'              )
+                     .field_is_equal('Runtime'      , 'python3.7'              )
                      .field_is_equal('Timeout'      , 60                       )
                      .field_is_equal('TracingConfig', {'Mode': 'PassThrough'}  )
                      .field_is_equal('Version'      , '$LATEST'                )
         )
 
 
-        assert self.aws_lambda.delete() is True                                                                    # confirm Lambda was deleted
+        assert self.aws_lambda.delete() is True     # confirm Lambda was deleted
+
+    def test_create_function__bad_s3_key_(self):
+        self.aws_lambda.set_role('').set_s3_bucket('').set_s3_key('')
+        assert self.aws_lambda.create() == { 'data'  : 'could not find provided s3 bucket and s3 key',
+                                             'name'  : 'tmp_lambda_dev_test'                         ,
+                                             'status': 'error'                                       }
 
     def test_invoke_raw(self):
         with Temp_Lambda() as temp_lambda:
-            result   = temp_lambda.temp_lambda.invoke_raw({'name' : temp_lambda.name})
+            result   = temp_lambda.temp_lambda.invoke_raw({'name' : temp_lambda.lambda_name})
             data     = result.get('data')
             name     = result.get('name')
             status   = result.get('status')
             response = result.get('response')
             assert status == 'ok'
-            assert name   == temp_lambda.name
-            assert data   == 'hello {0}'.format(temp_lambda.name)
+            assert name   == temp_lambda.lambda_name
+            assert data   == 'hello {0}'.format(temp_lambda.lambda_name)
             assert response.get('StatusCode') == 200
 
     def test_invoke(self):
         with Temp_Lambda() as temp_lambda:
-            result = temp_lambda.temp_lambda.invoke({'name': temp_lambda.name})
-            assert result == 'hello {0}'.format(temp_lambda.name)
+            result = temp_lambda.temp_lambda.invoke({'name': temp_lambda.lambda_name})
+            assert result == 'hello {0}'.format(temp_lambda.lambda_name)
 
     def test_invoke_async(self):
         with Temp_Lambda() as temp_lambda:
@@ -111,12 +107,15 @@ class test_Lambda(Test_Helper):
             assert result.get('StatusCode') == 202
 
     def test_functions(self):
-        all_lambdas = list(self.aws_lambda.functions().values())
-        assert len(all_lambdas) > 0
-        self.result = set(all_lambdas.pop(0))
-        #assert set(all_lambdas.pop(0)) == {'CodeSha256', 'CodeSize', 'Description', 'FunctionArn', 'FunctionName',
-        #                                   'Handler', 'LastModified', 'MemorySize', 'RevisionId', 'Role', 'Runtime',
-        #                                   'Timeout', 'TracingConfig', 'Version', 'VpcConfig'}
+        functions = list(self.aws_lambda.functions())
+        #function = functions.get(self.lambda_name)
+        assert len(functions) > 0
+        assert set(functions.pop(0)) == {'CodeSha256', 'CodeSize'     , 'Description'  , 'FunctionArn', 'FunctionName',
+                                           'Handler'   , 'LastModified' , 'MemorySize'   , 'RevisionId' , 'Role'        ,
+                                           'Runtime'   , 'Timeout'      , 'TracingConfig', 'Version'                    }
+
+
+
 
     def test_update(self):
         with Temp_Lambda() as temp_lambda:

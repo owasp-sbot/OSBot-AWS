@@ -7,7 +7,7 @@ import boto3
 from    pbx_gs_python_utils.utils.Files         import Files
 
 from osbot_aws.apis.Session import Session
-from osbot_aws.helpers.Method_Wrappers import cache
+from osbot_aws.helpers.Method_Wrappers import cache, index_by
 from osbot_aws.tmp_utils.Temp_Misc import Temp_Misc
 from osbot_aws.apis.S3 import S3
 
@@ -38,12 +38,20 @@ class Lambda:
 
     # helper methods
 
-    @staticmethod
-    def invoke_using_paginator(api, method, field_id, **kwargs):
+    #@staticmethod
+    # def invoke_using_paginator(api, method, field_id, **kwargs):
+    #     paginator = api.get_paginator(method)
+    #     for page in paginator.paginate(**kwargs):
+    #         for id in page.get(field_id):
+    #             yield id
+    def _call_method_with_paginator(self, method, field_id, **kwargs):
+        api       = self.boto_lambda()
         paginator = api.get_paginator(method)
         for page in paginator.paginate(**kwargs):
             for id in page.get(field_id):
                 yield id
+
+
     # main methods
 
 
@@ -60,7 +68,7 @@ class Lambda:
             return {'error': f'{error}'}
 
 
-    def create(self): #, name, role, handler, s3_bucket, s3_key, memory = 512, timeout = 25 , runtime = 'python3.6'):
+    def create(self):
         missing_fields = Temp_Misc.get_missing_fields(self,['name', 'runtime', 'role','handler', 'memory','timeout','s3_bucket', 's3_key'])
         if len(missing_fields) > 0:
             return { 'error': 'missing fields in create_function: {0}'.format(missing_fields) }
@@ -150,12 +158,15 @@ class Lambda:
         if payload is None: payload = {}
         return self.boto_lambda().invoke(FunctionName=self.name, Payload=json.dumps(payload), InvocationType='Event')
 
+    @index_by
     def functions(self):
-        data = {}
-        functions = self.invoke_using_paginator(self.boto_lambda(), 'list_functions', 'Functions')
-        for function in functions:
-            data[function['FunctionName']] = function
-        return data
+        return self._call_method_with_paginator('list_functions', 'Functions')
+
+        # data = {}
+        # functions = self.invoke_using_paginator(self.boto_lambda(), 'list_functions', 'Functions')
+        # for function in functions:
+        #     data[function['FunctionName']] = function
+        # return data
 
     def set_role                (self, value): self.role        = value    ; return self
     def set_s3_bucket           (self, value): self.s3_bucket   = value    ; return self
