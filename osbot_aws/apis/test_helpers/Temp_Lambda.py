@@ -35,7 +35,12 @@ class Temp_Lambda:
         if self.delete_on_exit:
             assert self.temp_lambda.delete() is True
             self.delete_s3_file()
-            #assert self.temp_lambda.s3().file_delete(self.s3_bucket,self.s3_key)
+
+    def arn(self):
+        return self.temp_lambda.function_Arn()
+
+    def info(self):
+        return self.temp_lambda.info()
 
     def invoke(self, params=None):
         return self.temp_lambda.invoke(params)

@@ -79,7 +79,7 @@ class test_Lambdas_Invoke(TestCase):
 
         #s3.bucket_create(s3_bucket, region)
         def add_notification(source_arn):
-            result = lambda_obj._lambda.boto_lambda().add_permission(
+            result = lambda_obj._lambda.client().add_permission(
                 FunctionName=lambda_arn,
                 StatementId='1',
                 Action='lambda:InvokeFunction',

@@ -7,7 +7,7 @@ import boto3
 from    pbx_gs_python_utils.utils.Files         import Files
 
 from osbot_aws.apis.Session import Session
-from osbot_aws.helpers.Method_Wrappers import cache, index_by
+from osbot_aws.helpers.Method_Wrappers import cache, index_by, catch, remove
 from osbot_aws.tmp_utils.Temp_Misc import Temp_Misc
 from osbot_aws.apis.S3 import S3
 
@@ -29,7 +29,7 @@ class Lambda:
     # cached dependencies
 
     @cache
-    def boto_lambda(self):
+    def client(self):
         return Session().client('lambda')
 
     @cache
@@ -44,8 +44,9 @@ class Lambda:
     #     for page in paginator.paginate(**kwargs):
     #         for id in page.get(field_id):
     #             yield id
+
     def _call_method_with_paginator(self, method, field_id, **kwargs):
-        api       = self.boto_lambda()
+        api       = self.client()
         paginator = api.get_paginator(method)
         for page in paginator.paginate(**kwargs):
             for id in page.get(field_id):
@@ -63,10 +64,30 @@ class Lambda:
                         'Principal'   : principal }
             if source_arn:
                 params['SourceArn'] = source_arn
-            return self.boto_lambda().add_permission(**params)
+            return self.client().add_permission(**params)
         except Exception as error:
             return {'error': f'{error}'}
 
+    def account_settings(self):
+        return self.client().get_account_settings()
+
+    @catch
+    @remove(field_name='ResponseMetadata')
+    def alias(self, function_name, name):
+        return self.client().get_alias(FunctionName=function_name, Name=name)
+
+    @catch
+    def alias_create(self, function_name, function_version, name, description):
+        return self.client().create_alias(FunctionName=function_name,FunctionVersion= function_version,Name=name, Description=description)
+
+    @catch
+    @remove(field_name='ResponseMetadata')
+    def alias_delete(self, function_name, name):
+        return self.client().delete_alias(FunctionName=function_name, Name=name)
+
+    @index_by
+    def aliases(self,function_name):
+        return self.client().list_aliases(FunctionName=function_name).get('Aliases')
 
     def create(self):
         missing_fields = Temp_Misc.get_missing_fields(self,['name', 'runtime', 'role','handler', 'memory','timeout','s3_bucket', 's3_key'])
@@ -82,14 +103,14 @@ class Lambda:
             return {'status': 'error', 'name': self.name, 'data': 'could not find provided s3 bucket and s3 key'}
 
         try:
-            data = self.boto_lambda().create_function(  FunctionName  = name           ,
-                                                        Runtime       = runtime        ,
-                                                        Role          = role           ,
-                                                        Handler       = handler        ,
-                                                        MemorySize    = memory_size    ,
-                                                        Timeout       = timeout        ,
-                                                        TracingConfig = tracing_config ,
-                                                        Code          = code)
+            data = self.client().create_function(FunctionName  = name,
+                                                 Runtime       = runtime,
+                                                 Role          = role,
+                                                 Handler       = handler,
+                                                 MemorySize    = memory_size,
+                                                 Timeout       = timeout,
+                                                 TracingConfig = tracing_config,
+                                                 Code          = code)
 
             return { 'status': 'ok', 'name': self.name , 'data' : data }
         except Exception as error:
@@ -109,17 +130,12 @@ class Lambda:
     def delete(self):
         if self.exists() is False:
             return False
-        self.boto_lambda().delete_function(FunctionName=self.name)
+        self.client().delete_function(FunctionName=self.name)
         return self.exists() is False
 
-    def delete_permission(self, function_name, statement_id):
-        try:
-            params = {  'FunctionName': function_name,
-                        'StatementId' : statement_id,                        }
-            return self.boto_lambda().remove_permission(**params)
-        except Exception as error:
-            return {'error': f'{error}'}
-
+    @catch
+    def event_sources(self):
+        return self.client().list_event_source_mappings()
 
     def exists(self):
         try:
@@ -128,17 +144,18 @@ class Lambda:
         except:
             return False
 
-
+    @cache
     def function_Arn(self):
         return self.info().get('Configuration').get('FunctionArn')
 
+    @remove('ResponseMetadata')
     def info(self):
-        return self.boto_lambda().get_function(FunctionName=self.name)
+        return self.client().get_function(FunctionName=self.name)
 
     def invoke_raw(self, payload = None):
         try:
             if payload is None: payload = {}
-            response      = self.boto_lambda().invoke(FunctionName=self.name, Payload = json.dumps(payload) )
+            response      = self.client().invoke(FunctionName=self.name, Payload = json.dumps(payload))
 
             result_bytes  = response.get('Payload').read()
             result_string = result_bytes.decode('utf-8')
@@ -156,7 +173,7 @@ class Lambda:
 
     def invoke_async(self, payload = None):
         if payload is None: payload = {}
-        return self.boto_lambda().invoke(FunctionName=self.name, Payload=json.dumps(payload), InvocationType='Event')
+        return self.client().invoke(FunctionName=self.name, Payload=json.dumps(payload), InvocationType='Event')
 
     @index_by
     def functions(self):
@@ -167,6 +184,14 @@ class Lambda:
         # for function in functions:
         #     data[function['FunctionName']] = function
         # return data
+
+    def permission_delete(self, function_name, statement_id):
+        try:
+            params = {  'FunctionName': function_name,
+                        'StatementId' : statement_id,                        }
+            return self.client().remove_permission(**params)
+        except Exception as error:
+            return {'error': f'{error}'}
 
     def set_role                (self, value): self.role        = value    ; return self
     def set_s3_bucket           (self, value): self.s3_bucket   = value    ; return self
@@ -199,6 +224,6 @@ class Lambda:
             return { 'status': 'error', 'name': self.name, 'data': '{0}'.format(error)}
 
     def update_lambda_code(self):
-        return self.boto_lambda().update_function_code(FunctionName = self.name     ,
-                                                       S3Bucket     = self.s3_bucket,
-                                                       S3Key        = self.s3_key   )
+        return self.client().update_function_code(FunctionName = self.name,
+                                                  S3Bucket     = self.s3_bucket,
+                                                  S3Key        = self.s3_key)

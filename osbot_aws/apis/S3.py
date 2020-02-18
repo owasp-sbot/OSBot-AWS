@@ -35,7 +35,7 @@ class S3:
         action       = 'lambda:InvokeFunction'
         principal    = 's3.amazonaws.com'
         aws_lambda   = Lambda()
-        aws_lambda.delete_permission(lambda_arn, statement_id)
+        aws_lambda.permission_delete(lambda_arn, statement_id)
         return aws_lambda.add_permission(lambda_arn, statement_id,action,principal,)
 
     def bucket_notification_create(self, s3_bucket, lambda_arn, events, prefix):

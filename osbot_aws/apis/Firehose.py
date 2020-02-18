@@ -37,7 +37,7 @@ class Firehose:
         action       = 'lambda:InvokeFunction'
         principal    = 'firehose.amazonaws.com'
         aws_lambda   = Lambda()
-        aws_lambda.delete_permission(lambda_arn, statement_id)
+        aws_lambda.permission_delete(lambda_arn, statement_id)
         return aws_lambda.add_permission(lambda_arn, statement_id,action,principal,)
 
     def add_record(self, stream_name, record):

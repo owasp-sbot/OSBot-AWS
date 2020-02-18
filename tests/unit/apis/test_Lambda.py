@@ -31,6 +31,32 @@ class test_Lambda(Test_Helper):
         assert self.aws_lambda.original_name == self.lambda_name
         assert self.aws_lambda.s3().bucket_exists(self.s3_bucket)
 
+    def test_account_settings(self):
+        assert self.aws_lambda.account_settings().get('AccountLimit').get('CodeSizeUnzipped') == 262144000
+
+    def test_aliases(self):
+        lambda_api = self.aws_lambda                                        # make it easier to read below
+        alias_name        = 'temp_name'
+        alias_description = 'temp description'
+        function_version  = '$LATEST'
+        with Temp_Lambda() as temp_lambda:
+            assert lambda_api.aliases     (function_name    = temp_lambda.arn()      ) == []
+            assert lambda_api.alias_create(function_name    = temp_lambda.lambda_name,
+                                           function_version = function_version       ,
+                                           name             = alias_name             ,
+                                           description      = alias_description      ).get('Name') == alias_name
+            data = lambda_api.alias       (function_name    = temp_lambda.lambda_name,
+                                           name             = alias_name             )
+            del data['RevisionId']
+            assert data == { 'AliasArn'      : f'{temp_lambda.arn()}:{alias_name}',
+                            'Description'    : alias_description                  ,
+                            'FunctionVersion': function_version                   ,
+                            'Name'           : alias_name                         }
+
+            assert lambda_api.aliases(function_name= temp_lambda.arn(),index_by='Name').get(alias_name).get('Description') == alias_description
+            assert lambda_api.alias_delete(temp_lambda.lambda_name, alias_name) == {}
+            assert lambda_api.aliases(function_name=temp_lambda.arn())          == []
+
     def test_create_function__no_params(self):
         assert self.aws_lambda.create() == {'error': "missing fields in create_function: ['role', 's3_bucket', 's3_key']"}
 
@@ -83,6 +109,10 @@ class test_Lambda(Test_Helper):
         assert self.aws_lambda.create() == { 'data'  : 'could not find provided s3 bucket and s3 key',
                                              'name'  : 'tmp_lambda_dev_test'                         ,
                                              'status': 'error'                                       }
+
+
+    def test_event_sources(self):
+        self.result = self.aws_lambda.event_sources()
 
     def test_invoke_raw(self):
         with Temp_Lambda() as temp_lambda:

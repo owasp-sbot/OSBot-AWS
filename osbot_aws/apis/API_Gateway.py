@@ -165,7 +165,7 @@ class API_Gateway:
         principal     = 'apigateway.amazonaws.com'
         source_arn    = f'arn:aws:execute-api:{aws_region}:{aws_acct_id}:{api_id}/*/GET/'
 
-        aws_lambda.delete_permission(function_arn,statement_id) # remove in case there was already a permission with this name
+        aws_lambda.permission_delete(function_arn, statement_id) # remove in case there was already a permission with this name
         return aws_lambda.add_permission(function_arn, statement_id,action,principal,source_arn)
 
     def integration_response(self, api_id, resource_id, http_method, status_code):

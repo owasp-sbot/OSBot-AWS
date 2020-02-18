@@ -11,13 +11,29 @@ def cache(function):
 
 
 def catch(function):
-    @wraps(function)
+    """Catches any errors and returns an object with the error"""
+    @wraps(function)                                                    # so that when we call the __name__ of the called we get the correct name (for example self.aws_lambda.alias.__name__)
     def wrapper(*args,**kwargs):
         try:
             return function(*args,**kwargs)
         except Exception as error:
             return {'error': error }
     return wrapper
+
+
+class remove:
+    """removes the field from the return value of the function (if it exists"""
+    def __init__(self, field_name):
+        self.field_name = field_name                                # field to remove
+
+    def __call__(self, function):
+        @wraps(function)                                            # makes __name__ work ok
+        def wrapper(*args,**kwargs):                                # wrapper function
+            data = function(*args,**kwargs)                         # calls wrapped function with original params
+            if data and data.get(self.field_name) is not None:      # check if field_name exists in data
+                del data[self.field_name]                           # if it does, delete it
+            return data                                             # return data received
+        return wrapper                                              # return wrapper function
 
 #todo: refactor with group_by (simplify these two methods and remove duplicate code)
 def index_by(function):                                 # returns the list provided indexed by the key provided in index_by
