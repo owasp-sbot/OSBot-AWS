@@ -22,4 +22,3 @@ class Temp_Folder_Code:
         Files.write(self.tmp_file, self.lambda_code)
         assert Files.exists(self.tmp_file)
         return self
-

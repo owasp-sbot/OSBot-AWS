@@ -202,34 +202,3 @@ class Lambda:
         return self.boto_lambda().update_function_code(FunctionName = self.name     ,
                                                        S3Bucket     = self.s3_bucket,
                                                        S3Key        = self.s3_key   )
-
-
-# def load_dependencies(targets):
-#     for target in targets:
-#         load_dependency(target)
-#
-# def load_dependency(target):
-#     s3         = S3()
-#     s3_bucket  = 'gs-lambda-tests'
-#     s3_key     = 'dinis/lambdas-dependencies/{0}.zip'.format(target)
-#     tmp_dir    = Files.path_combine('/tmp/lambdas-dependencies', target)
-#
-#     if s3.file_exists(s3_bucket,s3_key) is False:
-#         raise Exception("In Lambda load_dependency, could not find dependency for: {0}".format(target))
-#
-#     if Files.not_exists(tmp_dir):                               # if the tmp folder doesn't exist it means that we are loading this for the first time (on a new Lambda execution environment)
-#         zip_file = s3.file_download(s3_bucket, s3_key,False)    # download zip file with dependencies
-#         shutil.unpack_archive(zip_file, extract_dir = tmp_dir)  # unpack them
-#         sys.path.append(tmp_dir)                                # add tmp_dir to the path that python uses to check for dependencies
-#     return Files.not_exists(tmp_dir)
-#
-# def upload_dependency(target):
-#     s3        = S3()
-#     s3_bucket = 'gs-lambda-tests'
-#     s3_folder = 'dinis/lambdas-dependencies/'
-#     s3_file   = 'dinis/lambdas-dependencies/{0}.zip'.format(target)
-#     path_libs = Files.path_combine('../../../_lambda_dependencies/', target)
-#     if Files.not_exists(path_libs):
-#         raise Exception("In Lambda upload_dependency, could not find dependency for: {0}".format(target))
-#     s3.folder_upload(path_libs, s3_bucket, s3_file)
-#     return s3.file_exists(s3_bucket, s3_file)
