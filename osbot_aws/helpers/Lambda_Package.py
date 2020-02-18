@@ -13,13 +13,13 @@ from osbot_aws.apis.test_helpers.Temp_Lambda import Temp_Folder_Code
 class Lambda_Package:
     def __init__(self,lambda_name):
         self.lambda_name   = lambda_name
-        self._lambda       = Lambda(self.lambda_name)
+        self.aws_lambda    = Lambda(self.lambda_name)
         self.tmp_s3_bucket = 'gs-lambda-tests'
         self.tmp_s3_key    = 'unit_tests/lambdas/{0}.zip'.format(self.lambda_name)
         self.role_arn      = Temp_Aws_Roles().for_lambda_invocation()
         self.tmp_folder    = Files.temp_folder('tmp_lambda_')
 
-        (self._lambda.set_s3_bucket  (self.tmp_s3_bucket)
+        (self.aws_lambda.set_s3_bucket  (self.tmp_s3_bucket)
                      .set_s3_key     (self.tmp_s3_key   )
                      .set_role       (self.role_arn     )
                      .set_folder_code(self.tmp_folder  ))
@@ -31,13 +31,11 @@ class Lambda_Package:
 
     # Lambda class wrappers
 
-    def create(self             ): return self._lambda.create()
-    def delete(self             ): return self._lambda.delete()
-    def invoke(self, params=None): return self._lambda.invoke(params)
-    def update(self             ): return self._lambda.update()
-
-    def update_lambda_code(self):
-        self._lambda.update_lambda_code()
+    def create(self             ): return self.aws_lambda.create()
+    def delete(self             ): return self.aws_lambda.delete()
+    def invoke(self, params=None): return self.aws_lambda.invoke(params)
+    def update(self             ): return self.aws_lambda.update()
+    def reset (self             ): return self.aws_lambda.update_lambda_code()
 
     # main methods
     def add_file(self, source):
@@ -69,7 +67,7 @@ class Lambda_Package:
         return self
 
     def arn(self):
-        return self._lambda.function_Arn()
+        return self.aws_lambda.function_Arn()
 
     def get_files(self):
         all_files = []

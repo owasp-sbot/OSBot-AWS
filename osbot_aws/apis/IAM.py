@@ -1,69 +1,51 @@
 import json
-
-import boto3
-from pbx_gs_python_utils.utils.Dev import Dev
-from pbx_gs_python_utils.utils.Misc import Misc
-
-from osbot_aws.Globals import Globals
-from osbot_aws.apis.Session import Session
-from osbot_aws.helpers.Method_Wrappers import index_by
+from pbx_gs_python_utils.utils.Misc     import Misc
+from osbot_aws.Globals                  import Globals
+from osbot_aws.apis.Session             import Session
+from osbot_aws.helpers.Method_Wrappers  import index_by, cache, catch
 
 
 class IAM:
-
     def __init__(self, user_name=None, role_name=None):
-        self._iam        = None
-        self._resource   = None
-        self._sts        = None
-        self._account_id = None
-        self._session    = None
-        self._region     = None
         self.user_name   = user_name
         self.role_name   = role_name
 
     # helpers
+    @cache
     def iam(self):
-        if self._iam is None:
-            self._iam = Session().client('iam')
-        return self._iam
+        return Session().client('iam')
 
+    @cache
     def resource(self):
-        if self._resource is None:
-            self._resource = Session().resource('iam')
-        return self._resource
+        return Session().resource('iam')
 
+    @cache
     def session(self):
-        if self._session is None:
-            self._session = Session().session()
-        return self._session
+        return Session().session()
 
+    @cache
     def sts(self):
-        if self._sts is None:
-            self._sts = Session().client('sts')
-        return self._sts
+        return Session().client('sts')
 
-    def _index_by(self, values, index_by=None):
-        if index_by is None:
-            return list(values)
-        results = {}
-        for item in values:
-            results[item.get(index_by)] = item
-        return results
+    # def _index_by(self, values, index_by=None):
+    #     if index_by is None:
+    #         return list(values)
+    #     results = {}
+    #     for item in values:
+    #         results[item.get(index_by)] = item
+    #     return results
 
 
     # main method
-
+    @cache
     def account_id(self, profile_name=None):
         if profile_name is not None:                            # if profile_name is set
             Globals.aws_session_profile_name = profile_name     # set it globally (since this will be used by all boto3 clients)
-        if self._account_id is None:
-            self._account_id = self.caller_identity().get('Account')
-        return self._account_id
+        return self.caller_identity().get('Account')
 
+    @cache
     def region(self):
-        if self._region is None:
-            self._region = self.session().region_name
-        return self._region
+        return self.session().region_name
     # def assume_role(self, role_arn,role_session_name):
     #     data = self.sts().assume_role(RoleArn = role_arn, RoleSessionName=role_session_name)
     #     return data
@@ -241,20 +223,19 @@ class IAM:
     def roles(self):
         return list(self.get_data('list_roles', 'Roles', True))
 
-    def users(self, index_by=None):
-        return self._index_by(self.get_data('list_users', 'Users', True), index_by)
+    @index_by
+    def users(self):
+        return self.get_data('list_users', 'Users', True)
 
     def user_attach_policy(self, policy_arn):
         return self.iam().attach_user_policy(UserName=self.user_name, PolicyArn=policy_arn)
 
     def user_exists(self):
-        return self.user_info() is not None
+        return self.user_info().get('error') is not None
 
+    @catch
     def user_info(self):
-        try:
-            return self.iam().get_user(UserName=self.user_name).get('User')
-        except:
-            return None
+        return self.iam().get_user(UserName=self.user_name).get('User')
 
     def user_create(self):
         if self.user_exists() is False:

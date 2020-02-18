@@ -126,7 +126,7 @@ class test_Lambdas_Invoke(TestCase):
         #queue_1.attributes_update({'VisibilityTimeout': '61'}) # needs to be bigger than lambda timeout
 
         queue_1_arn  = queue_1.attributes().get('QueueArn')
-        function_arn = lambda_obj._lambda.function_Arn()
+        function_arn = lambda_obj.aws_lambda.function_Arn()
         #Dev.pprint(lambda_obj.role_arn)            # needed to add the extra priv to pull SQS messages
 
         #result = lambda_obj._lambda.boto_lambda().list_event_source_mappings(EventSourceArn=queue_1_arn)
