@@ -200,6 +200,7 @@ class IAM:
         for policy_arn in policies_arn:
             self.role_policy_attach(policy_arn)
 
+    @catch
     def role_policies(self):
         policies = {}
         if self.role_name:
@@ -220,6 +221,7 @@ class IAM:
         return policy_statements
 
 
+    @index_by
     def roles(self):
         return list(self.get_data('list_roles', 'Roles', True))
 

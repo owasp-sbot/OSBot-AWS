@@ -38,7 +38,7 @@ class Firehose:
         principal    = 'firehose.amazonaws.com'
         aws_lambda   = Lambda()
         aws_lambda.permission_delete(lambda_arn, statement_id)
-        return aws_lambda.add_permission(lambda_arn, statement_id,action,principal,)
+        return aws_lambda.permission_add(lambda_arn, statement_id, action, principal, )
 
     def add_record(self, stream_name, record):
         params = {'DeliveryStreamName': stream_name ,

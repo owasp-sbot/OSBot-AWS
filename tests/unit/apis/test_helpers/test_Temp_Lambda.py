@@ -1,12 +1,12 @@
-from unittest import TestCase
-
-from pbx_gs_python_utils.utils.Dev import Dev
+from gw_bot.helpers.Test_Helper              import Test_Helper
 from osbot_aws.apis.test_helpers.Temp_Lambda import Temp_Lambda
 
+class test_Temp_Lambda(Test_Helper):
 
-class test_Temp_Lambda(TestCase):
+    def setUp(self):
+        super().setUp()
 
     def test_simple_execution(self):
         with Temp_Lambda() as _:
-            assert 'temp_lambda_' in _.temp_lambda.name
-            assert _.invoke() == 'hello None'
+            assert 'temp_lambda_' in _.aws_lambda.name
+            assert _.invoke({'name':'world'}) == 'hello world'

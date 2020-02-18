@@ -1,5 +1,5 @@
 import unittest
-
+from time import sleep
 
 from pbx_gs_python_utils.utils.Assert        import Assert
 from pbx_gs_python_utils.utils.Files         import Files
@@ -8,16 +8,18 @@ from osbot_aws.apis.IAM                      import IAM
 from osbot_aws.Globals                       import Globals
 from gw_bot.helpers.Test_Helper              import Test_Helper
 from osbot_aws.apis.Lambda                   import Lambda
+from osbot_aws.apis.Queue import Queue
 from osbot_aws.apis.test_helpers.Temp_Lambda import Temp_Folder_Code, Temp_Lambda
+from osbot_aws.apis.test_helpers.Temp_Queue import Temp_Queue
 from osbot_aws.helpers.IAM_Role              import IAM_Role
+from osbot_aws.helpers.Method_Wrappers import aws_inject
+
 
 class test_Lambda(Test_Helper):
 
-    def setUp(self):
+    @aws_inject('region,account_id')
+    def setUp(self, region, account_id):
         super().setUp()
-        self.iam         = IAM()
-        self.region      = self.iam.region()
-        self.account_id  = self.iam.account_id()
         self.lambda_name = 'tmp_lambda_dev_test'
         self.setup       = super().setUp()
         self.s3_bucket   = self.setup.s3_bucket_lambdas
@@ -110,13 +112,47 @@ class test_Lambda(Test_Helper):
                                              'name'  : 'tmp_lambda_dev_test'                         ,
                                              'status': 'error'                                       }
 
+    def test_configuration(self):
+        with Temp_Lambda() as temp_lambda:
+            aws_lambda = temp_lambda.aws_lambda
+            value = 10
+            assert aws_lambda.configuration() == aws_lambda.info().get('Configuration')
+            assert aws_lambda.configuration_update(Timeout=value).get('Timeout') == value
+            assert aws_lambda.configuration().get('Timeout') == value
 
     def test_event_sources(self):
+        #assert self.aws_lambda.event_sources() == []
         self.result = self.aws_lambda.event_sources()
+
+    @aws_inject('account_id')
+    def test_event_source_create(self,account_id):
+        with Temp_Lambda() as temp_lambda:
+            with Temp_Queue() as temp_queue:
+                aws_lambda  = temp_lambda.aws_lambda
+                queue       = temp_queue.queue
+                lambda_name = temp_lambda.lambda_name
+                event_source_arn = temp_queue.queue.arn()
+                function_name    = temp_lambda.lambda_name
+
+                aws_lambda.configuration_update(Timeout=10).get('Timeout')      # needs to be less than 30 (which is the default value sent in the queue)
+                queue.policy_add_sqs_permissions_to_lambda_role(lambda_name)
+                sleep(2)                                                        # todo: need a better solution to find out when the permission is available
+                self.result = aws_lambda.event_source_create(event_source_arn, function_name)
+                #self.result = aws_lambda.event_sources()
+                queue.policy_remove_sqs_permissions_to_lambda_role(lambda_name)
+
+    def test_event_source_delete(self):
+        for uuid in self.aws_lambda.event_sources(index_by='UUID'):
+            self.result = self.aws_lambda.event_source_delete(uuid)     # these take a bit of time to delete
+
+    def test_policy__permissions(self):
+        with Temp_Lambda() as temp_lambda:
+            temp_lambda.aws_lambda.permission_add(temp_lambda.arn(), 'an_id', 'lambda:action', 'lambda.amazonaws.com')
+            assert temp_lambda.aws_lambda.permissions()[0].get('Action') == 'lambda:action'
 
     def test_invoke_raw(self):
         with Temp_Lambda() as temp_lambda:
-            result   = temp_lambda.temp_lambda.invoke_raw({'name' : temp_lambda.lambda_name})
+            result   = temp_lambda.aws_lambda.invoke_raw({'name' : temp_lambda.lambda_name})
             data     = result.get('data')
             name     = result.get('name')
             status   = result.get('status')
@@ -128,12 +164,12 @@ class test_Lambda(Test_Helper):
 
     def test_invoke(self):
         with Temp_Lambda() as temp_lambda:
-            result = temp_lambda.temp_lambda.invoke({'name': temp_lambda.lambda_name})
+            result = temp_lambda.aws_lambda.invoke({'name': temp_lambda.lambda_name})
             assert result == 'hello {0}'.format(temp_lambda.lambda_name)
 
     def test_invoke_async(self):
         with Temp_Lambda() as temp_lambda:
-            result = temp_lambda.temp_lambda.invoke_async({'name': temp_lambda.lambda_name})
+            result = temp_lambda.aws_lambda.invoke_async({'name': temp_lambda.lambda_name})
             assert result.get('StatusCode') == 202
 
     def test_functions(self):
@@ -151,13 +187,13 @@ class test_Lambda(Test_Helper):
             tmp_text = Misc.random_string_and_numbers(prefix='updated code ')
             temp_lambda.tmp_folder.create_temp_file('def run(event, context): return "{0}"'.format(tmp_text))
 
-            result = temp_lambda.temp_lambda.update()
+            result = temp_lambda.aws_lambda.update()
             status = result.get('status')
             data   = result.get('data')
 
             assert 'TracingConfig' in data #set(data) == { 'CodeSha256', 'CodeSize', 'Description', 'FunctionArn', 'FunctionName', 'Handler', 'LastModified', 'MemorySize', 'ResponseMetadata', 'RevisionId', 'Role', 'Runtime', 'Timeout', 'TracingConfig', 'Version'}
             assert status    == 'ok'
-            assert temp_lambda.temp_lambda.invoke() == tmp_text
+            assert temp_lambda.aws_lambda.invoke() == tmp_text
 
     def test_upload(self):
         tmp_folder = Temp_Folder_Code(self.lambda_name)

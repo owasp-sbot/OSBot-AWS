@@ -1,27 +1,25 @@
 import json
 
+from osbot_aws.apis.IAM import IAM
 from pbx_gs_python_utils.utils.Misc import Misc
 
+from osbot_aws.apis.Lambda import Lambda
 from osbot_aws.apis.Session import Session
+from osbot_aws.helpers.Method_Wrappers import cache, catch
 
 
 class Queue:
     def __init__(self, queue_name=None, url=None):
-        self._url       = url
-        self._sqs       = None
-        self.queue_name = queue_name
+        self._url          = url
+        self._sqs          = None
+        self.queue_name    = queue_name
+        self.queue_url     = None
+        self.lambda_policy = 'arn:aws:iam::aws:policy/service-role/AWSLambdaSQSQueueExecutionRole'
 
     # helper methods
+    @cache
     def sqs(self):
-        if self._sqs is None:
-            self._sqs = Session().client('sqs')
-        return self._sqs
-
-    def url(self):
-        if self._url is None:
-            self._url =  self.sqs().get_queue_url(QueueName=self.queue_name).get('QueueUrl')
-        return self._url
-
+        return  Session().client('sqs')
 
     # main methods
 
@@ -32,23 +30,20 @@ class Queue:
     def arn(self):
         return self.attributes().get('QueueArn')
 
-    def attributes(self):
-        try:
-            return self.sqs().get_queue_attributes(QueueUrl=self.url(),AttributeNames=['All']).get('Attributes')
-        except:
-            return None
+    @catch
+    def attributes(self, attribute_names='All'):
+        return self.sqs().get_queue_attributes(QueueUrl=self.url(),AttributeNames=[attribute_names]).get('Attributes')
 
     def attributes_update(self, new_attributes):
         return self.sqs().set_queue_attributes(QueueUrl=self.url(), Attributes=new_attributes)
-
 
     def create_raw(self,attributes=None):
         if attributes is None: attributes = {}
         return self.sqs().create_queue(QueueName=self.queue_name,Attributes=attributes).get('QueueUrl')
 
     def create(self,attributes=None):
-        queue_url = self.create_raw(attributes)
-        if queue_url:
+        self.queue_url = self.create_raw(attributes)
+        if self.queue_url:
             return self
         return None
 
@@ -58,7 +53,7 @@ class Queue:
         return self.exists() is False
 
     def exists(self):
-        return self.attributes() is not None
+        return self.attributes().get('error') is None
 
     def get_message(self, delete_message=True):
         message = self.message_raw()
@@ -93,9 +88,11 @@ class Queue:
                 break
         return messages
 
+    def info(self):                         # consistent method with similar classes like Lambda
+        return self.attributes()
+
     def list(self):
         return self.sqs().list_queues().get('QueueUrls')
-
 
     def message_raw(self):
         messages = self.sqs().receive_message(QueueUrl=self.url(), MessageAttributeNames=['All']).get('Messages')
@@ -103,9 +100,6 @@ class Queue:
 
     def message_delete(self, receipt_handle):
         return self.sqs().delete_message(QueueUrl=self.url(), ReceiptHandle=receipt_handle)
-
-
-    #def add(self, message, attributes=None): return self.message_send(message,attributes)
 
     def message_send(self,body,attributes_data=None):
         if attributes_data is None:
@@ -122,6 +116,42 @@ class Queue:
     def messages_not_visible(self):
         return int(self.attributes().get('ApproximateNumberOfMessagesNotVisible'))
 
+    @catch
+    def permission_add(self, queue_url, label, aws_account_ids, actions):
+        self.permission_delete(queue_url,label)                             # delete if already exists
+        params = {  'QueueUrl'     : queue_url      ,
+                    'Label'        : label          ,
+                    'AWSAccountIds': aws_account_ids,
+                    'Actions'      : actions      }
+        return self.sqs().add_permission(**params)
+
+    @catch
+    def permission_delete(self, queue_url, label):
+        params = {  'QueueUrl'     : queue_url      ,
+                    'Label'        : label          ,}
+        return self.sqs().remove_permission(**params)
+
+    def permissions(self):
+        return self.policy().get('Statement', [])
+
+    def policy(self):
+        value = self.attributes().get('Policy')
+        if value:
+            return json.loads(value)
+        return {}
+
+    def policy_add_sqs_permissions_to_lambda_role(self, lambda_name):
+        aws_lambda    = Lambda(lambda_name)
+        iam_role_name = aws_lambda.configuration().get('Role').split(':role/').pop()
+        IAM(role_name=iam_role_name).role_policy_attach(self.lambda_policy)
+        return iam_role_name
+
+    def policy_remove_sqs_permissions_to_lambda_role(self, lambda_name):
+        aws_lambda    = Lambda(lambda_name)
+        iam_role_name = aws_lambda.configuration().get('Role').split(':role/').pop()
+        IAM(role_name=iam_role_name).role_policy_detach(self.lambda_policy)
+        return iam_role_name
+
     def push(self, data):
         if data:
             self.message_send(json.dumps(data))
@@ -137,3 +167,7 @@ class Queue:
         self.queue_name = queue_name
         self._url       = None          # need to reset this value or the old value will still be used
         return self
+
+    @cache
+    def url(self):
+        return self.sqs().get_queue_url(QueueName=self.queue_name).get('QueueUrl')

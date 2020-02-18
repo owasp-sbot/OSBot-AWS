@@ -55,19 +55,6 @@ class Lambda:
 
     # main methods
 
-
-    def add_permission(self, function_arn, statement_id,action,principal,source_arn=None):
-        try:
-            params = {  'FunctionName': function_arn,
-                        'StatementId' : statement_id,
-                        'Action'      : action,
-                        'Principal'   : principal }
-            if source_arn:
-                params['SourceArn'] = source_arn
-            return self.client().add_permission(**params)
-        except Exception as error:
-            return {'error': f'{error}'}
-
     def account_settings(self):
         return self.client().get_account_settings()
 
@@ -116,6 +103,14 @@ class Lambda:
         except Exception as error:
             return {'status': 'error', 'data': '{0}'.format(error)}
 
+    @remove('ResponseMetadata')
+    def configuration(self):
+        return self.client().get_function_configuration(FunctionName=self.name)
+        #return self.info().get('Configuration')
+
+    def configuration_update(self,**kvargs):
+        return self.client().update_function_configuration(FunctionName=self.name,**kvargs)
+
     def create_params(self):
         FunctionName  = self.name
         Runtime       = self.runtime
@@ -134,8 +129,17 @@ class Lambda:
         return self.exists() is False
 
     @catch
+    def event_source_create(self, event_source_arn, function_name):
+        return self.client().create_event_source_mapping(EventSourceArn=event_source_arn, FunctionName=function_name)
+
+    @catch
+    def event_source_delete(self, event_source_uuid):
+        return self.client().delete_event_source_mapping(UUID=event_source_uuid)
+
+    @catch
+    @index_by
     def event_sources(self):
-        return self.client().list_event_source_mappings()
+        return self.client().list_event_source_mappings().get('EventSourceMappings')
 
     def exists(self):
         try:
@@ -185,6 +189,18 @@ class Lambda:
         #     data[function['FunctionName']] = function
         # return data
 
+    def permission_add(self, function_arn, statement_id, action, principal, source_arn=None):
+        try:
+            params = {  'FunctionName': function_arn,
+                        'StatementId' : statement_id,
+                        'Action'      : action,
+                        'Principal'   : principal }
+            if source_arn:
+                params['SourceArn'] = source_arn
+            return self.client().add_permission(**params)
+        except Exception as error:
+            return {'error': f'{error}'}
+
     def permission_delete(self, function_name, statement_id):
         try:
             params = {  'FunctionName': function_name,
@@ -192,6 +208,17 @@ class Lambda:
             return self.client().remove_permission(**params)
         except Exception as error:
             return {'error': f'{error}'}
+
+    def permissions(self):
+        return self.policy().get('Statement',[])
+
+    @catch
+    def policy(self):
+        try:
+            policy_str = self.client().get_policy(FunctionName=self.name).get('Policy')
+            return json.loads(policy_str)
+        except:                 # ResourceNotFoundException doesn't seem to exposed to we have to do a global capture
+            return {}
 
     def set_role                (self, value): self.role        = value    ; return self
     def set_s3_bucket           (self, value): self.s3_bucket   = value    ; return self

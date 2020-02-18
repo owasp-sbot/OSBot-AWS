@@ -1,6 +1,9 @@
 from functools import wraps
 
 # todo: create signature based on request params so that we don't cache when the params are different
+from osbot_aws.Globals import Globals
+
+
 def cache(function):
     @wraps(function)
     def wrapper(*args,**kwargs):
@@ -19,6 +22,20 @@ def catch(function):
         except Exception as error:
             return {'error': error }
     return wrapper
+
+class aws_inject:
+    """injects a number of AWS Specific values"""
+    def __init__(self, fields):
+        self.fields = fields                                        # field to inject
+
+    def __call__(self, function):
+        @wraps(function)                                            # makes __name__ work ok
+        def wrapper(*args,**kwargs):                                # wrapper function
+            for field in self.fields.split(','):                    # split value provided by comma
+                if field == 'region'    : kwargs[field] = Globals.aws_session_region_name
+                if field == 'account_id': kwargs[field] = Globals.aws_session_account_id
+            return function(*args,**kwargs)
+        return wrapper                                              # return wrapper function
 
 
 class remove:
