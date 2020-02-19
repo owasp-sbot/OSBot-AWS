@@ -183,11 +183,10 @@ class Lambda:
     def functions(self):
         return self._call_method_with_paginator('list_functions', 'Functions')
 
-        # data = {}
-        # functions = self.invoke_using_paginator(self.boto_lambda(), 'list_functions', 'Functions')
-        # for function in functions:
-        #     data[function['FunctionName']] = function
-        # return data
+    def layer_create(self, name, description, s3_bucket, s3_key,s3_version, compatible_runtimes):
+    def layers(self):
+        return self.client().list_layers().get('Layers')
+
 
     def permission_add(self, function_arn, statement_id, action, principal, source_arn=None):
         try:

@@ -124,31 +124,23 @@ class test_Lambda(Test_Helper):
         #assert self.aws_lambda.event_sources() == []
         self.result = self.aws_lambda.event_sources()
 
-    @aws_inject('account_id')
-    def test_event_source_create(self,account_id):
-        with Temp_Lambda() as temp_lambda:
-            with Temp_Queue() as temp_queue:
-                aws_lambda  = temp_lambda.aws_lambda
-                queue       = temp_queue.queue
-                lambda_name = temp_lambda.lambda_name
-                event_source_arn = temp_queue.queue.arn()
-                function_name    = temp_lambda.lambda_name
+    def test_event_source_create(self):
+        with Temp_Lambda() as temp_lambda:                                      # create a temp lambda function that will deleted on exit
+            with Temp_Queue() as temp_queue:                                    # create a temp sqs queue that will be deleted on exit
+                event_source_arn = temp_queue .queue.arn()
+                lambda_name      = temp_lambda.lambda_name
+                aws_lambda       = temp_lambda.aws_lambda
+                queue            = temp_queue .queue
 
-                aws_lambda.configuration_update(Timeout=10).get('Timeout')      # needs to be less than 30 (which is the default value sent in the queue)
-                queue.policy_add_sqs_permissions_to_lambda_role(lambda_name)
+                aws_lambda.configuration_update(Timeout=10)                     # needs to be less than 30 (which is the default value sent in the queue)
+                queue.policy_add_sqs_permissions_to_lambda_role(lambda_name)    # add permissions needed to role
                 sleep(2)                                                        # todo: need a better solution to find out when the permission is available
-                self.result = aws_lambda.event_source_create(event_source_arn, function_name)
-                #self.result = aws_lambda.event_sources()
-                queue.policy_remove_sqs_permissions_to_lambda_role(lambda_name)
+                aws_lambda.event_source_create(event_source_arn, lambda_name)   # todo: add asserts
+                queue.policy_remove_sqs_permissions_to_lambda_role(lambda_name) # remove permissions todo: create custom role
 
     def test_event_source_delete(self):
         for uuid in self.aws_lambda.event_sources(index_by='UUID'):
             self.result = self.aws_lambda.event_source_delete(uuid)     # these take a bit of time to delete
-
-    def test_policy__permissions(self):
-        with Temp_Lambda() as temp_lambda:
-            temp_lambda.aws_lambda.permission_add(temp_lambda.arn(), 'an_id', 'lambda:action', 'lambda.amazonaws.com')
-            assert temp_lambda.aws_lambda.permissions()[0].get('Action') == 'lambda:action'
 
     def test_invoke_raw(self):
         with Temp_Lambda() as temp_lambda:
@@ -179,8 +171,14 @@ class test_Lambda(Test_Helper):
                                            'Handler'   , 'LastModified' , 'MemorySize'   , 'RevisionId' , 'Role'        ,
                                            'Runtime'   , 'Timeout'      , 'TracingConfig', 'Version'                    }
 
+    def test_layers(self):
+        self.result = self.aws_lambda.layers()
 
 
+    def test_policy__permissions(self):
+        with Temp_Lambda() as temp_lambda:
+            temp_lambda.aws_lambda.permission_add(temp_lambda.arn(), 'an_id', 'lambda:action', 'lambda.amazonaws.com')
+            assert temp_lambda.aws_lambda.permissions()[0].get('Action') == 'lambda:action'
 
     def test_update(self):
         with Temp_Lambda() as temp_lambda:
