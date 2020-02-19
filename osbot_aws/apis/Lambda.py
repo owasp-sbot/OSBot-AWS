@@ -173,7 +173,7 @@ class Lambda:
         result = self.invoke_raw(payload)
         if result.get('status') == 'ok':
             return result.get('data')
-        return None
+        return {'error': result.get('data')}
 
     def invoke_async(self, payload = None):
         if payload is None: payload = {}
