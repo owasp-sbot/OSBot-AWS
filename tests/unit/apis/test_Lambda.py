@@ -1,14 +1,13 @@
 import unittest
+from gzip import GzipFile
 from time import sleep
 
 from pbx_gs_python_utils.utils.Assert        import Assert
 from pbx_gs_python_utils.utils.Files         import Files
 from pbx_gs_python_utils.utils.Misc          import Misc
-from osbot_aws.apis.IAM                      import IAM
 from osbot_aws.Globals                       import Globals
 from gw_bot.helpers.Test_Helper              import Test_Helper
 from osbot_aws.apis.Lambda                   import Lambda
-from osbot_aws.apis.Queue import Queue
 from osbot_aws.apis.test_helpers.Temp_Lambda import Temp_Folder_Code, Temp_Lambda
 from osbot_aws.apis.test_helpers.Temp_Queue import Temp_Queue
 from osbot_aws.helpers.IAM_Role              import IAM_Role
@@ -170,6 +169,14 @@ class test_Lambda(Test_Helper):
         assert set(functions.pop(0)) == {'CodeSha256', 'CodeSize'     , 'Description'  , 'FunctionArn', 'FunctionName',
                                            'Handler'   , 'LastModified' , 'MemorySize'   , 'RevisionId' , 'Role'        ,
                                            'Runtime'   , 'Timeout'      , 'TracingConfig', 'Version'                    }
+
+    def test_layer_create(self):
+        self.zip_file = Temp_Folder_Code('file_in_layer').zip
+        GzipFile(None, 'rb', fileobj=bytestream)
+        self.result = self.aws_lambda.layer_create()
+
+
+        self.folder.delete()
 
     def test_layers(self):
         self.result = self.aws_lambda.layers()

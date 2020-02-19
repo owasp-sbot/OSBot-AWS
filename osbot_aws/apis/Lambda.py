@@ -183,7 +183,20 @@ class Lambda:
     def functions(self):
         return self._call_method_with_paginator('list_functions', 'Functions')
 
-    def layer_create(self, name, description, s3_bucket, s3_key,s3_version, compatible_runtimes):
+    @catch
+    def layer_create(self, layer_name, description=None, compatible_runtimes=None, zip_file_bytes=None, s3_bucket=None, s3_key=None,s3_version=None):
+        params = { 'LayerName' : layer_name ,
+                   'Description' : description,
+                   'Content' : {
+                                 'S3Bucket'       : s3_bucket,
+                                 'S3Key'          : s3_key,
+                                 'S3ObjectVersion': s3_version,
+                                 'ZipFile'        : zip_file_bytes
+                             },
+                   'CompatibleRuntimes': compatible_runtimes
+        }
+        return self.client().publish_layer_version(**params)
+
     def layers(self):
         return self.client().list_layers().get('Layers')
 
