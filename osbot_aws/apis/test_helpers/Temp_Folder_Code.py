@@ -28,3 +28,7 @@ class Temp_Folder_Code:
 
     def zip(self):
         return Files.zip_folder(self.folder)
+
+    def zip_bytes(self):
+        with open(self.zip(), 'rb') as file_data:
+            return file_data.read()

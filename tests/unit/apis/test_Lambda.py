@@ -171,12 +171,26 @@ class test_Lambda(Test_Helper):
                                            'Runtime'   , 'Timeout'      , 'TracingConfig', 'Version'                    }
 
     def test_layer_create(self):
-        self.zip_file = Temp_Folder_Code('file_in_layer').zip
-        GzipFile(None, 'rb', fileobj=bytestream)
-        self.result = self.aws_lambda.layer_create()
+        #zip_bytes           = Temp_Folder_Code('file_in_layer').zip_bytes()
+        layer_name          = 'test_simple_layer'
+        #description         = 'this is a test layer'
+        #compatible_runtimes = ['python3.8']
+
+        #self.result = self.aws_lambda.layer_create(layer_name, description, compatible_runtimes, zip_bytes)
+        layer = 'arn:aws:lambda:eu-west-1:311800962295:layer:test_simple_layer'
+
+        #with Temp_Lambda() as _:
+        #    _.delete_on_exit= False
+        #    self.result = _.lambda_name
+        lambda_name ='temp_lambda_YRWKWQ'
+        temp_lambda = Lambda(lambda_name)
+        temp_lambda.configuration_update(Layers=[f'{layer}:1'])
+
+        #self.result = temp_lambda.info()
+        self.result = temp_lambda.invoke({})
 
 
-        self.folder.delete()
+        #self.folder.delete()
 
     def test_layers(self):
         self.result = self.aws_lambda.layers()

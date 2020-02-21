@@ -14,7 +14,7 @@ from osbot_aws.apis.S3 import S3
 
 class Lambda:
     def __init__(self, name=''):
-        self.runtime        = 'python3.7'
+        self.runtime        = 'python3.8'
         self.memory         = 3008
         self.timeout        = 60
         self.trace_mode     = 'PassThrough'                     # x-rays disabled
@@ -188,9 +188,9 @@ class Lambda:
         params = { 'LayerName' : layer_name ,
                    'Description' : description,
                    'Content' : {
-                                 'S3Bucket'       : s3_bucket,
-                                 'S3Key'          : s3_key,
-                                 'S3ObjectVersion': s3_version,
+                                 #'S3Bucket'       : s3_bucket,
+                                 #'S3Key'          : s3_key,
+                                 #'S3ObjectVersion': s3_version,
                                  'ZipFile'        : zip_file_bytes
                              },
                    'CompatibleRuntimes': compatible_runtimes
