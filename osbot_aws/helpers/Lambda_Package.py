@@ -62,7 +62,8 @@ class Lambda_Package:
         return self
 
     def add_pbx_gs_python_utils(self):
-        lib_path = Files.folder_name(pbx_gs_python_utils.__file__)
+        self.add_module('osbot_utils')                                  # todo: when all dependencies on pbx_gs_python_utils have been removed
+        lib_path = Files.folder_name(pbx_gs_python_utils.__file__)      # refactor this to add_osbot_utils and remove pbx_gs_python_utils from codebase
         self.add_folder(lib_path)
         return self
 

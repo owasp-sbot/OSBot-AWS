@@ -1,15 +1,14 @@
 import gzip
 import json
 import os
-import boto3
 import tempfile
 from   io import BytesIO
 from   gzip import GzipFile
 from   botocore.errorfactory import ClientError
 from osbot_aws.helpers.Method_Wrappers import group_by, index_by, cache
-from   pbx_gs_python_utils.utils.Files import Files
 
 from osbot_aws.apis.Session import Session
+from osbot_utils.utils.Files import Files
 
 
 class S3:
