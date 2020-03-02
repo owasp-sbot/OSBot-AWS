@@ -11,7 +11,7 @@ from osbot_aws.apis.Lambda                   import Lambda
 from osbot_aws.apis.test_helpers.Temp_Lambda import Temp_Folder_Code, Temp_Lambda
 from osbot_aws.apis.test_helpers.Temp_Queue import Temp_Queue
 from osbot_aws.helpers.IAM_Role              import IAM_Role
-from osbot_aws.helpers.Method_Wrappers import aws_inject
+from osbot_utils.decorators.Method_Wrappers import aws_inject
 
 
 class test_Lambda(Test_Helper):

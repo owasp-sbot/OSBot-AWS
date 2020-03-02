@@ -1,4 +1,4 @@
-from osbot_utils.utils.Misc import Misc
+from osbot_utils.utils.Misc import random_string_and_numbers
 
 
 class Temp_Misc:
@@ -32,4 +32,4 @@ class Temp_Misc:
         if prefix is None: prefix = 'text_'
         if Temp_Misc.last_letter(prefix) != '_':
             prefix += '_'
-        return Misc.random_string_and_numbers(length=length, prefix=prefix)
+        return random_string_and_numbers(length=length, prefix=prefix)

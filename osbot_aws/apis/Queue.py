@@ -5,7 +5,7 @@ from pbx_gs_python_utils.utils.Misc import Misc
 
 from osbot_aws.apis.Lambda import Lambda
 from osbot_aws.apis.Session import Session
-from osbot_aws.helpers.Method_Wrappers import cache, catch
+from osbot_utils.decorators.Method_Wrappers import cache, catch
 
 
 class Queue:
