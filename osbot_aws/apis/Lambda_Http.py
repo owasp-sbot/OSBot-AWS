@@ -5,7 +5,6 @@
 # from osbot_aws.apis.IAM import IAM
 #
 # # based on the example from https://docs.aws.amazon.com/general/latest/gr/sigv4-signed-request-examples.html
-# from osbot_aws.helpers.Method_Wrappers import aws_inject, catch
 #
 #
 # class Lambda_Http:
