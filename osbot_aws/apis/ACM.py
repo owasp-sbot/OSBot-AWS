@@ -1,5 +1,5 @@
 from osbot_aws.apis.Session import Session
-from osbot_aws.helpers.Method_Wrappers import catch,index_by
+from osbot_utils.decorators.Method_Wrappers import catch,index_by
 
 
 class ACM:

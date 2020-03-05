@@ -10,7 +10,7 @@ from osbot_aws.apis.test_helpers.Temp_Lambda import Temp_Lambda
 
 from gw_bot.helpers.Test_Helper import Test_Helper
 #from osbot_aws.apis.Lambda_Http import Lambda_Http
-from osbot_aws.helpers.Method_Wrappers import aws_inject
+from osbot_utils.decorators.Method_Wrappers import aws_inject
 from osbot_utils.decorators.trace import trace
 
 

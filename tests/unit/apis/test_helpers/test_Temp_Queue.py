@@ -1,6 +1,6 @@
 from gw_bot.helpers.Test_Helper              import Test_Helper
 from osbot_aws.apis.test_helpers.Temp_Queue  import Temp_Queue
-from osbot_aws.helpers.Method_Wrappers import catch, aws_inject
+from osbot_utils.decorators.Method_Wrappers import catch, aws_inject
 
 
 class test_Temp_Lambda(Test_Helper):
