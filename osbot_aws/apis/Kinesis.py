@@ -1,5 +1,5 @@
 from osbot_aws.apis.Session import Session
-from osbot_aws.helpers.Method_Wrappers import cache
+from osbot_utils.decorators.Method_Wrappers import cache
 
 
 class Kinesis:

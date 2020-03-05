@@ -1,6 +1,6 @@
 import json
 from osbot_aws.apis.Session import Session
-from osbot_aws.helpers.Method_Wrappers import cache, catch, remove
+from osbot_utils.decorators.Method_Wrappers import cache, catch, remove
 from osbot_aws.tmp_utils.Temp_Misc import Temp_Misc
 from osbot_aws.apis.S3 import S3
 from osbot_utils.decorators.Lists import index_by
