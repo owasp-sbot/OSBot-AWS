@@ -19,6 +19,8 @@ class Lambda:
         self.role           = None
         self.s3_bucket      = None
         self.s3_key         = None
+        self.layers         = None
+        self.env_variables  = None
 
     # cached dependencies
 
@@ -75,7 +77,7 @@ class Lambda:
         if len(missing_fields) > 0:
             return { 'error': 'missing fields in create_function: {0}'.format(missing_fields) }
 
-        (name, runtime, role, handler, memory_size, timeout, tracing_config, code) = self.create_params()
+        (name, runtime, role, handler, memory_size, timeout, tracing_config, code, layers, environment) = self.create_params()
 
         if self.exists() is True:
             return {'status': 'warning', 'name': self.name, 'data': 'lambda function already exists'}
@@ -91,7 +93,10 @@ class Lambda:
                                                  MemorySize    = memory_size,
                                                  Timeout       = timeout,
                                                  TracingConfig = tracing_config,
-                                                 Code          = code)
+                                                 Code          = code,
+                                                 Layers        = layers,
+                                                 Environment   = environment
+                                                 )
 
             return { 'status': 'ok', 'name': self.name , 'data' : data }
         except Exception as error:
@@ -112,9 +117,11 @@ class Lambda:
         Handler       = self.handler
         MemorySize    = self.memory
         Timeout       = self.timeout
+        Layers        = self.layers
+        Environment   = {'Variables': self.env_variables} if self.env_variables else None
         TracingConfig = { 'Mode': self.trace_mode }
         Code          = { "S3Bucket" : self.s3_bucket, "S3Key": self.s3_key}
-        return FunctionName, Runtime, Role, Handler, MemorySize, Timeout, TracingConfig, Code
+        return FunctionName, Runtime, Role, Handler, MemorySize, Timeout, TracingConfig, Code, Layers, Environment
 
     def delete(self):
         if self.exists() is False:
@@ -177,23 +184,6 @@ class Lambda:
     def functions(self):
         return self._call_method_with_paginator('list_functions', 'Functions')
 
-    @catch
-    def layer_create(self, layer_name, description=None, compatible_runtimes=None, zip_file_bytes=None, s3_bucket=None, s3_key=None,s3_version=None):
-        params = { 'LayerName' : layer_name ,
-                   'Description' : description,
-                   'Content' : {
-                                 #'S3Bucket'       : s3_bucket,
-                                 #'S3Key'          : s3_key,
-                                 #'S3ObjectVersion': s3_version,
-                                 'ZipFile'        : zip_file_bytes
-                             },
-                   'CompatibleRuntimes': compatible_runtimes
-        }
-        return self.client().publish_layer_version(**params)
-
-    def layers(self):
-        return self.client().list_layers().get('Layers')
-
 
     def permission_add(self, function_arn, statement_id, action, principal, source_arn=None):
         try:
@@ -226,11 +216,13 @@ class Lambda:
         except:                 # ResourceNotFoundException doesn't seem to exposed to we have to do a global capture
             return {}
 
-    def set_role                (self, value): self.role        = value    ; return self
-    def set_s3_bucket           (self, value): self.s3_bucket   = value    ; return self
-    def set_s3_key              (self, value): self.s3_key      = value    ; return self
-    def set_folder_code         (self, value): self.folder_code = value    ; return self
-    def set_trace_mode          (self, value): self.trace_mode  = value    ; return self
+    def set_role                (self, value): self.role           = value    ; return self
+    def set_s3_bucket           (self, value): self.s3_bucket      = value    ; return self
+    def set_s3_key              (self, value): self.s3_key         = value    ; return self
+    def set_folder_code         (self, value): self.folder_code    = value    ; return self
+    def set_trace_mode          (self, value): self.trace_mode     = value    ; return self
+    def set_layers              (self, value): self.layers         = value    ; return self
+    def set_env_variables       (self, value): self.env_variables  = value    ; return self
 #    def set_xrays_on            (self       ): self.trace_mode  = 'Active' ; return self
 
     # def set_s3_bucket_and_key(self, s3_bucket, s3_key):
@@ -250,8 +242,9 @@ class Lambda:
         else:
             self.upload()
         try:
-            result = self.update_lambda_code()
-            return {'status': 'ok'    , 'name': self.name, 'data': result             }
+            update_code_result = self.update_lambda_code()
+            update_config_result = self.update_lambda_configuration()
+            return {'status': 'ok'    , 'name': self.name, 'data': {"update_code": update_code_result, "update_config": update_config_result}}
 
         except Exception as error:
             return { 'status': 'error', 'name': self.name, 'data': '{0}'.format(error)}
@@ -260,3 +253,7 @@ class Lambda:
         return self.client().update_function_code(FunctionName = self.name,
                                                   S3Bucket     = self.s3_bucket,
                                                   S3Key        = self.s3_key)
+
+    def update_lambda_configuration(self):
+        return self.client().update_function_configuration(Layers = self.layers,
+                                                           Environment={'Variables': self.env_variables} if self.env_variables else None)
