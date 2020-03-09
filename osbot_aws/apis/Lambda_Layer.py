@@ -1,13 +1,12 @@
 import os
 import shutil
 
+from osbot_aws.Globals import Globals
 from osbot_aws.apis.Session import Session
 from osbot_aws.tmp_utils.Temp_Misc import Temp_Misc
 from osbot_utils.decorators.Method_Wrappers import cache, catch
 from osbot_utils.utils.Files import Files
 from osbot_aws.apis.S3 import S3
-from gw_proxy.Globals import Globals
-import gw_proxy
 
 
 

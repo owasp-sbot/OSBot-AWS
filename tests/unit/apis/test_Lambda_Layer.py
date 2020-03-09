@@ -1,9 +1,8 @@
 import os
-
-import gw_proxy
-from gw_proxy.api.Lambda_Layer import Lambda_Layer
 from unittest import TestCase
 from datetime import datetime
+
+from osbot_aws.apis.Lambda_Layer import Lambda_Layer
 
 
 class test_Lambda_Layer(TestCase):
