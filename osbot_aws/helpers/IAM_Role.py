@@ -2,6 +2,7 @@ from pbx_gs_python_utils.utils.Dev import Dev
 
 from osbot_aws.apis.IAM import IAM
 from osbot_aws.helpers.IAM_Policy import IAM_Policy
+from osbot_aws.Globals import Globals
 
 
 class IAM_Role:
@@ -13,7 +14,9 @@ class IAM_Role:
 
     def add_policy_for__lambda(self):
         temp_policy_name = 'policy_{0}'.format(self.role_name)
-        cloud_watch_arn  = "arn:aws:logs:{0}:{1}:log-group:/aws/lambda/*".format('eu-west-2','244560807427')
+        cloud_watch_arn  = "arn:aws:logs:{0}:{1}:log-group:/aws/lambda/*".format(
+                Globals.aws_session_region_name,
+                Globals.aws_userid)
         iam_policy       = IAM_Policy(temp_policy_name)
         self.policy_arn  = iam_policy.add_cloud_watch(cloud_watch_arn).create().get('policy_arn')
         self.iam.role_policy_attach(self.policy_arn)
