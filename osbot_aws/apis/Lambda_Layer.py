@@ -1,16 +1,16 @@
 import os
 import shutil
 
-from osbot_aws.Globals import Globals
 from osbot_aws.apis.Session import Session
-from osbot_utils.decorators.Method_Wrappers import cache, catch
+from osbot_aws.tmp_utils.Temp_Misc import Temp_Misc
+from osbot_utils.decorators.Method_Wrappers import cache
 from osbot_utils.utils.Files import Files
 from osbot_aws.apis.S3 import S3
-from osbot_utils.utils.Misc import get_missing_fields
+from Globals import Globals
 
 
 class Lambda_Layer:
-    def __init__(self, name=None, folders_mapping={}, s3_bucket=None, description=''):
+    def __init__(self, name=None, folders_mapping={}, s3_bucket=None, description='', version_arn=None, version_number=None):
         self.name            = name.replace('.', '-')
         self.folders_mapping = folders_mapping
         self.runtimes        = ['python3.8', 'python3.7', 'python3.6']
@@ -18,8 +18,8 @@ class Lambda_Layer:
         self.description     = description
         self.s3_bucket       = s3_bucket if s3_bucket else Globals.lambda_layers_s3_bucket
         self.s3_key          = f'{name}.zip'
-        self.version_arn     = None
-        self.version_number  = None
+        self.version_arn    = version_arn
+        self.version_number = version_number
 
     # cached dependencies
 
@@ -42,13 +42,16 @@ class Lambda_Layer:
     # main methods
 
     def create(self):
-        missing_fields = get_missing_fields(self,['name', 'folders_mapping', 'runtimes', 'license_info', 's3_bucket', 's3_key'])
+        missing_fields = Temp_Misc.get_missing_fields(self,['name', 'runtimes', 'license_info', 's3_bucket', 's3_key'])
         if len(missing_fields) > 0:
             raise  Exception('missing fields in create_lambda_layer: {0}'.format(missing_fields))
-        zipped_layer_file = self.get_zipped_layer_filename()
-        if not self.s3().bucket_exists(self.s3_bucket):
-            self.s3().bucket_create(self.s3_bucket, Globals.aws_session_region_name)
-        self.s3().file_upload_to_key(zipped_layer_file, self.s3_bucket, self.s3_key)
+        # Folder mappings should only be required for local creations. Creations from apig need to
+        # use this - we expect the layers zip already in the bucket during rest execution
+        if self.folders_mapping is not None:
+            zipped_layer_file = self.get_zipped_layer_filename()
+            if not self.s3().bucket_exists(self.s3_bucket):
+                self.s3().bucket_create(self.s3_bucket, Globals.aws_session_region_name)
+            self.s3().file_upload_to_key(zipped_layer_file, self.s3_bucket, self.s3_key)
         params = {'LayerName': self.name,
                   'Description': self.description,
                   'Content': {
@@ -61,7 +64,8 @@ class Lambda_Layer:
         aws_response = self.client().publish_layer_version(**params)
         self.version_arn = aws_response.get("LayerVersionArn")
         self.version_number = aws_response.get("Version")
-        self.delete_zipped_layer_file()
+        if self.folders_mapping is not None:
+            self.delete_zipped_layer_file()
         return self.version_arn
 
     def get_layer(self):
@@ -72,6 +76,8 @@ class Lambda_Layer:
 
     def delete(self, with_s3_bucket=False):
         if self.exists() is False:
+            return False
+        if not self.version_arn or not self.version_number:
             return False
         self.client().delete_layer_version(LayerName=self.name, VersionNumber=self.version_number)
         if self.s3().file_exists(self.s3_bucket, self.s3_key):
@@ -91,6 +97,7 @@ class Lambda_Layer:
         return self.client().list_layers().get('Layers')
 
     def get_zipped_layer_filename(self):
+        import gw_proxy
         layer_path = os.path.dirname(gw_proxy.__file__)
         for source, destination in self.folders_mapping.items():
             shutil.copytree(source, f"{layer_path}/layers/{self.name}/{destination}")
@@ -98,5 +105,6 @@ class Lambda_Layer:
         return file
 
     def delete_zipped_layer_file(self):
+        import gw_proxy
         path = os.path.dirname(gw_proxy.__file__)
         Files.delete(f"{path}/layers/{self.name}.zip")
