@@ -1,14 +1,9 @@
-import sys;
-
 from gw_bot.helpers.Test_Helper import Test_Helper
-
-sys.path.append('..')
 import os
 import unittest
 
-from osbot_aws.tmp_utils.Temp_Misc import Temp_Misc
-
 from osbot_aws.apis.S3 import S3
+from osbot_utils.utils.Misc import random_text
 
 
 class Test_S3(Test_Helper):
@@ -31,7 +26,7 @@ class Test_S3(Test_Helper):
         return temp_file
 
     def test_bucket_create_delete(self):
-        bucket_name = Temp_Misc.random_text('temp_bucket').lower().replace('_','-')
+        bucket_name = random_text('temp_bucket').lower().replace('_','-')
         bucket_url  = 'http://{0}.s3.amazonaws.com/'.format(bucket_name)
         region      = 'eu-west-2'
         assert self.s3.bucket_exists(bucket_name) is False

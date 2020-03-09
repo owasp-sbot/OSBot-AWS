@@ -14,9 +14,7 @@ class IAM_Role:
 
     def add_policy_for__lambda(self):
         temp_policy_name = 'policy_{0}'.format(self.role_name)
-        cloud_watch_arn  = "arn:aws:logs:{0}:{1}:log-group:/aws/lambda/*".format(
-                Globals.aws_session_region_name,
-                Globals.aws_userid)
+        cloud_watch_arn  = f'arn:aws:logs:{Globals.aws_session_region_name}:{Globals.aws_session_account_id}:log-group:/aws/lambda/*'
         iam_policy       = IAM_Policy(temp_policy_name)
         self.policy_arn  = iam_policy.add_cloud_watch(cloud_watch_arn).create().get('policy_arn')
         self.iam.role_policy_attach(self.policy_arn)

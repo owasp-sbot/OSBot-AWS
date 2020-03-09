@@ -1,9 +1,9 @@
 import json
 from osbot_aws.apis.Session import Session
 from osbot_utils.decorators.Method_Wrappers import cache, catch, remove
-from osbot_aws.tmp_utils.Temp_Misc import Temp_Misc
 from osbot_aws.apis.S3 import S3
 from osbot_utils.decorators.Lists import index_by
+from osbot_utils.utils.Misc import get_missing_fields
 
 
 class Lambda:
@@ -73,7 +73,7 @@ class Lambda:
         return self.client().list_aliases(FunctionName=function_name).get('Aliases')
 
     def create(self):
-        missing_fields = Temp_Misc.get_missing_fields(self,['name', 'runtime', 'role','handler', 'memory','timeout','s3_bucket', 's3_key'])
+        missing_fields = get_missing_fields(self,['name', 'runtime', 'role','handler', 'memory','timeout','s3_bucket', 's3_key'])
         if len(missing_fields) > 0:
             return { 'error': 'missing fields in create_function: {0}'.format(missing_fields) }
 

@@ -3,24 +3,23 @@ import shutil
 
 from osbot_aws.Globals import Globals
 from osbot_aws.apis.Session import Session
-from osbot_aws.tmp_utils.Temp_Misc import Temp_Misc
 from osbot_utils.decorators.Method_Wrappers import cache, catch
 from osbot_utils.utils.Files import Files
 from osbot_aws.apis.S3 import S3
-
+from osbot_utils.utils.Misc import get_missing_fields
 
 
 class Lambda_Layer:
     def __init__(self, name=None, folders_mapping={}, s3_bucket=None, description=''):
-        self.name           = name.replace('.', '-')
+        self.name            = name.replace('.', '-')
         self.folders_mapping = folders_mapping
-        self.runtimes       = ['python3.8', 'python3.7', 'python3.6']
-        self.license_info   =  'https://github.com/filetrust/gw-proxy-serverless/blob/master/LICENSE'
-        self.description    = description
-        self.s3_bucket      = s3_bucket if s3_bucket else Globals.lambda_layers_s3_bucket
-        self.s3_key         = f'{name}.zip'
-        self.version_arn    = None
-        self.version_number = None
+        self.runtimes        = ['python3.8', 'python3.7', 'python3.6']
+        self.license_info    =  'https://github.com/filetrust/gw-proxy-serverless/blob/master/LICENSE'
+        self.description     = description
+        self.s3_bucket       = s3_bucket if s3_bucket else Globals.lambda_layers_s3_bucket
+        self.s3_key          = f'{name}.zip'
+        self.version_arn     = None
+        self.version_number  = None
 
     # cached dependencies
 
@@ -32,18 +31,18 @@ class Lambda_Layer:
     def s3(self):
         return S3()
 
-    def _call_method_with_paginator(self, method, field_id, **kwargs):
-        api       = self.client()
-        paginator = api.get_paginator(method)
-        for page in paginator.paginate(**kwargs):
-            for id in page.get(field_id):
-                yield id
+    # def _call_method_with_paginator(self, method, field_id, **kwargs):
+    #     api       = self.client()
+    #     paginator = api.get_paginator(method)
+    #     for page in paginator.paginate(**kwargs):
+    #         for id in page.get(field_id):
+    #             yield id
 
 
     # main methods
 
     def create(self):
-        missing_fields = Temp_Misc.get_missing_fields(self,['name', 'folders_mapping', 'runtimes', 'license_info', 's3_bucket', 's3_key'])
+        missing_fields = get_missing_fields(self,['name', 'folders_mapping', 'runtimes', 'license_info', 's3_bucket', 's3_key'])
         if len(missing_fields) > 0:
             raise  Exception('missing fields in create_lambda_layer: {0}'.format(missing_fields))
         zipped_layer_file = self.get_zipped_layer_filename()
