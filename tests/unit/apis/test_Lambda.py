@@ -1,5 +1,3 @@
-import unittest
-from gzip import GzipFile
 from time import sleep
 
 from pbx_gs_python_utils.utils.Assert        import Assert
@@ -8,10 +6,10 @@ from pbx_gs_python_utils.utils.Misc          import Misc
 from osbot_aws.Globals                       import Globals
 from gw_bot.helpers.Test_Helper              import Test_Helper
 from osbot_aws.apis.Lambda                   import Lambda
-from osbot_aws.apis.test_helpers.Temp_Lambda import Temp_Folder_Code, Temp_Lambda
-from osbot_aws.apis.test_helpers.Temp_Queue import Temp_Queue
+from osbot_aws.apis.test_helpers.Temp_Lambda import Temp_Folder_With_Lambda_File, Temp_Lambda
+from osbot_aws.apis.test_helpers.Temp_Queue  import Temp_Queue
 from osbot_aws.helpers.IAM_Role              import IAM_Role
-from osbot_utils.decorators.Method_Wrappers import aws_inject
+from osbot_utils.decorators.Method_Wrappers  import aws_inject
 
 
 class test_Lambda(Test_Helper):
@@ -63,7 +61,7 @@ class test_Lambda(Test_Helper):
 
     def test_create_function(self):
         role_arn   = IAM_Role(self.lambda_name + '__tmp_role').create_for__lambda().get('role_arn')
-        tmp_folder = Temp_Folder_Code(self.lambda_name)
+        tmp_folder = Temp_Folder_With_Lambda_File(self.lambda_name).create_temp_file()
         (
                 self.aws_lambda.set_role         (role_arn)
                                  .set_s3_bucket  (self.s3_bucket    )
@@ -170,31 +168,6 @@ class test_Lambda(Test_Helper):
                                            'Handler'   , 'LastModified' , 'MemorySize'   , 'RevisionId' , 'Role'        ,
                                            'Runtime'   , 'Timeout'      , 'TracingConfig', 'Version'                    }
 
-    def test_layer_create(self):
-        #zip_bytes           = Temp_Folder_Code('file_in_layer').zip_bytes()
-        layer_name          = 'test_simple_layer'
-        #description         = 'this is a test layer'
-        #compatible_runtimes = ['python3.8']
-
-        #self.result = self.aws_lambda.layer_create(layer_name, description, compatible_runtimes, zip_bytes)
-        layer = 'arn:aws:lambda:eu-west-1:311800962295:layer:test_simple_layer'
-
-        #with Temp_Lambda() as _:
-        #    _.delete_on_exit= False
-        #    self.result = _.lambda_name
-        lambda_name ='temp_lambda_YRWKWQ'
-        temp_lambda = Lambda(lambda_name)
-        temp_lambda.configuration_update(Layers=[f'{layer}:1'])
-
-        #self.result = temp_lambda.info()
-        self.result = temp_lambda.invoke({})
-
-
-        #self.folder.delete()
-
-    def test_layers(self):
-        self.result = self.aws_lambda.layers()
-
 
     def test_policy__permissions(self):
         with Temp_Lambda() as temp_lambda:
@@ -215,7 +188,7 @@ class test_Lambda(Test_Helper):
             assert temp_lambda.aws_lambda.invoke() == tmp_text
 
     def test_upload(self):
-        tmp_folder = Temp_Folder_Code(self.lambda_name)
+        tmp_folder = Temp_Folder_With_Lambda_File(self.lambda_name).create_temp_file()
 
         (self.aws_lambda.set_s3_bucket   (self.s3_bucket       )
                         .set_s3_key      (self.s3_key          )

@@ -1,25 +1,26 @@
 import os
 import shutil
 
-from osbot_aws.apis.Session import Session
-from osbot_aws.tmp_utils.Temp_Misc import Temp_Misc
+from osbot_aws.Globals                      import Globals
+from osbot_aws.apis.S3                      import S3
+from osbot_aws.apis.Session                 import Session
+from osbot_utils.decorators.Lists import index_by
+from osbot_utils.utils.Files                import Files
 from osbot_utils.decorators.Method_Wrappers import cache
-from osbot_utils.utils.Files import Files
-from osbot_aws.apis.S3 import S3
-from Globals import Globals
+from osbot_utils.utils.Misc                 import get_missing_fields
 
 
 class Lambda_Layer:
-    def __init__(self, name=None, folders_mapping={}, s3_bucket=None, description='', version_arn=None, version_number=None):
-        self.name            = name.replace('.', '-')
-        self.folders_mapping = folders_mapping
+    def __init__(self, layer_name='', folders_mapping=None, s3_bucket=None, description='', version_arn=None, version_number=None):
+        self.layer_name      = layer_name.replace('.', '-')
+        self.folders_mapping = folders_mapping or {}
         self.runtimes        = ['python3.8', 'python3.7', 'python3.6']
         self.license_info    =  'https://github.com/filetrust/gw-proxy-serverless/blob/master/LICENSE'
         self.description     = description
         self.s3_bucket       = s3_bucket if s3_bucket else Globals.lambda_layers_s3_bucket
-        self.s3_key          = f'{name}.zip'
-        self.version_arn    = version_arn
-        self.version_number = version_number
+        self.s3_key          = f'{self.layer_name}.zip'
+        self.version_arn     = version_arn
+        self.version_number  = version_number
 
     # cached dependencies
 
@@ -31,18 +32,10 @@ class Lambda_Layer:
     def s3(self):
         return S3()
 
-    # def _call_method_with_paginator(self, method, field_id, **kwargs):
-    #     api       = self.client()
-    #     paginator = api.get_paginator(method)
-    #     for page in paginator.paginate(**kwargs):
-    #         for id in page.get(field_id):
-    #             yield id
-
-
     # main methods
 
     def create(self):
-        missing_fields = Temp_Misc.get_missing_fields(self,['name', 'runtimes', 'license_info', 's3_bucket', 's3_key'])
+        missing_fields = get_missing_fields(self,['name', 'runtimes', 'license_info', 's3_bucket', 's3_key'])
         if len(missing_fields) > 0:
             raise  Exception('missing fields in create_lambda_layer: {0}'.format(missing_fields))
         # Folder mappings should only be required for local creations. Creations from apig need to
@@ -52,7 +45,7 @@ class Lambda_Layer:
             if not self.s3().bucket_exists(self.s3_bucket):
                 self.s3().bucket_create(self.s3_bucket, Globals.aws_session_region_name)
             self.s3().file_upload_to_key(zipped_layer_file, self.s3_bucket, self.s3_key)
-        params = {'LayerName': self.name,
+        params = {'LayerName': self.layer_name,
                   'Description': self.description,
                   'Content': {
                       'S3Bucket': self.s3_bucket,
@@ -79,7 +72,7 @@ class Lambda_Layer:
             return False
         if not self.version_arn or not self.version_number:
             return False
-        self.client().delete_layer_version(LayerName=self.name, VersionNumber=self.version_number)
+        self.client().delete_layer_version(LayerName=self.layer_name, VersionNumber=self.version_number)
         if self.s3().file_exists(self.s3_bucket, self.s3_key):
             self.s3().file_delete(self.s3_bucket, self.s3_key)
         if with_s3_bucket and self.s3().bucket_exists(self.s3_bucket):
@@ -93,18 +86,19 @@ class Lambda_Layer:
         except:
             return False
 
+    @index_by
     def layers(self):
         return self.client().list_layers().get('Layers')
 
-    def get_zipped_layer_filename(self):
-        import gw_proxy
-        layer_path = os.path.dirname(gw_proxy.__file__)
-        for source, destination in self.folders_mapping.items():
-            shutil.copytree(source, f"{layer_path}/layers/{self.name}/{destination}")
-        file = Files.zip_folder(f"{layer_path}/layers/{self.name}")
-        return file
-
-    def delete_zipped_layer_file(self):
-        import gw_proxy
-        path = os.path.dirname(gw_proxy.__file__)
-        Files.delete(f"{path}/layers/{self.name}.zip")
+    # def get_zipped_layer_filename(self):
+    #     import gw_proxy
+    #     layer_path = os.path.dirname(gw_proxy.__file__)
+    #     for source, destination in self.folders_mapping.items():
+    #         shutil.copytree(source, f"{layer_path}/layers/{self.nalayer_nameme}/{destination}")
+    #     file = Files.zip_folder(f"{layer_path}/layers/{self.layer_name}")
+    #     return file
+    #
+    # def delete_zipped_layer_file(self):
+    #     import gw_proxy
+    #     path = os.path.dirname(gw_proxy.__file__)
+    #     Files.delete(f"{path}/layers/{self.layer_name}.zip")

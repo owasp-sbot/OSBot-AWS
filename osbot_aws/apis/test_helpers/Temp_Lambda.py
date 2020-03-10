@@ -3,14 +3,14 @@ from pbx_gs_python_utils.utils.Misc import Misc
 from osbot_aws.Globals                            import Globals
 from osbot_aws.apis.Lambda                        import Lambda
 from osbot_aws.apis.test_helpers.Temp_Aws_Roles   import Temp_Aws_Roles
-from osbot_aws.apis.test_helpers.Temp_Folder_Code import Temp_Folder_Code
+from osbot_aws.apis.test_helpers.Temp_Folder_With_Lambda_File import Temp_Folder_With_Lambda_File
 
 
 class Temp_Lambda:
     def __init__(self):
         self.lambda_name    = "temp_lambda_{0}".format(Misc.random_string_and_numbers())
         self.aws_lambda     = Lambda(self.lambda_name)
-        self.tmp_folder     = Temp_Folder_Code(self.lambda_name)
+        self.tmp_folder     = Temp_Folder_With_Lambda_File(self.lambda_name).create_temp_file()
         self.role_arn       = Temp_Aws_Roles().for_lambda_invocation()
         self.create_log     = None
         self.delete_on_exit = True

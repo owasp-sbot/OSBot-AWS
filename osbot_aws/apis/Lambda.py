@@ -242,7 +242,7 @@ class Lambda:
         else:
             self.upload()
         try:
-            update_code_result = self.update_lambda_code()
+            update_code_result   = self.update_lambda_code()
             update_config_result = self.update_lambda_configuration()
             return {'status': 'ok'    , 'name': self.name, 'data': {"update_code": update_code_result, "update_config": update_config_result}}
 
