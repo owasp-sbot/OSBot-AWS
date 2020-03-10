@@ -255,5 +255,6 @@ class Lambda:
                                                   S3Key        = self.s3_key)
 
     def update_lambda_configuration(self):
-        return self.client().update_function_configuration(Layers = self.layers,
-                                                           Environment={'Variables': self.env_variables} if self.env_variables else None)
+        return self.client().update_function_configuration(FunctionName = self.name,
+                                                           Layers       = self.layers,
+                                                           Environment  = {'Variables': self.env_variables} if self.env_variables else None)
