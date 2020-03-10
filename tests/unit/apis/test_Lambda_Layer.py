@@ -36,10 +36,11 @@ class test_Lambda_Layer(Test_Helper):
             layer_name = params.get('layer_name')
             region     = Globals.aws_session_region_name
             account_id = Globals.aws_session_account_id
-            assert set(result)                      == { 'CompatibleRuntimes', 'Content', 'CreatedDate', 'Description', 'LayerArn', 'LayerVersionArn', 'Version'}
+            assert set(result)                      == { 'CompatibleRuntimes', 'Content', 'CreatedDate', 'Description', 'LayerArn', 'LayerVersionArn', 'LicenseInfo','Version'}
             assert result.get('LayerArn'          ) == f'arn:aws:lambda:{region}:{account_id}:layer:{layer_name}'
             assert result.get('Description'       ) == params.get('description')
             assert result.get('CompatibleRuntimes') == params.get('runtimes')
+
 
             self.result = result
         return

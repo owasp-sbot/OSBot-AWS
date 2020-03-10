@@ -78,33 +78,33 @@ class Test_Aws_Cli(unittest.TestCase):
         #
 
 
-@unittest.skip
-class Test_Aws_Utils(unittest.TestCase):
-    def setUp(self):
-        self.aws_Utils = Aws_Utils()
-
-    def test_zip_folder             (self):
-        dir_Name      = 'temp_dir'
-        file_Path     = 'temp_dir/a_file.txt'
-        file_Contents = 'some contents'
-
-        if not os.path.exists(dir_Name):
-            os.mkdir(dir_Name)
-
-        with open(file_Path, "w+") as f:
-            f.write(file_Contents)
-
-        result = self.aws_Utils.zip_folder(dir_Name)
-
-        assert os.path.basename(result) == 'temp_dir.zip'
-
-        with ZipFile(result, 'r') as f:
-            names = f.namelist()
-            assert names == ['a_file.txt']
-
-        os.remove(result)
-        os.remove(file_Path)
-        os.rmdir(dir_Name)
+# @unittest.skip
+# class Test_Aws_Utils(unittest.TestCase):
+#     def setUp(self):
+#         self.aws_Utils = Aws_Utils()
+#
+#     def test_zip_folder             (self):
+#         dir_Name      = 'temp_dir'
+#         file_Path     = 'temp_dir/a_file.txt'
+#         file_Contents = 'some contents'
+#
+#         if not os.path.exists(dir_Name):
+#             os.mkdir(dir_Name)
+#
+#         with open(file_Path, "w+") as f:
+#             f.write(file_Contents)
+#
+#         result = self.aws_Utils.zip_folder(dir_Name)
+#
+#         assert os.path.basename(result) == 'temp_dir.zip'
+#
+#         with ZipFile(result, 'r') as f:
+#             names = f.namelist()
+#             assert names == ['a_file.txt']
+#
+#         os.remove(result)
+#         os.remove(file_Path)
+#         os.rmdir(dir_Name)
 
 if __name__ == '__main__':
     unittest.main()

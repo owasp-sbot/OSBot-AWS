@@ -1,9 +1,15 @@
+from osbot_aws.Globals import Globals
 from osbot_utils.utils.Files import Files
+from osbot_utils.utils.Misc import random_string_and_numbers
 
+from osbot_aws.apis.S3 import S3
 
-class Temp_Folder_With_Lambda_File:
-    def __init__(self, file_name=None):
-        self.file_name    = file_name or 'simple_lambda.py'
+class Temp_S3_Zip_With_Lambda_File:
+    def __init__(self, file_name=None,s3_bucket=None, s3_prefix=None):
+        self.file_name    = file_name or f"temp_zip_file_{random_string_and_numbers()}"
+        self.s3_bucket    = Globals.lambda_s3_bucket
+        self.s3_prefix    = f'{Globals.lambda_s3_key_prefix}/unit_tests/temp_zips/'
+        self.s3_key       = f'{self.s3_prefix}/{file_name}.zip'
         self.folder       = None
         self.lambda_code  = "def run(event, context): return 'hello {0}'.format(event.get('name'))"
         self.tmp_file     = None

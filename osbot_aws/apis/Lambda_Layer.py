@@ -42,6 +42,7 @@ class Lambda_Layer:
         params = { 'LayerName'         : self.layer_name           ,
                    'Description'       : self.description          ,
                    'Content'           : {  'ZipFile' : zip_bytes },
+                   'LicenseInfo'       : self.license_info         ,
                    'CompatibleRuntimes': self.runtimes             }
         return self.client().publish_layer_version(**params)
 
