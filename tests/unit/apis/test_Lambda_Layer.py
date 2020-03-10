@@ -3,11 +3,12 @@ from unittest import TestCase
 from datetime import datetime
 
 import gw_bot
-from gw_bot.helpers.Test_Helper import Test_Helper
-from osbot_aws.apis.Lambda import Lambda
-from osbot_aws.apis.Lambda_Layer import Lambda_Layer
+from osbot_aws.Globals                                       import Globals
+from gw_bot.helpers.Test_Helper                              import Test_Helper
+from osbot_aws.apis.Lambda                                   import Lambda
+from osbot_aws.apis.Lambda_Layer                             import Lambda_Layer
+from osbot_utils.utils.Files                                 import Files
 from osbot_aws.apis.test_helpers.Temp_Folder_With_Lambda_File import Temp_Folder_With_Lambda_File
-from osbot_utils.utils.Files import Files
 
 
 class test_Lambda_Layer(Test_Helper):
@@ -16,24 +17,36 @@ class test_Lambda_Layer(Test_Helper):
         super().setUp()
         #self.source_path      = os.path.dirname(gw_bot.__file__)[0:-8] + "../modules/sdk-eval-toolset/libraries/linux"        # todo: move to dedicated class
         #self.folders_mapping  = { self.source_path: 'lib/sdk-eval-toolset'}
-        self.lambda_layer = Lambda_Layer()
+
 
         #self.api              = Lambda_Layer(layer_name="glasswall_editor_engine", folders_mapping = self.folders_mapping, s3_bucket=f'gw-bot-test-layer-bucket-{datetime.now().timestamp()}')
 
     def test_setUp(self):
         Files.exists(self.source_path)
 
-    def test_layer_create(self):
+    def test_create_from_zip_bytes(self):
         with Temp_Folder_With_Lambda_File('file_in_layer') as temp_folder:
-            zip_bytes = temp_folder().zip_bytes()
-            print(zip_bytes)
+            params     = { 'layer_name'          : 'test_simple_layer'   ,
+                           'description'         : 'this is a test layer',
+                           'runtimes'            : ['python3.8']         }
+
+            lambda_layer = Lambda_Layer(**params)
+            result = lambda_layer.create_from_zip_bytes(temp_folder.zip_bytes())
+
+            layer_name = params.get('layer_name')
+            region     = Globals.aws_session_region_name
+            account_id = Globals.aws_session_account_id
+            assert set(result)                      == { 'CompatibleRuntimes', 'Content', 'CreatedDate', 'Description', 'LayerArn', 'LayerVersionArn', 'Version'}
+            assert result.get('LayerArn'          ) == f'arn:aws:lambda:{region}:{account_id}:layer:{layer_name}'
+            assert result.get('Description'       ) == params.get('description')
+            assert result.get('CompatibleRuntimes') == params.get('runtimes')
+
+            self.result = result
         return
 
-        layer_name          = 'test_simple_layer'
-        #description         = 'this is a test layer'
-        #compatible_runtimes = ['python3.8']
 
-        #self.result = self.aws_lambda.layer_create(layer_name, description, compatible_runtimes, zip_bytes)
+
+
         layer = 'arn:aws:lambda:eu-west-1:311800962295:layer:test_simple_layer'
 
         #with Temp_Lambda() as _:
@@ -49,29 +62,31 @@ class test_Lambda_Layer(Test_Helper):
 
         #self.folder.delete()
 
-    def test_layers(self):
-        self.result = self.aws_lambda.layers()
 
-    def test_create_lambda_layer(self):
-        self.assertEqual(type(self.api.create()), str)
-        self.assertEqual(self.api.delete(with_s3_bucket=True), True)
 
+    #def test_create_lambda_layer(self):
+    #    self.assertEqual(type(self.api.create()), str)
+    #    self.assertEqual(self.api.delete(with_s3_bucket=True), True)
+
+
+    # todo: make this test more robust since at the moment this depends on the layers below existing in the current AWS environment
     def test_layers(self):
-        assert self.lambda_layer.layers()                     == [ { 'LatestMatchingVersion': { 'CompatibleRuntimes'    : ['python3.8']                                                     ,
-                                                                                                'CreatedDate'           : '2020-02-20T01:21:20.895+0000'                                    ,
-                                                                                                'Description'           : 'this is a test layer'                                            ,
-                                                                                                'LayerVersionArn'       : 'arn:aws:lambda:eu-west-1:311800962295:layer:test_simple_layer:1' ,
-                                                                                                'Version'               : 1                                                                },
-                                                                     'LayerArn' : 'arn:aws:lambda:eu-west-1:311800962295:layer:test_simple_layer'                                           ,
-                                                                     'LayerName': 'test_simple_layer'
-                                                                     }]
-        assert self.lambda_layer.layers(index_by='LayerName') == { 'test_simple_layer': { 'LatestMatchingVersion': { 'CompatibleRuntimes': [ 'python3.8'],
-                                                                                                                     'CreatedDate': '2020-02-20T01:21:20.895+0000',
-                                                                                                                     'Description': 'this is a test layer',
-                                                                                                                     'LayerVersionArn': 'arn:aws:lambda:eu-west-1:311800962295:layer:test_simple_layer:1',
-                                                                                                                     'Version': 1},
-                                                                                           'LayerArn' : 'arn:aws:lambda:eu-west-1:311800962295:layer:test_simple_layer',
-                                                                                           'LayerName': 'test_simple_layer'}}
+        lambda_layer = Lambda_Layer()
+        assert lambda_layer.layers()                     == [ { 'LatestMatchingVersion': { 'CompatibleRuntimes'    : ['python3.8']                                                     ,
+                                                                                           'CreatedDate'           : '2020-02-20T01:21:20.895+0000'                                    ,
+                                                                                           'Description'           : 'this is a test layer'                                            ,
+                                                                                           'LayerVersionArn'       : 'arn:aws:lambda:eu-west-1:311800962295:layer:test_simple_layer:1' ,
+                                                                                           'Version'               : 1                                                                },
+                                                                'LayerArn' : 'arn:aws:lambda:eu-west-1:311800962295:layer:test_simple_layer'                                           ,
+                                                                'LayerName': 'test_simple_layer'                                                                                      }]
+
+        assert lambda_layer.layers(index_by='LayerName') == { 'test_simple_layer': { 'LatestMatchingVersion': { 'CompatibleRuntimes': [ 'python3.8'],
+                                                                                                                'CreatedDate': '2020-02-20T01:21:20.895+0000',
+                                                                                                                'Description': 'this is a test layer',
+                                                                                                                'LayerVersionArn': 'arn:aws:lambda:eu-west-1:311800962295:layer:test_simple_layer:1',
+                                                                                                                'Version': 1},
+                                                                                      'LayerArn' : 'arn:aws:lambda:eu-west-1:311800962295:layer:test_simple_layer',
+                                                                                      'LayerName': 'test_simple_layer'}}
 
         #
 
