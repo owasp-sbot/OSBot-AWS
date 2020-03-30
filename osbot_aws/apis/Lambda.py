@@ -86,17 +86,19 @@ class Lambda:
             return {'status': 'error', 'name': self.name, 'data': 'could not find provided s3 bucket and s3 key'}
 
         try:
-            data = self.client().create_function(FunctionName  = name,
-                                                 Runtime       = runtime,
-                                                 Role          = role,
-                                                 Handler       = handler,
-                                                 MemorySize    = memory_size,
-                                                 Timeout       = timeout,
-                                                 TracingConfig = tracing_config,
-                                                 Code          = code,
-                                                 Layers        = layers,
-                                                 Environment   = environment
-                                                 )
+            kwargs = {'FunctionName'  : name           ,
+                      'Runtime'       : runtime        ,
+                      'Role'          : role           ,
+                      'Handler'       : handler        ,
+                      'MemorySize'    : memory_size    ,
+                      'Timeout'       : timeout        ,
+                      'TracingConfig' : tracing_config ,
+                      'Code'          : code           }
+
+            if layers     : kwargs['Layers'     ] = layers
+            if environment: kwargs['Environment'] = environment
+
+            data = self.client().create_function(**kwargs)
 
             return { 'status': 'ok', 'name': self.name , 'data' : data }
         except Exception as error:
@@ -255,5 +257,6 @@ class Lambda:
                                                   S3Key        = self.s3_key)
 
     def update_lambda_configuration(self):
-        return self.client().update_function_configuration(Layers = self.layers,
-                                                           Environment={'Variables': self.env_variables} if self.env_variables else None)
+        if self.layers:         # todo handle situation when layers is empty but the env_variables is set
+            return self.client().update_function_configuration(Layers = self.layers,
+                                                               Environment={'Variables': self.env_variables} if self.env_variables else None)
