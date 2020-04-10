@@ -5,9 +5,9 @@ import pbx_gs_python_utils                                                      
 from osbot_aws.Globals import Globals
 from pbx_gs_python_utils.utils.Files import Files
 
-from osbot_aws.tmp_utils.Temp_Files import Temp_Files
 from osbot_aws.apis.Lambda import Lambda
 from osbot_aws.apis.test_helpers.Temp_Aws_Roles import Temp_Aws_Roles
+from osbot_utils.utils.Files import folder_copy, folder_copy_except
 
 
 class Lambda_Package:
@@ -41,9 +41,9 @@ class Lambda_Package:
     def add_file(self, source):
         Files.copy(source, self.tmp_folder)
 
-    def add_folder(self, source):
+    def add_folder(self, source, ignore=None):
         destination = Files.path_combine(self.tmp_folder,Files.file_name(source))
-        Temp_Files.folder_copy(source, destination)
+        folder_copy(source, destination,ignore)
         self.remove_files('__pycache__')
         return self
 

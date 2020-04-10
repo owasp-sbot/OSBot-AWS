@@ -1,10 +1,5 @@
 import json
-
-import boto3
 import pprint
-
-from pbx_gs_python_utils.utils.Dev import Dev
-
 from osbot_aws.apis.Session import Session
 
 
