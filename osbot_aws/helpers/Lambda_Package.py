@@ -35,7 +35,7 @@ class Lambda_Package:
     def delete(self             ): return self.aws_lambda.delete()
     def invoke(self, params=None): return self.aws_lambda.invoke(params)
     def update(self             ): return self.aws_lambda.update()
-    def reset (self             ): return self.aws_lambda.update_lambda_code()
+    def reset (self             ): return self.aws_lambda.update_lambda_code()              # this will trigger a reset and force cold start on next execution
 
     # main methods
     def add_file(self, source):

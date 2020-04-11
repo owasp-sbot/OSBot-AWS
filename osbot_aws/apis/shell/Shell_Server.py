@@ -1,5 +1,17 @@
+from functools import wraps
+
 from osbot_utils.utils.Process import Process
 
+def lambda_shell(function):
+    @wraps(function)
+    def wrapper(event, context=None):
+
+        exec_result = Shell_Server().invoke(event)
+        if exec_result and exec_result.get('method_invoked'):
+            return exec_result.get('return_value')
+
+        return function(event, context)
+    return wrapper
 
 class Shell_Server:
 
@@ -11,9 +23,15 @@ class Shell_Server:
             if hasattr(Shell_Server,method_name):
                 method = getattr(Shell_Server, method_name)
                 if type(method_kwargs) is dict:
-                    return method(**method_kwargs)
+                    return_value = method(**method_kwargs)
                 else:
-                    return method()
+                    return_value = method()
+                return { "method_invoked" : True          ,
+                         "method_name"    : method_name   ,
+                         "method_kwargs"  : method_kwargs ,
+                         "return_value"   : return_value  }
+        return None
+
 
     @staticmethod  # note: this method by design allows extra commands injection via | and ;
     def bash(command, cwd=None):
@@ -30,7 +48,33 @@ class Shell_Server:
     def ping():
         return 'pong'
 
+    @staticmethod
+    def python_exec(code):
+        try:
+            exec(code)
+            return locals().get('result')
+        except Exception as error:
+            return {'error': f'{error}'}
+
     # helper process_run methods
     @staticmethod
     def pwd():
         return Shell_Server.process_run('pwd').get('stdout')
+
+    @staticmethod
+    def disk_space():
+        return Shell_Server.bash('df -h').get('stdout').strip()
+
+    @staticmethod
+    def file_contents(path):
+        return Shell_Server.process_run('cat',[path]).get('stdout')
+
+    @staticmethod
+    def list_processes():
+        return Shell_Server.bash('ps -aux').get('stdout').strip()
+
+    @staticmethod
+    def memory_usage():
+        return Shell_Server.file_contents('/proc/meminfo')
+        #as.asd()
+        #return Shell_Server.bash('cat /proc/meminfo').get('stdout')

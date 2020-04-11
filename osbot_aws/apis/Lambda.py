@@ -210,6 +210,10 @@ class Lambda:
     def permissions(self):
         return self.policy().get('Statement',[])
 
+    def shell_python_exec(self, code):  # this needs @lambda_shell on the Lambda's run method
+        params = {'shell': {'method_name':'python_exec', 'method_kwargs': {'code' : code}}}
+        return self.invoke(params)
+
     @catch
     def policy(self):
         try:

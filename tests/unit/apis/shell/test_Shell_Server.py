@@ -38,6 +38,9 @@ class test_Shell_Server(TestCase):
         assert self.server.bash('AAAAAa').get('stderr') == 'bash: AAAAAa: command not found\n'
 
 
-
     def test_pwd(self):
         assert 'tests/unit/apis/shell' in self.server.pwd()
+
+    def test_python_exec(self):
+        assert self.server.python_exec('result=40+2') == 42
+        assert len(self.server.python_exec('import sys;\npath = sys.path\nresult=path')) > 10
