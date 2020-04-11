@@ -1,17 +1,4 @@
-from functools import wraps
-
 from osbot_utils.utils.Process import Process
-
-def lambda_shell(function):
-    @wraps(function)
-    def wrapper(event, context=None):
-
-        exec_result = Shell_Server().invoke(event)
-        if exec_result and exec_result.get('method_invoked'):
-            return exec_result.get('return_value')
-
-        return function(event, context)
-    return wrapper
 
 class Shell_Server:
 

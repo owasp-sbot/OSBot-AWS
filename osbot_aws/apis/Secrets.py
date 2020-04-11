@@ -1,6 +1,7 @@
 import json
 import pprint
 from osbot_aws.apis.Session import Session
+from osbot_utils.decorators.Lists import index_by
 
 
 class Secrets:
@@ -8,13 +9,12 @@ class Secrets:
         self.aws_secrets = Session().client('secretsmanager')
         self.id = id
 
-    def create(self, value):
+    def create(self, value='{}'):
         try:
             self.aws_secrets.create_secret( Name = self.id, SecretString = value)
             return self.exists()
-        except:
+        except Exception as error:
             return False
-
 
     def deleted(self):
         details = self.details()
@@ -39,6 +39,10 @@ class Secrets:
     def exists(self):
         return self.details() is not None and self.deleted() is False
 
+    @index_by
+    def list(self):
+        return self.aws_secrets.list_secrets().get('SecretList')
+
     def print(self):
         details = self.details()
         print(pprint.pformat(details))
@@ -55,6 +59,8 @@ class Secrets:
         return self.exists()
 
     def update_to_json_string(self, data):
+        if self.exists() is False:
+            self.create()
         value = json.dumps(data)
         self.aws_secrets.update_secret( SecretId = self.id, SecretString = value)
         return self.exists()
