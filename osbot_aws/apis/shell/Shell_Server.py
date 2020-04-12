@@ -2,10 +2,9 @@ from osbot_utils.utils.Process import Process
 
 class Shell_Server:
 
-    def invoke(self, event):
-        shell         = event.get('shell', {})
-        method_name   = shell.get('method_name')
-        method_kwargs = shell.get('method_kwargs')
+    def invoke(self, data):
+        method_name   = data.get('method_name')
+        method_kwargs = data.get('method_kwargs')
         if method_name:
             if hasattr(Shell_Server,method_name):
                 method = getattr(Shell_Server, method_name)

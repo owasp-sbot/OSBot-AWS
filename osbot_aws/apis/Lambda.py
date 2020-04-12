@@ -210,8 +210,13 @@ class Lambda:
     def permissions(self):
         return self.policy().get('Statement',[])
 
-    def shell_python_exec(self, code):  # this needs @lambda_shell on the Lambda's run method
-        params = {'shell': {'method_name':'python_exec', 'method_kwargs': {'code' : code}}}
+
+    def shell(self):
+        from osbot_aws.apis.shell.Shell_Client import Shell_Client                  # todo: see way to solve circular dependency
+        return Shell_Client(self)
+
+    def shell_python_exec(self, code, auth_key):  # this needs @lambda_shell on the Lambda's run method
+        params = {'lambda_shell': {'method_name':'python_exec', 'method_kwargs': {'code' : code} ,'auth_key' : auth_key }}
         return self.invoke(params)
 
     @catch

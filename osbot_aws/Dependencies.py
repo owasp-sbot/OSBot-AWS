@@ -2,7 +2,7 @@ import os
 
 #todo: use AWS Lambda Layers
 from osbot_aws.apis.S3 import S3
-from osbot_utils.utils.Files import Files, folder_exists, folder_not_exists, folder_create
+from osbot_utils.utils.Files import Files, folder_exists, folder_not_exists, folder_create, file_not_exists
 from osbot_utils.utils.Process import Process
 
 
@@ -27,9 +27,10 @@ def load_dependency(target):
     if s3.file_exists(s3_bucket,s3_key) is False:
         raise Exception("In Lambda load_dependency, could not find dependency for: {0}".format(target))
 
-    if Files.not_exists(tmp_dir):                               # if the tmp folder doesn't exist it means that we are loading this for the first time (on a new Lambda execution environment)
+    if file_not_exists(tmp_dir):                                # download dependency
         zip_file = s3.file_download(s3_bucket, s3_key,False)    # download zip file with dependencies
         shutil.unpack_archive(zip_file, extract_dir = tmp_dir)  # unpack them
+    if tmp_dir not in sys.path:                                 # if not currently in the path
         sys.path.append(tmp_dir)                                # add tmp_dir to the path that python uses to check for dependencies
     return Files.exists(tmp_dir)
 

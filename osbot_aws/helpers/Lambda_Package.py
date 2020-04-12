@@ -19,10 +19,10 @@ class Lambda_Package:
         self.role_arn      = Temp_Aws_Roles().for_lambda_invocation()
         self.tmp_folder    = Files.temp_folder('tmp_lambda_')
 
-        (self.aws_lambda.set_s3_bucket(self.s3_bucket    )
-                     .set_s3_key      (self.s3_key       )
-                     .set_role        (self.role_arn     )
-                     .set_folder_code (self.tmp_folder  ))
+        (self.aws_lambda.set_s3_bucket   (self.s3_bucket    )
+                        .set_s3_key      (self.s3_key       )
+                        .set_role        (self.role_arn     )
+                        .set_folder_code (self.tmp_folder  ))
 
     # helper methods
     @staticmethod
