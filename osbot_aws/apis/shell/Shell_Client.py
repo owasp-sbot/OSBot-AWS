@@ -47,8 +47,10 @@ class Shell_Client:
     def file_contents(self, path):return self._invoke('file_contents',{'path': path})
 
     # with not params
+
+    def disk_space    (self): return self._invoke('disk_space'    )
     def list_processes(self): return self._invoke('list_processes')
-    def memory_usage  (self): return self._invoke('memory_usage')
-    def ping          (self): return self._invoke('ping')
-    def pwd           (self): return self._invoke('pwd')
-    def whoami        (self): return self.exec('whoami')
+    def memory_usage  (self): return self._invoke('memory_usage'  )
+    def ping          (self): return self._invoke('ping'          )
+    def pwd           (self): return self._invoke('pwd'           )
+    def whoami        (self): return self.exec   ('whoami'        )
