@@ -3,7 +3,7 @@ from pbx_gs_python_utils.utils.Misc     import Misc
 from osbot_aws.Globals                  import Globals
 from osbot_aws.apis.Session             import Session
 from osbot_utils.decorators.Method_Wrappers  import cache, catch
-from osbot_utils.decorators.Lists import index_by
+from osbot_utils.decorators.Lists import index_by, group_by
 
 
 class IAM:
@@ -28,16 +28,14 @@ class IAM:
     def sts(self):
         return Session().client('sts')
 
-    # def _index_by(self, values, index_by=None):
-    #     if index_by is None:
-    #         return list(values)
-    #     results = {}
-    #     for item in values:
-    #         results[item.get(index_by)] = item
-    #     return results
-
 
     # main method
+
+    @group_by
+    @index_by
+    def access_keys(self):
+        return self.iam().list_access_keys().get('AccessKeyMetadata')
+
     @cache
     def account_id(self, profile_name=None):
         if profile_name is not None:                            # if profile_name is set
@@ -47,9 +45,6 @@ class IAM:
     @cache
     def region(self):
         return self.session().region_name
-    # def assume_role(self, role_arn,role_session_name):
-    #     data = self.sts().assume_role(RoleArn = role_arn, RoleSessionName=role_session_name)
-    #     return data
 
     def caller_identity(self):
         data = self.sts().get_caller_identity()
@@ -67,11 +62,19 @@ class IAM:
     def groups(self):
         return list(self.get_data('list_groups', 'Groups', True))
 
+    @catch
+    def login_profile(self):
+        return self.iam().get_login_profile(UserName=self.user_name)
+
     def login_profile_create(self, password, reset_required=True):
         return self.iam().create_login_profile(UserName=self.user_name, Password=password, PasswordResetRequired=reset_required)
 
     def login_profile_delete(self):
-        return self.iam().delete_login_profile(UserName=self.user_name)
+        if self.login_profile_exists():
+            self.iam().delete_login_profile(UserName=self.user_name)
+
+    def login_profile_exists(self):
+        return self.login_profile().get('error') is None
 
     def policy_arn(self, policy_name, policy_path='/',account_id=None):
         if policy_name is None: return policy_name
@@ -230,11 +233,26 @@ class IAM:
     def users(self):
         return self.get_data('list_users', 'Users', True)
 
+
+    def user_access_key_create(self):
+        return self.iam().create_access_key(UserName=self.user_name).get('AccessKey')
+
+    def user_access_key_delete(self, access_key_id):
+        return self.iam().delete_access_key(UserName=self.user_name, AccessKeyId=access_key_id)
+
+    def user_access_keys(self):
+        return self.iam().list_access_keys(UserName=self.user_name).get('AccessKeyMetadata')
+
+    def user_access_keys_delete_all(self):
+        for access_key in self.user_access_keys():
+            self.user_access_key_delete(access_key.get('AccessKeyId'))
+        return len(self.user_access_keys()) == 0
+
     def user_attach_policy(self, policy_arn):
         return self.iam().attach_user_policy(UserName=self.user_name, PolicyArn=policy_arn)
 
     def user_exists(self):
-        return self.user_info().get('error') is not None
+        return self.user_info().get('error') is None
 
     @catch
     def user_info(self):
@@ -248,9 +266,9 @@ class IAM:
     def user_delete(self):
         if self.user_exists() is False: return False
         self.login_profile_delete()
+        self.user_access_keys_delete_all()
         self.iam().delete_user(UserName=self.user_name)
         return self.user_exists() is False
 
-    def set_account_id(self, value): self._account_id = value ;return self
     def set_user_name (self, value): self.user_name   = value ;return self
     def set_role_name (self, value): self.role_name   = value; return self

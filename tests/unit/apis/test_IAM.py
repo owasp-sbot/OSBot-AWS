@@ -1,26 +1,24 @@
-import sys; sys.path.append('..')
 import unittest
 from unittest import TestCase
 
-from pbx_gs_python_utils.utils.Assert import Assert
-from pbx_gs_python_utils.utils.Dev import Dev
-
+from gw_bot.helpers.Test_Helper import Test_Helper
 from osbot_aws.apis.IAM import IAM
 from osbot_aws.Globals import Globals
+from osbot_utils.utils.Assert import Assert
 
-
-account_id       = '244560807427'
+account_id       = Globals.aws_session_account_id
 delete_created   = True
 test_user        = 'test_user'
 test_user_arn    = 'arn:aws:iam::{0}:user/test_user'.format(account_id)
 test_role        = 'test_role'
-test_role_arn    = 'arn:aws:iam::{0}:role/test_role'.format(244560807427)
+test_role_arn    = 'arn:aws:iam::{0}:role/test_role'.format(account_id)
 policy_document  = {'Statement': [ { 'Action': 'sts:AssumeRole',
                                                  'Effect': 'Allow',
                                                  'Principal': { 'Service': 'codebuild.amazonaws.com'}}]}
 
 
-class Test_IAM(TestCase):
+class Test_IAM(Test_Helper):        # todo move Test_Helper into this OSBOT_AWS
+
 
     @classmethod
     def setUpClass(cls):
@@ -44,9 +42,12 @@ class Test_IAM(TestCase):
             assert iam.role_arn()    is None
 
     def setUp(self):
+        super().setUp()
         import warnings
         warnings.filterwarnings("ignore", category=ResourceWarning, message="unclosed.*<ssl.SSLSocket.*>")
         self.iam = IAM(user_name=test_user,role_name=test_role )
+
+    # ------ tests ------
 
     @unittest.skip("Doesn't work in CodeBuild since there is only one configuration in there")
     def test_account_id(self):
@@ -67,12 +68,9 @@ class Test_IAM(TestCase):
         assert Globals.aws_session_profile_name == 'default'
         assert account_id_2 == account_id_3
 
-
-
-    # def test_assume_role(self):       # getting `(AccessDenied) when calling the AssumeRole operation: Access denied`
-    #     role_arn          = 'arn:aws:iam::244560807427:role/temp_role_for_lambda_invocation'  # needs to be non account_id specific
-    #     role_session_name = 'temp_role_for_test'
-    #     Dev.pprint(self.iam.assume_role(role_arn,role_session_name))
+    def test_access_keys(self):
+        assert len(self.iam.access_keys(index_by='AccessKeyId')) > 0
+        assert len(self.iam.access_keys(group_by='UserName'   )) > 0
 
     def test_caller_identity(self):
         assert set(self.iam.caller_identity()) == {'UserId', 'Account', 'Arn'}
@@ -84,15 +82,11 @@ class Test_IAM(TestCase):
         assert len(self.iam.policies())  > 500
 
     def test_policy_arn(self):
-        #account_id = self.iam.account_id()
         assert self.iam.policy_arn('aaa'          ) == 'arn:aws:iam::{0}:policy/aaa'    .format(account_id)
         assert self.iam.policy_arn('aaa/bbb'      ) == 'arn:aws:iam::{0}:policy/aaa/bbb'.format(account_id)
         assert self.iam.policy_arn('aa','/bb'     ) == 'arn:aws:iam::{0}:policy/bb/aa'  .format(account_id)
         assert self.iam.policy_arn('aa','/bb','cc') == 'arn:aws:iam::cc:policy/bb/aa'
         assert self.iam.policy_arn(None)      is None
-
-        self.iam.set_account_id('12345')
-        assert self.iam.policy_arn('aaa'    ) == 'arn:aws:iam::{0}:policy/aaa'    .format('12345')
 
     def test_policy_create__policy_delete__policy_details(self):
         policy_name     = 'test_policy'
@@ -126,10 +120,10 @@ class Test_IAM(TestCase):
     def test_policy_info(self):
         assert self.iam.policy_info('AAAAAA') is None
 
-    #def test_user_create(self):
+    #def test_user_create(self):                # convered in setUpClass
     #    self.iam.user_create()
 
-    #def test_user_delete(self):
+    #def test_user_delete(self):                # convered in tearDownClass
     #    Dev.pprint(self.iam.user_delete())
 
     def test_user_exists(self):
@@ -143,10 +137,10 @@ class Test_IAM(TestCase):
                         .field_is_equal('Path'    , '/')
                         .field_is_equal('UserName', test_user)
         )
-        assert self.iam.set_user_name('AAAA').user_info() is None
+        assert self.iam.set_user_name('AAAA').user_info().get('error') is not None
 
     def test_users(self):
-        assert len(self.iam.users())  > 10
+        assert len(list(self.iam.users()))  > 5
 
     def test_role_create(self):
         self.iam.role_delete()
@@ -168,10 +162,9 @@ class Test_IAM(TestCase):
         policies = self.iam.role_policies()
         assert len(set(policies)) == 0
 
-    def test_role_policies(self):
-        iam = IAM(role_name='AWSBatchServiceRole')
-        assert iam.role_policies() == {'AWSBatchServiceRole': 'arn:aws:iam::aws:policy/service-role/AWSBatchServiceRole'}
-        assert len(iam.role_policies_statements().get('AWSBatchServiceRole')[0].get('Action')) == 59
+        iam = IAM(role_name='AWSServiceRoleForAPIGateway')
+        assert iam.role_policies() == {'APIGatewayServiceRolePolicy': 'arn:aws:iam::aws:policy/aws-service-role/APIGatewayServiceRolePolicy'}
+        assert len(iam.role_policies_statements().get('APIGatewayServiceRolePolicy')[0].get('Action')) > 10
 
     def test_role_policies_attach__role_policies_detach(self):
         policy_name = 'test_policy'
@@ -192,4 +185,11 @@ class Test_IAM(TestCase):
 
     def test_roles(self):
         assert len(self.iam.roles())  > 70
+
+    def test_user_access_key_create__delete(self):
+        assert self.iam.user_access_key_create().get('UserName') == test_user
+        assert len(self.iam.user_access_keys()) > 0
+        assert self.iam.user_access_keys_delete_all() is True
+
+
 
