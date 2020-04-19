@@ -1,4 +1,7 @@
 import json
+from time import sleep
+
+import boto3
 from pbx_gs_python_utils.utils.Misc     import Misc
 from osbot_aws.Globals                  import Globals
 from osbot_aws.apis.Session             import Session
@@ -30,6 +33,52 @@ class IAM:
 
 
     # main method
+
+    def access_key__wait_until_key_is_working(self, access_key, wait_count=20, success_count=5):
+        """
+        Wait until the access key is working. When testing this there a number of cases where
+        access_key__is_key_working would return False after a True one (which means that AWS was still not fully syncronised (see https://aws.amazon.com/iam/faqs/ and https://stackoverflow.com/questions/20156043/how-long-should-i-wait-after-applying-an-aws-iam-policy-before-it-is-valid)
+        :param access_key:
+        :param wait_count:
+        :param success_count:  if still seeing some false positives include the default value (set to 5)
+        :return:
+        """
+        for i in range(1,wait_count):
+            if self.access_key__is_key_working(access_key) is True:         # the get_caller_identity takes about 500ms to execute
+                success_count -= 1                                          # decrement success_count
+                if success_count == 0:                                      # only getting success_count matches we can reliable say that key is good
+                    print(f'waited {i} times before confirming key is working')
+                    return True
+        return False
+
+    def access_key__wait_until_key_is_not_working(self, access_key, wait_count=100, success_count=30):
+        """
+        waits until the access key is not working anymore
+        note: I couldn't get this to provide a consistent result with values smaller than 30
+        :param access_key:
+        :param wait_count:
+        :param success_count:
+        :return:
+        """
+
+        for i in range(1,wait_count):
+            if self.access_key__is_key_working(access_key) is False:        # the get_caller_identity takes about 500ms to execute
+                success_count -= 1
+                if success_count == 0:
+                    print(f'waited {i} times - before confirming key is not working anymore')
+                    return True
+        return False
+
+    def access_key__is_key_working(self, access_key):
+        aws_access_key_id     = access_key.get('AccessKeyId')
+        aws_secret_access_key = access_key.get('SecretAccessKey')
+        try:
+            session = boto3.Session(aws_access_key_id=aws_access_key_id, aws_secret_access_key=aws_secret_access_key)
+            session.client('sts').get_caller_identity()
+            return True
+        except Exception as error:
+            assert error.__str__() == 'An error occurred (InvalidClientTokenId) when calling the GetCallerIdentity operation: The security token included in the request is invalid.'
+            return False
 
     @group_by
     @index_by
@@ -233,9 +282,16 @@ class IAM:
     def users(self):
         return self.get_data('list_users', 'Users', True)
 
+    def users_by_username(self):
+        return self.users(index_by='UserName')
 
-    def user_access_key_create(self):
-        return self.iam().create_access_key(UserName=self.user_name).get('AccessKey')
+    def user_access_key_create(self, wait_for_key_working=False):
+        access_key = self.iam().create_access_key(UserName=self.user_name).get('AccessKey')
+        if wait_for_key_working:
+            if self.access_key__wait_until_key_is_working(access_key) is False:
+                return None
+        return access_key
+
 
     def user_access_key_delete(self, access_key_id):
         return self.iam().delete_access_key(UserName=self.user_name, AccessKeyId=access_key_id)
@@ -264,11 +320,11 @@ class IAM:
         return self.user_info()
 
     def user_delete(self):
-        if self.user_exists() is False: return False
-        self.login_profile_delete()
-        self.user_access_keys_delete_all()
-        self.iam().delete_user(UserName=self.user_name)
-        return self.user_exists() is False
+        if self.user_exists() is False: return False            # return False if user doesn't exist
+        self.login_profile_delete()                             # delete user's profile
+        self.user_access_keys_delete_all()                      # delete user's access keys
+        self.iam().delete_user(UserName=self.user_name)         # delete user
+        return self.user_exists() is False                      # return True if user doesn't exist any more (which it shouldn't)
 
     def set_user_name (self, value): self.user_name   = value ;return self
     def set_role_name (self, value): self.role_name   = value; return self

@@ -187,9 +187,51 @@ class Test_IAM(Test_Helper):        # todo move Test_Helper into this OSBOT_AWS
         assert len(self.iam.roles())  > 70
 
     def test_user_access_key_create__delete(self):
-        assert self.iam.user_access_key_create().get('UserName') == test_user
-        assert len(self.iam.user_access_keys()) > 0
-        assert self.iam.user_access_keys_delete_all() is True
+        access_key = self.iam.user_access_key_create()
+        assert self.iam.access_key__wait_until_key_is_working(access_key,success_count=1) is True
+        self.iam.user_access_keys_delete_all()
+        assert self.iam.access_key__wait_until_key_is_not_working(access_key, success_count=1) is True
+
+    # test below was using to get some stats on when the key is enabled
+    # def test_user_access_key_create__delete(self):
+    #     print()
+    #     access_key = self.iam.user_access_key_create()
+    #     assert access_key.get('UserName') == test_user
+    #     assert len(self.iam.user_access_keys()) > 0
+    #     assert self.iam.access_key__wait_until_key_is_working(access_key) is True
+    #     print('*******')
+    #     print(self.iam.access_key__is_key_working(access_key))
+    #     print(self.iam.access_key__is_key_working(access_key))
+    #     print(self.iam.access_key__is_key_working(access_key))
+    #     print(self.iam.access_key__is_key_working(access_key))
+    #     print(self.iam.access_key__is_key_working(access_key))
+    #     print(self.iam.access_key__is_key_working(access_key))
+    #     print(self.iam.access_key__is_key_working(access_key))
+    #     print(self.iam.access_key__is_key_working(access_key))
+    #     print('-------')
+    #     assert self.iam.user_access_keys_delete_all() is True
+    #     print('#######')
+    #     assert self.iam.access_key__wait_until_key_is_not_working(access_key) is True
+    #     print(self.iam.access_key__is_key_working(access_key))
+    #     print(self.iam.access_key__is_key_working(access_key))
+    #     print(self.iam.access_key__is_key_working(access_key))
+    #     print(self.iam.access_key__is_key_working(access_key))
+    #     print(self.iam.access_key__is_key_working(access_key))
+    #     print(self.iam.access_key__is_key_working(access_key))
+    #     print(self.iam.access_key__is_key_working(access_key))
+    #     print(self.iam.access_key__is_key_working(access_key))
+    #     print(self.iam.access_key__is_key_working(access_key))
+    #     print(self.iam.access_key__is_key_working(access_key))
+    #     print(self.iam.access_key__is_key_working(access_key))
+    #     print(self.iam.access_key__is_key_working(access_key))
+    #     print(self.iam.access_key__is_key_working(access_key))
+    #     print(self.iam.access_key__is_key_working(access_key))
+    #     print(self.iam.access_key__is_key_working(access_key))
+    #     print(self.iam.access_key__is_key_working(access_key))
+    #     print(self.iam.access_key__is_key_working(access_key))
+    #     print(self.iam.access_key__is_key_working(access_key))
+    #     print(self.iam.access_key__is_key_working(access_key))
+
 
 
 

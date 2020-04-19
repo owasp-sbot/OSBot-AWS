@@ -1,4 +1,5 @@
 import boto3
+from boto3 import Session
 from botocore.session import get_session
 
 from osbot_aws.Globals import Globals
@@ -6,7 +7,7 @@ from osbot_aws.Globals import Globals
 
 class Session:
 
-    def session(self,profile_name=None, region_name=None):
+    def session(self,profile_name=None, region_name=None) -> Session:
         profile_name = profile_name or Globals.aws_session_profile_name
         region_name  = region_name  or Globals.aws_session_region_name
 
@@ -16,7 +17,7 @@ class Session:
         else:
             return boto3.Session()
 
-    def client_boto3(self,service_name, profile_name=None, region_name=None):
+    def client_boto3(self,service_name, profile_name=None, region_name=None):                   # todo: refactor with resource_boto3
         try:
             profile_name = profile_name or Globals.aws_session_profile_name
             region_name  = region_name  or Globals.aws_session_region_name
@@ -30,7 +31,7 @@ class Session:
             return {'status': 'error', 'data': '{0}'.format(error) }
 
 
-    def resource_boto3(self,service_name, profile_name=None, region_name=None):          # refactor with client_boto3
+    def resource_boto3(self,service_name, profile_name=None, region_name=None):                 # todo: refactor with client_boto3
         try:
             profile_name = profile_name or Globals.aws_session_profile_name
             region_name  = region_name  or Globals.aws_session_region_name
