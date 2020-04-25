@@ -52,5 +52,6 @@ class Shell_Client:
     def list_processes(self): return self._invoke('list_processes')
     def memory_usage  (self): return self._invoke('memory_usage'  )
     def ping          (self): return self._invoke('ping'          )
+    def ps            (self): return self.exec   ('ps'            )
     def pwd           (self): return self._invoke('pwd'           )
     def whoami        (self): return self.exec   ('whoami'        )
