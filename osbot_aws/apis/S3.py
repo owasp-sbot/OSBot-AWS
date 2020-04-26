@@ -10,6 +10,14 @@ from    osbot_aws.apis.Session              import Session
 from    osbot_utils.decorators.Lists        import index_by, group_by
 from    osbot_utils.utils.Files             import Files
 
+# helper methods
+
+def s3_file_download(s3_bucket,s3_key):
+    return S3().file_download(s3_bucket, s3_key)
+
+def s3_file_download_to(s3_bucket, s3_key, target_file, use_cache = False):
+    return S3().file_download_to(s3_bucket, s3_key,target_file, use_cache)
+
 
 class S3:
     def __init__(self):
@@ -85,7 +93,7 @@ class S3:
         #return sorted(list({ bucket['Name'] for bucket in self.s3().list_buckets().get('Buckets')}))
         #
 
-    def _files_raw              (self, bucket, prefix='', filter=''                 ):
+    def _files_raw(self, bucket, prefix='', filter=''                 ):
         params = {'Bucket': bucket}
         if isinstance(prefix, str):                                            # if prefix is a string, filter on list_objects_v2
             params['Prefix'] = prefix
@@ -106,21 +114,19 @@ class S3:
             except KeyError:
                 break
 
-    def find_files              (self, bucket, prefix='', filter=''                 ):
+    def find_files(self, bucket, prefix='', filter=''                 ):
         return list({ item['Key'] for item in self._files_raw(bucket, prefix, filter) })
 
-        #
-
-    def file_contents           (self, bucket, key                                  ):
+    def file_contents(self, bucket, key                                  ):
         obj = self.s3().get_object(Bucket=bucket, Key=key)                    # get object data from s3
         return obj['Body'].read().decode('utf-8')                               # extract body and decode it
 
-    def file_contents_from_gzip   (self, bucket, key                                  ):
+    def file_contents_from_gzip(self, bucket, key                                  ):
         obj = self.s3().get_object(Bucket=bucket, Key=key)                    # get object data from s3
         bytestream = BytesIO(obj['Body'].read())
         return GzipFile(None, 'rb', fileobj=bytestream).read().decode('utf-8')
 
-    def file_download           (self, bucket, key , use_cache = False               ):
+    def file_download(self, bucket, key , use_cache = False):
         if bucket and key:
             tmp_file = '/tmp/' + key.replace('/','_')
             if self.file_download_to(bucket, key, tmp_file, use_cache):
@@ -134,7 +140,7 @@ class S3:
             return tmp_file
         return None
 
-    def file_download_to        (self, bucket, key, target_file, use_cache = False  ):
+    def file_download_to(self, bucket, key, target_file, use_cache = False):
         try:
             if use_cache is True:
                 if os.path.exists(target_file):
