@@ -11,7 +11,6 @@ class test_Globals(TestCase):
         assert Globals.bot_name                 == 'gw_bot'
         assert Globals.lambda_s3_bucket         == 'gw-bot-lambdas'
         assert Globals.lambda_s3_key_prefix     == 'lambdas'
-        assert Globals.lambda_layers_s3_bucket  == 'gw-bot-lambda-layers'
         assert Globals.lambda_role_name         == 'gwbot-lambdas-temp'
 
     def test_environment_variables(self):
@@ -30,6 +29,5 @@ class test_Globals(TestCase):
         assert Globals.aws_session_account_id       == 'AWS_ACCOUNT_ID'
         assert Globals.lambda_s3_bucket             == 'OSBOT_LAMBDA_S3_BUCKET'
         assert Globals.lambda_s3_key_prefix         == 'OSBOT_LAMBDA_S3_KEY_PREFIX'
-        assert Globals.lambda_layers_s3_bucket      == 'OSBOT_LAMBDA_LAYERS_S3_BUCKET'
         assert Globals.lambda_role_name             == 'OSBOT_LAMBDA_ROLE_NAME'
         assert Globals.bot_name                     == 'OSBOT_NAME'

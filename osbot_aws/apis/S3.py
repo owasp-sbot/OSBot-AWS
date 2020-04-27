@@ -12,8 +12,8 @@ from    osbot_utils.utils.Files             import Files
 
 # helper methods
 
-def s3_file_download(s3_bucket,s3_key):
-    return S3().file_download(s3_bucket, s3_key)
+def s3_file_download(s3_bucket, s3_key, use_cache = False):
+    return S3().file_download(s3_bucket, s3_key, use_cache)
 
 def s3_file_download_to(s3_bucket, s3_key, target_file, use_cache = False):
     return S3().file_download_to(s3_bucket, s3_key,target_file, use_cache)
@@ -126,7 +126,7 @@ class S3:
         bytestream = BytesIO(obj['Body'].read())
         return GzipFile(None, 'rb', fileobj=bytestream).read().decode('utf-8')
 
-    def file_download(self, bucket, key , use_cache = False):
+    def file_download(self, bucket, key, use_cache = False):
         if bucket and key:
             tmp_file = '/tmp/' + key.replace('/','_')
             if self.file_download_to(bucket, key, tmp_file, use_cache):

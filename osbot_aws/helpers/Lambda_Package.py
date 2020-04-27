@@ -1,13 +1,10 @@
 import os
 import importlib
 
-import pbx_gs_python_utils                                                      # needed for dependency import
 from osbot_aws.Globals import Globals
-from pbx_gs_python_utils.utils.Files import Files
-
 from osbot_aws.apis.Lambda import Lambda
 from osbot_aws.apis.test_helpers.Temp_Aws_Roles import Temp_Aws_Roles
-from osbot_utils.utils.Files import folder_copy, folder_copy_except
+from osbot_utils.utils.Files import folder_copy, Files
 
 
 class Lambda_Package:
@@ -61,10 +58,8 @@ class Lambda_Package:
         self.add_folder(self.get_root_folder())
         return self
 
-    def add_pbx_gs_python_utils(self):
-        self.add_module('osbot_utils')                                  # todo: when all dependencies on pbx_gs_python_utils have been removed
-        lib_path = Files.folder_name(pbx_gs_python_utils.__file__)      # refactor this to add_osbot_utils and remove pbx_gs_python_utils from codebase
-        self.add_folder(lib_path)
+    def add_osbot_utils(self):
+        self.add_module('osbot_utils')
         return self
 
     def arn(self):
@@ -96,7 +91,7 @@ class Lambda_Package:
         if delete_before:
             self.delete()
         self.add_root_folder()
-        self.add_pbx_gs_python_utils()
+        self.add_osbot_utils()
         self.update()
         return self
 
@@ -104,7 +99,7 @@ class Lambda_Package:
         base_folder = self.lambda_name.split('.').pop(0)                    # will point to the top level module
         self.add_module(base_folder)                                        # add module's folder
         self.add_root_folder()                                              # add osbot-aws folder
-        self.add_pbx_gs_python_utils()                                      # add pbx-gs-python-utils folder
+        self.add_osbot_utils()                                              # add osbot-utils folder
         self.update()                                                       # zip files up and update lambda
         return self
 

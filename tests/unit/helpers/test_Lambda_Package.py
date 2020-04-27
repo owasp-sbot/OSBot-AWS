@@ -34,9 +34,9 @@ class test_Lambda_Package(TestCase):
         self.package.update()
         assert self.package.invoke() == "checking aws api: <class 'osbot_aws.Globals.Globals'>"
 
-    def test_add_pbx_gs_python_utils(self):
+    def test_add_osbot_utils(self):
         self.package.add_root_folder()
-        self.package.add_pbx_gs_python_utils()
+        self.package.add_osbot_utils()
         assert len(self.package.get_files()) > 10
         self.package.aws_lambda.handler = 'osbot_aws.lambdas.dev.check_python_utils.run'
         self.package.update()

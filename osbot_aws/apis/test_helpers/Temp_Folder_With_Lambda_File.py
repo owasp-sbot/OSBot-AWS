@@ -1,4 +1,4 @@
-from osbot_utils.utils.Files import Files
+from osbot_utils.utils.Files import Files, folder_zip
 
 
 class Temp_Folder_With_Lambda_File:
@@ -27,7 +27,7 @@ class Temp_Folder_With_Lambda_File:
         return Files.folder_delete_all(self.folder)
 
     def zip(self):
-        return Files.zip_folder(self.folder)
+        return folder_zip(self.folder)
 
     def zip_bytes(self):
         with open(self.zip(), 'rb') as file_data:
