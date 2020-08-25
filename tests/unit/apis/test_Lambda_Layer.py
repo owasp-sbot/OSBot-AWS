@@ -91,6 +91,3 @@ class test_Lambda_Layer(Test_Helper):
     def test_versions(self):
         assert len(Lambda_Layer(self.layer_name).versions()) >0
 
-
-
-

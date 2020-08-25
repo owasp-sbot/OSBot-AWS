@@ -266,6 +266,11 @@ class Lambda:
                                                   S3Key        = self.s3_key)
 
     def update_lambda_configuration(self):
-        if self.layers:         # todo handle situation when layers is empty but the env_variables is set
-            return self.client().update_function_configuration(Layers = self.layers,
-                                                               Environment={'Variables': self.env_variables} if self.env_variables else None)
+        kwargs = {}
+        if self.layers:
+            kwargs['Layers'] = self.layers
+        if self.env_variables:
+            kwargs['Environment'] = {'Variables': self.env_variables}
+        if kwargs != {}:
+            kwargs['FunctionName'] = self.name
+            return self.client().update_function_configuration(**kwargs)

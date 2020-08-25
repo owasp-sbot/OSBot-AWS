@@ -47,7 +47,7 @@ class Lambda_Layer:
     def create_from_pip(self, package_name, pip_executable='pip3'):
         path_install = temp_folder()
         install_result = run_process(pip_executable, ['install','-t',path_install,package_name])
-        if f'Successfully installed {package_name}' in install_result.get('stdout'):
+        if install_result.get('stderr') == '':
             return self.create_from_folder(path_install)
         else:
             return {'status': 'error', 'error':install_result.get('stderr'), 'stdout': install_result.get('stdout')}
