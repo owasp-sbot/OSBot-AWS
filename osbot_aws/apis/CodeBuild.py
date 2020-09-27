@@ -2,10 +2,10 @@ import  boto3
 from    time                                import sleep
 
 from    osbot_aws.apis.IAM                  import IAM
-from    pbx_gs_python_utils.utils.Dev       import Dev
-from    pbx_gs_python_utils.utils.Misc      import Misc
 
 from osbot_aws.apis.Session import Session
+from osbot_utils.utils import Misc
+from osbot_utils.utils.Dev import Dev
 
 
 class CodeBuild:
