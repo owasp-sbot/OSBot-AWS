@@ -2,6 +2,7 @@ import json
 import pprint
 from osbot_aws.apis.Session import Session
 from osbot_utils.decorators.Lists import index_by
+from osbot_utils.utils.Misc import json_dumps
 
 
 class Secrets:
@@ -11,6 +12,8 @@ class Secrets:
 
     def create(self, value='{}'):
         try:
+            if type(value) != str:
+                value = json_dumps(value)
             self.aws_secrets.create_secret( Name = self.id, SecretString = value)
             return self.exists()
         except Exception as error:
