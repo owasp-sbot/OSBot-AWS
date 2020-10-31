@@ -1,7 +1,7 @@
 import base64
 from unittest import TestCase
 
-from gw_bot.setup.OSBot_Setup import OSBot_Setup
+from osbot_aws.OSBot_Setup import OSBot_Setup
 from osbot_utils.utils.Dev import Dev
 
 
