@@ -1,8 +1,7 @@
 from gw_bot.Deploy import Deploy
-from gw_bot.helpers.Test_Helper import Test_Helper
+from osbot_aws.helpers.Test_Helper import Test_Helper
 from osbot_aws.apis.Lambda import Lambda
 from osbot_aws.apis.Lambda_Layer import Lambda_Layer
-from osbot_aws.lambdas.dev.lambda_layer import run
 
 
 class test_run_command(Test_Helper):

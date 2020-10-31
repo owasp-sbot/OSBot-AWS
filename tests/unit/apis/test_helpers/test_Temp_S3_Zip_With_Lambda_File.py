@@ -1,6 +1,6 @@
-from gw_bot.helpers.Test_Helper import Test_Helper
+from osbot_aws.helpers.Test_Helper import Test_Helper
 from osbot_aws.apis.test_helpers.Temp_S3_Zip_With_Lambda_File import Temp_S3_Zip_With_Lambda_File
-from osbot_utils.utils.Files import Files, folder_exists, file_exists
+from osbot_utils.utils.Files import folder_exists, file_exists
 
 
 class test_Temp_S3_Zip_With_Lambda_File(Test_Helper):

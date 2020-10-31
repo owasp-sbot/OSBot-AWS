@@ -1,4 +1,4 @@
-from gw_bot.helpers.Test_Helper import Test_Helper
+from osbot_aws.helpers.Test_Helper import Test_Helper
 from osbot_aws.apis.shell.Lambda_Shell import Lambda_Shell, lambda_shell
 
 

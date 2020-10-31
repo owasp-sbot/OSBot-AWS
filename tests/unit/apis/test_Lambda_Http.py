@@ -1,14 +1,12 @@
 # NOT WORKING (TO TRY Later)
 import json
 
-import botocore
 import requests
-from botocore.httpsession import URLLib3Session
 
 from osbot_aws.apis.Lambda import Lambda
 from osbot_aws.apis.test_helpers.Temp_Lambda import Temp_Lambda
 
-from gw_bot.helpers.Test_Helper import Test_Helper
+from osbot_aws.helpers.Test_Helper import Test_Helper
 
 
 class test_Lambda_Http(Test_Helper):

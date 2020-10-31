@@ -1,11 +1,6 @@
-from datetime import date, timedelta
 from time import sleep
 
-from osbot_aws.apis.IAM import IAM
-
-from osbot_aws.apis.Session import Session
-
-from gw_bot.helpers.Test_Helper import Test_Helper
+from osbot_aws.helpers.Test_Helper import Test_Helper
 from osbot_aws.apis.API_Gateway import API_Gateway
 from osbot_aws.helpers.Rest_API import Rest_API
 
@@ -111,7 +106,6 @@ class test_API_Gateway(Test_Helper):
         self.result = self.api_gateway.integration_create__http(api_id=api_id, resource_id=resource_id, uri=uri, http_method=method, integration_http_method=integration_method)
 
     def test_integration_create__lambda(self):
-        from osbot_aws.apis.Lambda import Lambda
         #_lambda = Lambda('gw_bot.lambdas.dev.hello_world')
         lambda_name = 'gw_bot_lambdas_dev_hello_world'
         #rest_api    = Rest_API('temp_rest_api').create()

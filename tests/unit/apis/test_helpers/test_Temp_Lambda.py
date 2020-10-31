@@ -1,4 +1,4 @@
-from gw_bot.helpers.Test_Helper              import Test_Helper
+from osbot_aws.helpers.Test_Helper import Test_Helper
 from osbot_aws.apis.test_helpers.Temp_Lambda import Temp_Lambda
 
 class test_Temp_Lambda(Test_Helper):

@@ -1,5 +1,5 @@
 from osbot_aws.Globals                                        import Globals
-from gw_bot.helpers.Test_Helper                               import Test_Helper
+from osbot_aws.helpers.Test_Helper import Test_Helper
 from osbot_aws.apis.Lambda_Layer                              import Lambda_Layer
 from osbot_utils.utils.Files import temp_folder_with_temp_file, Files
 from osbot_aws.apis.test_helpers.Temp_Folder_With_Lambda_File import Temp_Folder_With_Lambda_File

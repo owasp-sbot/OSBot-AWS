@@ -1,5 +1,4 @@
-from gw_bot.helpers.Test_Helper import Test_Helper
-from osbot_aws.apis.Firehose import Firehose
+from osbot_aws.helpers.Test_Helper import Test_Helper
 from osbot_aws.apis.Kinesis import Kinesis
 
 

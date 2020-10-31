@@ -1,4 +1,4 @@
-from gw_bot.helpers.Test_Helper import Test_Helper
+from osbot_aws.helpers.Test_Helper import Test_Helper
 from osbot_aws.helpers.Rest_API import Rest_API
 
 class test_Rest_API(Test_Helper):
