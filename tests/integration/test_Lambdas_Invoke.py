@@ -1,22 +1,19 @@
-import json
 import unittest
 from time import sleep
 
 from osbot_aws.apis.S3 import S3
-from pbx_gs_python_utils.utils.Dev import Dev
-from pbx_gs_python_utils.utils.Misc     import Misc
-
 from osbot_aws.apis.Logs                import Logs
-from osbot_aws.apis.Queue import Queue
-
+from osbot_aws.apis.Queue               import Queue
 from osbot_aws.helpers.IAM_Policy       import IAM_Policy
 from osbot_aws.helpers.Lambda_Package   import Lambda_Package
 from osbot_aws.apis.IAM                 import IAM
 from osbot_aws.apis.Lambda              import Lambda
 from unittest                           import TestCase
 
-
 # these tests require lambdas to already exist in AWS
+from osbot_utils.utils.Dev import Dev
+
+
 class test_Lambdas_Invoke(TestCase):
 
     def test_dev_hello_world(self):
@@ -64,7 +61,7 @@ class test_Lambdas_Invoke(TestCase):
         # add_sqs_send_message_priv(lambda_obj.role_arn)
 
 
-    # NOT WORKING
+    # bug  NOT WORKING
     @unittest.skip
     def _test_s3_bucket_to_sqs(self):
         s3 = S3()

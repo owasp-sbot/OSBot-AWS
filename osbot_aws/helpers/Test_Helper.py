@@ -20,17 +20,8 @@ class Test_Helper(TestCase):
     def tearDown(self):
         if self.result is not None:
             Dev.pprint(self.result)
-        if self.png_data is not None:
-            if type(self.png_data) is not str:
-                Dev.pprint(f'Png data was not a string: {self.png_data}')
-            else:
-                try:
-                    with open(self.png_file, "wb") as fh:
-                        fh.write(base64.decodebytes(self.png_data.encode()))
-                    Dev.pprint(f'Png data with size {len(self.png_data)} saved to {self.png_file}')
-                except Exception as error:
-                    Dev.pprint(f'png save error: {error}')
-                    Dev.pprint(self.png_data)
+
+        Png.save_png_base64_to_file(self.png_data, self.png_file)
 
     def lambda_package(self, lambda_name, profile_name = None, account_id=None, region=None):
         return self.osbot_setup(profile_name=profile_name,account_id=account_id,region=region).lambda_package(lambda_name)
