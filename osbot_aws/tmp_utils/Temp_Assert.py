@@ -1,6 +1,6 @@
 import datetime
 
-from pbx_gs_python_utils.utils.Assert import Assert
+from osbot_utils.utils.Assert import Assert
 
 
 class Temp_Assert:

@@ -5,3 +5,4 @@ __pycache__
 _dev_env
 .coverage
 report.json
+osbot_aws.egg-info

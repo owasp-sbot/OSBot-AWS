@@ -1,5 +1,6 @@
 import subprocess
-from pbx_gs_python_utils.utils.Process import Process
+
+from osbot_utils.utils.Process import Process
 
 
 def run(event, context):

@@ -1,15 +1,15 @@
 from time import sleep
 
-from pbx_gs_python_utils.utils.Assert        import Assert
-from pbx_gs_python_utils.utils.Files         import Files
-from pbx_gs_python_utils.utils.Misc          import Misc
+from osbot_utils.utils import Misc, Files
+
 from osbot_aws.Globals                       import Globals
-from osbot_aws.helpers.Test_Helper import Test_Helper
+from osbot_aws.helpers.Test_Helper           import Test_Helper
 from osbot_aws.apis.Lambda                   import Lambda
 from osbot_aws.apis.test_helpers.Temp_Lambda import Temp_Folder_With_Lambda_File, Temp_Lambda
 from osbot_aws.apis.test_helpers.Temp_Queue  import Temp_Queue
 from osbot_aws.helpers.IAM_Role              import IAM_Role
 from osbot_utils.decorators.Method_Wrappers  import aws_inject
+from osbot_utils.utils.Assert import Assert
 
 
 class test_Lambda(Test_Helper):
@@ -24,7 +24,7 @@ class test_Lambda(Test_Helper):
         self.aws_lambda  = Lambda(self.lambda_name)
 
     def test__init__(self):
-        assert self.aws_lambda.runtime == 'python3.7'
+        assert self.aws_lambda.runtime == 'python3.8'
         assert self.aws_lambda.memory == 3008
         assert self.aws_lambda.timeout == 60
         assert self.aws_lambda.original_name == self.lambda_name

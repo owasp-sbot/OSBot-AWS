@@ -2,7 +2,7 @@ import sys ; sys.path.append('..')
 
 from osbot_aws.apis.Ec2 import Ec2
 from unittest import TestCase
-from pbx_gs_python_utils.utils.Dev import Dev
+from osbot_utils.utils.Dev import Dev
 
 
 class test_Ec2(TestCase):

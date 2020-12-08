@@ -126,8 +126,6 @@ class test_API_Gateway(Test_Helper):
         self.result = self.api_gateway.deployment_create(self.api_id,'QA-Lambda')
 
 #        stage_url = self.api_gateway.stage_url(self.api_id,aws_region,'QA-Lambda')
-
-#        from pbx_gs_python_utils.utils.Http import GET
 #        self.result = GET(stage_url)
         #self.result = stage_url
 

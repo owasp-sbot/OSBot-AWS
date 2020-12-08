@@ -2,8 +2,8 @@ import sys ; sys.path.append('..')
 import unittest
 
 from unittest import TestCase
-from pbx_gs_python_utils.utils.Dev import Dev
-from pbx_gs_python_utils.utils.Misc import Misc
+from osbot_utils.utils.Dev import Dev
+from osbot_utils.utils import Misc
 from osbot_aws.apis.Fargate import Fargate
 
 @unittest.skip("Needs test that create and destroy the test data")

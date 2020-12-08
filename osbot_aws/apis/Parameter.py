@@ -1,6 +1,6 @@
 import json
 
-from pbx_gs_python_utils.utils.Misc import Misc
+from osbot_utils.utils import Misc
 
 from osbot_aws.apis.Session import Session
 

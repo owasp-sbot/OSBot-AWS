@@ -1,6 +1,8 @@
 import base64
 from unittest import TestCase
 
+from osbot_utils.utils import Png
+
 from osbot_aws.OSBot_Setup import OSBot_Setup
 from osbot_utils.utils.Dev import Dev
 

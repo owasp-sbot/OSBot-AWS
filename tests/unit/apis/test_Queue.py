@@ -1,4 +1,5 @@
-from pbx_gs_python_utils.utils.Misc         import Misc
+from osbot_utils.utils import Misc
+
 from osbot_aws.helpers.Test_Helper import Test_Helper
 from osbot_aws.apis.Queue                   import Queue
 from osbot_aws.apis.test_helpers.Temp_Queue import Temp_Queue

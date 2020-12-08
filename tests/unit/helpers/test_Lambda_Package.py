@@ -1,8 +1,11 @@
-import sys ; sys.path.append('..')
+import sys ;
+
+from osbot_utils.utils.Files import Files
+
+sys.path.append('..')
 from unittest import TestCase
 
-from pbx_gs_python_utils.utils.Files import Files
-from pbx_gs_python_utils.utils.Misc import Misc
+from osbot_utils.utils import Misc
 from osbot_aws.helpers.Lambda_Package import Lambda_Package
 
 

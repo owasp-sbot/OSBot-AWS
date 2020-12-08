@@ -1,4 +1,4 @@
-from pbx_gs_python_utils.utils.Http import GET
+from osbot_utils.utils.Http import GET
 
 from osbot_aws.apis.IAM import IAM
 
