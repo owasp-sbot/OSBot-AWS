@@ -1,3 +1,4 @@
+from osbot_aws.Globals import Globals
 from osbot_aws.apis.IAM         import IAM
 from osbot_aws.helpers.IAM_Role import IAM_Role
 
@@ -21,4 +22,6 @@ class Temp_Aws_Roles:
         return iam_role.iam.role_exists()
 
     def for_lambda_invocation__role_arn(self):
-        return 'arn:aws:iam::{0}:role/{1}'.format(IAM().account_id(),self.role_name__for_lambda_invocation)
+        account_id = Globals.aws_session_account_id
+        role_name  = self.role_name__for_lambda_invocation
+        return f"arn:aws:iam::{account_id}:role/{role_name}"
