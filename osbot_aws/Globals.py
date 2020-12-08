@@ -6,7 +6,7 @@ from osbot_aws.Config import Config
 # you can set them directly or via environment variables
 
 
-
+#todo: this neeeds to be refactored to be more compatible with the use of Env variables (see AWS_Config class)
 class Globals:
     config = Config()
 
@@ -21,7 +21,7 @@ class Globals:
     }
 
     aws_session_profile_name = os.getenv('AWS_PROFILE_NAME'             , default_values['AWS_PROFILE_NAME'          ])
-    aws_session_region_name  = os.getenv('AWS_REGION_NAME'              , default_values['AWS_REGION_NAME'           ])
+    aws_session_region_name  = os.getenv('AWS_DEFAULT_REGION'           , default_values['AWS_DEFAULT_REGION'        ])
     aws_session_account_id   = os.getenv('AWS_ACCOUNT_ID'               , default_values['AWS_ACCOUNT_ID'            ])
     lambda_s3_bucket         = os.getenv('OSBOT_LAMBDA_S3_BUCKET'       , default_values['OSBOT_LAMBDA_S3_BUCKET'    ]) # must be unique in AWS
     lambda_s3_key_prefix     = os.getenv('OSBOT_LAMBDA_S3_KEY_PREFIX'   , default_values['OSBOT_LAMBDA_S3_KEY_PREFIX'])
