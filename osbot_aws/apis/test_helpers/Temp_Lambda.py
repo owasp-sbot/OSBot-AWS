@@ -21,9 +21,9 @@ class Temp_Lambda:
     def __enter__(self):
         (
             self.aws_lambda.set_role       (self.role_arn)
-                            .set_s3_bucket  (self.s3_bucket          )
-                            .set_s3_key     (self.s3_key             )
-                            .set_folder_code(self.tmp_folder.folder )
+                           .set_s3_bucket  (self.s3_bucket          )
+                           .set_s3_key     (self.s3_key             )
+                           .set_folder_code(self.tmp_folder.folder )
         )
         self.aws_lambda.upload()
         self.create_log = self.aws_lambda.create()

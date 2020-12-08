@@ -1,4 +1,4 @@
-from gw_bot.Deploy import Deploy
+from gw_bot.Deploy import Deploy            # todo: refactor this code from gw_bot
 from osbot_aws.helpers.Test_Helper import Test_Helper
 from osbot_aws.apis.Lambda import Lambda
 from osbot_aws.lambdas.shell.lambda_shell import run

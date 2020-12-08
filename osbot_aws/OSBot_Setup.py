@@ -37,7 +37,7 @@ class OSBot_Setup:
     #     return self
 
     def set_up_buckets(self):
-        if self.s3_bucket_lambdas not in self.s3.buckets():
+        if self.s3_bucket_lambdas not in self.s3.buckets():                         # todo: refactor to use #s3.bucket_exists()
             result = self.s3.bucket_create(self.s3_bucket_lambdas,self.region_name)
             assert result.get('status') == 'ok'
         return self

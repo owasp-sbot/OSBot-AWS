@@ -14,8 +14,11 @@ class Temp_Aws_Roles:
         return iam_role.create_for__lambda().get('role_arn')
 
     def for_lambda_invocation__not_exists(self):
+        return self.for_lambda_invocation_exists() is False
+
+    def for_lambda_invocation_exists(self):
         iam_role = IAM_Role(self.role_name__for_lambda_invocation)
-        return iam_role.iam.role_not_exists()
+        return iam_role.iam.role_exists()
 
     def for_lambda_invocation__role_arn(self):
         return 'arn:aws:iam::{0}:role/{1}'.format(IAM().account_id(),self.role_name__for_lambda_invocation)
