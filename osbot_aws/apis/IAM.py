@@ -233,6 +233,9 @@ class IAM:
         self.iam().delete_role(RoleName=self.role_name)
         return self.role_exists() is False
 
+    def role_not_exists(self):
+        return self.role_exists() is False
+
     def role_policies_detach_and_delete(self):
         policies_arns = self.role_policies().values()
         self.role_policies_detach(policies_arns)

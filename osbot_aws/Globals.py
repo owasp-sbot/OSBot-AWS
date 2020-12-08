@@ -1,10 +1,14 @@
 import os
+from osbot_aws.Config import Config
 
 # Globals vars
-
 # these values must be set before running any OSBot-AWS commands
 # you can set them directly or via environment variables
+
+
+
 class Globals:
+    config = Config()
 
     default_values = {                                      # todo - refactor to better solution to store unit tests values (since these values shouldn't be hardcoded in the source code
         'AWS_PROFILE_NAME'          : 'gw-bot'            ,

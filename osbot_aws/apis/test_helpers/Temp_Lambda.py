@@ -10,7 +10,7 @@ class Temp_Lambda:
         self.lambda_name    = "temp_lambda_{0}".format(random_string_and_numbers())
         self.aws_lambda     = Lambda(self.lambda_name)
         self.tmp_folder     = Temp_Folder_With_Lambda_File(self.lambda_name).create_temp_file()
-        self.role_arn       = Temp_Aws_Roles().for_lambda_invocation()
+        self.role_arn       = Temp_Aws_Roles().for_lambda_invocation__role_arn()
         self.create_log     = None
         self.delete_on_exit = True
         self.s3_bucket      = Globals.lambda_s3_bucket

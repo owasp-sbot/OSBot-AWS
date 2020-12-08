@@ -1,8 +1,8 @@
 import boto3
-from boto3              import Session
-from botocore.session   import get_session
-from osbot_aws.Globals  import Globals
-
+from   boto3              import Session
+from   botocore.session   import get_session
+from   osbot_aws.Globals  import Globals
+import osbot_aws.Config
 class Session:
 
     def boto_session(self):

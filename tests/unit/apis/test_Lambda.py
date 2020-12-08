@@ -3,6 +3,8 @@ from time import sleep
 from osbot_utils.utils import Misc, Files
 
 from osbot_aws.Globals                       import Globals
+from osbot_aws.OSBot_Setup import OSBot_Setup
+from osbot_aws.apis.S3 import S3
 from osbot_aws.helpers.Test_Helper           import Test_Helper
 from osbot_aws.apis.Lambda                   import Lambda
 from osbot_aws.apis.test_helpers.Temp_Lambda import Temp_Folder_With_Lambda_File, Temp_Lambda
@@ -14,14 +16,34 @@ from osbot_utils.utils.Assert import Assert
 
 class test_Lambda(Test_Helper):
 
-    @aws_inject('region,account_id')
-    def setUp(self, region, account_id):
+    @staticmethod
+    def setup_test_enviroment():            # todo: refactor into separate class
+        s3                = S3()
+        setup             = OSBot_Setup()
+        s3_bucket_lambdas = setup.s3_bucket_lambdas
+        s3_region         = setup.region_name
+
+        if s3.bucket_not_exists(s3_bucket_lambdas):
+            s3.bucket_create(s3_bucket_lambdas, s3_region)
+            print('>>>> Created bucket', s3_bucket_lambdas)
+
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        cls.setup_test_enviroment()
+
+
+    #@aws_inject('region,account_id')
+    def setUp(self):   # self, region, account_id):
         super().setUp()
         self.lambda_name = 'tmp_lambda_dev_test'
         self.setup       = super().setUp()
         self.s3_bucket   = self.setup.s3_bucket_lambdas
+        self.region      = self.setup.region_name
+        self.account_id  = self.setup.account_id
         self.s3_key      = f'{Globals.lambda_s3_key_prefix}/{self.lambda_name}.zip' #'lambdas/{0}.zip'.format(self.lambda_name)
         self.aws_lambda  = Lambda(self.lambda_name)
+
 
     def test__init__(self):
         assert self.aws_lambda.runtime == 'python3.8'
@@ -69,12 +91,13 @@ class test_Lambda(Test_Helper):
                                  .set_folder_code(tmp_folder.folder)
         )
 
-        assert self.aws_lambda.create_params() == (self.lambda_name, 'python3.7'              ,
+        assert self.aws_lambda.create_params() == (self.lambda_name, 'python3.8'              ,     # confirm values that will be passed to the boto3's create_function
                                                    role_arn        , self.lambda_name + '.run',
                                                    3008            , 60                       ,
                                                    { 'Mode'    : 'PassThrough'               },
                                                    { 'S3Bucket': self.s3_bucket               ,
-                                                     'S3Key'   : self.s3_key                 })  # confirm values that will be passed to the boto3's create_function
+                                                     'S3Key'   : self.s3_key                 },
+                                                   None, None)
 
         assert self.aws_lambda.upload() is True
 
@@ -94,12 +117,11 @@ class test_Lambda(Test_Helper):
                      .field_is_equal('Handler'      , self.lambda_name + '.run')
                      .field_is_equal('MemorySize'   , 3008                     )
                      .field_is_equal('Role'         , role_arn                 )
-                     .field_is_equal('Runtime'      , 'python3.7'              )
+                     .field_is_equal('Runtime'      , 'python3.8'              )
                      .field_is_equal('Timeout'      , 60                       )
                      .field_is_equal('TracingConfig', {'Mode': 'PassThrough'}  )
                      .field_is_equal('Version'      , '$LATEST'                )
         )
-
 
         assert self.aws_lambda.delete() is True     # confirm Lambda was deleted
 
@@ -118,8 +140,9 @@ class test_Lambda(Test_Helper):
             assert aws_lambda.configuration().get('Timeout') == value
 
     def test_event_sources(self):
-        #assert self.aws_lambda.event_sources() == []
-        self.result = self.aws_lambda.event_sources()
+        assert type(self.aws_lambda.event_sources()) == list                    # todo: add test with actual event_sources
+        #self.result = self.aws_lambda.event_sources()
+
 
     def test_event_source_create(self):
         with Temp_Lambda() as temp_lambda:                                      # create a temp lambda function that will deleted on exit

@@ -76,12 +76,15 @@ class S3:
         self.s3().delete_bucket(Bucket=bucket)
         return self.bucket_exists(bucket) is False
 
-    def bucket_exists(self, bucket):
+    def bucket_exists(self, bucket_name):
         try:
-            self.s3().head_bucket(Bucket=bucket)
+            self.s3().head_bucket(Bucket=bucket_name)
             return True
         except:
             return False
+
+    def bucket_not_exists(self, bucket_name):
+        return self.bucket_exists(bucket_name) is False
 
 
 
