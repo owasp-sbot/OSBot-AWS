@@ -1,3 +1,4 @@
+from pprint import pprint
 from time import sleep
 
 from osbot_aws.helpers.Test_Helper import Test_Helper
@@ -7,19 +8,41 @@ from osbot_aws.helpers.Rest_API import Rest_API
 
 class test_API_Gateway(Test_Helper):
 
+    test_api_name = 'temp_rest_api_API_Gateway'
+    test_api_id   = None
+
+    @staticmethod
+    def setup_test_enviroment__API_Gateway(cls):            # todo: refactor into separate class
+        Test_Helper().check_aws_token()
+        api_gateway     = API_Gateway()
+        result          = api_gateway.rest_api_create(cls.test_api_name)
+        cls.test_api_id = result['id']
+        assert api_gateway.rest_api_exists(cls.test_api_id)
+
+    @staticmethod
+    def teardown_test_enviroment__API_Gateway(cls):
+        #api_gateway = API_Gateway()
+        #assert api_gateway.rest_api_delete()
+        pass
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        cls.setup_test_enviroment__API_Gateway(cls)
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.teardown_test_enviroment__API_Gateway(cls)
+
     def setUp(self):
         super().setUp()
         self.api_gateway   = API_Gateway()
         self.rest_api      = Rest_API('temp_rest_api').create()
         self.api_id        = self.rest_api.id()
 
-        #self.test_api_key_id    = '24owcfrcjc'
-        #self.test_resource_id   = 'lf80sgepa5'
-        #self.test_usage_plan_id = '7a6fl9'
-
 
     def test__init__(self):
         assert type(self.api_gateway.api_gateway).__name__ == 'APIGateway'
+
 
     def test_account(self):
         #from osbot_jupyter.utils.Trace_Call import Trace_Call
@@ -28,10 +51,26 @@ class test_API_Gateway(Test_Helper):
         #self.result = trace.invoke_method(self.api_gateway.account)
 
         account = self.api_gateway.account()
+
+        print()
+        pprint(account)
+        return
         assert account.get('apiKeyVersion')     == '4'
         assert account.get('cloudwatchRoleArn') == 'arn:aws:iam::311800962295:role/api-gateway-write-to-cloud-watch'
         assert account.get('features')          == ['UsagePlans']
         assert account.get('throttleSettings')  == {'burstLimit': 5000, 'rateLimit': 10000.0}
+
+    def test_account_update(self):
+        operation =  'add'
+        path      = '/cloudwatchRoleArn'
+        role_arn  = 'arn:aws:iam::311800962295:role/api-gateway-write-to-cloud-watch'
+        _from     = 'from-value'
+        self.result = self.api_gateway.account_update(operation, path, role_arn, _from)
+
+        account = self.api_gateway.account()
+
+        pprint(account)
+
 
     def test_api_key(self):
         assert 'value' in set(self.api_gateway.api_key(self.test_api_key_id, include_value=True))
@@ -193,6 +232,9 @@ class test_API_Gateway(Test_Helper):
         assert len(self.api_gateway.models(self.api_id)) > 1
 
     def test_stage(self):
+        stages = self.api_gateway.stages(self.api_id, index_by='stageName')
+        print(len(stages))
+        return
         stage_name  = list(set(self.api_gateway.stages(self.api_id, index_by='stageName'))).pop()
         self.result = self.api_gateway.stage(self.api_id, stage_name)
 

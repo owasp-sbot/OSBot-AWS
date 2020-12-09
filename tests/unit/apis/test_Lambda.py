@@ -20,7 +20,7 @@ from osbot_utils.utils.Assert import Assert
 class test_Lambda(Test_Helper):
 
     @staticmethod
-    def setup_test_enviroment():            # todo: refactor into separate class
+    def setup_test_enviroment_Lambda():            # todo: refactor into separate class
 
         Test_Helper().check_aws_token()
 
@@ -36,7 +36,7 @@ class test_Lambda(Test_Helper):
 
     @classmethod
     def setUpClass(cls) -> None:
-        cls.setup_test_enviroment()
+        cls.setup_test_enviroment_Lambda()
 
 
     #@aws_inject('region,account_id')

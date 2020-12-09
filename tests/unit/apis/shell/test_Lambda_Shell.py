@@ -24,10 +24,11 @@ class test_Lambda_Shell(Test_Helper):
 
     def test_has_shell_invoke(self):
         self.lambda_shell.shell_command = {'method_name': 'ping', 'auth_key': self.lambda_shell.get_lambda_shell_auth()}
+
         assert self.lambda_shell.invoke() == 'pong'
 
         self.lambda_shell.shell_command['method_name'] = 'aaaa'         # method doesn't exist
-        self.lambda_shell.invoke() == None
+        assert self.lambda_shell.invoke() == None
 
     def test_decorator_lambda_shell(self):
         @lambda_shell

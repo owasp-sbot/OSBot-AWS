@@ -12,7 +12,8 @@ class Rest_API:
         self.api_gateway = API_Gateway()
 
     def create(self):
-        self.api_gateway.rest_api_create(self.api_name)
+        result      = self.api_gateway.rest_api_create(self.api_name)
+        self.api_id = result['id']
         return self
 
     def delete(self):
@@ -36,10 +37,10 @@ class Rest_API:
         status_code     = '200'
         response_models = {'application/json': 'Empty'}
         response_templates = {'application/json': ''}
-        method_create               = self.api_gateway.method_create(self.api_id, resource_id,from_method)
-        integration_create__http    = self.api_gateway.integration_create__http(self.id(), resource_id,to_uri,from_method, to_method)
-        method_response_create      = self.api_gateway.method_response_create(self.id(),resource_id,from_method, status_code,response_models)
-        integration_response_create = self.api_gateway.integration_response_create(self.id(),resource_id, from_method,status_code, response_templates)
+        method_create               = self.api_gateway.method_create              (self.id() , resource_id , from_method                                   )
+        integration_create__http    = self.api_gateway.integration_create__http   (self.id() , resource_id , to_uri      , from_method , to_method         )
+        method_response_create      = self.api_gateway.method_response_create     (self.id() , resource_id , from_method , status_code ,response_models    )
+        integration_response_create = self.api_gateway.integration_response_create(self.id() , resource_id , from_method , status_code , response_templates)
         return { 'method_create'              : method_create               ,
                  'integration_create__http'   : integration_create__http    ,
                  'method_response_create'     : method_response_create      ,
@@ -65,6 +66,9 @@ class Rest_API:
     def method(self, path, method):
         resource_id = self.resource_id(path)
         return self.api_gateway.method(self.id(), resource_id, method)
+
+    def not_exists(self):
+        return self.exists() is False
 
     def resource_id(self, path):
         return self.api_gateway.resource(self.id(), path).get('id')

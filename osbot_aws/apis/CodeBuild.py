@@ -49,14 +49,16 @@ class CodeBuild:
 
 
     def policies_create(self, policies):                        # does not update, only add new ones
-        policies_arns = []
-        role_policies = list(self.iam.role_policies().keys())
-        for base_name, policy in policies.items():
-            policy_name = "{0}_{1}".format(base_name, self.project_name)
-            if policy_name in role_policies:
-                continue
-            policies_arns.append(self.iam.policy_create(policy_name,policy).get('policy_arn'))
-        return policies_arns
+        return self.iam.policies_create(policies, self.project_name)
+
+        # policies_arns = []
+        # role_policies = list(self.iam.role_policies().keys())
+        # for base_name, policy in policies.items():
+        #     policy_name = "{0}_{1}".format(base_name, self.project_name)
+        #     if policy_name in role_policies:
+        #         continue
+        #     policies_arns.append(self.iam.policy_create(policy_name,policy).get('policy_arn'))
+        # return policies_arns
 
     def project_builds(self,ids):
         return self.codebuild.batch_get_builds(ids=ids)

@@ -148,6 +148,26 @@ class IAM:
         data = self.iam().create_policy_version(PolicyArn=policy_arn, PolicyDocument=policy_document,SetAsDefault=True).get('Policy')
         return {'status': 'ok', 'policy_name': policy_name, 'policy_arn': policy_arn, 'data': data}
 
+    def policies_create(self, policies, project_name=None, recreate_policy=False):
+        policies_arns          = []
+        existing_policies      = self.role_policies()
+        existing_policies_names = list(existing_policies.keys())
+        for base_name, policy in policies.items():
+            if project_name:
+                policy_name = "{0}_{1}".format(base_name, project_name)
+            else:
+                policy_name = base_name
+            if policy_name in existing_policies_names:
+                existing_policy_arn = existing_policies[policy_name]
+                if recreate_policy:
+                    self.policy_delete(existing_policy_arn)
+                else:
+                    policies_arns.append(existing_policy_arn)
+                    continue
+            result = self.policy_create(policy_name, policy)
+            policies_arns.append(result.get('policy_arn'))
+        return policies_arns
+
     def policy_create(self, policy_name, policy_document, policy_path='/', account_id=None, delete_before_create=False):
         policy_arn = self.policy_arn(policy_name, policy_path,account_id)
         if delete_before_create:
@@ -210,6 +230,9 @@ class IAM:
         calculated_policy_arn = self.policy_arn(policy_name, policy_path, account_id)   # since there doesn't seem to be a way to search for a policy by name
         return self.policy_info(calculated_policy_arn) is not None
 
+    def policy_not_exists(self, policy_arn):
+        return self.policy_exists(policy_arn) is False
+
     @index_by
     def policies(self):
         return list(self.get_data('list_policies', 'Policies', True))
@@ -259,11 +282,12 @@ class IAM:
     def role_policies_detach(self, policies_arn):
         for policy_arn in policies_arn:
             self.role_policy_detach(policy_arn)
-
+        return self
 
     def role_policies_attach(self, policies_arn):
         for policy_arn in policies_arn:
             self.role_policy_attach(policy_arn)
+        return self
 
     @catch
     def role_policies(self):

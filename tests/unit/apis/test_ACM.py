@@ -1,3 +1,5 @@
+import pytest
+
 from osbot_aws.helpers.Test_Helper import Test_Helper
 from osbot_aws.apis.ACM import ACM
 
@@ -12,7 +14,10 @@ class test_ACM(Test_Helper):
         assert type(self.acm).__name__ == 'ACM'
 
     def test_certificate(self):
-        certificate_arn = self.acm.certificates()[0].get('CertificateArn')
+        certificates = self.acm.certificates()
+        if not len(certificates):
+            pytest.skip("no certificates configured in target AWS enviroment")
+        certificate_arn = certificates[0].get('CertificateArn')
         self.result = self.acm.certificate(certificate_arn, include_certs=True)
 
     def test_certificate_request(self):

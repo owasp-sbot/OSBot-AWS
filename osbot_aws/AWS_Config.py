@@ -8,6 +8,12 @@ class AWS_Config:
     def __init__(self):
         load_dotenv()
 
+    def __enter__(self):
+        return self
+
+    def __exit__(self, type, value, traceback):
+        pass
+
     def aws_session_profile_name(self): return os.getenv('AWS_PROFILE_NAME'          )
     def aws_session_region_name (self): return os.getenv('AWS_DEFAULT_REGION'        )
     def aws_session_account_id  (self): return os.getenv('AWS_ACCOUNT_ID'            )

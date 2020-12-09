@@ -1,15 +1,14 @@
+from osbot_aws.AWS_Config import AWS_Config
 from osbot_aws.helpers.Test_Helper import Test_Helper
 from osbot_aws.OSBot_Setup import OSBot_Setup
 
-
 class test_OSBot_Setup(Test_Helper):
     def setUp(self):
-        self.osbot_setup = OSBot_Setup()
-        super().setUp()
+        self.osbot_setup = super().setUp()
 
 
     def test__init__(self):
-        assert self.osbot_setup.profile_name == 'gw-bot'
+        assert self.osbot_setup.profile_name == AWS_Config().aws_session_profile_name()
 
     def test_lambda_package(self):
         self.lambda_package = self.osbot_setup.lambda_package('an-lambda-name')
