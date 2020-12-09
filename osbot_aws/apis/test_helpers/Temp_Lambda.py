@@ -1,4 +1,4 @@
-from osbot_aws.Globals                            import Globals
+from osbot_aws.AWS_Config import AWS_Config
 from osbot_aws.apis.Lambda                        import Lambda
 from osbot_aws.apis.test_helpers.Temp_Aws_Roles   import Temp_Aws_Roles
 from osbot_aws.apis.test_helpers.Temp_Folder_With_Lambda_File import Temp_Folder_With_Lambda_File
@@ -13,7 +13,7 @@ class Temp_Lambda:
         self.role_arn       = Temp_Aws_Roles().for_lambda_invocation__role_arn()
         self.create_log     = None
         self.delete_on_exit = True
-        self.s3_bucket      = Globals.lambda_s3_bucket
+        self.s3_bucket      = AWS_Config().lambda_s3_bucket()
         self.s3_key         = 'unit_tests/lambdas/{0}.zip'.format(self.lambda_name)
         self.s3             = self.aws_lambda.s3()
 

@@ -1,16 +1,16 @@
 import boto3
-from   boto3              import Session
-from   botocore.session   import get_session
-from   osbot_aws.Globals  import Globals
-import osbot_aws.Config
+from   boto3                import Session
+from   botocore.session     import get_session
+from   osbot_aws.AWS_Config import AWS_Config
+
 class Session:
 
     def boto_session(self):
         return get_session()
 
     def session(self,profile_name=None, region_name=None) -> Session:                           # todo: refactor with resource_boto3
-        profile_name = profile_name or Globals.aws_session_profile_name
-        region_name  = region_name  or Globals.aws_session_region_name
+        profile_name = profile_name or AWS_Config().aws_session_profile_name()
+        region_name  = region_name  or AWS_Config().aws_session_region_name()
 
         profiles = get_session()._build_profile_map()
         if profile_name in profiles:
@@ -20,8 +20,8 @@ class Session:
 
     def client_boto3(self,service_name, profile_name=None, region_name=None):                   # todo: refactor with resource_boto3
         try:
-            profile_name = profile_name or Globals.aws_session_profile_name
-            region_name  = region_name  or Globals.aws_session_region_name
+            profile_name = profile_name or AWS_Config().aws_session_profile_name()
+            region_name  = region_name  or AWS_Config().aws_session_region_name()
 
             # profiles = get_session()._build_profile_map()
             # if profile_name in profiles:
@@ -39,8 +39,8 @@ class Session:
 
     def resource_boto3(self,service_name, profile_name=None, region_name=None):                 # todo: refactor with client_boto3
         try:
-            profile_name = profile_name or Globals.aws_session_profile_name
-            region_name  = region_name  or Globals.aws_session_region_name
+            profile_name = profile_name or AWS_Config().aws_session_profile_name()
+            region_name  = region_name  or AWS_Config().aws_session_region_name()
 
             profiles = get_session()._build_profile_map()
             if profile_name in profiles:

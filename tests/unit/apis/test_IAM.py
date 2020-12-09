@@ -1,11 +1,12 @@
 import unittest
 
+from osbot_aws.AWS_Config import AWS_Config
 from osbot_aws.helpers.Test_Helper import Test_Helper
 from osbot_aws.apis.IAM import IAM
-from osbot_aws.Globals import Globals
+
 from osbot_utils.utils.Assert import Assert
 
-account_id       = Globals.aws_session_account_id
+account_id       = AWS_Config().aws_session_account_id()
 delete_created   = True
 test_user        = 'test_user'
 test_user_arn    = 'arn:aws:iam::{0}:user/test_user'.format(account_id)
@@ -51,20 +52,20 @@ class Test_IAM(Test_Helper):        # todo move Test_Helper into this OSBOT_AWS
     @unittest.skip("Doesn't work in CodeBuild since there is only one configuration in there")
     def test_account_id(self):
         account_id_1 = self.iam.account_id('gs-detect-aws')
-        assert Globals.aws_session_profile_name == 'gs-detect-aws'
+        assert AWS_Config().aws_session_profile_name() == 'gs-detect-aws'
 
         self.iam._account_id = None
         self.iam._sts        = None
 
         account_id_2 = self.iam.account_id('default')
-        assert Globals.aws_session_profile_name == 'default'
+        assert AWS_Config().aws_session_profile_name() == 'default'
         assert account_id_1 != account_id_2
 
         self.iam._account_id = None
         self.iam._sts = None
 
         account_id_3 = self.iam.account_id()
-        assert Globals.aws_session_profile_name == 'default'
+        assert AWS_Config().aws_session_profile_name() == 'default'
         assert account_id_2 == account_id_3
 
     def test_access_keys(self):

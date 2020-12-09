@@ -1,6 +1,4 @@
-from osbot_aws.apis.IAM import IAM
 from osbot_aws.apis.test_helpers.Temp_Aws_Roles import Temp_Aws_Roles
-from osbot_aws.helpers.IAM_Role import IAM_Role
 from osbot_aws.helpers.Test_Helper import Test_Helper
 from osbot_aws.apis.test_helpers.Temp_Lambda import Temp_Lambda
 

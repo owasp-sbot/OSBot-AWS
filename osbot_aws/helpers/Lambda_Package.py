@@ -1,7 +1,8 @@
 import os
 import importlib
 
-from osbot_aws.Globals import Globals
+from osbot_aws.AWS_Config import AWS_Config
+
 from osbot_aws.apis.Lambda import Lambda
 from osbot_aws.apis.test_helpers.Temp_Aws_Roles import Temp_Aws_Roles
 from osbot_utils.utils.Files import folder_copy, Files
@@ -11,8 +12,8 @@ class Lambda_Package:
     def __init__(self,lambda_name):
         self.lambda_name   = lambda_name
         self.aws_lambda    = Lambda(self.lambda_name)
-        self.s3_bucket     = Globals.lambda_s3_bucket
-        self.s3_key        = f'{Globals.lambda_s3_key_prefix}/{self.lambda_name}.zip'
+        self.s3_bucket     = AWS_Config().lambda_s3_bucket()
+        self.s3_key        = f'{AWS_Config().lambda_s3_key_prefix()}/{self.lambda_name}.zip'
         self.role_arn      = Temp_Aws_Roles().for_lambda_invocation__role_arn()
         self.tmp_folder    = Files.temp_folder('tmp_lambda_')
 

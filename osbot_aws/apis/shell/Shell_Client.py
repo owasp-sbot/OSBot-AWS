@@ -1,4 +1,4 @@
-from osbot_aws.Globals import Globals
+from osbot_aws.AWS_Config import AWS_Config
 from osbot_aws.apis.shell.Lambda_Shell import Lambda_Shell
 from osbot_aws.apis.shell.Shell_Server import Shell_Server
 from osbot_aws.apis.Lambda import Lambda                    # todo: see how to resolve the circular dependency with the Lambda Function
@@ -31,8 +31,8 @@ class Shell_Client:
 
     def reset(self):
         if self.aws_lambda.s3_bucket is None:                                                                     # if these values are not set
-            self.aws_lambda.set_s3_bucket(Globals.lambda_s3_bucket)                                               # use default values
-            self.aws_lambda.set_s3_key   (f'{Globals.lambda_s3_key_prefix}/{self.aws_lambda.original_name}.zip')  # which are needed
+            self.aws_lambda.set_s3_bucket(AWS_Config().lambda_s3_bucket())                                               # use default values
+            self.aws_lambda.set_s3_key   (f'{AWS_Config().lambda_s3_key_prefix()}/{self.aws_lambda.original_name}.zip')  # which are needed
         return self.aws_lambda.update_lambda_code()                                                               # to trigger the update (which will reset the lambda and force a cold start on next lambda invocation)
 
     def python_exec(self, code):

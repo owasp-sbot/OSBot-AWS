@@ -6,6 +6,8 @@ from osbot_utils.utils import Png
 from osbot_aws.OSBot_Setup import OSBot_Setup
 from osbot_utils.utils.Dev import Dev
 
+from osbot_aws.apis.IAM import IAM
+
 
 class Test_Helper(TestCase):
 
@@ -24,6 +26,12 @@ class Test_Helper(TestCase):
             Dev.pprint(self.result)
 
         Png.save_png_base64_to_file(self.png_data, self.png_file)
+
+    def check_aws_token(self):
+        result = IAM().check_aws_security_tokens()
+        if result.get('status') == 'Error':
+            raise Exception(result['error'])
+        return
 
     def lambda_package(self, lambda_name, profile_name = None, account_id=None, region=None):
         return self.osbot_setup(profile_name=profile_name,account_id=account_id,region=region).lambda_package(lambda_name)

@@ -1,7 +1,7 @@
 import os
 import shutil
 
-from osbot_aws.Globals                      import Globals
+from osbot_aws.AWS_Config import AWS_Config
 from osbot_aws.apis.S3                      import S3
 from osbot_aws.apis.Session                 import Session
 from osbot_utils.decorators.Lists import index_by
@@ -19,7 +19,7 @@ class Lambda_Layer:
         self.runtimes        = runtimes         or ['python3.8', 'python3.7', 'python3.6']
         self.license_info    = license_info     or 'https://github.com/filetrust/gw-proxy-serverless/blob/master/LICENSE'
         self.description     = description      or ''
-        self.s3_bucket       = s3_bucket        or Globals.lambda_s3_bucket
+        self.s3_bucket       = s3_bucket        or AWS_Config().lambda_s3_bucket()
         self.s3_folder       = 'layers'
         self.s3_key          = f'{self.s3_folder}/{self.layer_name}.zip'
         self.version_number  = version_number

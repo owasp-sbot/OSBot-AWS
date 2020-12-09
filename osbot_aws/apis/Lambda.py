@@ -48,7 +48,6 @@ class Lambda:
             for id in page.get(field_id):
                 yield id
 
-
     # main methods
 
     def account_settings(self):

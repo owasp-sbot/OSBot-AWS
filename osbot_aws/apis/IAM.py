@@ -2,7 +2,8 @@ import json
 from time import sleep
 
 import boto3
-from osbot_aws.Globals                  import Globals
+
+from osbot_aws.AWS_Config import AWS_Config
 from osbot_aws.apis.Session             import Session
 from osbot_utils.decorators.Method_Wrappers  import cache, catch
 from osbot_utils.decorators.Lists import index_by, group_by
@@ -87,9 +88,17 @@ class IAM:
 
     @cache
     def account_id(self, profile_name=None):
-        if profile_name is not None:                            # if profile_name is set
-            Globals.aws_session_profile_name = profile_name     # set it globally (since this will be used by all boto3 clients)
+        if profile_name is not None:                                    # if profile_name is set
+            AWS_Config().set_aws_session_profile_name(profile_name)     # set it globally (since this will be used by all boto3 clients)
         return self.caller_identity().get('Account')
+
+    def check_aws_security_tokens(self):
+        try:
+            identity = self.caller_identity()
+            return {'status': "Ok", 'error': None, "data": identity}
+        except Exception as error:
+            return { 'status': "Error", 'error':error, "data":None}
+
 
     @cache
     def region(self):

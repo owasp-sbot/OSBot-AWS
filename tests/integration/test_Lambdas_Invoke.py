@@ -1,6 +1,7 @@
 import unittest
 from time import sleep
 
+from osbot_aws.AWS_Config import AWS_Config
 from osbot_aws.apis.S3 import S3
 from osbot_aws.apis.Logs                import Logs
 from osbot_aws.apis.Queue               import Queue
@@ -287,15 +288,15 @@ class test_Lambdas_Invoke(TestCase):
 
     @unittest.skip
     def _test_run_lambdas_in_multiple_accounts(self):
-        from osbot_aws.Globals import Globals
+
         from osbot_aws.apis.test_helpers.Temp_Lambda import Temp_Lambda
-        Globals.aws_session_profile_name = 'gs-detect-aws'
-        Globals.lambda_s3_bucket         = 'gs-detect-lambda'
+        AWS_Config().set_aws_session_profile_name('gs-detect-aws')
+        AWS_Config().set_lambda_s3_bucket('gs-detect-lambda')
 
         with Temp_Lambda() as _:
             _.invoke_raw().get('status') == 'ok'
 
-        Globals.aws_session_profile_name = 'default'
+        AWS_Config().set_aws_session_profile_name('default')
 
 
 

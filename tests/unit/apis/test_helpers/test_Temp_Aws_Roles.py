@@ -3,7 +3,8 @@ from unittest import TestCase
 
 from osbot_utils.utils.Dev import Dev
 
-from osbot_aws.Globals import Globals
+from osbot_aws.AWS_Config import AWS_Config
+
 from osbot_aws.apis.IAM import IAM
 from osbot_aws.apis.test_helpers.Temp_Aws_Roles import Temp_Aws_Roles
 
@@ -14,7 +15,7 @@ class test_Temp_Aws_Roles(TestCase):
         self.account_id     = '244560807427'
 
     def test_for_lambda_invocation__role_arn(self):
-        account_id = Globals.aws_session_account_id
+        account_id = AWS_Config().aws_session_account_id()
         role_arn   = self.temp_aws_roles.for_lambda_invocation__role_arn()
         assert role_arn == f"arn:aws:iam::{account_id}:role/temp_role_for_lambda_invocation"
 

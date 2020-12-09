@@ -1,4 +1,4 @@
-from osbot_aws.Globals                                        import Globals
+from osbot_aws.AWS_Config import AWS_Config
 from osbot_aws.helpers.Test_Helper import Test_Helper
 from osbot_aws.apis.Lambda_Layer                              import Lambda_Layer
 from osbot_utils.utils.Files import temp_folder_with_temp_file, Files
@@ -16,7 +16,7 @@ class test_Lambda_Layer(Test_Helper):
     def assert_lambda_created_ok(self, params, result):
         layer_name = params.get('layer_name')
         assert set(result)                      == { 'CompatibleRuntimes', 'Content', 'CreatedDate', 'Description', 'LayerArn', 'LayerVersionArn', 'LicenseInfo','Version'}
-        assert result.get('LayerArn'          ) == f'arn:aws:lambda:{Globals.aws_session_region_name}:{Globals.aws_session_account_id}:layer:{layer_name}'
+        assert result.get('LayerArn'          ) == f'arn:aws:lambda:{AWS_Config().aws_session_region_name()}:{AWS_Config().aws_session_account_id()}:layer:{layer_name}'
         assert result.get('Description'       ) == params.get('description')
         assert result.get('CompatibleRuntimes') == params.get('runtimes')
 

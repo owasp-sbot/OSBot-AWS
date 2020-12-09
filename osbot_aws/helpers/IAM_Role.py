@@ -1,6 +1,7 @@
+from osbot_aws.AWS_Config import AWS_Config
 from osbot_aws.apis.IAM import IAM
 from osbot_aws.helpers.IAM_Policy import IAM_Policy
-from osbot_aws.Globals import Globals
+
 
 
 class IAM_Role:
@@ -12,7 +13,7 @@ class IAM_Role:
 
     def add_policy_for__lambda(self):
         temp_policy_name = 'policy_{0}'.format(self.role_name)
-        cloud_watch_arn  = f'arn:aws:logs:{Globals.aws_session_region_name}:{Globals.aws_session_account_id}:log-group:/aws/lambda/*'
+        cloud_watch_arn  = f'arn:aws:logs:{AWS_Config().aws_session_region_name()}:{AWS_Config().aws_session_account_id()}:log-group:/aws/lambda/*'
         iam_policy       = IAM_Policy(temp_policy_name)
         self.policy_arn  = iam_policy.add_cloud_watch(cloud_watch_arn).create().get('policy_arn')
         self.iam.role_policy_attach(self.policy_arn)
