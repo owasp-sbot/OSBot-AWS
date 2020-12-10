@@ -17,11 +17,14 @@ class test_IAM_Role(TestCase):
             self.account_id  = aws_config.aws_session_account_id()
             self.region      = aws_config.aws_session_region_name()
 
+    def tearDown(self) -> None:
+        if self.iam_role.exists():
+            assert self.iam_role.delete()
+
     def test___init__(self):
         assert self.iam_role.iam.role_name == self.temp_role_name
 
     def test_create_for__code_build(self):
-        self.iam_role.iam.role_delete()
         result      = self.iam_role.create_for__code_build()
         status      = result.get('status')
         data        = result.get('data')
@@ -51,21 +54,19 @@ class test_IAM_Role(TestCase):
                                                           'role_name': self.temp_role_name,
                                                           'role_arn' : expected_arn,
                                                           'status'   : 'warning'}
-        assert self.iam_role.iam.role_delete() is True
 
     def test_create_for__lambda(self):
         self.iam_role.create_for__lambda().get('role_arn')
-        role_info = self.iam_role.iam.role_info()
+        role_info = self.iam_role.info()
         service = role_info.get('AssumeRolePolicyDocument').get('Statement')[0].get('Principal').get('Service')
         assert service == 'lambda.amazonaws.com'
 
-        policy_statement = list(self.iam_role.iam.role_policies_statements().values()).pop()
+        policy_statement = list(self.iam_role.policies_statements().values()).pop()
 
         assert policy_statement ==  [{ 'Action'  : [ 'logs:CreateLogGroup','logs:CreateLogStream','logs:PutLogEvents'],
                                        'Effect'  : 'Allow',
                                        'Resource': [ 'arn:aws:logs:{0}:{1}:log-group:/aws/lambda/*'.format(self.region, self.account_id )]}]
 
-        assert self.iam_role.iam.role_delete() is True            # delete role and policies
 
     def test_create_for_service_with_policies(self):
         policy_name = "Cloud_Watch"
@@ -91,14 +92,14 @@ class test_IAM_Role(TestCase):
         temp_policy_arn    = result['policies_arns'][0]
 
         assert len(temp_policies_arns)  == 1
-        assert self.iam_role.iam.role_exists()
+        assert self.iam_role.exists()
 
         assert self.iam_role.iam.policy_exists(temp_policy_arn)
 
-        self.iam_role.iam.role_delete()                             # will also delete all associated policies
+        self.iam_role.delete()                             # will also delete all associated policies
 
         assert self.iam_role.iam.policy_not_exists(temp_policy_arn)
-        assert self.iam_role.iam.role_not_exists()
+        assert self.iam_role.not_exists()
 
 
 

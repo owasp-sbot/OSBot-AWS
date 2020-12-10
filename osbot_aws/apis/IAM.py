@@ -2,6 +2,7 @@ import json
 from time import sleep
 
 import boto3
+from osbot_utils.utils.Misc import random_string
 
 from osbot_aws.AWS_Config import AWS_Config
 from osbot_aws.apis.Session             import Session
@@ -149,14 +150,12 @@ class IAM:
         return {'status': 'ok', 'policy_name': policy_name, 'policy_arn': policy_arn, 'data': data}
 
     def policies_create(self, policies, project_name=None, recreate_policy=False):
-        policies_arns          = []
-        existing_policies      = self.role_policies()
+        policies_arns           = []
+        existing_policies       = self.role_policies()
         existing_policies_names = list(existing_policies.keys())
+        project_name            = project_name or random_string()
         for base_name, policy in policies.items():
-            if project_name:
-                policy_name = "{0}_{1}".format(base_name, project_name)
-            else:
-                policy_name = base_name
+            policy_name = "{0}_{1}".format(base_name, project_name)
             if policy_name in existing_policies_names:
                 existing_policy_arn = existing_policies[policy_name]
                 if recreate_policy:

@@ -29,6 +29,7 @@ class IAM_Role:
     def create_for__code_build(self):
         return self.create_for_service__assume_role('codebuild.amazonaws.com')
 
+
     def create_for_service__assume_role(self, service):
         statement = {'Action': 'sts:AssumeRole',
                       'Effect': 'Allow',
@@ -58,3 +59,17 @@ class IAM_Role:
             data = self.iam.role_create(policy_document)
             return {'status': 'ok', 'data': data, 'role_name': self.iam.role_name, 'role_arn': data.get('Arn') }
 
+    def delete(self):
+        return self.iam.role_delete()
+
+    def exists(self):
+        return self.iam.role_exists()
+
+    def info(self):
+        return self.iam.role_info()
+
+    def not_exists(self):
+        return self.iam.role_not_exists()
+
+    def policies_statements(self):
+        return self.iam.role_policies_statements()
