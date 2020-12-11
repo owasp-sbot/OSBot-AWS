@@ -12,7 +12,7 @@ class Test_S3(Test_Helper):
     def setUp(self):
         super().setUp()
         self.s3 = S3()
-        self.temp_file_name     = "aaa.txt"
+        self.temp_file_name     = "aaa.txt"             # todo: fix test that is leaving this file in the file system
         self.temp_file_contents = "some contents"
         self.test_bucket        = "gs-lambda-tests"
         self.test_folder        = "unit_tests"
