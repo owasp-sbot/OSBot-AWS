@@ -1,5 +1,9 @@
 import unittest
 from time import sleep
+from unittest.case import skip
+
+import pytest
+from osbot_utils.utils import Misc
 
 from osbot_aws.AWS_Config import AWS_Config
 from osbot_aws.apis.S3 import S3
@@ -14,7 +18,7 @@ from unittest                           import TestCase
 # these tests require lambdas to already exist in AWS
 from osbot_utils.utils.Dev import Dev
 
-
+@pytest.mark.skip('Fix tests')
 class test_Lambdas_Invoke(TestCase):
 
     def test_dev_hello_world(self):
@@ -113,7 +117,7 @@ class test_Lambdas_Invoke(TestCase):
         #assert s3.bucket_delete(s3_bucket) is True
 
     # SKIPPED tests
-
+    # todo: refactor methods to better locations
     @unittest.skip
     def _test_sqs_to_lamdba_to_sqs(self):
         queue_1 = Queue('unit_tests_temp_queue__1').create()

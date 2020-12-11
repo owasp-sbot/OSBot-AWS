@@ -13,7 +13,7 @@ class test_Temp_User(Unit_Test):
 
     def test_enter_exit(self):
         with Temp_User() as temp_user:
-            self.result = temp_user.iam.user_exists()                                   # inside `with block` user should exist
+            assert temp_user.iam.user_exists()                                   # inside `with block` user should exist
             assert temp_user.iam.user_exists() is True
             user_info = temp_user.iam.user_info()
             assert user_info.get('UserName') == temp_user.user_name

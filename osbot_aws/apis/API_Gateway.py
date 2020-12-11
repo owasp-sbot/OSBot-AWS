@@ -1,29 +1,34 @@
 from datetime import date, timedelta
 
+from osbot_utils.decorators.Method_Wrappers import cache
+
 from osbot_aws.apis.Lambda import Lambda
-
 from osbot_aws.apis.IAM import IAM
-
 from osbot_aws.apis.Session import Session
 
 
 class API_Gateway:
 
     def __init__(self):
-        self.api_gateway = Session().client('apigateway')
+        pass
+
+    @cache
+    def api_gateway(self):
+        return Session().client('apigateway')
 
     # helper methods
     def _call_method(self, method_name, params):
         try:
-            return getattr(self.api_gateway, method_name)(**params)
+            return getattr(self.api_gateway(), method_name)(**params)
         except Exception as error:
             return {'error': f'{error}'}
+
     # see this tweet to understand the use of the 'data_key' param https://twitter.com/DinisCruz/status/1226113182240038912
     # see this tweet thread to see more info about performance issues with this api https://twitter.com/DinisCruz/status/1226504297439023104
     # todo: add support for getting all the data using the position field
     def _call_method_return_items(self, method_name, params={}, index_by='id', data_key='items'):
         try:
-            raw_data = getattr(self.api_gateway, method_name)(**params)
+            raw_data = getattr(self.api_gateway(), method_name)(**params)
             data = {}
             for item in raw_data.get(data_key):
                 data[item.get(index_by)] = item
@@ -33,7 +38,7 @@ class API_Gateway:
 
     def _call_method_return_arrays(self, method_name, params={}, index_by='id', data_key='items'):
         try:
-            raw_data = getattr(self.api_gateway, method_name)(**params)
+            raw_data = getattr(self.api_gateway(), method_name)(**params)
             data = {}
 
             for key,value in raw_data.get(data_key).items():
@@ -58,32 +63,48 @@ class API_Gateway:
 
     # main methods
     def account(self):
-        return self.api_gateway.get_account()
+        return self.api_gateway().get_account()
+
+    #@aws_retry()  #todo add the code below to the aws_retry method (this is needed by operations that are affected by delays in IAM deployments
+    def account_update(self, operation, path, value, _from, retry_count=5, retry_wait=2):
+#        while (retry_count > 0):
+#            print(f"Retry #{retry_count}")
+#            try:
+                patchOperations=[{
+                                    'op'   : operation,  #'add'|'remove'|'replace'|'move'|'copy'|'test',
+                                 'path' : path     ,
+                                 'value': value    ,
+                                 'from' : _from
+                              }]
+                return self.api_gateway().update_account(patchOperations=patchOperations)
+#            except Exception as error:
+#                print(f"error: {error}")
+#            retry_count -= 1
 
     def api_keys(self, index_by='id',include_values=False):
         return self._call_method_return_items(method_name="get_api_keys", params={'includeValues':include_values}, index_by=index_by)
 
     def api_key(self, api_key, include_value=False):
         try:
-            return self.api_gateway.get_api_key(apiKey=api_key,includeValue=include_value)
+            return self.api_gateway().get_api_key(apiKey=api_key,includeValue=include_value)
         except:
             return None
 
     def api_key_create(self,key_name, enabled=True):
-        return self.api_gateway.create_api_key(name=key_name,enabled=enabled)
+        return self.api_gateway().create_api_key(name=key_name,enabled=enabled)
 
     def api_key_delete(self, key_id_or_name):
-        if self.api_exists(key_id_or_name):                                     # see if it an api_key value
-            self.api_gateway.delete_api_key(apiKey=key_id_or_name)
+        if self.api_key_exists(key_id_or_name):                                     # see if it an api_key value
+            self.api_gateway().delete_api_key(apiKey=key_id_or_name)
             return True
 
         for key_id, value in self.api_keys().items():                           # try to find api_key value
             if value.get('name') == key_id_or_name:                             # via its name
-                self.api_gateway.delete_api_key(apiKey=key_id)
+                self.api_gateway().delete_api_key(apiKey=key_id)
                 return True
         return False
 
-    def api_exists(self, api_key):
+    def api_key_exists(self, api_key):
         if self.api_key(api_key):
             return True
         return False
@@ -102,7 +123,7 @@ class API_Gateway:
                        'basePath'   : base_path   ,
                        'restApiId'  : rest_api_id ,
                        'stage'      : stage       }
-            return self.api_gateway.create_base_path_mapping(**params)
+            return self.api_gateway().create_base_path_mapping(**params)
         except Exception as error:
             return {'error': f'{error}'}
     def domain_name_create__regional(self, domain_name, certificate_arn):
@@ -111,26 +132,26 @@ class API_Gateway:
                        'regionalCertificateArn': certificate_arn,
                        'endpointConfiguration': { 'types': ['REGIONAL'] },
                        'securityPolicy'    :'TLS_1_2'}
-            return self.api_gateway.create_domain_name(**params)
+            return self.api_gateway().create_domain_name(**params)
         except Exception as error:
             return {'error':  f'{error}'}
 
     def domain_name_delete(self, domain_name):
         try:
-            return self.api_gateway.delete_domain_name(domainName=domain_name)
+            return self.api_gateway().delete_domain_name(domainName=domain_name)
         except Exception as error:
             return {'error':  f'{error}'}
 
     def domain_names(self, index_by=None):
-        return self._index_by(self.api_gateway.get_domain_names().get('items'), index_by=index_by)
+        return self._index_by(self.api_gateway().get_domain_names().get('items'), index_by=index_by)
 
     def integration(self, api_id, resource_id, http_method):
-        return self.api_gateway.get_integration(restApiId=api_id, resourceId=resource_id, httpMethod=http_method)
+        return self.api_gateway().get_integration(restApiId=api_id, resourceId=resource_id, httpMethod=http_method)
 
     def integration_create__http(self, api_id, resource_id, uri, http_method='GET', integration_http_method='GET'):
         input_type        = 'HTTP'
         try:
-            return self.api_gateway.put_integration(restApiId=api_id,
+            return self.api_gateway().put_integration(restApiId=api_id,
                                                     resourceId=resource_id,
                                                     httpMethod=http_method,
                                                     integrationHttpMethod=integration_http_method,
@@ -148,7 +169,7 @@ class API_Gateway:
         uri = f'arn:aws:apigateway:{aws_region}:lambda:path/2015-03-31/functions/arn:aws:lambda:{aws_region}:{aws_acct_id}:function:{lambda_name}/invocations'
         integration_http_method = 'POST'
         try:
-            return self.api_gateway.put_integration(restApiId=api_id, resourceId=resource_id, httpMethod=http_method,
+            return self.api_gateway().put_integration(restApiId=api_id, resourceId=resource_id, httpMethod=http_method,
                                                     integrationHttpMethod=integration_http_method,type=input_type, uri=uri)
         except Exception as error:
             return f'{error}'
@@ -187,16 +208,16 @@ class API_Gateway:
 
     def method(self, api_id, resource_id, http_method):
         try:
-            return self.api_gateway.get_method(restApiId=api_id, resourceId= resource_id, httpMethod= http_method)
+            return self.api_gateway().get_method(restApiId=api_id, resourceId= resource_id, httpMethod= http_method)
         except Exception as error:
             return {'error': f'{error}'}
 
     def method_create(self, api_id, resource_id, http_method, authorization_type='NONE'):
         return self._call_method("put_method", { 'restApiId': api_id, 'resourceId':resource_id, 'httpMethod':http_method, 'authorizationType':authorization_type})
-#        return self.api_gateway.put_method(restApiId=api_id, resourceId=resource_id, httpMethod=http_method, authorizationType=authorization_type)
+#        return self.api_gateway().put_method(restApiId=api_id, resourceId=resource_id, httpMethod=http_method, authorizationType=authorization_type)
 
     def method_delete(self, api_id, resource_id, http_method):
-        return self.api_gateway.delete_method(restApiId=api_id, resourceId=resource_id, httpMethod=http_method)
+        return self.api_gateway().delete_method(restApiId=api_id, resourceId=resource_id, httpMethod=http_method)
 
     def method_invoke_test(self, api_id,resource_id,http_method, path_with_query_string='',body='',headers={}):
         params = { 'restApiId'          : api_id ,
@@ -227,6 +248,7 @@ class API_Gateway:
     def models(self, api_id):
         return self._get_using_api_id('models', api_id)
 
+
     def stage(self, api_id, stage_name):
         return self._call_method("get_stage", {'restApiId' : api_id, 'stageName':stage_name})
 
@@ -250,10 +272,10 @@ class API_Gateway:
         return list(set(self.resource(api_id,path).get('resourceMethods',[])))
 
     def resource_create(self, api_id, parent_id, path):
-        return self.api_gateway.create_resource(restApiId=api_id, parentId=parent_id,pathPart=path)
+        return self.api_gateway().create_resource(restApiId=api_id, parentId=parent_id,pathPart=path)
 
     def resource_delete(self, api_id, resource_id):
-        return self.api_gateway.delete_resource(restApiId=api_id, resourceId=resource_id)
+        return self.api_gateway().delete_resource(restApiId=api_id, resourceId=resource_id)
 
     def resources(self, api_id_or_name, index_by='id'):
         result = self._get_using_api_id('resources', api_id=api_id_or_name, index_by=index_by)
@@ -274,11 +296,12 @@ class API_Gateway:
             return rest_apis.get(api_name)                            # return if it does
         params = { 'name'                 : api_name               ,
                    'endpointConfiguration': {"types": ["REGIONAL"]}}
-        return self.api_gateway.create_rest_api(**params)              # if not, create it
+        return self.api_gateway().create_rest_api(**params)              # if not, create it
 
     def rest_api_delete(self, api_id):
         if self.rest_api_exists(api_id):
-            self.api_gateway.delete_rest_api(restApiId=api_id)
+            self.api_gateway().delete_rest_api(restApiId=api_id)
+        return self.rest_api_not_exists(api_id)
 
     def rest_api_exists(self, api_id):
         return self.rest_api_info(api_id).get('id') == api_id
@@ -288,9 +311,12 @@ class API_Gateway:
 
     def rest_api_info(self, api_id):
         try:
-            return self.api_gateway.get_rest_api(restApiId=api_id)
+            return self.api_gateway().get_rest_api(restApiId=api_id)
         except Exception as error:
             return {'error': f'{error}'}
+
+    def rest_api_not_exists(self, api_id):
+        return self.rest_api_exists(api_id) is False
 
     def rest_apis(self, index_by='id'):
         return self._call_method_return_items(method_name="get_rest_apis",index_by=index_by)

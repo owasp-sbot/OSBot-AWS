@@ -1,3 +1,5 @@
+from osbot_utils.utils.Misc import random_string
+
 from osbot_aws.AWS_Config import AWS_Config
 from osbot_aws.apis.IAM import IAM
 from osbot_aws.helpers.IAM_Policy import IAM_Policy
@@ -5,20 +7,20 @@ from osbot_aws.helpers.IAM_Policy import IAM_Policy
 
 
 class IAM_Role:
-    def __init__(self,role_name):
-        self.role_name  = role_name
+    def __init__(self,role_name=None):
+        self.role_name  = role_name or f"osbot_temp_role_{random_string()}"
         self.iam        = IAM(role_name=self.role_name)
-        self.role_arn   = None
-        self.policy_arn = None
 
     def add_policy_for__lambda(self):
         temp_policy_name = 'policy_{0}'.format(self.role_name)
         cloud_watch_arn  = f'arn:aws:logs:{AWS_Config().aws_session_region_name()}:{AWS_Config().aws_session_account_id()}:log-group:/aws/lambda/*'
         iam_policy       = IAM_Policy(temp_policy_name)
-        self.policy_arn  = iam_policy.add_cloud_watch(cloud_watch_arn).create().get('policy_arn')
-        self.iam.role_policy_attach(self.policy_arn)
-        return self
+        policy_arn       = iam_policy.add_cloud_watch(cloud_watch_arn).create().get('policy_arn')
+        self.iam.role_policy_attach(policy_arn)
+        return policy_arn
 
+    def arn(self):
+        return self.iam.role_arn()
 
     def create_for__lambda(self):
         result = self.create_for_service__assume_role('lambda.amazonaws.com')

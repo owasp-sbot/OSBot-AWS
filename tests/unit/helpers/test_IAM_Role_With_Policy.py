@@ -1,15 +1,16 @@
 from pprint import pprint
 from unittest import TestCase
 
+from osbot_utils.utils.Misc import random_string
+
 from osbot_aws.AWS_Config import AWS_Config
 from osbot_aws.helpers.IAM_Role_With_Policy import IAM_Role_With_Policy
 
 
 class test_IAM_Role_With_Policy(TestCase):
-
     def setUp(self):
-        self.temp_role_name       = 'test_IAM_Role__temp_role'
-        self.iam_role_with_policy = IAM_Role_With_Policy(role_name=self.temp_role_name)
+        self.temp_role_name       = f"osbot_temp_role_{random_string()}"
+        self.iam_role_with_policy = IAM_Role_With_Policy(self.temp_role_name)
         with AWS_Config() as aws_config:
             self.account_id  = aws_config.aws_session_account_id()
             self.region      = aws_config.aws_session_region_name()
@@ -17,7 +18,6 @@ class test_IAM_Role_With_Policy(TestCase):
     def tearDown(self) -> None:
         self.iam_role_with_policy.delete()
         assert self.iam_role_with_policy.not_exists()
-
 
     def test__init__(self):
         assert self.iam_role_with_policy.role_name == self.temp_role_name

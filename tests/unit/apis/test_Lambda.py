@@ -196,7 +196,7 @@ class test_Lambda(Test_Helper):
             pytest.skip("There where no Lambda functions in the target AWS region ")
         assert len(functions) > 0
         assert set(functions.pop(0)) == {'CodeSha256', 'CodeSize'     , 'Description'  , 'FunctionArn', 'FunctionName',
-                                           'Handler'   , 'LastModified' , 'MemorySize'   , 'RevisionId' , 'Role'        ,
+                                           'Handler'   , 'LastModified' , 'MemorySize'   , 'PackageType', 'RevisionId' , 'Role'        ,
                                            'Runtime'   , 'Timeout'      , 'TracingConfig', 'Version'                    }
 
 

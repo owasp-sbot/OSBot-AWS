@@ -1,7 +1,7 @@
 from functools import wraps
 
 
-class aws_inject:           # todo this method should not be osbot_utils (since it has a dependency on the Global osbot_aws class
+class aws_inject:
 
     """injects a number of AWS Specific values"""
     def __init__(self, fields):

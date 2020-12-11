@@ -2,6 +2,7 @@ import json
 from time import sleep
 
 import boto3
+from botocore import waiter
 from osbot_utils.utils.Misc import random_string
 
 from osbot_aws.AWS_Config import AWS_Config
@@ -35,7 +36,7 @@ class IAM:
 
 
     # main method
-
+    #todo: refactor with better wait solution
     def access_key__wait_until_key_is_working(self, access_key, wait_count=20, success_count=5):
         """
         Wait until the access key is working. When testing this there a number of cases where
@@ -363,3 +364,27 @@ class IAM:
 
     def set_user_name (self, value): self.user_name   = value ;return self
     def set_role_name (self, value): self.role_name   = value; return self
+
+    def wait_for_policy(self, policy_name, delay=None, max_attempts=None):
+        waiter_name = 'policy_exists'
+        arg_name    = 'PolicyArn'
+        return self.wait_for_waiter(waiter_name, arg_name, policy_name, delay, max_attempts)
+
+    def wait_for_role(self, role_name, delay=None, max_attempts=None):
+        waiter_name = 'role_exists'
+        arg_name    = 'RoleName'
+        return self.wait_for_waiter(waiter_name, arg_name, role_name, delay, max_attempts)
+
+    def wait_for_waiter(self, waiter_name, arg_name, arg_value, delay=None, max_attempts=None):
+        kwargs = {
+            arg_name : arg_value
+        }
+        kwargs['WaiterConfig'] = {
+            'Delay'      : delay        or 1,               # 1  is default boto3 value for Delay
+            'MaxAttempts': max_attempts or 20               # 20 is default boto3 value for Delay
+        }
+
+        waiter = self.iam().get_waiter(waiter_name)
+        waiter.wait(**kwargs)
+        return waiter
+

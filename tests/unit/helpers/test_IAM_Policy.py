@@ -2,13 +2,14 @@ from unittest import TestCase
 
 from osbot_utils.utils.Dev import Dev
 
+from osbot_aws.AWS_Config import AWS_Config
 from osbot_aws.helpers.IAM_Policy import IAM_Policy
 
 
 class test_IAM_Policy(TestCase):
 
     def setUp(self):
-        self.account_id = '244560807427'
+        self.account_id = AWS_Config().aws_session_account_id()
         self.iam_policy = IAM_Policy()
 
 

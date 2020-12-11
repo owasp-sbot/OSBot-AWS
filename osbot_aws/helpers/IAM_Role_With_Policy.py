@@ -3,7 +3,7 @@ from osbot_aws.helpers.IAM_Role import IAM_Role
 
 class IAM_Role_With_Policy(IAM_Role):
 
-    def __init__(self, role_name):
+    def __init__(self, role_name=None):
         super().__init__(role_name)
 
     def policy_template_cloudwatch_allow_all(self):

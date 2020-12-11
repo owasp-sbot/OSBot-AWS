@@ -10,7 +10,7 @@ class test_Lambda_Shell(Test_Helper):
 
     def test_reset_lambda_shell_auth(self):
         self.lambda_shell.reset_lambda_shell_auth()
-        assert len(self.lambda_shell.get_lambda_shell_auth().get('key').split('-')) == 5
+        assert len(self.lambda_shell.get_lambda_shell_auth().split('-')) == 5
 
     def test_get_lambda_shell_auth(self):
         #todo: add support to confirming that this method will be fast with the @cache_in_tmp decorator
@@ -33,7 +33,7 @@ class test_Lambda_Shell(Test_Helper):
     def test_decorator_lambda_shell(self):
         @lambda_shell
         def lambda_run(event, context=None):
-            return 'here'
+            return 'pong'
 
         payload = {'shell':  {'method_name': 'ping', 'auth_key': self.lambda_shell.get_lambda_shell_auth()} }
         assert lambda_run(payload) == 'pong'

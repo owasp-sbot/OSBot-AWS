@@ -40,7 +40,7 @@ class test_Rest_API(Test_Helper):
         to_method   = 'GET'
         to_uri      = 'http://httpbin.org/robots.txt'
         self.rest_api.add_method_http(from_path, from_method, to_method, to_uri)
-        self.result = self.rest_api.test_method(from_path, from_method)
+        assert len(self.rest_api.test_method(from_path, from_method).get('log')) > 0
 
     def test_create(self):
         current_id = self.rest_api.id()

@@ -55,7 +55,7 @@ class test_Logs(TestCase):
 
     def test_groups(self):
         assert len(list(self.logs.groups())) > 1
-        assert len(self.logs.groups()) > 100
+        assert len(self.logs.groups()) > 10
 
     def test_streams__exists_delete_create(self):
         assert self.logs.stream_exists() is True                                        # log stream is created by setUpClass
