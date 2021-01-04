@@ -1,8 +1,12 @@
 import json
+
+from osbot_utils.decorators.lists.index_by import index_by
+from osbot_utils.decorators.methods.cache import cache
+from osbot_utils.decorators.methods.catch import catch
+from osbot_utils.decorators.methods.remove_return_value import remove_return_value
+
 from osbot_aws.apis.Session import Session
-from osbot_utils.decorators.Method_Wrappers import cache, catch, remove
 from osbot_aws.apis.S3 import S3
-from osbot_utils.decorators.Lists import index_by
 from osbot_utils.utils.Misc import get_missing_fields
 
 
@@ -54,7 +58,7 @@ class Lambda:
         return self.client().get_account_settings()
 
     @catch
-    @remove(field_name='ResponseMetadata')
+    @remove_return_value(field_name='ResponseMetadata')
     def alias(self, function_name, name):
         return self.client().get_alias(FunctionName=function_name, Name=name)
 
@@ -63,7 +67,7 @@ class Lambda:
         return self.client().create_alias(FunctionName=function_name,FunctionVersion= function_version,Name=name, Description=description)
 
     @catch
-    @remove(field_name='ResponseMetadata')
+    @remove_return_value(field_name='ResponseMetadata')
     def alias_delete(self, function_name, name):
         return self.client().delete_alias(FunctionName=function_name, Name=name)
 
@@ -103,7 +107,7 @@ class Lambda:
         except Exception as error:
             return {'status': 'error', 'data': '{0}'.format(error)}
 
-    @remove('ResponseMetadata')
+    @remove_return_value('ResponseMetadata')
     def configuration(self):
         return self.client().get_function_configuration(FunctionName=self.name)
         #return self.info().get('Configuration')
@@ -154,7 +158,7 @@ class Lambda:
     def function_Arn(self):
         return self.info().get('Configuration').get('FunctionArn')
 
-    @remove('ResponseMetadata')
+    @remove_return_value('ResponseMetadata')
     def info(self):
         return self.client().get_function(FunctionName=self.name)
 

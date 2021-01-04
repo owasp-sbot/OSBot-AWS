@@ -1,7 +1,6 @@
 from datetime import date, timedelta
 
-from osbot_utils.decorators.Method_Wrappers import cache
-
+from osbot_utils.decorators.methods.cache import cache
 from osbot_aws.apis.Lambda import Lambda
 from osbot_aws.apis.IAM import IAM
 from osbot_aws.apis.Session import Session

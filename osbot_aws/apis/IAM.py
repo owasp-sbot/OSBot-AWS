@@ -3,12 +3,14 @@ from time import sleep
 
 import boto3
 from botocore import waiter
+from osbot_utils.decorators.lists.group_by import group_by
+from osbot_utils.decorators.lists.index_by import index_by
+from osbot_utils.decorators.methods.cache import cache
+from osbot_utils.decorators.methods.catch import catch
 from osbot_utils.utils.Misc import random_string
 
 from osbot_aws.AWS_Config import AWS_Config
 from osbot_aws.apis.Session             import Session
-from osbot_utils.decorators.Method_Wrappers  import cache, catch
-from osbot_utils.decorators.Lists import index_by, group_by
 from osbot_utils.utils import Misc
 
 

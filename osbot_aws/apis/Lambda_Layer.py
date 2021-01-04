@@ -1,14 +1,16 @@
 import os
 import shutil
 
+from osbot_utils.decorators.lists.index_by import index_by
+from osbot_utils.decorators.methods.cache import cache
+from osbot_utils.decorators.methods.remove_return_value import remove_return_value
+from osbot_utils.decorators.methods.required_fields     import required_fields
+
 from osbot_aws.AWS_Config import AWS_Config
 from osbot_aws.apis.S3                      import S3
 from osbot_aws.apis.Session                 import Session
-from osbot_utils.decorators.Lists import index_by
-from osbot_utils.utils.Files import Files, folder_zip, file_bytes, temp_folder, temp_file
-from osbot_utils.decorators.Method_Wrappers import cache, remove, required_fields
+from osbot_utils.utils.Files import folder_zip, file_bytes, temp_folder, temp_file
 from osbot_utils.utils.Http import GET_bytes_to_file
-from osbot_utils.utils.Misc                 import get_missing_fields
 from osbot_utils.utils.Process import run_process
 
 
@@ -52,7 +54,7 @@ class Lambda_Layer:
         else:
             return {'status': 'error', 'error':install_result.get('stderr'), 'stdout': install_result.get('stdout')}
 
-    @remove('ResponseMetadata')
+    @remove_return_value('ResponseMetadata')
     @required_fields(['layer_name'])
     def create_from_zip_bytes(self, zip_bytes):
         params = { 'LayerName'         : self.layer_name           ,
@@ -62,7 +64,7 @@ class Lambda_Layer:
                    'CompatibleRuntimes': self.runtimes             }
         return self.client().publish_layer_version(**params)
 
-    @remove('ResponseMetadata')
+    @remove_return_value('ResponseMetadata')
     @required_fields(['layer_name'])
     def create_from_s3(self):
         params = {'LayerName'           : self.layer_name               ,

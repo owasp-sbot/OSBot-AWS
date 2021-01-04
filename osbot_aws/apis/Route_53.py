@@ -1,5 +1,7 @@
-from osbot_utils.decorators.Lists           import group_by, index_by
-from osbot_utils.decorators.Method_Wrappers import catch
+from osbot_utils.decorators.lists.group_by import group_by
+from osbot_utils.decorators.lists.index_by import index_by
+from osbot_utils.decorators.methods.catch import catch
+
 from osbot_aws.apis.Session            import Session
 
 

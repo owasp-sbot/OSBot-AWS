@@ -1,7 +1,7 @@
-from osbot_utils.decorators.Lists import index_by
+from osbot_utils.decorators.lists.index_by import index_by
+from osbot_utils.decorators.methods.catch import catch
 
 from osbot_aws.apis.Session import Session
-from osbot_utils.decorators.Method_Wrappers import catch
 
 
 class ACM:

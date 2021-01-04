@@ -1,11 +1,13 @@
 import json
 
+from osbot_utils.decorators.methods.cache import cache
+from osbot_utils.decorators.methods.catch import catch
+
 from osbot_aws.apis.Lambda import Lambda
 
 from osbot_aws.apis.IAM import IAM
 
 from osbot_aws.apis.Session import Session
-from osbot_utils.decorators.Method_Wrappers import cache, catch
 
 
 class Firehose:

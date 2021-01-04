@@ -2,13 +2,15 @@ import  gzip
 import  json
 import  os
 import  tempfile
-from    io                                  import BytesIO
-from    gzip                                import GzipFile
-from    botocore.errorfactory               import ClientError
-from    osbot_utils.decorators.Method_Wrappers   import cache
-from    osbot_aws.apis.Session              import Session
-from    osbot_utils.decorators.Lists        import index_by, group_by
-from    osbot_utils.utils.Files             import Files
+from    io                                   import BytesIO
+from    gzip                                 import GzipFile
+from    botocore.errorfactory                import ClientError
+from osbot_utils.decorators.lists.group_by import group_by
+from osbot_utils.decorators.lists.index_by import index_by
+from    osbot_utils.decorators.methods.cache import cache
+
+from    osbot_aws.apis.Session               import Session
+from    osbot_utils.utils.Files              import Files
 
 # helper methods
 
