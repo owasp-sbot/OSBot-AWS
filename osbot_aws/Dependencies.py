@@ -21,7 +21,7 @@ def load_dependency(target):
     import shutil
     import sys
     s3         = S3()
-    s3_bucket  = 'gw-bot-lambdas'
+    s3_bucket  = AWS_Config().lambda_s3_bucket()
     s3_key     = 'lambdas-dependencies/{0}.zip'.format(target)
     tmp_dir    = Files.path_combine('/tmp/lambdas-dependencies', target)
     #return s3.file_exists(s3_bucket,s3_key)
