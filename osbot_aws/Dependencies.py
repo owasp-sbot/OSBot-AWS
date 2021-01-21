@@ -1,9 +1,11 @@
 import os
 
 #todo: use AWS Lambda Layers
-from osbot_aws.apis.S3 import S3
-from osbot_utils.utils.Files import Files, folder_exists, folder_not_exists, folder_create, file_not_exists
-from osbot_utils.utils.Process import Process
+from osbot_aws.apis.S3          import S3
+from osbot_aws.AWS_Config       import AWS_Config
+from osbot_utils.utils.Files    import Files, folder_exists, folder_not_exists, folder_create, file_not_exists
+from osbot_utils.utils.Process  import Process
+
 
 
 def load_dependencies(targets):
@@ -46,7 +48,7 @@ def pip_install_dependency(target):
 #todo: also support AWS Lambda Layers
 def upload_dependency(target):
     s3        = S3()
-    s3_bucket = 'gw-bot-lambdas'
+    s3_bucket = AWS_Config().lambda_s3_bucket()
     s3_file   = 'lambdas-dependencies/{0}.zip'.format(target)
     path_libs = Files.path_combine('../../../_lambda_dependencies/', target)
     if Files.not_exists(path_libs):
