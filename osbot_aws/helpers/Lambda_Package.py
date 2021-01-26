@@ -59,7 +59,11 @@ class Lambda_Package:
         self.add_folder(self.get_root_folder())
         return self
 
+    def add_osbot_aws(self):
+        self.deploy_lambda.package.add_module('osbot_aws')
+
     def add_osbot_utils(self):
+        self.add_module('dotenv')
         self.add_module('osbot_utils')
         return self
 

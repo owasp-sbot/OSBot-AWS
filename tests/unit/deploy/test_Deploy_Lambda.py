@@ -80,12 +80,11 @@ class test_Deploy_Lambda(TestCase):
         assert folder_exists(package.tmp_folder)
 
     def test_update(self):
-        #assert self.deploy.package.aws_lambda.delete()
         deploy = Deploy_Lambda(self.lambda_function)
         result = deploy.update()
 
         assert result['status' ] == 'ok'
-        assert result['name']    == self.deploy.lambda_name.replace('.',"_")
+        assert result['name']    == self.deploy.lambda_name().replace('.',"_")
 
         assert result['data']['FunctionArn'] == f'arn:aws:lambda:eu-west-1:{self.aws_config.aws_session_account_id()}:function:osbot_test_deploy_lambda_osbot_test_deploy_lambda'
         assert result['data']['FunctionName'] == 'osbot_test_deploy_lambda_osbot_test_deploy_lambda'
@@ -93,18 +92,18 @@ class test_Deploy_Lambda(TestCase):
         assert result['data']['MemorySize'  ] == 3008
         assert result['data']['PackageType' ] == 'Zip'
 
-        assert deploy.lambda_invoke()  == 'hello None'
-        assert deploy.lambda_invoke({"name": "world"}) == "hello world"
+        assert deploy.invoke()  == 'hello None'
+        assert deploy.invoke({"name": "world"}) == "hello world"
 
         print(deploy.delete())
 
     def test_invoke(self):
         self.deploy.update()
 
-        assert self.deploy.lambda_invoke({"name": "world"}) == "hello world"
+        assert self.deploy.invoke({"name": "world"}) == "hello world"
 
         #invoke directly
-        aws_lambda = Lambda(name=self.deploy.lambda_name)
+        aws_lambda = Lambda(name=self.deploy.lambda_name())
         assert aws_lambda.invoke()                  == 'hello None'
         assert aws_lambda.invoke({'name': 'world'}) == 'hello world'
 
