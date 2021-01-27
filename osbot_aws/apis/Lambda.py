@@ -7,19 +7,20 @@ from osbot_utils.decorators.methods.remove_return_value import remove_return_val
 
 from osbot_aws.apis.Session import Session
 from osbot_aws.apis.S3 import S3
-from osbot_utils.utils.Misc import get_missing_fields
+from osbot_utils.utils.Misc import get_missing_fields, wait
 
 
 class Lambda:
     def __init__(self, name=''):
         self.runtime        = 'python3.8'
-        self.memory         = 3008
-        self.timeout        = 60
+        self.memory         = 10240                             # 10 Gb (current AWS limit in Dec 2020)
+        self.timeout        = 900                               # 15 M
         self.trace_mode     = 'PassThrough'                     # x-rays disabled
         self.original_name  = name
         self.handler        = name + '.run'
         self.name           = name.replace('.','_')
         self.folder_code    = None
+        self.image_uri      = None                          # when using container images
         self.role           = None
         self.s3_bucket      = None
         self.s3_key         = None
@@ -80,26 +81,31 @@ class Lambda:
         if len(missing_fields) > 0:
             return { 'error': 'missing fields in create_function: {0}'.format(missing_fields) }
 
-        (name, runtime, role, handler, memory_size, timeout, tracing_config, code, layers, environment) = self.create_params()
+        (name, runtime, role, handler, memory_size, timeout, tracing_config, code, layers, environment, package_type) = self.create_params()
 
         if self.exists() is True:
             return {'status': 'warning', 'name': self.name, 'data': 'lambda function already exists'}
 
-        if self.s3().file_exists(code.get('S3Bucket'), code.get('S3Key')) is False:
+        if self.image_uri:
+            pass
+        elif self.s3().file_exists(code.get('S3Bucket'), code.get('S3Key')) is False:
             return {'status': 'error', 'name': self.name, 'data': 'could not find provided s3 bucket and s3 key'}
 
         try:
             kwargs = {'FunctionName'  : name           ,
-                      'Runtime'       : runtime        ,
                       'Role'          : role           ,
-                      'Handler'       : handler        ,
+
                       'MemorySize'    : memory_size    ,
                       'Timeout'       : timeout        ,
                       'TracingConfig' : tracing_config ,
+                      'PackageType'   : package_type   ,
                       'Code'          : code           }
 
-            if layers     : kwargs['Layers'     ] = layers
-            if environment: kwargs['Environment'] = environment
+            if package_type == 'Zip':
+                kwargs['Runtime'] = runtime
+                kwargs['Handler'] = handler
+            if layers      : kwargs['Layers'     ] = layers
+            if environment : kwargs['Environment'] = environment
 
             data = self.client().create_function(**kwargs)
 
@@ -125,8 +131,16 @@ class Lambda:
         Layers        = self.layers
         Environment   = {'Variables': self.env_variables} if self.env_variables else None
         TracingConfig = { 'Mode': self.trace_mode }
-        Code          = { "S3Bucket" : self.s3_bucket, "S3Key": self.s3_key}
-        return FunctionName, Runtime, Role, Handler, MemorySize, Timeout, TracingConfig, Code, Layers, Environment
+
+        if self.image_uri:
+            Code        = {'ImageUri': self.image_uri}
+            PackageType = "Image"
+        else:
+            Code        = {"S3Bucket": self.s3_bucket, "S3Key": self.s3_key}
+            PackageType = "Zip"
+
+        #todo refactor the return value below into an object
+        return FunctionName, Runtime, Role, Handler, MemorySize, Timeout, TracingConfig, Code, Layers, Environment, PackageType
 
     def delete(self):
         if self.exists() is False:
@@ -277,3 +291,16 @@ class Lambda:
         if kwargs != {}:
             kwargs['FunctionName'] = self.name
             return self.client().update_function_configuration(**kwargs)
+
+
+    def wait_for_state(self, state, max_wait_count=40, wait_interval=1):
+        for i in range(0, max_wait_count):
+            info = self.info()
+            state = info.get('Configuration').get('State')
+            if state == 'state':
+                return {"status" : "ok", "message": f"Status '{state}' was found after {i} * {wait_interval} seconds"}
+            wait(wait_interval)
+        return {"status" : "error", "message": f"Status '{state}' did not occur in {i} * {wait_interval} seconds"}
+
+    def wait_for_state_active(self, **kwargs):
+        return self.wait_for_state("Active", **kwargs)

@@ -60,7 +60,7 @@ class Lambda_Package:
         return self
 
     def add_osbot_aws(self):
-        self.deploy_lambda.package.add_module('osbot_aws')
+        self.add_module('osbot_aws')
 
     def add_osbot_utils(self):
         self.add_module('dotenv')
@@ -83,6 +83,9 @@ class Lambda_Package:
             if pattern in file:
                 file_to_delete = Files.path_combine(self.tmp_folder,file[1:])
                 Files.delete(file_to_delete)
+
+    def set_image_uri(self, image_uri):
+        self.aws_lambda.image_uri = image_uri
 
     def use_lambda_file(self,lambda_file):
         file_path = Files.path_combine(self.get_root_folder(), lambda_file)

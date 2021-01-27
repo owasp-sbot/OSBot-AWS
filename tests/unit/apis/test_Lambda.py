@@ -39,8 +39,7 @@ class test_Lambda(Test_Helper):
         cls.setup_test_enviroment_Lambda()
 
 
-    #@aws_inject('region,account_id')
-    def setUp(self):   # self, region, account_id):
+    def setUp(self):
         super().setUp()
         self.lambda_name = 'tmp_lambda_dev_test'
         self.setup       = super().setUp()
@@ -52,9 +51,9 @@ class test_Lambda(Test_Helper):
 
 
     def test__init__(self):
-        assert self.aws_lambda.runtime == 'python3.8'
-        assert self.aws_lambda.memory == 3008
-        assert self.aws_lambda.timeout == 60
+        assert self.aws_lambda.runtime       == 'python3.8'
+        assert self.aws_lambda.memory        == 10240
+        assert self.aws_lambda.timeout       == 900
         assert self.aws_lambda.original_name == self.lambda_name
         assert self.aws_lambda.s3().bucket_exists(self.s3_bucket)
 
@@ -99,11 +98,11 @@ class test_Lambda(Test_Helper):
 
         assert self.aws_lambda.create_params() == (self.lambda_name, 'python3.8'              ,     # confirm values that will be passed to the boto3's create_function
                                                    role_arn        , self.lambda_name + '.run',
-                                                   3008            , 60                       ,
+                                                   10240           , 900                      ,
                                                    { 'Mode'    : 'PassThrough'               },
                                                    { 'S3Bucket': self.s3_bucket               ,
                                                      'S3Key'   : self.s3_key                 },
-                                                   None, None)
+                                                   None, None, 'Zip')
 
         assert self.aws_lambda.upload() is True
 
@@ -121,15 +120,22 @@ class test_Lambda(Test_Helper):
                      .field_is_equal('FunctionArn'  , expected_arn             )
                      .field_is_equal('FunctionName' , self.lambda_name         )
                      .field_is_equal('Handler'      , self.lambda_name + '.run')
-                     .field_is_equal('MemorySize'   , 3008                     )
+                     .field_is_equal('MemorySize'   , 10240                    )
                      .field_is_equal('Role'         , role_arn                 )
                      .field_is_equal('Runtime'      , 'python3.8'              )
-                     .field_is_equal('Timeout'      , 60                       )
+                     .field_is_equal('Timeout'      , 900                      )
                      .field_is_equal('TracingConfig', {'Mode': 'PassThrough'}  )
                      .field_is_equal('Version'      , '$LATEST'                )
         )
 
+        assert self.aws_lambda.invoke() == 'hello None'
         assert self.aws_lambda.delete() is True     # confirm Lambda was deleted
+
+
+    def test_create_function_using_image_container(self):
+        pass
+        # self.image_uri = "785217600689.dkr.ecr.eu-west-1.amazonaws.com/python-for-lambda:latest"
+        # todo write test that checks the ability to use images for deployment
 
     def test_create_function__bad_s3_key_(self):
         self.aws_lambda.set_role('').set_s3_bucket('').set_s3_key('')

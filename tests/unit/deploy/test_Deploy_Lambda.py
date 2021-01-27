@@ -3,6 +3,8 @@ import sys
 from pprint import pprint
 from unittest import TestCase
 
+from osbot_utils.utils.Misc import wait
+
 from osbot_aws.AWS_Config import AWS_Config
 from osbot_aws.apis.IAM import IAM
 from osbot_aws.apis.Lambda import Lambda
@@ -10,12 +12,8 @@ from osbot_aws.apis.test_helpers.Temp_Aws_Roles import Temp_Aws_Roles
 from osbot_aws.apis.test_helpers.Temp_Folder_With_Lambda_File import Temp_Folder_With_Lambda_File
 from osbot_aws.deploy.Deploy_Lambda import Deploy_Lambda
 from osbot_aws.helpers.Test_Helper import Test_Helper
-from osbot_utils.utils.Files import folder_exists, parent_folder, file_contents, file_create, path_combine, \
-    folder_create, folder_files, file_name, file_copy, file_delete
-
-
-#from function_hello_world.aws.deploy.Deploy import Deploy
-#from function_hello_world.aws.lambdas.hello_world import run
+from osbot_utils.utils.Files import folder_exists, file_create, path_combine, \
+    folder_create, file_name, file_copy, file_delete
 
 
 class test_Deploy_Lambda(TestCase):
@@ -79,17 +77,18 @@ class test_Deploy_Lambda(TestCase):
         assert package.role_arn    == f"arn:aws:iam::{self.aws_config.aws_session_account_id()}:role/temp_role_for_lambda_invocation"
         assert folder_exists(package.tmp_folder)
 
+
     def test_update(self):
         deploy = Deploy_Lambda(self.lambda_function)
         result = deploy.update()
 
-        assert result['status' ] == 'ok'
-        assert result['name']    == self.deploy.lambda_name().replace('.',"_")
+        assert result['status'] == 'ok'
+        assert result['name'  ]    == self.deploy.lambda_name().replace('.',"_")
 
-        assert result['data']['FunctionArn'] == f'arn:aws:lambda:eu-west-1:{self.aws_config.aws_session_account_id()}:function:osbot_test_deploy_lambda_osbot_test_deploy_lambda'
+        assert result['data']['FunctionArn' ] == f'arn:aws:lambda:{self.aws_config.aws_session_region_name()}:{self.aws_config.aws_session_account_id()}:function:osbot_test_deploy_lambda_osbot_test_deploy_lambda'
         assert result['data']['FunctionName'] == 'osbot_test_deploy_lambda_osbot_test_deploy_lambda'
         assert result['data']['Handler'     ] == 'osbot_test_deploy_lambda.osbot_test_deploy_lambda.run'
-        assert result['data']['MemorySize'  ] == 3008
+        assert result['data']['MemorySize'  ] == 10240
         assert result['data']['PackageType' ] == 'Zip'
 
         assert deploy.invoke()  == 'hello None'
@@ -107,3 +106,15 @@ class test_Deploy_Lambda(TestCase):
         assert aws_lambda.invoke()                  == 'hello None'
         assert aws_lambda.invoke({'name': 'world'}) == 'hello world'
 
+    # todo: add test setup when a ECR image is created as part of the tests
+    # def test_set_container_image(self):
+    #     image_uri = "785217600689.dkr.ecr.eu-west-1.amazonaws.com/python-for-lambda:latest"
+    #     print('-----')
+    #     self.deploy.set_container_image(image_uri)
+    #     assert self.deploy.package.aws_lambda.exists() is False
+    #     assert self.deploy.package.aws_lambda.create().get('status') == 'ok'
+    #     assert self.deploy.package.aws_lambda.exists() is True
+    #     wait_count = 40
+    #     pprint(self.deploy.package.aws_lambda.wait_for_state_active())
+    #
+    #     print(self.deploy.package.aws_lambda.invoke({'name': 'world'}))

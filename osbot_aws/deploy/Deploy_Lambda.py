@@ -21,6 +21,12 @@ class Deploy_Lambda:
     def add_osbot_aws  (self):    self.package.add_module('osbot_aws')
     def add_osbot_utils(self):    self.package.add_osbot_utils()
 
+    def delete(self):
+        return self.lambda_function().delete()
+
+    def deploy(self):
+        return self.update().get('status') == 'ok'
+
     def exists(self):
         return self.package.aws_lambda.exists()
 
@@ -39,8 +45,7 @@ class Deploy_Lambda:
     def lambda_function(self):
         return self.package.aws_lambda
 
-    def deploy(self):
-        return self.update().get('status') == 'ok'
+
 
     def update(self):
         self.add_function_source_code()
@@ -48,10 +53,8 @@ class Deploy_Lambda:
             raise Exception("There are not files to deploy")
         return self.package.update()
 
-    def delete(self):
-        return self.lambda_function().delete()
-
-
+    def set_container_image(self, image_uri):
+        self.package.set_image_uri(image_uri)
 
 # legacy methods
 Deploy_Lambda.lambda_invoke = Deploy_Lambda.invoke
