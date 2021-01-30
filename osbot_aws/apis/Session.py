@@ -1,7 +1,9 @@
-import boto3
-from   boto3                import Session
-from   botocore.session     import get_session
-from   osbot_aws.AWS_Config import AWS_Config
+import  boto3
+from    boto3                import Session
+from    botocore.session     import get_session
+from    osbot_aws.AWS_Config import AWS_Config
+from    osbot_aws.apis.STS   import STS
+
 
 class Session:
 
@@ -28,7 +30,7 @@ class Session:
             #     session = boto3.Session(profile_name=profile_name, region_name=region_name)
             if profile_name in self.profiles():                                                  # seeing if this is a more efficient way to get the data
                 session = boto3.Session(profile_name=profile_name, region_name=region_name)      # tried to pass this params but had side effects: , botocore_session=self.boto_session()
-                return {'status': 'ok', 'client': session.client(service_name=service_name) }
+                return {'status': 'ok', 'client': session.client(service_name=service_name) , "session": session }
             return { 'status' : 'ok', 'client': boto3.client(service_name=service_name)}
         except Exception as error:
             return {'status': 'error', 'data': '{0}'.format(error) }
@@ -50,8 +52,11 @@ class Session:
         except Exception as error:
             return {'status': 'error', 'data': '{0}'.format(error) }
 
-    def client(self, service_name, profile_name=None, region_name=None):
-        return self.client_boto3(service_name,profile_name,region_name).get('client')
+    def client(self, service_name, profile_name=None, region_name=None, check_credentials=True):
+        client = self.client_boto3(service_name,profile_name,region_name).get('client')
+        if check_credentials:
+            STS().check_current_session_credentials()
+        return client
 
     def resource(self, service_name,profile_name=None, region_name=None):
         return self.resource_boto3(service_name,profile_name,region_name).get('resource')
