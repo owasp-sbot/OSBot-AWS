@@ -26,11 +26,11 @@ class S3:
         self.tmp_file_folder = 's3_temp_files'
 
     @cache
-    def s3(self):
+    def s3(self):                                               # todo refactor this method to be called client()
         return Session().client('s3')
 
     @cache
-    def s3_resource(self):
+    def s3_resource(self):                                      # todo refactor this method to be called resource()
         return Session().resource('s3')
 
     def bucket_notification(self, bucket_name):
