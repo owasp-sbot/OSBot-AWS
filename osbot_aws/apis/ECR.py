@@ -3,6 +3,8 @@ from osbot_utils.decorators.lists.index_by import index_by
 from osbot_utils.decorators.methods.cache import cache
 
 from osbot_aws.apis.Session import Session
+from osbot_utils.utils.Misc import base64_to_str
+
 
 class ECR:
     def __init__(self):
@@ -12,10 +14,23 @@ class ECR:
     def client(self):
         return Session().client('ecr')
 
+    def authorization_token(self):
+        auth_data          = self.client().get_authorization_token().get('authorizationData')[0]
+        auth_token         = base64_to_str(auth_data.get('authorizationToken'))
+        proxy_endpoint     = auth_data.get('proxyEndpoint')
+        username, password = auth_token.split(':')
+        return {    "registry": proxy_endpoint  ,
+                    "username": username        ,
+                    "password": password        }
 
+    def images(self, repository_name):
+        result = self.client().describe_images(repositoryName=repository_name)
+        return result.get('imageDetails')
 
-    def images(self):
-        return self.client().list_images()
+    @index_by
+    def images_ids(self, repository_name):
+        result = self.client().list_images(repositoryName=repository_name)
+        return result.get('imageIds')
 
     def registry(self):
         response = self.client().describe_registry()

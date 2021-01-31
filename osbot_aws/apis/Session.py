@@ -31,7 +31,7 @@ class Session:
             if profile_name in self.profiles():                                                  # seeing if this is a more efficient way to get the data
                 session = boto3.Session(profile_name=profile_name, region_name=region_name)      # tried to pass this params but had side effects: , botocore_session=self.boto_session()
                 return {'status': 'ok', 'client': session.client(service_name=service_name) , "session": session }
-            return { 'status' : 'ok', 'client': boto3.client(service_name=service_name)}
+            return { 'status' : 'ok', 'client': boto3.client(service_name=service_name, region_name=region_name)}
         except Exception as error:
             return {'status': 'error', 'data': '{0}'.format(error) }
 
