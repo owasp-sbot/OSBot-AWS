@@ -1,4 +1,7 @@
 import boto3
+from osbot_utils.utils.Misc import wait, wait_for
+
+from osbot_utils.decorators.methods.remove_return_value import remove_return_value
 
 from osbot_aws.apis.STS import STS
 from osbot_utils.decorators.lists.index_by import index_by
@@ -29,6 +32,29 @@ class Cloud_Watch_Logs():
     def export_tasks(self):
         return self.client().describe_export_tasks().get('exportTasks')
 
+    @remove_return_value(field_name='ResponseMetadata')
+    def log_events(self, log_group_name, log_stream_name):
+        result = self.client().get_log_events(logGroupName=log_group_name, logStreamName=log_stream_name)
+        return result
+        # todo add support for these filters
+        # startTime = 123,
+        # endTime = 123,
+        # nextToken = 'string',
+        # limit = 123,
+        # startFromHead = True | False
+
+    @remove_return_value(field_name='ResponseMetadata')
+    def log_events_put(self, log_group_name, log_stream_name, log_events, next_sequence_token=None):
+        kwargs = {  'logGroupName' : log_group_name,
+                    'logStreamName': log_stream_name,
+                    'logEvents'    : log_events }
+
+        if next_sequence_token:
+            kwargs.update({'sequenceToken': next_sequence_token})
+
+        result = self.client().put_log_events(**kwargs)
+        return result.get('nextSequenceToken')
+
     def log_group(self,log_group_name):
         log_group_arn = self.log_group_arn(log_group_name)
         log_groups    = self.log_groups(log_group_prefix=log_group_name)
@@ -54,7 +80,6 @@ class Cloud_Watch_Logs():
         self.client().delete_log_group(logGroupName= log_group_name)
         return status_ok(message=f"log group deleted ok: {log_group_name}")
 
-
     def log_group_exists(self, log_group_name):
         return self.log_group(log_group_name=log_group_name) is not None
 
@@ -75,7 +100,7 @@ class Cloud_Watch_Logs():
         self.client().create_log_stream(logGroupName=log_group_name, logStreamName=log_stream_name)
         return status_ok(message=f"log stream created ok: {log_stream_name}")
 
-    def log_stream(self, log_group_name, log_stream_name):
+    def log_stream(self, log_group_name, log_stream_name):                                      # todo: map out the performance implications of .log_streams(...) using describe_log_streams is it looks like it has very low limits of 5 TPS per account per region
         log_stream_arn = self.log_stream_arn(log_group_name=log_group_name, log_stream_name=log_stream_name)
         log_streams    = self.log_streams(log_group_name=log_group_name, log_stream_name_prefix=log_stream_name)
         for log_stream in log_streams:
@@ -94,12 +119,16 @@ class Cloud_Watch_Logs():
     def log_stream_exists(self, log_group_name, log_stream_name):
         return self.log_stream(log_group_name=log_group_name, log_stream_name=log_stream_name) is not None
 
+    def log_stream_next_token(self,log_group_name, log_stream_name):
+        log_stream = self.log_stream(log_group_name=log_group_name, log_stream_name=log_stream_name)
+        if log_stream:
+            return log_stream.get('nextForwardToken')
+
     def log_stream_not_exists(self, log_group_name, log_stream_name):
         return self.log_stream_exists(log_group_name=log_group_name, log_stream_name=log_stream_name) is False
 
-    def log_streams(self, log_group_name, log_stream_name_prefix=None):
+    def log_streams(self, log_group_name, log_stream_name_prefix=None):     # todo: map out the performance implications of using describe_log_streams is it looks like it has very low limits of 5 TPS per account per region
         if self.log_group_not_exists(log_group_name=log_group_name):
-            #return status_error(f'log group does not exist: {log_group_name}')
             return []
         kwargs = {'logGroupName': log_group_name}
         if log_stream_name_prefix:
@@ -122,7 +151,14 @@ class Cloud_Watch_Logs():
     def subscription_filters(self, log_group_name):
         return self.client().describe_subscription_filters(logGroupName=log_group_name).get('subscriptionFilters')
 
-
-
+    def wait_for_log_events(self, log_group_name, log_stream_name, max_attempts=20 ,sleep_for=0.1):
+        for i in range(0, max_attempts):
+            result = self.log_events(log_group_name=log_group_name, log_stream_name=log_stream_name)
+            events = result.get('events')
+            if len(events) > 0:
+                #print(f' got logs after {i} * {sleep_for} seconds')        # note: when coding this this value was between 4 and 8
+                return events
+            wait_for(sleep_for)
+        return []
 
 

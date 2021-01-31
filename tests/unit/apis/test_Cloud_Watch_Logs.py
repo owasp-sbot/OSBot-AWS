@@ -1,5 +1,6 @@
+from time import time
 from unittest import TestCase
-from osbot_utils.utils.Misc import random_string
+from osbot_utils.utils.Misc import random_string, wait, wait_for
 from osbot_aws.apis.Cloud_Watch_Logs import Cloud_Watch_Logs
 from osbot_utils.utils.Dev import pprint
 
@@ -45,6 +46,28 @@ class test_Cloud_Watch_Logs(TestCase):
     def test_export_tasks(self):
         result = self.logs.export_tasks()
         assert result == []                                    # todo add test for this method
+
+    def test_log_events(self):
+        result = self.logs.log_events(log_group_name=self.log_group_name, log_stream_name=self.log_stream_name)
+        pprint(result)
+
+    def test_log_events_put(self):
+        timestamp  = int(round(time() * 1000))
+        log_event  = {'timestamp': timestamp ,
+                      'message'  : 'an message in this log stream'}
+
+        next_sequence_token_1 = self.logs.log_events_put(log_group_name=self.log_group_name, log_stream_name=self.log_stream_name, log_events=[log_event]                                         )
+        next_sequence_token_2 = self.logs.log_events_put(log_group_name=self.log_group_name, log_stream_name=self.log_stream_name, log_events=[log_event], next_sequence_token=next_sequence_token_1)
+
+        assert next_sequence_token_1 != next_sequence_token_2
+
+        events = self.logs.wait_for_log_events(log_group_name=self.log_group_name, log_stream_name=self.log_stream_name)
+
+        assert len(events) == 2
+        event = events[0]
+        del event['ingestionTime']
+        assert event == log_event
+
 
     def test_log_group(self):
         result = self.logs.log_group(log_group_name=self.log_group_name)
