@@ -5,7 +5,7 @@ from osbot_utils.utils.Dev import Dev, pprint
 from osbot_aws.apis.ECR import ECR
 
 
-#STS().check_current_session_credentials()
+
 
 class test_ECR(TestCase):
 

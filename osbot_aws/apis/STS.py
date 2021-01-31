@@ -10,13 +10,19 @@ class STS:
     def __init__(self, print_error_message=True):
         self.print_error_message = print_error_message                  # todo: need to find a better way to have the bad credentials errors showing up in IDE when development
 
+    def current_account_id(self):
+        return self.caller_identity().get('Account')
+
+    def current_region_name(self):
+        return self.client().meta.region_name
+
     @cache
-    def sts(self):
+    def client(self):
         from osbot_aws.apis.Session import Session                      # recursive dependency
         return Session().client('sts', check_credentials=False)
 
-    def called_identity(self):
-        return self.sts().get_caller_identity()
+    def caller_identity(self):
+        return self.client().get_caller_identity()
 
     @cache
     def check_current_session_credentials(self):        # todo: see if there is a faster way to do this, at the moment it takes about 500ms which is quite a lot
@@ -24,7 +30,7 @@ class STS:
             return
         exception = None
         try:
-            self.called_identity()
+            self.caller_identity()
         except ClientError as client_error:
             exception = client_error.response.get('Error')
         if exception:

@@ -6,7 +6,7 @@ from osbot_aws.apis.S3 import S3
 from osbot_aws.apis.Session import Session
 
 
-class Cloud_Trail(Boto_Helpers):
+class Cloud_Trail(Boto_Helpers):                # todo write tests for this class (which was lost in a past refactor)
 
     def __init__(self):
         self.cloudtrail = Session().client('cloudtrail')

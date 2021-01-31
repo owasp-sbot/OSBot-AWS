@@ -1,4 +1,4 @@
-from osbot_aws.apis.Fargate import Fargate
+from osbot_aws.apis.ECS import Fargate
 
 
 class Fargate_Cluster(Fargate):

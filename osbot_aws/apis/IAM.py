@@ -185,8 +185,17 @@ class IAM:
                 return {'status': 'error'  , 'policy_name': policy_name, 'policy_arn': None                        , 'data': '{0}'.format(error)      }
         return {        'status': 'warning', 'policy_name': policy_name, 'policy_arn': policy_arn                  , 'data': 'policy already existed' }
 
-    def policy_delete(self, policy_arn):
-        if self.policy_exists(policy_arn) is False: return False
+    def policy_delete(self, policy_arn=None, policy_name=None):
+        if policy_arn:
+            if self.policy_exists(policy_arn) is False: return False
+        elif policy_name:
+            role_policies = self.role_policies()
+            if policy_name in role_policies:
+                policy_arn=role_policies.get(policy_name)
+            else:
+                return False
+        else:
+            return False
         self.policy_detach_roles(policy_arn)
         self.iam().delete_policy(PolicyArn= policy_arn)
         return self.policy_exists(policy_arn) is False
@@ -255,14 +264,19 @@ class IAM:
         except:
             return None
 
-    def role_create(self, policy_document):
+    def role_create(self, policy_document, skip_if_exists=True):
         if type(policy_document) is not str:
             policy_document = json.dumps(policy_document)
-        if self.role_exists() is False:
-            return self.iam().create_role(RoleName=self.role_name, AssumeRolePolicyDocument=policy_document).get('Role')
+        if self.role_exists():
+            if skip_if_exists:
+                return self.role_info()                     # todo: confirm that the values we get from self.role_info() are compatible with the values in .get('Role') (below)
+            else:
+                self.role_delete()
+        return self.iam().create_role(RoleName=self.role_name, AssumeRolePolicyDocument=policy_document).get('Role')
 
     def role_delete(self):
-        if self.role_exists() is False: return False                # make sure it exists
+        if self.role_exists() is False:
+            return False                                            # make sure it exists
         self.role_policies_detach_and_delete()                      # delete all associated policies
         self.iam().delete_role(RoleName=self.role_name)
         return self.role_exists() is False
@@ -292,6 +306,7 @@ class IAM:
         return self
 
     @catch
+    @index_by
     def role_policies(self):
         policies = {}
         if self.role_name:
@@ -310,7 +325,6 @@ class IAM:
         for policy_name, policy_arn in self.role_policies().items():
             policy_statements[policy_name] = self.policy_statement(policy_arn)
         return policy_statements
-
 
     @index_by
     def roles(self):

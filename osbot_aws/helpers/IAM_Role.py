@@ -22,6 +22,17 @@ class IAM_Role:
     def arn(self):
         return self.iam.role_arn()
 
+    def attach_policy(self, policy_name, policy_document):
+        self.delete_policy(policy_name= policy_name)
+        result_create = self.iam.policy_create(policy_name=policy_name, policy_document=policy_document)
+        policy_arn = result_create.get('policy_arn')
+        self.iam.role_policy_attach(policy_arn=policy_arn)
+        return policy_arn
+
+    def create(self, policy_document, skip_if_exists=True):
+        self.iam.role_create(policy_document=policy_document, skip_if_exists=skip_if_exists)
+        return self.exists()
+
     def create_for__lambda(self):
         result = self.create_for_service__assume_role('lambda.amazonaws.com')
         if result.get('status') == 'ok':
@@ -30,7 +41,6 @@ class IAM_Role:
 
     def create_for__code_build(self):
         return self.create_for_service__assume_role('codebuild.amazonaws.com')
-
 
     def create_for_service__assume_role(self, service):
         statement = {'Action': 'sts:AssumeRole',
@@ -63,6 +73,9 @@ class IAM_Role:
 
     def delete(self):
         return self.iam.role_delete()
+
+    def delete_policy(self, policy_arn=None, policy_name=None):
+        return self.iam.policy_delete(policy_arn=policy_arn, policy_name=policy_name)
 
     def exists(self):
         return self.iam.role_exists()

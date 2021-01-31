@@ -19,7 +19,7 @@ policy_document  = {'Statement': [ { 'Action': 'sts:AssumeRole',
                                                  'Principal': { 'Service': 'codebuild.amazonaws.com'}}]}
 
 
-class Test_IAM(Test_Helper):        # todo move Test_Helper into this OSBOT_AWS
+class Test_IAM(Test_Helper):
 
 
     @classmethod
@@ -188,13 +188,13 @@ class Test_IAM(Test_Helper):        # todo move Test_Helper into this OSBOT_AWS
         assert self.iam.policy_delete(policy_arn) is True          # this will not delete a policy that is attached
         assert self.iam.policy_exists(policy_arn) is False
 
-    @pytest.mark.skip('Fix test')
+    #@pytest.mark.skip('Fix test')
     def test_roles(self):
-        assert len(self.iam.roles())  > 70
+        assert len(self.iam.roles())  > 5
 
     def test_user_access_key_create__delete(self):
         access_key = self.iam.user_access_key_create()
-        assert self.iam.access_key__wait_until_key_is_working(access_key,success_count=1) is True
+        assert self.iam.access_key__wait_until_key_is_working    (access_key,success_count=1) is True
         self.iam.user_access_keys_delete_all()
         assert self.iam.access_key__wait_until_key_is_not_working(access_key, success_count=1) is True
 
