@@ -1,5 +1,9 @@
 from time import sleep
 
+from osbot_utils.decorators.lists.group_by import group_by
+
+from osbot_aws.apis.Cloud_Watch_Logs import Cloud_Watch_Logs
+from osbot_aws.apis.STS import STS
 from osbot_aws.helpers.IAM_Role import IAM_Role
 
 from osbot_utils.decorators.lists.index_by import index_by
@@ -18,13 +22,22 @@ from osbot_aws.apis.Session import Session
 class ECS:
 
     def __init__(self):
-        self.aws_config  = AWS_Config()
-        self.account_id  = self.aws_config.aws_session_account_id()
-        self.region      = self.aws_config.aws_session_region_name()
+        self.account_id  = self.sts().current_account_id()
+        self.region      = self.sts().current_region_name()
 
     @cache
     def client(self):
         return Session().client('ecs')
+
+    @cache
+    def sts(self):
+        return STS()
+
+    @index_by
+    def cluster(self, cluster_arn):
+        result = self.clusters(clusters_arns=[cluster_arn])
+        if len(result) == 1:
+            return result[0]
 
     def cluster_arn(self, cluster_name):
         return f'arn:aws:ecs:{self.region}:{self.account_id}:cluster/{cluster_name}'
@@ -37,11 +50,11 @@ class ECS:
         response = self.client().delete_cluster(cluster=cluster_arn)
         return response.get('cluster')
 
-    @index_by
-    def cluster(self, cluster_arn):
-        result = self.clusters(clusters_arns=[cluster_arn])
-        if len(result) == 1:
-            return result[0]
+    def cluster_exists(self, cluster_arn):
+        cluster = self.cluster(cluster_arn=cluster_arn)
+        if cluster and cluster.get('status') == 'ACTIVE':       # threat inactive cluster as non existent
+            return True
+        return False
 
     @index_by
     def clusters(self, clusters_arns=None):
@@ -52,20 +65,27 @@ class ECS:
     def clusters_arns(self):
         return self.client().list_clusters().get('clusterArns')
 
-    def task_get_log_details(self, task_name):
-        log_group_name = "awslogs-{0}".format(task_name)
-        log_group_region = "eu-west-2"
-        log_group_stream_prefix = "awslogs-example"
-        cloud_watch = Cloud_Watch()
-        if cloud_watch.log_group_exists(log_group_name) is False:
-            cloud_watch.log_group_create(log_group_name)
-        return log_group_name,log_group_region,log_group_stream_prefix
+    # def task_get_log_details(self, task_name):
+    #
+    #     cloud_watch =
+    #     if cloud_watch.log_group_exists(log_group_name) is False:
+    #         cloud_watch.log_group_create(log_group_name)
+    #     return log_group_name,log_group_region,log_group_stream_prefix
 
-    def task_create(self, image_name, task_name, task_role_arn, execution_role_arn, cpu='1024', memory='2048', network_mode='awsvpc', requires='FARGATE'):
+    def task_definition(self, task_definition_arn):
+        result          = self.client().describe_task_definition(taskDefinition=task_definition_arn)
+        task_definition = result.get('taskDefinition')
+        if task_definition and task_definition.get('status') == 'ACTIVE':       # threat inactive task definitions as non existent (to address AWS weird bug of not allowing task definitions to be deleted)
+            return task_definition
 
-        (log_group_name, log_group_region, log_group_stream_prefix) = self.task_get_log_details(task_name)
 
-        kwargs = { 'family'              : task_name             ,
+    #def task_definition_arn(self, task_name):
+
+    def task_definition_create(self, task_family, image_name, task_role_arn, execution_role_arn, log_group_name, log_stream_name, cpu='1024', memory='2048', network_mode='awsvpc', requires='FARGATE'):
+
+        Cloud_Watch_Logs().log_stream_create(log_group_name=log_group_name, log_stream_name=log_stream_name)
+
+        kwargs = { 'family'              : task_family           ,
                    'taskRoleArn'         : task_role_arn         ,
                    'executionRoleArn'    : execution_role_arn    ,
                    'cpu'                 : cpu                   ,
@@ -75,14 +95,36 @@ class ECS:
                                                'image'           : f'{self.account_id}.dkr.ecr.{self.region}.amazonaws.com/{image_name}' ,
                                                "logConfiguration": {   "logDriver": "awslogs",
                                                                        "options"  : {  "awslogs-group"        : log_group_name,
-                                                                                       "awslogs-region"       : log_group_region,
-                                                                                       "awslogs-stream-prefix": log_group_stream_prefix }}, }],
+                                                                                       "awslogs-region"       : self.region,
+                                                                                       "awslogs-stream-prefix": log_stream_name }}, }],
                    "requiresCompatibilities": [ requires] }
 
         try:
             return self.client().register_task_definition(**kwargs).get('taskDefinition')
         except Exception as error:
             return "{0}".format(error)
+
+    def task_definition_delete(self, task_definition_arn):
+        result = self.client().deregister_task_definition(taskDefinition=task_definition_arn)
+        return result.get('taskDefinition').get('status') == 'INACTIVE'
+
+    def task_definition_exists(self, task_definition_arn):
+        return self.task_definition(task_definition_arn=task_definition_arn) is not None
+
+    def task_definition_not_exists(self, task_definition_arn):
+        return self. task_definition_exists(task_definition_arn=task_definition_arn) is False
+
+    @index_by
+    @group_by
+    def task_definitions(self, task_family):
+        data = []
+        task_definitions_arns = self.task_definitions_arns(task_family)
+        for task_definition_arn in task_definitions_arns:
+            data.append(self.task_definition(task_definition_arn=task_definition_arn))
+        return data
+
+    def task_definitions_arns(self, task_family):
+        return self.client().list_task_definitions(familyPrefix=task_family).get('taskDefinitionArns')
 
     def task_run(self, cluster, task_arn,subnet_id,security_group):
         kwargs = {

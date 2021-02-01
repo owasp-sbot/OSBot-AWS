@@ -81,10 +81,19 @@ class test_Cloud_Watch_Logs(TestCase):
         assert result[0].get('logGroupName') == self.log_group_name
 
     def test_log_stream_create(self):
-        bad_log_group_name = random_string()
-        assert self.logs.log_stream_create(bad_log_group_name,'').get('message') == f'log group does not exist: {bad_log_group_name}'
-
+        # log stream created in test setUpClass
         assert self.logs.log_stream(self.log_group_name, self.log_stream_name).get('logStreamName') == self.log_stream_name
+
+        # create a log stream with random names
+        random_log_group_name  = random_string()
+        random_log_stream_name = random_string()
+        assert self.logs.log_stream_create(random_log_group_name, random_log_stream_name).get('message') == f'log stream created ok: {random_log_stream_name}'
+        assert self.logs.log_group_exists (random_log_group_name                         ) is True
+        assert self.logs.log_stream_exists(random_log_group_name, random_log_stream_name) is True
+        self.logs.log_group_delete(random_log_group_name)
+        assert self.logs.log_group_exists (random_log_group_name                         ) is False
+        assert self.logs.log_stream_exists(random_log_group_name, random_log_stream_name) is False
+
 
 
     def test_log_streams(self):

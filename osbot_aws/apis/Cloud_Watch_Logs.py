@@ -1,4 +1,7 @@
 import boto3
+import botocore
+from botocore.exceptions import ClientError
+
 from osbot_utils.utils.Misc import wait, wait_for
 
 from osbot_utils.decorators.methods.remove_return_value import remove_return_value
@@ -16,7 +19,6 @@ class Cloud_Watch_Logs():
     def __init__(self):
         self.account_id  = self.sts().current_account_id()
         self.region_name = self.sts().current_region_name()
-        pass
 
     @cache
     def client(self):
@@ -94,15 +96,19 @@ class Cloud_Watch_Logs():
         return self.client().describe_log_groups(**kwargs).get('logGroups')     # todo add pagination (see how IAM does it)
 
     def log_stream_create(self, log_group_name, log_stream_name):
-        if self.log_group_not_exists(log_group_name=log_group_name):
-            return status_error(f'log group does not exist: {log_group_name}')
-
-        self.client().create_log_stream(logGroupName=log_group_name, logStreamName=log_stream_name)
-        return status_ok(message=f"log stream created ok: {log_stream_name}")
+        if self.log_group_not_exists(log_group_name=log_group_name):                    # if the log group doesn't exist, create it
+            self.log_group_create(log_group_name).get('status')
+        try:
+            self.client().create_log_stream(logGroupName=log_group_name, logStreamName=log_stream_name)
+            return status_ok(message=f"log stream created ok: {log_stream_name}")
+        except ClientError as exception:
+            if exception.response['Error']['Code'] == 'ResourceAlreadyExistsException':
+                return status_warning(message=f"log stream already existed: {log_stream_name}")
+            return status_error(message=f'exception', error=exception)
 
     def log_stream(self, log_group_name, log_stream_name):                                      # todo: map out the performance implications of .log_streams(...) using describe_log_streams is it looks like it has very low limits of 5 TPS per account per region
         log_stream_arn = self.log_stream_arn(log_group_name=log_group_name, log_stream_name=log_stream_name)
-        log_streams    = self.log_streams(log_group_name=log_group_name, log_stream_name_prefix=log_stream_name)
+        log_streams    = self.log_streams   (log_group_name=log_group_name, log_stream_name_prefix=log_stream_name)
         for log_stream in log_streams:
             if log_stream.get('arn') == log_stream_arn:
                 return log_stream
