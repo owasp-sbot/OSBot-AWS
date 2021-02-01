@@ -145,7 +145,7 @@ class test_ECS(TestCase):
 
         cluster                = self.cluster_name #'FargateCluster'
         subnet_id              = 'subnet-49391932'
-        security_group_id = 'sg-e6ea548e'
+        security_group_id      = 'sg-e6ea548e'
 
         task_name = 'create_and_run_task:45'
         task_arn = f'arn:aws:ecs:{region}:{account_id}:task-definition/{task_name}'

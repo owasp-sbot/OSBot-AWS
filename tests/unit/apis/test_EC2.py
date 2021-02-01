@@ -64,17 +64,69 @@ class test_EC2(TestCase):
         result = self.ec2.instances_details()
         assert len(result) > 1
 
+    def test_internet_gateway_create(self):
+        tags                = {'Name': 'osbot_aws - test internet gateway'}
+        internet_gateway    = self.ec2.internet_gateway_create(tags=tags)
+        internet_gateway_id = internet_gateway.get('InternetGatewayId')
+
+        assert self.ec2.internet_gateway_exists(internet_gateway_id) is True
+        self.ec2.internet_gateway_delete(internet_gateway_id)
+        assert self.ec2.internet_gateway_exists(internet_gateway_id) is False
+
+    def test_internet_gateways(self):
+        result = self.ec2.internet_gateways()
+        pprint(result)
+
+    def test_security_group(self):
+        group_id = 'sg-050e49981ff7f1386'
+        result = self.ec2.security_group(group_id)
+        pprint(result)
+
+    def test_security_group_create(self):
+        group_name  = 'temp_security_group'
+        description = 'testing security group creation'
+        result      = self.ec2.security_group_create(group_name=group_name, description=description)
+        group_id    = result.get('data').get('group_id')
+        assert self.ec2.security_group_exists(group_id   = group_id  ) is True
+        assert self.ec2.security_group_exists(group_name = group_name) is True
+        assert self.ec2.security_group_delete(group_name = group_name) is True
+        assert self.ec2.security_group_exists(group_id   = group_id  ) is False
+
     def test_security_groups(self):
-        result = self.ec2.security_groups()
+        result = self.ec2.security_groups(group_by='VpcId').get('vpc-dddb1aa4')
+        pprint(result)
+        return
+
+        result = self.ec2.security_groups(index_by='GroupId')
+        pprint(result)
         assert len(result) > 0
 
     def test_subnets(self):
-        result = self.ec2.subnets()
+        result = self.ec2.subnets(index_by='SubnetId')
         assert len(result) > 0
+        pprint(result)
+
+    def test_vpc(self):
+        vpc_id = self.ec2.vpcs_ids().pop()
+        vpc    = self.ec2.vpc(vpc_id=vpc_id)
+        assert vpc.get('VpcId') == vpc_id
+
+    def test_vpc_create(self):
+        tags   = {'Name': 'osbot_aws - test_vpc_create'}
+        vpc    = self.ec2.vpc_create(tags=tags)
+        vpc_id = vpc.get('VpcId')
+        self.ec2.wait_for_vpc_available(vpc_id)
+        assert self.ec2.vpc_exists(vpc_id) is True
+
+        self.ec2.vpc_attribute_set(vpc_id, 'EnableDnsSupport'  , True)
+        self.ec2.vpc_attribute_set(vpc_id, 'EnableDnsHostnames', True)
+        self.ec2.vpc_delete(vpc_id)
+        assert self.ec2.vpc_exists(vpc_id) is False
 
     def test_vpcs(self):
-        result = self.ec2.vpcs()
+        result = self.ec2.vpcs(index_by='VpcId')
         assert len(result) > 0
+        #pprint(result)
 
     @pytest.mark.skip('test can takes 30 to 50 secs to execute')                    # todo move to integration tests (where we can have longer running tests
     def test_wait_for_instance_running(self):                                       # todo create test that mocks the excution
