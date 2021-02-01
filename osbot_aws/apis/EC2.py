@@ -107,6 +107,34 @@ class EC2:
                 return []
             raise
 
+    def route_table(self, route_table_id):
+        result = self.route_tables(route_tables_ids=[route_table_id])
+        if len(result) == 1:
+            return result[0]
+
+    def route_table_create(self, tags=None, resource_type='route-table'):
+        kwargs = { 'TagSpecifications': self.tag_specifications_create(tags=tags, resource_type=resource_type) }
+        return self.client().create_route_table(**kwargs).get('RouteTable')
+
+    def route_table_delete(self, route_table_id):
+        return self.client().delete_route_table(RouteTableId=route_table_id)
+
+    def route_table_exists(self, route_table_id):
+        return self.route_table(route_table_id) is not None
+
+    @index_by
+    @group_by
+    def route_tables(self, route_tables_ids=None):                         # todo: refactor this entire route_tables and (for example) vpns, since they have mostly the same code and there is a number of helper methods added for each of them
+        kwargs = {}
+        if route_tables_ids:
+            kwargs['RouteTableIds'] = route_tables_ids
+        try:
+            return self.client().describe_route_tables(**kwargs).get('RouteTableIds')
+        except ClientError as e:                                                    # todo: refactor this pattern into a helper with statement (which receives as param the Error.Code value
+            if e.response.get('Error', {}).get('Code') == 'InvalidRouteTableID.NotFound':
+                return []
+            raise
+
     def security_group(self, group_id=None, group_name=None):
         if group_id:
             return self.security_groups(index_by="GroupId"  ).get(group_id)
@@ -132,12 +160,6 @@ class EC2:
 
         group_id = self.client().create_security_group(**kwargs).get('GroupId')
         return status_ok(message=f'Security group created ok: {group_name}', data= { 'group_id':group_id })
-        #
-        # Description = 'string',
-        # GroupName = 'string',
-        # VpcId = '
-
-        # Tags
 
     def security_group_delete(self, group_id=None, group_name=None):
         if group_id:
@@ -174,6 +196,12 @@ class EC2:
         result = self.vpcs(vpcs_ids=[vpc_id])
         if len(result) == 1:
             return result[0]
+
+    def vpc_attach_internet_gateway(self, vpc_id, internet_gateway_id):
+        return self.client().attach_internet_gateway(VpcId=vpc_id, InternetGatewayId=internet_gateway_id)
+
+    def vpc_detach_internet_gateway(self, vpc_id, internet_gateway_id):
+        return self.client().detach_internet_gateway(VpcId=vpc_id, InternetGatewayId=internet_gateway_id)
 
     def vpc_create(self, cidr_block='172.16.0.0/16', tags=None, resource_type='vpc'):
         kwargs = {

@@ -66,8 +66,7 @@ class test_EC2(TestCase):
 
     def test_internet_gateway_create(self):
         tags                = {'Name': 'osbot_aws - test internet gateway'}
-        internet_gateway    = self.ec2.internet_gateway_create(tags=tags)
-        internet_gateway_id = internet_gateway.get('InternetGatewayId')
+        internet_gateway_id  = self.ec2.internet_gateway_create(tags=tags).get('InternetGatewayId')
 
         assert self.ec2.internet_gateway_exists(internet_gateway_id) is True
         self.ec2.internet_gateway_delete(internet_gateway_id)
@@ -76,6 +75,15 @@ class test_EC2(TestCase):
     def test_internet_gateways(self):
         result = self.ec2.internet_gateways()
         pprint(result)
+
+    def test_route_table_create(self):
+        # todo add helper class tp create a temp vpc (using `with`)
+        tags                = {'Name': 'osbot_aws - test route table'}
+        route_table_id  = self.ec2.route_table_create(vpc_id, tags=tags).get('RouteTableId')
+
+        assert self.ec2.route_table_exists(route_table_id) is True
+        self.ec2.route_table_delete(route_table_id)
+        assert self.ec2.route_table_exists(route_table_id) is False
 
     def test_security_group(self):
         group_id = 'sg-050e49981ff7f1386'
@@ -93,28 +101,36 @@ class test_EC2(TestCase):
         assert self.ec2.security_group_exists(group_id   = group_id  ) is False
 
     def test_security_groups(self):
-        result = self.ec2.security_groups(group_by='VpcId').get('vpc-dddb1aa4')
-        pprint(result)
-        return
-
         result = self.ec2.security_groups(index_by='GroupId')
-        pprint(result)
         assert len(result) > 0
 
     def test_subnets(self):
         result = self.ec2.subnets(index_by='SubnetId')
         assert len(result) > 0
-        pprint(result)
 
     def test_vpc(self):
         vpc_id = self.ec2.vpcs_ids().pop()
         vpc    = self.ec2.vpc(vpc_id=vpc_id)
         assert vpc.get('VpcId') == vpc_id
 
+    def test_vpc_attach_internet_gateway(self):
+        tags                = {'Name': 'osbot_aws - test_vpc_attach_internet_gateway'}
+        vpc_id              = self.ec2.vpc_create             (tags=tags).get('VpcId')
+        internet_gateway_id = self.ec2.internet_gateway_create(tags=tags).get('InternetGatewayId')
+
+        assert self.ec2.internet_gateway     (internet_gateway_id).get('Attachments') == []
+        self.ec2.vpc_attach_internet_gateway (vpc_id=vpc_id,internet_gateway_id=internet_gateway_id)
+        assert self.ec2.internet_gateway     (internet_gateway_id).get('Attachments') == [{'State': 'available', 'VpcId': vpc_id}]
+        self.ec2.vpc_detach_internet_gateway (vpc_id=vpc_id, internet_gateway_id=internet_gateway_id)
+        assert self.ec2.internet_gateway     (internet_gateway_id).get('Attachments') == []
+
+        self.ec2.internet_gateway_delete(internet_gateway_id)
+        self.ec2.vpc_delete             (vpc_id)
+
     def test_vpc_create(self):
         tags   = {'Name': 'osbot_aws - test_vpc_create'}
-        vpc    = self.ec2.vpc_create(tags=tags)
-        vpc_id = vpc.get('VpcId')
+        vpc_id = self.ec2.vpc_create(tags=tags).get('VpcId')
+
         self.ec2.wait_for_vpc_available(vpc_id)
         assert self.ec2.vpc_exists(vpc_id) is True
 
