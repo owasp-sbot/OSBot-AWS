@@ -42,14 +42,11 @@ class test_ECS(TestCase):
         assert cluster.get('runningTasksCount')==0
         assert cls.cluster_arn in cls.ecs.clusters_arns()
         assert cls.ecs.cluster_exists(cluster_arn=cls.cluster_arn) is True
-        pprint(cls.ecs.cluster(cluster_arn=cls.cluster_arn))
 
     @classmethod
     def tearDownClass(cls) -> None:
         cls.ecs.cluster_delete(cls.cluster_name)
-        pprint(cls.ecs.cluster(cluster_arn=cls.cluster_arn) )
-        pprint( cls.ecs.cluster_exists(cluster_arn=cls.cluster_arn) )
-        #assert cls.ecs.cluster_exists(cluster_arn=cls.cluster_arn) is False
+        assert cls.ecs.cluster_exists(cluster_arn=cls.cluster_arn) is False
 
     def test__init__(self):
         assert type(self.ecs.client()).__name__ == 'ECS'
@@ -72,13 +69,9 @@ class test_ECS(TestCase):
         cluster = result.get(self.cluster_name)
         assert cluster.get('clusterArn') == self.ecs.cluster_arn(self.cluster_name)
 
-        pprint(result)
-
     def test_clusters_arns(self):
         result = self.ecs.clusters_arns()
-        if len(result) > 0:
-            assert 'arn:aws:ecs:' in result[0]
-        pprint(result)
+        assert self.cluster_arn in result
 
     def test_policy_create_for_task_role(self):
         role_name = 'task_role_create_and_run_task'
@@ -93,32 +86,21 @@ class test_ECS(TestCase):
         assert iam_role.delete() is True
 
     def test_task_definition_create(self):
-        task_family           = self.task_family
-        image_name          = 'an_docker_image'
-        task_role_name      = f'{task_family}_task_role'
-        execution_role_name = f'{task_family}_execution_role'
-        log_group_name      = "ecs-task-on-{0}".format(image_name)
-        log_stream_name     = task_family
-        task_role_iam       = self.ecs.policy_create_for_task_role     (task_role_name     )
-        execution_role_iam  = self.ecs.policy_create_for_execution_role(execution_role_name)
-        task_role_arn       = task_role_iam     .arn()
-        execution_role_arn  = execution_role_iam.arn()
+        task_family = self.task_family
+        image_name  = 'an_docker_image'
+        task_definition_config = self.ecs.task_definition_setup(task_family=task_family, image_name=image_name)
+        log_group_name         = task_definition_config.get('log_group_name' )
+        log_stream_name        = task_definition_config.get('log_stream_name')
 
-        assert task_role_iam     .exists() is True
-        assert execution_role_iam.exists() is True
-
-        task_definition = self.ecs.task_definition_create(task_family        = task_family          ,
-                                                          image_name         = image_name         ,
-                                                          task_role_arn      = task_role_arn      ,
-                                                          execution_role_arn = execution_role_arn ,
-                                                          log_group_name     = log_group_name     ,
-                                                          log_stream_name    = log_stream_name    )
+        task_definition = self.ecs.task_definition_create(task_definition_config=task_definition_config)
 
         task_definition_arn = task_definition.get('taskDefinitionArn')
-        #assert  task_definition_arn == f'arn:aws:ecs:{self.region}:{self.account_id}:task-definition/{task_name}:1'
+        revision            = task_definition.get('revision')
+        assert  task_definition_arn           == self.ecs.task_definition_arn(task_family, revision)
         assert task_definition.get('family' ) == task_family
         assert task_definition.get('cpu'    ) == '1024'
         assert task_definition.get('memory' ) == '2048'
+
         assert self.logs.log_group_exists(log_group_name                  ) is True
         assert self.logs.log_stream_exists(log_group_name, log_stream_name) is True
 
@@ -136,9 +118,9 @@ class test_ECS(TestCase):
         result = self.ecs.task_definitions(self.task_family)
         pprint(result)
 
-    def test_task_definitions_arns(self):
-        result = self.ecs.task_definitions_arns(self.task_family)
-        pprint(result)
+    #def test_task_definitions_arns(self):
+    #    result = self.ecs.task_definitions_arns(self.task_family)
+    #    pprint(result)
 
     def test_task_delete(self):
         tasks  = self.ecs.tasks()
@@ -147,18 +129,22 @@ class test_ECS(TestCase):
                 Dev.pprint('deleting task: {0}'.format(task))
                 self.ecs.task_delete(task)
 
-    @pytest.mark.skip("to fix")
     def test_task_run(self):
-        account_id        = self.ecs.account_id
-        region            = self.ecs.region
-        docker_image_name = 'ubuntu'
-        cluster_name      = self.cluster_name
-        task_name         = 'temp_task_on_{0}'  .format(cluster_name)
-        task_role         = 'task_role_{0}'     .format(task_name)
-        execution_role    = 'execution_role_{0}'.format(task_name)
+        image_name             = 'ubuntu'
+        task_family            = f"test_run_for_{image_name}"
+        task_definition_config = self.ecs.task_definition_setup(task_family=task_family, image_name=image_name)
+        task_definition        = self.ecs.task_definition_create(task_definition_config=task_definition_config)
+        return
+        account_id             = self.ecs.account_id
+        region                 = self.ecs.region
 
-        cluster           = self.cluster_name #'FargateCluster'
-        subnet_id         = 'subnet-49391932'
+        cluster_name           = self.cluster_name
+        task_name              = 'temp_task_on_{0}'  .format(cluster_name)
+        task_role              = 'task_role_{0}'     .format(task_name)
+        execution_role         = 'execution_role_{0}'.format(task_name)
+
+        cluster                = self.cluster_name #'FargateCluster'
+        subnet_id              = 'subnet-49391932'
         security_group_id = 'sg-e6ea548e'
 
         task_name = 'create_and_run_task:45'

@@ -79,9 +79,22 @@ class ECS:
             return task_definition
 
 
-    #def task_definition_arn(self, task_name):
+    def task_definition_arn(self, task_family, revision):
+        return f'arn:aws:ecs:{self.region}:{self.account_id}:task-definition/{task_family}:{revision}'
 
-    def task_definition_create(self, task_family, image_name, task_role_arn, execution_role_arn, log_group_name, log_stream_name, cpu='1024', memory='2048', network_mode='awsvpc', requires='FARGATE'):
+    def task_definition_create(self, task_definition_config):
+        cpu                = task_definition_config.get('cpu'               )
+        execution_role_arn = task_definition_config.get('execution_role_arn')
+        log_group_name     = task_definition_config.get('log_group_name'    )
+        log_stream_name    = task_definition_config.get('log_stream_name'   )
+        image_name         = task_definition_config.get('image_name'        )
+        memory             = task_definition_config.get('memory'            )
+        network_mode       = task_definition_config.get('network_mode'      )
+        task_family        = task_definition_config.get('task_family'       )
+        task_role_arn      = task_definition_config.get('task_role_arn'     )
+        requires           = task_definition_config.get('requires'          )
+
+    #task_family, image_name, task_role_arn, execution_role_arn, log_group_name, log_stream_name, ):
 
         Cloud_Watch_Logs().log_stream_create(log_group_name=log_group_name, log_stream_name=log_stream_name)
 
@@ -114,6 +127,28 @@ class ECS:
     def task_definition_not_exists(self, task_definition_arn):
         return self. task_definition_exists(task_definition_arn=task_definition_arn) is False
 
+    def task_definition_setup(self, task_family, image_name):
+        task_role_name      = f'{task_family}_task_role'
+        execution_role_name = f'{task_family}_execution_role'
+        log_group_name      = "ecs-task-on-{0}".format(image_name)
+
+        task_role_iam       = self.policy_create_for_task_role     (task_role_name     )
+        execution_role_iam  = self.policy_create_for_execution_role(execution_role_name)
+
+        task_role_arn       = task_role_iam     .arn()
+        execution_role_arn  = execution_role_iam.arn()
+
+        return { 'cpu'                : '1024'               ,
+                 'image_name'         : image_name           ,
+                 'log_group_name'     : log_group_name       ,
+                 'log_stream_name'    : task_family          ,
+                 'memory'             : '2048'               ,
+                 'execution_role_arn' : execution_role_arn   ,
+                 'network_mode'       : 'awsvpc'             ,
+                 'requires'           : 'FARGATE'            ,
+                 'task_family'        : task_family          ,
+                 'task_role_arn'      : task_role_arn        }
+
     @index_by
     @group_by
     def task_definitions(self, task_family):
@@ -126,18 +161,19 @@ class ECS:
     def task_definitions_arns(self, task_family):
         return self.client().list_task_definitions(familyPrefix=task_family).get('taskDefinitionArns')
 
-    def task_run(self, cluster, task_arn,subnet_id,security_group):
+    def task_run(self, cluster, task_definition_arn,subnet_id,security_group, launch_type='FARGATE', assign_public_ip='ENABLED'):
         kwargs = {
-                    'cluster'             : cluster ,
-                    'taskDefinition'      : task_arn,
-                    'launchType'          : 'FARGATE',
+                    'cluster'             : cluster             ,
+                    'taskDefinition'      : task_definition_arn ,
+                    'launchType'          : launch_type         ,
                     'networkConfiguration': { 'awsvpcConfiguration': { 'subnets'        : [ subnet_id],
                                                                        'securityGroups' : [ security_group],
-                                                                       'assignPublicIp' : 'ENABLED'  } },
+                                                                       'assignPublicIp' : assign_public_ip  } },
                  }
 
         try:
-            return self.client().run_task(**kwargs).get('tasks')[0]
+            result = self.client().run_task(**kwargs)
+            return result.get('tasks')[0]
         except Exception as error:
             return "{0}".format(error)
 
