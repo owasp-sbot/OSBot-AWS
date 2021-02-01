@@ -7,14 +7,14 @@ from osbot_utils.utils.Misc import list_set, list_group_by, list_index_by
 
 sys.path.append('..')
 
-from osbot_aws.apis.Ec2 import Ec2
+from osbot_aws.apis.EC2 import EC2
 from unittest import TestCase
 from osbot_utils.utils.Dev import Dev, pprint
 
 
-class test_Ec2(TestCase):
+class test_EC2(TestCase):
     def setUp(self):
-        self.ec2 = Ec2()
+        self.ec2 = EC2()
         self.image_id = 'ami-00f8b1192da5566c5'  # amazon linux 2 in eu-west-1 (see test_amis for one in current region)  # todo: write helper class to find test amis
 
     def test__init__(self):

@@ -4,7 +4,7 @@ from osbot_utils.decorators.methods.cache import cache
 from osbot_aws.apis.Session import Session
 
 
-class Ec2:
+class EC2:
 
     @cache
     def client(self):
