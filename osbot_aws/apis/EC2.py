@@ -1,3 +1,5 @@
+from os import chmod
+
 import boto3
 from botocore.exceptions import ClientError
 from osbot_utils.utils.Files import file_name, temp_folder, path_combine, file_create
@@ -30,15 +32,16 @@ class EC2:
 
         return self.client().describe_images(**kwargs).get('Images')
 
-    def instance_create(self, image_id, name='created by osbot_aws', instance_type='t2.micro', tags=None, iam_instance_profile=None):
+    def instance_create(self, image_id, name='created by osbot_aws', instance_type='t2.micro', iam_instance_profile=None, key_name=None, network_interface=None, tags=None,):
         kwargs = {  "ImageId"      : image_id                                                               ,
                     "InstanceType" : instance_type                                                          ,
                     "MaxCount"     : 1                                                                      ,
                     "MinCount"     : 1                                                                      ,
                     'TagSpecifications': self.tag_specifications_create(tags=tags, name=name,resource_type='instance')}
 
-        if iam_instance_profile:
-            kwargs["IamInstanceProfile"] = iam_instance_profile
+        if iam_instance_profile : kwargs["IamInstanceProfile"] = iam_instance_profile
+        if key_name             : kwargs["KeyName"           ] = key_name
+        if network_interface    : kwargs['NetworkInterfaces' ] = [network_interface]
 
         result   = self.client().run_instances(**kwargs)
         instance = result.get('Instances')[0]
@@ -114,14 +117,15 @@ class EC2:
 
     def key_pair_create_to_file(self, key_name, target_folder=None, tags=None):
         key_pair          = self.key_pair_create(key_name=key_name,tags=tags)
+        key_pair_id       = key_pair.get('KeyPairId')
         key_pair_material = key_pair.get('KeyMaterial')
 
         if target_folder is None:
             target_folder = temp_folder()
         path_key_pair = path_combine(target_folder, key_name + ".pem")
         file_create(path_key_pair,key_pair_material)
-
-        return {'path_key_pair':path_key_pair, 'key_pair':key_pair}
+        chmod(path_key_pair, 0o400)
+        return {'path_key_pair':path_key_pair, 'key_pair_id':key_pair_id, 'key_pair':key_pair}
 
     def key_pair_delete(self, key_pair_id=None, key_pair_name=None):
         if key_pair_id:

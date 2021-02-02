@@ -46,7 +46,7 @@ class Temp_VPC:
         if self.add_security_group:
             security_group_name    = self.vpc_name
             description            = self.vpc_name
-            result                 = self.security_group_id = self.ec2.security_group_create(security_group_name=security_group_name, description=description, vpc_id=self.vpc_id)
+            result                 = self.security_group_id = self.ec2.security_group_create(security_group_name=security_group_name, description=description, vpc_id=self.vpc_id,tags=self.tags)
             self.security_group_id = result.get('data').get('security_group_id')
 
     def create_subnet(self):
