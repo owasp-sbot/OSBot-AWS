@@ -142,7 +142,8 @@ class Lambda:
         #todo refactor the return value below into an object
         return FunctionName, Runtime, Role, Handler, MemorySize, Timeout, TracingConfig, Code, Layers, Environment, PackageType
 
-    def delete(self):
+    def delete(self):                                               # todo  Delete Lambda function method should also delete cloud formation logs #6 (https://github.com/owasp-sbot/OSBot-AWS/issues/6)
+
         if self.exists() is False:
             return False
         self.client().delete_function(FunctionName=self.name)
