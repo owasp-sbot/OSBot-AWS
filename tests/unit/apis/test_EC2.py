@@ -2,14 +2,11 @@ import sys ;
 
 import pytest
 
-from osbot_aws.AWS_Config import AWS_Config
-from osbot_utils.utils.Misc import list_set, list_group_by, list_index_by
-
-sys.path.append('..')
-
-from osbot_aws.apis.EC2 import EC2
-from unittest import TestCase
-from osbot_utils.utils.Dev import Dev, pprint
+from osbot_aws.apis.test_helpers.Temp_VPC import Temp_VPC
+from osbot_utils.utils.Misc               import list_index_by
+from osbot_aws.apis.EC2                   import EC2
+from unittest                             import TestCase
+from osbot_utils.utils.Dev                import pprint
 
 
 class test_EC2(TestCase):
@@ -73,17 +70,30 @@ class test_EC2(TestCase):
         assert self.ec2.internet_gateway_exists(internet_gateway_id) is False
 
     def test_internet_gateways(self):
-        result = self.ec2.internet_gateways()
-        pprint(result)
+        temp_vpc = Temp_VPC(add_internet_gateway=True)
+        with temp_vpc:
+            internet_gateway_id = temp_vpc.internet_gateway_id
+            assert internet_gateway_id in self.ec2.internet_gateways(index_by='InternetGatewayId')
+
+    def test_route_create(self):
+        temp_vpc = Temp_VPC(add_route_table=True, add_internet_gateway=True)
+        with temp_vpc:
+            route_table_id      = temp_vpc.route_table_id
+            internet_gateway_id = temp_vpc.internet_gateway_id
+            route_table         = self.ec2.route_table(route_table_id=route_table_id)
+            assert route_table.get('Routes').pop() == { 'DestinationCidrBlock': '0.0.0.0/0'         ,
+                                                        'GatewayId'           : internet_gateway_id ,
+                                                        'Origin'              : 'CreateRoute'       ,
+                                                        'State'               : 'active'            }
 
     def test_route_table_create(self):
-        # todo add helper class tp create a temp vpc (using `with`)
-        tags                = {'Name': 'osbot_aws - test route table'}
-        route_table_id  = self.ec2.route_table_create(vpc_id, tags=tags).get('RouteTableId')
-
-        assert self.ec2.route_table_exists(route_table_id) is True
-        self.ec2.route_table_delete(route_table_id)
-        assert self.ec2.route_table_exists(route_table_id) is False
+        with Temp_VPC() as temp_vpc:
+            vpc_id          = temp_vpc.vpc_id
+            tags            = { 'Name': 'osbot_aws - test route table' }
+            route_table_id  = self.ec2.route_table_create(vpc_id=vpc_id, tags=tags).get('RouteTableId')
+            assert self.ec2.route_table_exists(route_table_id) is True
+            self.ec2.route_table_delete(route_table_id)
+            assert self.ec2.route_table_exists(route_table_id) is False
 
     def test_security_group(self):
         group_id = 'sg-050e49981ff7f1386'

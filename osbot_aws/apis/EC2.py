@@ -107,14 +107,22 @@ class EC2:
                 return []
             raise
 
+    def route_create(self, route_table_id, gateway_id, destination_cidr_block='0.0.0.0/0'):
+        kwargs = { "DestinationCidrBlock": destination_cidr_block ,
+                   "GatewayId"           : gateway_id             ,
+                   "RouteTableId"        : route_table_id         }
+        return self.client().create_route(**kwargs)
+
     def route_table(self, route_table_id):
         result = self.route_tables(route_tables_ids=[route_table_id])
-        if len(result) == 1:
+        if result and len(result) == 1:
             return result[0]
 
-    def route_table_create(self, tags=None, resource_type='route-table'):
-        kwargs = { 'TagSpecifications': self.tag_specifications_create(tags=tags, resource_type=resource_type) }
-        return self.client().create_route_table(**kwargs).get('RouteTable')
+    def route_table_create(self, vpc_id, tags=None, resource_type='route-table'):
+        kwargs = { 'TagSpecifications': self.tag_specifications_create(tags=tags, resource_type=resource_type),
+                   'VpcId'            : vpc_id }
+        result = self.client().create_route_table(**kwargs)
+        return result.get('RouteTable')
 
     def route_table_delete(self, route_table_id):
         return self.client().delete_route_table(RouteTableId=route_table_id)
@@ -129,7 +137,7 @@ class EC2:
         if route_tables_ids:
             kwargs['RouteTableIds'] = route_tables_ids
         try:
-            return self.client().describe_route_tables(**kwargs).get('RouteTableIds')
+            return self.client().describe_route_tables(**kwargs).get('RouteTables')
         except ClientError as e:                                                    # todo: refactor this pattern into a helper with statement (which receives as param the Error.Code value
             if e.response.get('Error', {}).get('Code') == 'InvalidRouteTableID.NotFound':
                 return []

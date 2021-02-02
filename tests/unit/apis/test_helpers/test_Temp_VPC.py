@@ -10,12 +10,16 @@ class test_Temp_VPC(TestCase):
         self.ec2 = EC2()
 
     def test__enter__exit__(self):
-        with Temp_VPC() as temp_vpc:
+        temp_vpc = Temp_VPC(add_internet_gateway=True, add_route_table=True)
+        with temp_vpc:
             vpc_id              = temp_vpc.vpc_id
             internet_gateway_id = temp_vpc.internet_gateway_id
+            route_table_id      = temp_vpc.route_table_id
             assert self.ec2.vpc_exists             (vpc_id             ) is True
             assert self.ec2.internet_gateway_exists(internet_gateway_id) is True
+            assert self.ec2.route_table_exists     (route_table_id     ) is True
             assert self.ec2.internet_gateway       (internet_gateway_id).get('Attachments') == [{'State': 'available', 'VpcId': vpc_id}]
 
         assert self.ec2.vpc_exists             (vpc_id             ) is False
         assert self.ec2.internet_gateway_exists(internet_gateway_id) is False
+        assert self.ec2.route_table_exists(route_table_id          ) is False

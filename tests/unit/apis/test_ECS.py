@@ -134,6 +134,8 @@ class test_ECS(TestCase):
         task_family            = f"test_run_for_{image_name}"
         task_definition_config = self.ecs.task_definition_setup(task_family=task_family, image_name=image_name)
         task_definition        = self.ecs.task_definition_create(task_definition_config=task_definition_config)
+        pprint(task_definition)
+
         return
         account_id             = self.ecs.account_id
         region                 = self.ecs.region
