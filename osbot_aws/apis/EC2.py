@@ -1,5 +1,7 @@
 import boto3
 from botocore.exceptions import ClientError
+from osbot_utils.utils.Files import file_name, temp_folder, path_combine, file_create
+
 from osbot_utils.decorators.methods.remove_return_value import remove_return_value
 
 from osbot_utils.decorators.lists.group_by import group_by
@@ -29,26 +31,16 @@ class EC2:
         return self.client().describe_images(**kwargs).get('Images')
 
     def instance_create(self, image_id, name='created by osbot_aws', instance_type='t2.micro', tags=None, iam_instance_profile=None):
-        kwargs = {
-            "ImageId"      : image_id       ,
-            "InstanceType" : instance_type  ,
-            "MaxCount"     : 1              ,
-            "MinCount"     : 1
-        }
+        kwargs = {  "ImageId"      : image_id                                                               ,
+                    "InstanceType" : instance_type                                                          ,
+                    "MaxCount"     : 1                                                                      ,
+                    "MinCount"     : 1                                                                      ,
+                    'TagSpecifications': self.tag_specifications_create(tags=tags, name=name,resource_type='instance')}
 
         if iam_instance_profile:
             kwargs["IamInstanceProfile"] = iam_instance_profile
 
-        instance_tags = [{'Key': 'Name', 'Value': name}]
-        if tags and type(tags) is dict:
-            for key,value in tags.items():
-                instance_tags.append({'Key': key, 'Value': value})
-
-        kwargs["TagSpecifications"] = [{"ResourceType": "instance"      ,       # todo: refactor this code with a call to self.tag_specifications_create()
-                                        "Tags"        : instance_tags }]
-
-
-        result = self.client().run_instances(**kwargs)
+        result   = self.client().run_instances(**kwargs)
         instance = result.get('Instances')[0]
         return  instance.get('InstanceId')
 
@@ -84,8 +76,8 @@ class EC2:
         if len(result) == 1:
             return result[0]
 
-    def internet_gateway_create(self, tags=None, resource_type='internet-gateway'):
-        kwargs = { 'TagSpecifications': self.tag_specifications_create(tags=tags, resource_type=resource_type) }
+    def internet_gateway_create(self, tags=None):
+        kwargs = { 'TagSpecifications': self.tag_specifications_create(tags=tags, resource_type='internet-gateway') }
         return self.client().create_internet_gateway(**kwargs).get('InternetGateway')
 
     def internet_gateway_delete(self, internet_gateway_id):
@@ -107,9 +99,48 @@ class EC2:
                 return []
             raise
 
-    def route_create(self, route_table_id, gateway_id, destination_cidr_block='0.0.0.0/0'):
+    def key_pair(self, key_pair_id=None, key_pair_name=None):
+        if key_pair_id:
+            return self.key_pairs(index_by="KeyPairId").get(key_pair_id)
+        if key_pair_name:
+            return self.key_pairs(index_by="KeyName"  ).get(key_pair_name)
+
+    @remove_return_value(field_name='ResponseMetadata')
+    def key_pair_create(self, key_name, tags=None):
+        kwargs = {'KeyName'          : key_name                                                           ,
+                  'TagSpecifications': self.tag_specifications_create(tags=tags, resource_type='key-pair')}
+
+        return self.client().create_key_pair(**kwargs)
+
+    def key_pair_create_to_file(self, key_name, target_folder=None, tags=None):
+        key_pair          = self.key_pair_create(key_name=key_name,tags=tags)
+        key_pair_material = key_pair.get('KeyMaterial')
+
+        if target_folder is None:
+            target_folder = temp_folder()
+        path_key_pair = path_combine(target_folder, key_name + ".pem")
+        file_create(path_key_pair,key_pair_material)
+
+        return {'path_key_pair':path_key_pair, 'key_pair':key_pair}
+
+    def key_pair_delete(self, key_pair_id=None, key_pair_name=None):
+        if key_pair_id:
+            self.client().delete_key_pair(KeyPairId=key_pair_id)
+        if key_pair_name:
+            self.client().delete_key_pair(KeyName=key_pair_name)
+        return self.key_pair_exists(key_pair_id=key_pair_id, key_pair_name=key_pair_name) is False
+
+    def key_pair_exists(self, key_pair_id=None, key_pair_name=None):
+        return self.key_pair(key_pair_id=key_pair_id, key_pair_name=key_pair_name) is not None
+
+    @index_by
+    @group_by
+    def key_pairs(self):
+        return self.client().describe_key_pairs().get('KeyPairs')
+
+    def route_create(self, route_table_id, internet_gateway_id, destination_cidr_block='0.0.0.0/0'):
         kwargs = { "DestinationCidrBlock": destination_cidr_block ,
-                   "GatewayId"           : gateway_id             ,
+                   "GatewayId"           : internet_gateway_id    ,
                    "RouteTableId"        : route_table_id         }
         return self.client().create_route(**kwargs)
 
@@ -127,8 +158,8 @@ class EC2:
             kwargs['GatewayId'] = gateway_id
         return self.client().associate_route_table(**kwargs)
 
-    def route_table_create(self, vpc_id, tags=None, resource_type='route-table'):
-        kwargs = { 'TagSpecifications': self.tag_specifications_create(tags=tags, resource_type=resource_type),
+    def route_table_create(self, vpc_id, tags=None):
+        kwargs = { 'TagSpecifications': self.tag_specifications_create(tags=tags, resource_type='route-table'),
                    'VpcId'            : vpc_id }
         result = self.client().create_route_table(**kwargs)
         return result.get('RouteTable')
@@ -155,41 +186,48 @@ class EC2:
                 return []
             raise
 
-    def security_group(self, group_id=None, group_name=None):
-        if group_id:
-            return self.security_groups(index_by="GroupId"  ).get(group_id)
-        if group_name:
-            return self.security_groups(index_by="GroupName").get(group_name)
+    def security_group(self, security_group_id=None, security_group_name=None):
+        if security_group_id:
+            return self.security_groups(index_by="GroupId"  ).get(security_group_id)
+        if security_group_name:
+            return self.security_groups(index_by="GroupName").get(security_group_name)
 
-    #authorize_security_group_ingress
-    def security_group_create(self, group_name, description, vpc_id=None, resource_type=None, tags=None):
-        if self.security_group_exists(group_name=group_name):
-            group_id =  self.security_group(group_name=group_name).get('GroupId')            # todo see what is a better way to implement this workflow, since at the moment there are two full calls to the self.security_groups() method
-            return status_warning(message=f'Security group already existed: {group_name}' , data= { 'group_id':group_id })
-        kwargs = { 'Description'       : description,
-                   'GroupName'         : group_name ,
-                   'TagSpecifications' : []         }
+    def security_group_authorize_ingress(self, security_group_id, port=None, from_port=None, to_port=None, cidr_ip='0.0.0.0/0', ip_protocol='tcp'):
+        if port:
+            from_port = port
+            to_port   = port
+
+        kwargs = { "CidrIp"     : cidr_ip           ,
+                   "IpProtocol" : ip_protocol       ,
+                   'GroupId'    : security_group_id ,
+                   "FromPort"   : from_port         ,
+                   "ToPort"     : to_port           }
+
+        return self.client().authorize_security_group_ingress(**kwargs)
+
+
+    def security_group_create(self, security_group_name, description, vpc_id=None, tags=None):
+        if self.security_group_exists(security_group_name=security_group_name):
+            security_group_id =  self.security_group(security_group_name=security_group_name).get('GroupId')            # todo see what is a better way to implement this workflow, since at the moment there are two full calls to the self.security_groups() method
+            return status_warning(message=f'Security group already existed: {security_group_name}' , data= { 'security_group_id':security_group_id })
+        kwargs = { 'Description'      : description                                                               ,
+                   'GroupName'        : security_group_name                                                       ,
+                   'TagSpecifications': self.tag_specifications_create(tags=tags, resource_type='security-group') }
         if vpc_id:
             kwargs['VpcId'] = vpc_id
-        if tags:
-            tag_specification = {'Tags': []}    # todo: refactor this code with a call to self.tag_specifications_create()
-            for key,value in tags.items():
-                tag_specification['Tags'].append({'Key':key, 'Value':value})
-            kwargs['TagSpecifications'].append(tag_specification)
 
+        security_group_id = self.client().create_security_group(**kwargs).get('GroupId')
+        return status_ok(message=f'Security group created ok: {security_group_name}', data= { 'security_group_id': security_group_id })
 
-        group_id = self.client().create_security_group(**kwargs).get('GroupId')
-        return status_ok(message=f'Security group created ok: {group_name}', data= { 'group_id':group_id })
+    def security_group_delete(self, security_group_id=None, security_group_name=None):
+        if security_group_id:
+            self.client().delete_security_group(GroupId=security_group_id)
+        if security_group_name:
+            self.client().delete_security_group(GroupName=security_group_name)
+        return self.security_group_exists(security_group_id=security_group_id, security_group_name=security_group_name) is False
 
-    def security_group_delete(self, group_id=None, group_name=None):
-        if group_id:
-            self.client().delete_security_group(GroupId=group_id)
-        if group_name:
-            self.client().delete_security_group(GroupName=group_name)
-        return self.security_group_exists(group_id=group_id, group_name=group_name) is False
-
-    def security_group_exists(self, group_id=None, group_name=None):
-        return self.security_group(group_id=group_id, group_name=group_name) is not None
+    def security_group_exists(self, security_group_id=None, security_group_name=None):
+        return self.security_group(security_group_id=security_group_id, security_group_name=security_group_name) is not None
 
     @index_by
     @group_by
@@ -201,10 +239,10 @@ class EC2:
         if result and len(result) == 1:
             return result[0]
 
-    def subnet_create(self, vpc_id, cidr_block='172.16.1.0/24', tags=None, resource_type='subnet'):
-        kwargs = { 'CidrBlock'        : cidr_block                                                            ,
-                   'TagSpecifications': self.tag_specifications_create(tags=tags, resource_type=resource_type),
-                   'VpcId'            : vpc_id }
+    def subnet_create(self, vpc_id, cidr_block='172.16.1.0/24', tags=None):
+        kwargs = { 'CidrBlock'        : cidr_block                                                       ,
+                   'TagSpecifications': self.tag_specifications_create(tags=tags, resource_type='subnet'),
+                   'VpcId'            : vpc_id                                                           }
         result = self.client().create_subnet(**kwargs)
         return result.get('Subnet')
 
@@ -227,10 +265,15 @@ class EC2:
                 return []
             raise
 
-    def tag_specifications_create(self, tags=None, resource_type=None):
+    def tag_specifications_create(self, tags=None, name=None, resource_type=None):
         data =  []
+        if name:
+            if tags:
+                tags['Name'] = name
+            else:
+                tags = { 'Name': name }
         if tags:
-            tag_specification = { 'Tags': []}
+            tag_specification = { 'Tags': [] }
             if resource_type:
                 tag_specification['ResourceType'] = resource_type
             for key,value in tags.items():
@@ -249,11 +292,9 @@ class EC2:
     def vpc_detach_internet_gateway(self, vpc_id, internet_gateway_id):
         return self.client().detach_internet_gateway(VpcId=vpc_id, InternetGatewayId=internet_gateway_id)
 
-    def vpc_create(self, cidr_block='172.16.0.0/16', tags=None, resource_type='vpc'):
-        kwargs = {
-            'CidrBlock'        : cidr_block                                          ,
-            'TagSpecifications': self.tag_specifications_create(tags=tags, resource_type=resource_type)
-        }
+    def vpc_create(self, cidr_block='172.16.0.0/16', tags=None):
+        kwargs = {  'CidrBlock'        : cidr_block                                                    ,
+                    'TagSpecifications': self.tag_specifications_create(tags=tags, resource_type='vpc')}
         return self.client().create_vpc(**kwargs).get('Vpc')           # todo: see if it makes sense to add the status_ok message here
 
     def vpc_delete(self, vpc_id):

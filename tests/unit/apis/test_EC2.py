@@ -1,7 +1,9 @@
 import sys ;
 
 import pytest
+from osbot_utils.utils.Files import file_exists, file_contents, file_delete
 
+from osbot_aws.apis.STS import STS
 from osbot_aws.apis.test_helpers.Temp_VPC import Temp_VPC
 from osbot_utils.utils.Misc               import list_index_by
 from osbot_aws.apis.EC2                   import EC2
@@ -75,11 +77,34 @@ class test_EC2(TestCase):
             internet_gateway_id = temp_vpc.internet_gateway_id
             assert internet_gateway_id in self.ec2.internet_gateways(index_by='InternetGatewayId')
 
+    def test_key_pair_create(self):
+        key_name     = 'osbot-unit-tests-temp_key_pair'
+        tags         = { 'Name': key_name }
+        result       = self.ec2.key_pair_create(key_name=key_name, tags=tags)
+        key_pair_id  = result.get('KeyPairId')
+        assert self.ec2.key_pair_exists(key_pair_id   = key_pair_id  ) is True
+        assert self.ec2.key_pair_exists(key_pair_name = key_name     ) is True
+        assert self.ec2.key_pair_delete(key_pair_name = key_name     ) is True
+        assert self.ec2.key_pair_exists(key_pair_id   = key_pair_id  ) is False
+
+    def test_key_pair_create_to_file(self):
+        key_name      = 'osbot-unit-tests-temp_key_pair'
+        result        = self.ec2.key_pair_create_to_file(key_name=key_name)
+        key_pair_id   = result.get('key_pair').get('KeyPairId')
+        path_key_pair = result.get('path_key_pair')
+
+        assert file_exists(path_key_pair)                                   is True
+        assert file_contents(path_key_pair).find('BEGIN RSA PRIVATE KEY')    > -1
+        assert self.ec2.key_pair_delete(key_pair_id = key_pair_id)          is True
+        assert file_delete(path_key_pair)                                   is True
+
+
     def test_route_create(self):
         temp_vpc = Temp_VPC(add_route_table=True, add_internet_gateway=True)
         with temp_vpc:
             route_table_id      = temp_vpc.route_table_id
             internet_gateway_id = temp_vpc.internet_gateway_id
+            self.ec2.route_create(route_table_id=route_table_id,internet_gateway_id=internet_gateway_id)
             route_table         = self.ec2.route_table(route_table_id=route_table_id)
             assert route_table.get('Routes').pop() == { 'DestinationCidrBlock': '0.0.0.0/0'         ,
                                                         'GatewayId'           : internet_gateway_id ,
@@ -111,20 +136,49 @@ class test_EC2(TestCase):
             self.ec2.route_table_delete(route_table_id)
             assert self.ec2.route_table_exists(route_table_id) is False
 
-    def test_security_group(self):
-        group_id = 'sg-050e49981ff7f1386'
-        result = self.ec2.security_group(group_id)
-        pprint(result)
+    # def test_security_group(self):
+    #     pass
+
+    def test_security_group_authorize_ingress(self):
+        security_group_name  = 'SSH-ONLY'
+        description          = 'only allow SSH traffic'
+        port                 = 22
+        account_id           = STS().current_account_id()
+        with Temp_VPC() as temp_vpc:
+            vpc_id            = temp_vpc.vpc_id
+            security_group_id = self.ec2.security_group_create(security_group_name=security_group_name, description=description, vpc_id=vpc_id).get('data').get('security_group_id')
+
+            self.ec2.security_group_authorize_ingress(security_group_id=security_group_id, port=port)
+
+            security_group    = self.ec2.security_group(security_group_id)
+            assert security_group == {    'Description': description        ,
+                                          'GroupId'    : security_group_id  ,
+                                          'GroupName'  : security_group_name,
+                                          'IpPermissions': [ { 'FromPort'        : port                     ,
+                                                               'IpProtocol'      : 'tcp'                    ,
+                                                               'IpRanges'        : [{'CidrIp': '0.0.0.0/0'}],
+                                                               'Ipv6Ranges'      : []                       ,
+                                                               'PrefixListIds'   : []                       ,
+                                                               'ToPort'          : port                     ,
+                                                               'UserIdGroupPairs': []}]                     ,
+                                          'IpPermissionsEgress': [ { 'IpProtocol'      : '-1'                     ,
+                                                                     'IpRanges'        : [{'CidrIp': '0.0.0.0/0'}],
+                                                                     'Ipv6Ranges'      : []                       ,
+                                                                     'PrefixListIds'   : []                       ,
+                                                                     'UserIdGroupPairs': []}]                     ,
+                                          'OwnerId': account_id ,
+                                          'VpcId'  : vpc_id     }
+            assert self.ec2.security_group_delete(security_group_id) is True
 
     def test_security_group_create(self):
-        group_name  = 'temp_security_group'
-        description = 'testing security group creation'
-        result      = self.ec2.security_group_create(group_name=group_name, description=description)
-        group_id    = result.get('data').get('group_id')
-        assert self.ec2.security_group_exists(group_id   = group_id  ) is True
-        assert self.ec2.security_group_exists(group_name = group_name) is True
-        assert self.ec2.security_group_delete(group_name = group_name) is True
-        assert self.ec2.security_group_exists(group_id   = group_id  ) is False
+        security_group_name  = 'temp_security_group'
+        description          = 'testing security group creation'
+        result               = self.ec2.security_group_create(security_group_name=security_group_name, description=description)
+        security_group_id = result.get('data').get('security_group_id')
+        assert self.ec2.security_group_exists(security_group_id   = security_group_id  ) is True
+        assert self.ec2.security_group_exists(security_group_name = security_group_name) is True
+        assert self.ec2.security_group_delete(security_group_name = security_group_name) is True
+        assert self.ec2.security_group_exists(security_group_id   = security_group_id  ) is False
 
     def test_security_groups(self):
         result = self.ec2.security_groups(index_by='GroupId')
