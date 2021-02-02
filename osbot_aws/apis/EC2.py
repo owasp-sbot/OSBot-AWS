@@ -1,5 +1,7 @@
 import boto3
 from botocore.exceptions import ClientError
+from osbot_utils.decorators.methods.remove_return_value import remove_return_value
+
 from osbot_utils.decorators.lists.group_by import group_by
 from osbot_utils.decorators.lists.index_by import index_by
 from osbot_utils.decorators.methods.cache import cache
@@ -63,11 +65,9 @@ class EC2:
     def instance_details(self, instance_id=None, filter=None):
         kwargs = { }
         if instance_id: kwargs['InstanceIds'] = [instance_id]
-        result = self.resource().instances.filter(**kwargs)
+        result = self.resource().instances.filter(**kwargs)             # todo see client().describe_instances is a better method to use
         for instance in result:
-            return self.format_instance_details(instance)       # todo see client().describe_instances is a better method to use
-        #result = self.client().describe_instances(InstanceIds=[instance_id])
-        #return result.get('Reservations')[0].get('Instances')[0]
+            return self.format_instance_details(instance)
 
     def instance_delete(self, instance_id):
         return self.client().terminate_instances(InstanceIds=[instance_id])
@@ -118,6 +118,15 @@ class EC2:
         if result and len(result) == 1:
             return result[0]
 
+    @remove_return_value(field_name='ResponseMetadata')
+    def route_table_associate(self, route_table_id, subnet_id=None, gateway_id=None):
+        kwargs = { 'RouteTableId' : route_table_id}
+        if subnet_id:
+            kwargs['SubnetId'] = subnet_id
+        if gateway_id:
+            kwargs['GatewayId'] = gateway_id
+        return self.client().associate_route_table(**kwargs)
+
     def route_table_create(self, vpc_id, tags=None, resource_type='route-table'):
         kwargs = { 'TagSpecifications': self.tag_specifications_create(tags=tags, resource_type=resource_type),
                    'VpcId'            : vpc_id }
@@ -126,6 +135,9 @@ class EC2:
 
     def route_table_delete(self, route_table_id):
         return self.client().delete_route_table(RouteTableId=route_table_id)
+
+    def route_table_disassociate(self, association_id):
+        return self.client().disassociate_route_table(AssociationId=association_id)
 
     def route_table_exists(self, route_table_id):
         return self.route_table(route_table_id) is not None
@@ -184,10 +196,36 @@ class EC2:
     def security_groups(self):
         return self.client().describe_security_groups().get('SecurityGroups')
 
+    def subnet(self, subnet_id):
+        result = self.subnets(subnets_ids=[subnet_id])
+        if result and len(result) == 1:
+            return result[0]
+
+    def subnet_create(self, vpc_id, cidr_block='172.16.1.0/24', tags=None, resource_type='subnet'):
+        kwargs = { 'CidrBlock'        : cidr_block                                                            ,
+                   'TagSpecifications': self.tag_specifications_create(tags=tags, resource_type=resource_type),
+                   'VpcId'            : vpc_id }
+        result = self.client().create_subnet(**kwargs)
+        return result.get('Subnet')
+
+    def subnet_delete(self, subnet_id):
+        return self.client().delete_subnet(SubnetId=subnet_id)
+
+    def subnet_exists(self, subnet_id):
+        return self.subnet(subnet_id) is not None
+
     @index_by
     @group_by
-    def subnets(self):
-        return self.client().describe_subnets().get('Subnets')
+    def subnets(self, subnets_ids=None):
+        kwargs = {}
+        if subnets_ids:
+            kwargs['SubnetIds'] = subnets_ids
+        try:
+            return self.client().describe_subnets(**kwargs).get('Subnets')
+        except ClientError as e:                                                    # todo: refactor this pattern into a helper with statement (which receives as param the Error.Code value
+            if e.response.get('Error', {}).get('Code') == 'InvalidSubnetID.NotFound':
+                return []
+            raise
 
     def tag_specifications_create(self, tags=None, resource_type=None):
         data =  []

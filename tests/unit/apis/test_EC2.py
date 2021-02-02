@@ -85,6 +85,22 @@ class test_EC2(TestCase):
                                                         'GatewayId'           : internet_gateway_id ,
                                                         'Origin'              : 'CreateRoute'       ,
                                                         'State'               : 'active'            }
+    def test_route_table_associate(self):
+        temp_vpc =Temp_VPC(add_route_table=True, add_subnet=True)
+        with temp_vpc:
+            route_table_id = temp_vpc.route_table_id
+            subnet_id      = temp_vpc.subnet_id
+            association_id = self.ec2.route_table_associate(route_table_id=route_table_id, subnet_id=subnet_id).get('AssociationId')
+            route_table    = self.ec2.route_table(route_table_id)
+            association    = route_table.get('Associations')[0]
+
+            assert association.get('RouteTableId') == route_table_id
+            assert association.get('SubnetId'    ) == subnet_id
+
+            self.ec2.route_table_disassociate(association_id)
+            route_table = self.ec2.route_table(route_table_id)
+            assert route_table.get('Associations') == []
+
 
     def test_route_table_create(self):
         with Temp_VPC() as temp_vpc:
@@ -113,6 +129,15 @@ class test_EC2(TestCase):
     def test_security_groups(self):
         result = self.ec2.security_groups(index_by='GroupId')
         assert len(result) > 0
+
+    def test_subnet_create(self):
+        with Temp_VPC() as temp_vpc:
+            vpc_id     = temp_vpc.vpc_id
+            tags       = { 'Name': 'osbot_aws - test route table' }
+            subnet_id  = self.ec2.subnet_create(vpc_id=vpc_id, tags=tags).get('SubnetId')
+            assert self.ec2.subnet_exists(subnet_id) is True
+            self.ec2.subnet_delete(subnet_id)
+            assert self.ec2.subnet_exists(subnet_id) is False
 
     def test_subnets(self):
         result = self.ec2.subnets(index_by='SubnetId')
