@@ -14,20 +14,26 @@ from osbot_utils.utils.Dev                import pprint
 class test_EC2(TestCase):
     def setUp(self):
         self.ec2 = EC2()
-        self.image_id = 'ami-00f8b1192da5566c5'  # amazon linux 2 in eu-west-1 (see test_amis for one in current region)  # todo: write helper class to find test amis
+        #self.image_id = 'ami-00f8b1192da5566c5'  # amazon linux 2 in eu-west-1
+        self.image_id = 'ami-074882b79a16e2e6e'  # amazon linux 2 in eu-west-2  # todo: write helper class to find test amis
+
 
     def test__init__(self):
         assert type(self.ec2.client()  ).__name__ == 'EC2'
         assert type(self.ec2.resource()).__name__ == 'ec2.ServiceResource'
 
-    def test_amis(self):
+    def test_amis(self):                                                       # todo check the performance of the amis and if there is more efficient way to get this data (this test takes 5 seconds to execute)
         owner       = 'amazon'
         name        = 'amzn2-ami-hvm-2.0.20180924-x86_64-ebs'
         description = 'Amazon Linux 2 AMI 2.0.20180924 x86_64 HVM ebs'
         result = self.ec2.amis(owner=owner, name=name, description=description)
         assert len(result) == 1
         assert result[0].get('Name') == name
-        assert result[0].get('ImageId') == self.image_id       # 'ami-00f8b1192da5566c5'
+        assert result[0].get('ImageId') == self.image_id
+
+        # result = self.ec2.amis(owner=owner, name='amzn*', index_by='Name')
+        # pprint(len(result))
+        # pprint(result)
 
     def test_create_instance(self):
         name              = 'osbot_aws.test_create_instance'

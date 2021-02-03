@@ -19,10 +19,13 @@ class EC2:
     @cache
     def client(self):
         return Session().client('ec2')
+
     @cache
     def resource(self):
         return Session().resource('ec2')
 
+    @index_by
+    @group_by
     def amis(self, owner='self', state='available', name=None, description=None):  # todo: find how to search for amis in the quick start
         kwargs = {'Owners' : [owner] ,
                   'Filters' : [ {'Name': 'state', 'Values': [state]}]}
