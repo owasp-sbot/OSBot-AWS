@@ -13,11 +13,11 @@ class test_Temp_VPC(TestCase):
         temp_vpc = Temp_VPC(add_internet_gateway=True, add_route_table=True, add_security_group=True, add_subnet=True)
 
         with temp_vpc:
-            vpc_id              = temp_vpc.vpc_id
-            internet_gateway_id = temp_vpc.internet_gateway_id
-            security_group_id   = temp_vpc.security_group_id
-            subnet_id           = temp_vpc.subnet_id
-            route_table_id      = temp_vpc.route_table_id
+            vpc_id              = temp_vpc.vpc.vpc_id
+            internet_gateway_id = temp_vpc.vpc.internet_gateway_id
+            security_group_id   = temp_vpc.vpc.security_group_id
+            subnet_id           = temp_vpc.vpc.subnet_id
+            route_table_id      = temp_vpc.vpc.route_table_id
 
             assert self.ec2.internet_gateway_exists (internet_gateway_id) is True
             assert self.ec2.security_group_exists   (security_group_id  ) is True
