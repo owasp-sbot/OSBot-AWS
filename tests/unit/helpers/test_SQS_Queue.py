@@ -1,23 +1,20 @@
-import pytest
-
-from osbot_utils.utils.Dev import pprint
 from osbot_utils.utils.Misc import random_string
 
 from osbot_utils.utils import Misc
 
 from osbot_aws.decorators.aws_inject import aws_inject
 from osbot_aws.helpers.Test_Helper import Test_Helper
-from osbot_aws.apis.Queue                   import Queue
-from osbot_aws.apis.test_helpers.Temp_Queue import Temp_Queue
+from osbot_aws.helpers.SQS_Queue import SQS_Queue
 
-class test_Queue(Test_Helper):
+
+class test_SQS_Queue(Test_Helper):
 
     queue = None
 
     @classmethod
     def setUpClass(cls) -> None:
         cls.queue_name  = random_string(prefix='unit_tests_temp_queue-')
-        cls.queue       = Queue(cls.queue_name).create()
+        cls.queue       = SQS_Queue(cls.queue_name).create()
         assert cls.queue.exists() is True
 
     @classmethod
@@ -31,7 +28,7 @@ class test_Queue(Test_Helper):
     def test_attributes(self, account_id, region):
         attributes  = self.queue.attributes()
         assert attributes.get('QueueArn') == f'arn:aws:sqs:{region}:{account_id}:{self.queue_name}'
-        assert self.queue.url() in Queue().list()
+        assert self.queue.url() in SQS_Queue().list()
 
 
     def test_message_send(self):

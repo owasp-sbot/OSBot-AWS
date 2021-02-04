@@ -9,8 +9,7 @@ from osbot_aws.apis.Lambda import Lambda
 from osbot_aws.apis.Session import Session
 from osbot_utils.utils import Misc
 
-
-class Queue:
+class SQS_Queue:                                        # todo refactor main methods to SSM class
     def __init__(self, queue_name=None, url=None):
         self._url          = url
         self._sqs          = None

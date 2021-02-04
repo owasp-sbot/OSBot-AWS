@@ -1,14 +1,13 @@
 import unittest
 from time import sleep
-from unittest.case import skip
 
 import pytest
 from osbot_utils.utils import Misc
 
-from osbot_aws.AWS_Config import AWS_Config
-from osbot_aws.apis.S3 import S3
+from osbot_aws.AWS_Config               import AWS_Config
+from osbot_aws.apis.S3                  import S3
 from osbot_aws.apis.Logs                import Logs
-from osbot_aws.apis.Queue               import Queue
+from osbot_aws.helpers.SQS_Queue        import SQS_Queue
 from osbot_aws.helpers.IAM_Policy       import IAM_Policy
 from osbot_aws.helpers.Lambda_Package   import Lambda_Package
 from osbot_aws.apis.IAM                 import IAM

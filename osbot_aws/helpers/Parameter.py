@@ -5,7 +5,7 @@ from osbot_utils.utils import Misc
 from osbot_aws.apis.Session import Session
 
 
-class Parameter:
+class Parameter:                                # todo refactor main methods to SSM class
     def __init__(self, name=None):
         self._ssm = None
         self.name = name

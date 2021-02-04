@@ -1,4 +1,4 @@
-from osbot_aws.apis.Queue import Queue
+from osbot_aws.helpers.SQS_Queue import SQS_Queue
 
 
 def run(event, context):

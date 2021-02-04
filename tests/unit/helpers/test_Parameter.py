@@ -3,7 +3,7 @@ from unittest import TestCase
 from osbot_utils.utils.Dev import Dev
 from osbot_utils.utils import Misc
 
-from osbot_aws.apis.Parameter import Parameter
+from osbot_aws.helpers.Parameter import Parameter
 
 
 class test_Parameters(TestCase):
