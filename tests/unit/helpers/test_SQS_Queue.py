@@ -1,3 +1,5 @@
+from osbot_utils.utils.Json import json_loads
+
 from osbot_utils.utils.Misc import random_string
 
 from osbot_utils.utils import Misc
@@ -14,7 +16,8 @@ class test_SQS_Queue(Test_Helper):
     @classmethod
     def setUpClass(cls) -> None:
         cls.queue_name  = random_string(prefix='unit_tests_temp_queue-')
-        cls.queue       = SQS_Queue(cls.queue_name).create()
+        cls.queue       = SQS_Queue(cls.queue_name)
+        cls.queue_url   = cls.queue.create()
         assert cls.queue.exists() is True
 
     @classmethod
@@ -28,7 +31,7 @@ class test_SQS_Queue(Test_Helper):
     def test_attributes(self, account_id, region):
         attributes  = self.queue.attributes()
         assert attributes.get('QueueArn') == f'arn:aws:sqs:{region}:{account_id}:{self.queue_name}'
-        assert self.queue.url() in SQS_Queue().list()
+        assert self.queue.url() in self.queue.sqs().queues_urls()
 
 
     def test_message_send(self):
@@ -52,7 +55,7 @@ class test_SQS_Queue(Test_Helper):
 
     def test_push_pull(self):
         self.queue.push( {'var_1': 'value_1' , 'var_2': 'value_2'})
-        assert self.queue.get_message() == '{"var_1": "value_1", "var_2": "value_2"}'       # is json string
+        assert json_loads(self.queue.get_message()) == {"var_1": "value_1", "var_2": "value_2"}
 
         self.queue.push({'var_3': 'value_3', 'var_4': 'value_4'})
         assert self.queue.pull() == {'var_3': 'value_3' , 'var_4': 'value_4'}               # is python object
@@ -62,18 +65,17 @@ class test_SQS_Queue(Test_Helper):
 
     @aws_inject('account_id,region')
     def test_permissions(self, account_id, region):
-        queue_url   = self.queue.url()
-        label       = 'the-permission-id'
-        account_ids = [account_id]
-        actions     = ['SendMessage']
+        label           = 'the-permission-id'
+        aws_account_ids = [account_id]
+        actions         = ['SendMessage']
         assert self.queue.policy() == {}
-        self.queue.permission_add(queue_url,label, account_ids, actions)
+        self.queue.permission_add(label=label, aws_account_ids=aws_account_ids, actions=actions)
         assert self.queue.permissions() == [ { 'Action'   : f'SQS:{actions[0]}',
                                               'Effect'   : 'Allow',
                                               'Principal': {'AWS': f'arn:aws:iam::{account_id}:root'},
                                               'Resource' : f'arn:aws:sqs:{region}:{account_id}:{self.queue_name}',
                                               'Sid'      : label}]
-        self.queue.permission_delete(queue_url, label)
+        self.queue.permission_delete(label=label)
         assert self.queue.permissions() == []
 
 
