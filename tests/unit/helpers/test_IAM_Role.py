@@ -1,10 +1,6 @@
-from pprint import pprint
-from unittest import TestCase
-
-from osbot_utils.utils.Dev import Dev
-
-from osbot_aws.AWS_Config import AWS_Config
-from osbot_aws.tmp_utils.Temp_Assert import Temp_Assert
+from unittest                   import TestCase
+from osbot_utils.utils.Assert   import Assert
+from osbot_aws.AWS_Config       import AWS_Config
 from osbot_aws.helpers.IAM_Role import IAM_Role
 
 class test_IAM_Role(TestCase):
@@ -48,7 +44,7 @@ class test_IAM_Role(TestCase):
         assert role_name == self.temp_role_name
         assert data      == expected_data
 
-        Temp_Assert(create_date).is_today()
+        Assert(create_date).is_today()
 
         assert self.iam_role.create_for__code_build() == { 'data'     : 'role already exists',
                                                           'role_name': self.temp_role_name,

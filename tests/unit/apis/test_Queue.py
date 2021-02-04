@@ -1,4 +1,8 @@
 import pytest
+
+from osbot_utils.utils.Dev import pprint
+from osbot_utils.utils.Misc import random_string
+
 from osbot_utils.utils import Misc
 
 from osbot_aws.decorators.aws_inject import aws_inject
@@ -6,74 +10,74 @@ from osbot_aws.helpers.Test_Helper import Test_Helper
 from osbot_aws.apis.Queue                   import Queue
 from osbot_aws.apis.test_helpers.Temp_Queue import Temp_Queue
 
-@pytest.mark.skip('Fix tests')
 class test_Queue(Test_Helper):
+
+    queue = None
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        cls.queue_name  = random_string(prefix='unit_tests_temp_queue-')
+        cls.queue       = Queue(cls.queue_name).create()
+        assert cls.queue.exists() is True
+
+    @classmethod
+    def tearDownClass(cls) -> None:
+        assert cls.queue.delete() is True
 
     def setUp(self):
         super().setUp()
 
-    def test_attributes_create__exists__list(self):
-        assert Queue().exists() is False
-        with Temp_Queue() as temp_Queue:
-            assert 'QueueArn'                in set(temp_Queue.queue.attributes())
-            assert 'unit_tests_temp_queue_'  in temp_Queue.queue_name
-            assert temp_Queue.queue.exists() is True
-            assert len(Queue().list()) > 0
-            self.result = temp_Queue.queue.attributes()
+    @aws_inject('account_id,region')
+    def test_attributes(self, account_id, region):
+        attributes  = self.queue.attributes()
+        assert attributes.get('QueueArn') == f'arn:aws:sqs:{region}:{account_id}:{self.queue_name}'
+        assert self.queue.url() in Queue().list()
+
 
     def test_message_send(self):
-        with Temp_Queue() as temp_Queue:
-            queue = temp_Queue.queue
-            message_1 = Misc.random_string_and_numbers(prefix='Hello_')
-            message_2 = Misc.random_string_and_numbers(prefix='World_')
-            queue.add(message_1).add(message_2)
-            messages = [queue.get_message(),queue.get_message()]
-            assert message_1 in messages
-            assert message_2 in messages
-            assert queue.get_message() is None
+        message_1 = Misc.random_string_and_numbers(prefix='Hello_')
+        message_2 = Misc.random_string_and_numbers(prefix='World_')
+        self.queue.add(message_1).add(message_2)
+        messages = [self.queue.get_message(),self.queue.get_message()]
+        assert message_1 in messages
+        assert message_2 in messages
+        assert self.queue.get_message() is None
 
     def test_get_message_with_attributes(self):
-        with Temp_Queue() as temp_Queue:
-            queue = temp_Queue.queue
-            body = 'this is the body of the message.... 132'
-            attributes = {'var_1': 'value_1', 'var_2': 'value_2'}
+        body = 'this is the body of the message.... 132'
+        attributes = {'var_1': 'value_1', 'var_2': 'value_2'}
 
-            queue.message_send(body,attributes)
-            data = queue.get_message_with_attributes()
-            assert body       == data[0]
-            assert attributes == data[1]
-            assert attributes.get('var_1') == 'value_1'
+        self.queue.message_send(body,attributes)
+        data = self.queue.get_message_with_attributes()
+        assert body       == data[0]
+        assert attributes == data[1]
+        assert attributes.get('var_1') == 'value_1'
 
     def test_push_pull(self):
-        with Temp_Queue() as temp_Queue:
-            queue = temp_Queue.queue
-            queue.push( {'var_1': 'value_1' , 'var_2': 'value_2'})
-            assert queue.get_message() == '{"var_1": "value_1", "var_2": "value_2"}'       # is json string
+        self.queue.push( {'var_1': 'value_1' , 'var_2': 'value_2'})
+        assert self.queue.get_message() == '{"var_1": "value_1", "var_2": "value_2"}'       # is json string
 
-            queue.push({'var_3': 'value_3', 'var_4': 'value_4'})
-            assert queue.pull() == {'var_3': 'value_3' , 'var_4': 'value_4'}              # is python object
+        self.queue.push({'var_3': 'value_3', 'var_4': 'value_4'})
+        assert self.queue.pull() == {'var_3': 'value_3' , 'var_4': 'value_4'}               # is python object
 
-            queue.push([{'var_5': 'value_5'}, {'var_6': 'value_7'}])                       # push an array
-            assert queue.pull() == [{'var_5': 'value_5'}, {'var_6': 'value_7'}]            # comes back as an array
+        self.queue.push([{'var_5': 'value_5'}, {'var_6': 'value_7'}])                       # push an array
+        assert self.queue.pull() == [{'var_5': 'value_5'}, {'var_6': 'value_7'}]            # comes back as an array
 
-    @aws_inject('account_id')
-    def test_permissions(self, account_id):
-        with Temp_Queue() as temp_Queue:
-            queue       = temp_Queue.queue
-            queue_name  = temp_Queue.queue_name
-            queue_url   = queue.url()
-            label       = 'the-permission-id'
-            account_ids = [account_id]
-            actions     = ['SendMessage']
-            assert queue.policy() == {}
-            queue.permission_add(queue_url,label, account_ids, actions)
-            assert queue.permissions() == [ { 'Action'   : f'SQS:{actions[0]}',
+    @aws_inject('account_id,region')
+    def test_permissions(self, account_id, region):
+        queue_url   = self.queue.url()
+        label       = 'the-permission-id'
+        account_ids = [account_id]
+        actions     = ['SendMessage']
+        assert self.queue.policy() == {}
+        self.queue.permission_add(queue_url,label, account_ids, actions)
+        assert self.queue.permissions() == [ { 'Action'   : f'SQS:{actions[0]}',
                                               'Effect'   : 'Allow',
                                               'Principal': {'AWS': f'arn:aws:iam::{account_id}:root'},
-                                              'Resource' : f'arn:aws:sqs:eu-west-1:{account_id}:{queue_name}',
+                                              'Resource' : f'arn:aws:sqs:{region}:{account_id}:{self.queue_name}',
                                               'Sid'      : label}]
-            queue.permission_delete(queue_url, label)
-            assert queue.permissions() == []
+        self.queue.permission_delete(queue_url, label)
+        assert self.queue.permissions() == []
 
 
     # # Skipped test (created during development, move to separate class)

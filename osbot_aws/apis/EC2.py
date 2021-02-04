@@ -13,6 +13,9 @@ from osbot_aws.apis.Session import Session
 from osbot_utils.utils.Misc import list_set
 from osbot_utils.utils.Status import status_warning, status_ok
 
+# todo: find good solution to capture/manage these config values
+EC2_WAITER_DELAY        = 1             # default was 15 seconds
+EC2_WAITER_MAX_ATTEMPTS = 600           # default was 40 times
 
 class EC2:
 
@@ -334,13 +337,14 @@ class EC2:
 
     def wait_for(self, waiter_type, kwargs):
         waiter = self.client().get_waiter(waiter_type)
+        waiter.config.delay        = EC2_WAITER_DELAY
+        waiter.config.max_attempts = EC2_WAITER_MAX_ATTEMPTS
         return waiter.wait(**kwargs)
 
-    def wait_for_instance_status_ok(self, instance_id):
-        return self.wait_for('instance_status_ok', {"InstanceIds": [instance_id]})
+    def wait_for_instance_exists    (self, instance_id): return self.wait_for('instance_exists'     , {"InstanceIds": [instance_id]})
+    def wait_for_instance_status_ok (self, instance_id): return self.wait_for('instance_status_ok'  , {"InstanceIds": [instance_id]})
+    def wait_for_instance_running   (self, instance_id): return self.wait_for('instance_running'    , {"InstanceIds": [instance_id]})
+    def wait_for_instance_stopped   (self, instance_id): return self.wait_for('instance_stopped'    , {"InstanceIds": [instance_id]})
+    def wait_for_instance_terminated(self, instance_id): return self.wait_for('instance_terminated' , {"InstanceIds": [instance_id]})
 
-    def wait_for_instance_running(self, instance_id):
-        return self.wait_for('instance_running', {"InstanceIds": [instance_id]})
-
-    def wait_for_vpc_available(self, vpc_id):
-        return self.wait_for('vpc_available', {"VpcIds": [vpc_id]})
+    def wait_for_vpc_available      (self, vpc_id): return self.wait_for('vpc_available', {"VpcIds": [vpc_id]})
