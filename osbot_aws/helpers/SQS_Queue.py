@@ -13,11 +13,10 @@ from osbot_aws.apis.Session import Session
 from osbot_utils.utils import Misc
 
 class SQS_Queue:                                        # todo refactor main methods to SSM class
-    def __init__(self, queue_name=None, url=None):
-        self._url          = url
+    def __init__(self, queue_name=None, queue_url=None):
         self.queue_name    = queue_name
-        self.queue_url     = None
-        self.lambda_policy = 'arn:aws:iam::aws:policy/service-role/AWSLambdaSQSQueueExecutionRole'
+        self.queue_url     = queue_url
+
 
     @cache
     def sqs(self):
@@ -53,11 +52,11 @@ class SQS_Queue:                                        # todo refactor main met
     def get_message_with_attributes(self, delete_message=True):
         return self.sqs().queue_message_get_with_attributes(queue_url=self.url(), delete_message=delete_message)
 
-    def get_n_message(self, n, delete_message=True):
-        return self.sqs().queue_messages_get_n(queue_url=self.url(), n=n, delete_message=delete_message)
+    def get_many(self, count=1, delete_message=True):
+        return self.sqs().queue_messages_get_n(queue_url=self.url(), n=count, delete_message=delete_message)
 
     def info(self):                         # consistent method with similar classes like Lambda
-        return self.sqs().info()
+        return self.sqs().queue_info(queue_url=self.url())
 
     def message_raw(self):
         return self.sqs().queue_message_get_raw(queue_url=self.url())
@@ -91,12 +90,17 @@ class SQS_Queue:                                        # todo refactor main met
             self.message_send(json_dumps(data))
         return self
 
-    def pull(self, delete_message=True):
+    def pop(self, delete_message=True):
         data_json = self.get_message(delete_message=delete_message)
         if data_json:
             return json_loads(data_json)
         return None
 
-    @cache
     def url(self):
-        return self.sqs().queue_url(queue_name=self.queue_name)
+        if self.queue_url  is None:
+            self.queue_url = self.sqs().queue_url(queue_name=self.queue_name)
+        return self.queue_url
+
+SQS_Queue.next = SQS_Queue.pop
+SQS_Queue.pull = SQS_Queue.pop
+SQS_Queue.size = SQS_Queue.messages_in_queue

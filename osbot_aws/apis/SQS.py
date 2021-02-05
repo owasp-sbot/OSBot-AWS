@@ -1,6 +1,8 @@
+from osbot_utils.decorators.lists.index_by import index_by
+
 from osbot_utils.utils.Json import json_loads
 
-from osbot_utils.utils.Misc import array_pop, array_get
+from osbot_utils.utils.Misc import array_pop, array_get, list_set
 
 from osbot_utils.decorators.methods.catch import catch
 from osbot_utils.decorators.methods.cache import cache
@@ -16,7 +18,10 @@ class SQS:
 
     @catch
     def queue_attributes(self, queue_url, attribute_names='All'):
-        return self.client().get_queue_attributes(QueueUrl=queue_url, AttributeNames=[attribute_names]).get('Attributes')
+        queue_data = self.client().get_queue_attributes(QueueUrl=queue_url, AttributeNames=[attribute_names]).get('Attributes')
+        queue_data['QueueUrl' ] = queue_url                              # add this important value (which is missing from the current data returned from AWS)
+        queue_data['QueueName'] = queue_data['QueueUrl' ].split('/').pop()
+        return queue_data
 
     def queue_attributes_update(self, queue_url, new_attributes):
         return self.client().set_queue_attributes(QueueUrl=queue_url, Attributes=new_attributes)
@@ -70,7 +75,7 @@ class SQS:
                 self.queue_message_delete(queue_url=queue_url,receipt_handle=receipt_handle)
             return body, attributes_data
 
-    def queue_messages_get_n(self, queue_url, n, delete_message=True):      # todo see if we can use client().receive_message with a higher value of MaxNumberOfMessages
+    def queue_messages_get_n(self, queue_url, n=1, delete_message=True):      # todo see if we can use client().receive_message with a higher value of MaxNumberOfMessages
         messages = []
         for i in range(0,n):
             message = self.queue_message_get(queue_url=queue_url, delete_message=delete_message)
@@ -98,16 +103,35 @@ class SQS:
     def queue_url(self, queue_name):
         return self.client().get_queue_url(QueueName=queue_name).get('QueueUrl')
 
+    def queue_url_from_queue_arn(self, queue_arn):
+        result = self.queues(index_by='QueueArn')
+        return result.get(queue_arn, {}).get('QueueUrl')
+
+    @index_by
+    def queues(self):                               # todo: see if there is a better way to get this info about existing queues
+        """Note: there could be missing entries since the list of queues doesn't update as fast as it should
+                 (i.e. SQS.queues_urls(): might have more entries that SQS.queues() )
+        """
+        data = []
+        for queue_url in self.queues_urls():
+            queue_info = self.queue_info(queue_url=queue_url)
+            if queue_info.get('error') is None:
+                data.append(queue_info)
+        return data
+
+    def queues_arns(self):
+        return list_set(self.queues(index_by="QueueArn"))
+
     def queues_urls(self):
         return self.client().list_queues().get('QueueUrls')
 
     @catch
     def permission_add(self, queue_url, label, aws_account_ids, actions):
         self.permission_delete(queue_url, label)  # delete if already exists
-        params = {'QueueUrl': queue_url,
-                  'Label': label,
-                  'AWSAccountIds': aws_account_ids,
-                  'Actions': actions}
+        params = {'QueueUrl'     : queue_url       ,
+                  'Label'        : label           ,
+                  'AWSAccountIds': aws_account_ids ,
+                  'Actions'      : actions         }
         return self.client().add_permission(**params)
 
     @catch
@@ -126,8 +150,10 @@ class SQS:
         return {}
 
 
-
     # todo refactor methods bellow into an Lambda Helper class (there are a couple unit tests that need this)
+    #
+    # self.lambda_policy = 'arn:aws:iam::aws:policy/service-role/AWSLambdaSQSQueueExecutionRole'
+    #
     # def policy_add_sqs_permissions_to_lambda_role(self, lambda_name):
     #     aws_lambda    = Lambda(lambda_name)
     #     iam_role_name = aws_lambda.configuration().get('Role').split(':role/').pop()

@@ -9,7 +9,7 @@ class Temp_Queue:
         self.queue       = None
 
     def __enter__(self):
-        self.queue = Queue(self.queue_name).create()
+        self.queue = SQS_Queue(self.queue_name).create()
         return self
 
     def __exit__(self, type, value, traceback):
