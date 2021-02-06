@@ -13,7 +13,7 @@ class test_Events(TestCase):
     @classmethod
     def setUpClass(cls) -> None:
         cls.events             = Events()
-        cls.rule_name          = random_string(prefix='k8_temp_rule-')
+        cls.rule_name          = random_string(prefix='osbot_temp_rule-')
         cls.rule_event_source  = 'temp_event_source' # 'aws.ec2' #
         cls.rule_description   = 'temp_description'
         cls.rule_tags          = {'Name': 'osbot_aws-test_test_rule_create'}
@@ -49,11 +49,11 @@ class test_Events(TestCase):
             #assert queue.url() == SQS().queue_url_from_queue_arn(queue_arn=queue.arn())
 
             event_data = f'{{"id":"event_1", "value***": "{random_string()}"}}'
-            event = {   'Time'      : date_now(),
-                        'Source'    : self.rule_event_source,
-                        "DetailType": "myTestType",
-                        'Detail'    : event_data,
-                        }
+            event      = {   'Time'      : date_now(),
+                             'Source'    : self.rule_event_source,
+                             "DetailType": "myTestType",
+                             'Detail'    : event_data,
+                             }
 
             self.events.events_put([event])
             self.events.events_put([event])

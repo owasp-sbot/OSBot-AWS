@@ -5,7 +5,7 @@ from osbot_utils.utils import Misc
 
 
 class Temp_SQS_Queue:
-    def __init__(self , queue_name=None, attributes=None, fifo=False):
+    def __init__(self , queue_name=None, attributes=None, fifo=True):
         self.attributes = attributes
         self.fifo       = fifo
         self.queue      = None

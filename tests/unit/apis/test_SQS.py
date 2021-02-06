@@ -40,7 +40,7 @@ class test_SQS(TestCase):
         assert self.sqs.queue_delete(queue_url=queue_url) is True
 
     def test_create_fifo(self):
-        temp_queue_name  = f"k8_unit_tests_an-fifo-temp_queue-{random_string()}.fifo"
+        temp_queue_name  = f"osbot_unit_tests_an-fifo-temp_queue-{random_string()}.fifo"
         message_group_id = 'message_group_id'
         fifo_queue       = SQS_Queue(queue_name=temp_queue_name, message_group_id=message_group_id)
         queue_url        = fifo_queue.create_fifo()

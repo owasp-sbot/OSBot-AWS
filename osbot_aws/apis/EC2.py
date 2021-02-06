@@ -10,7 +10,7 @@ from osbot_utils.decorators.lists.group_by import group_by
 from osbot_utils.decorators.lists.index_by import index_by
 from osbot_utils.decorators.methods.cache import cache
 from osbot_aws.apis.Session import Session
-from osbot_utils.utils.Misc import list_set
+from osbot_utils.utils.Misc import list_set, list_get
 from osbot_utils.utils.Status import status_warning, status_ok
 
 # todo: find good solution to capture/manage these config values
@@ -38,7 +38,7 @@ class EC2:
 
         return self.client().describe_images(**kwargs).get('Images')
 
-    def instance_create(self, image_id, name='created by osbot_aws', instance_type='t2.micro', iam_instance_profile=None, key_name=None, network_interface=None, tags=None,):
+    def  instance_create(self, image_id, name='created by osbot_aws', instance_type='t2.micro', iam_instance_profile=None, key_name=None, network_interface=None, tags=None,):
         kwargs = {  "ImageId"      : image_id                                                               ,
                     "InstanceType" : instance_type                                                          ,
                     "MaxCount"     : 1                                                                      ,
@@ -63,7 +63,7 @@ class EC2:
                      'tags'         : target.tags                         }
         return {}
 
-    def instance_details(self, instance_id=None, filter=None):
+    def instance_details(self, instance_id):
         kwargs = { }
         if instance_id: kwargs['InstanceIds'] = [instance_id]
         result = self.resource().instances.filter(**kwargs)             # todo see client().describe_instances is a better method to use
@@ -71,7 +71,12 @@ class EC2:
             return self.format_instance_details(instance)
 
     def instance_delete(self, instance_id):
-        return self.client().terminate_instances(InstanceIds=[instance_id])
+        if self.instance_exists(instance_id):
+            result = self.client().terminate_instances(InstanceIds=[instance_id])
+            return list_get(result.get('TerminatingInstances'),0)
+
+    def instance_exists(self, instance_id):
+        return self.instance_details(instance_id=instance_id) is not None
 
     def instances_details(self):
         instances = {}

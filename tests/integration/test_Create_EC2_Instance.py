@@ -24,19 +24,14 @@ class test_EC2_Create_Instance(TestCase):
         name     = random_string(prefix='test_ec2_with_ssh_support-')
         tags     = {'Name': f'osbot_aws - {name}'}
         kwargs   = {  "image_id"         : image_id          ,
-                      #"key_name"         : key_name          ,
                       "name"             : name              ,
-                      #"network_interface": network_interface ,
                       "tags"             : tags              }
 
         instance_id = self.ec2.instance_create(**kwargs)
-
-        print_now()
-        pprint(self.ec2.instance_details(instance_id=instance_id))
-
+        assert self.ec2.instance_details(instance_id=instance_id).get('state') ==  {'Code': 0, 'Name': 'pending'}
         self.ec2.instance_delete(instance_id)
-        print_now()
-        pprint(self.ec2.instance_details(instance_id=instance_id))
+        assert self.ec2.instance_details(instance_id=instance_id).get('state') == {'Code': 32, 'Name': 'shutting-down'}
+
 
     @pytest.mark.skip('todo: see why test below was failing with exception: botocore.exceptions.WaiterError: Waiter InstanceTerminated failed: Waiter encountered a terminal failure state: For expression "Reservations[].Instances[].State.Name" we matched expected path: "pending" at least once')
     def test_ec2_with_ssh_support(self):

@@ -67,11 +67,11 @@ class Events:
         self.client().delete_rule(**kwargs)
         return self.rule_not_exists(rule_name)
 
-    def rule_exists(self, rule_name):
-        return self.rule(rule_name=rule_name) is not None
+    def rule_exists(self, rule_name, event_bus_name=None):
+        return self.rule(rule_name=rule_name, event_bus_name=event_bus_name) is not None
 
-    def rule_not_exists(self, rule_name):
-        return self.rule_exists(rule_name) is False
+    def rule_not_exists(self, rule_name, event_bus_name=None):
+        return self.rule_exists(rule_name, event_bus_name=event_bus_name) is False
 
     @index_by
     def rules(self, name_prefix=None, event_bus_name=None):
