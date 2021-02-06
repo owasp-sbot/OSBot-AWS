@@ -78,6 +78,9 @@ class Events:
         if event_bus_name: kwargs['EventBusName'] = event_bus_name
         return self.client().list_rules(**kwargs).get('Rules')
 
+    def target(self, rule_name, target_id):
+        return self.targets(rule_name, index_by='Id').get(target_id)
+
     @remove_return_value('ResponseMetadata')
     def target_create(self, rule_name, target_id, target_arn):
         target = {"Arn": target_arn ,
@@ -95,6 +98,9 @@ class Events:
                   "Force": True        }
         if event_bus_name: kwargs['EventBusName'] = event_bus_name
         return self.client().remove_targets(**kwargs)
+
+    def target_exists(self, rule_name, target_id):
+        return self.target(rule_name=rule_name, target_id=target_id) is not None
 
     @index_by
     @remove_return_value('ResponseMetadata')

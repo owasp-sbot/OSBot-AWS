@@ -12,7 +12,7 @@ from osbot_aws.apis.Session import Session
 from osbot_aws.helpers.Test_Helper           import Test_Helper
 from osbot_aws.apis.Lambda                   import Lambda
 from osbot_aws.apis.test_helpers.Temp_Lambda import Temp_Folder_With_Lambda_File, Temp_Lambda
-from osbot_aws.apis.test_helpers.Temp_Queue  import Temp_Queue
+from osbot_aws.apis.test_helpers.Temp_SQS_Queue  import Temp_SQS_Queue
 from osbot_aws.helpers.IAM_Role              import IAM_Role
 from osbot_utils.utils.Assert import Assert
 
@@ -158,11 +158,10 @@ class test_Lambda(Test_Helper):
 
     def test_event_source_create(self):
         with Temp_Lambda() as temp_lambda:                                      # create a temp lambda function that will deleted on exit
-            with Temp_Queue() as temp_queue:                                    # create a temp sqs queue that will be deleted on exit
-                event_source_arn = temp_queue .queue.arn()
+            with Temp_SQS_Queue() as queue:                                    # create a temp sqs queue that will be deleted on exit
+                event_source_arn = queue.arn()
                 lambda_name      = temp_lambda.lambda_name
                 aws_lambda       = temp_lambda.aws_lambda
-                queue            = temp_queue .queue
 
                 aws_lambda.configuration_update(Timeout=10)                     # needs to be less than 30 (which is the default value sent in the queue)
                 queue.policy_add_sqs_permissions_to_lambda_role(lambda_name)    # add permissions needed to role

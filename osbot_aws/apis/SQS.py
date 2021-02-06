@@ -1,6 +1,6 @@
 from osbot_utils.decorators.lists.index_by import index_by
 
-from osbot_utils.utils.Json import json_loads
+from osbot_utils.utils.Json import json_loads, json_to_str
 
 from osbot_utils.utils.Misc import array_pop, array_get, list_set
 
@@ -30,6 +30,14 @@ class SQS:
         kwargs = { "QueueName": queue_name,
                    "Attributes": attributes or {} }
         return self.client().create_queue(**kwargs).get('QueueUrl')
+
+    def queue_create_fifo(self, queue_name, attributes=None):
+        if attributes is None:
+            attributes = {}
+        attributes.update({'FifoQueue'                : 'True'  ,
+                           'ContentBasedDeduplication': 'True' })
+
+        return self.queue_create(queue_name=queue_name, attributes=attributes)
 
     def queue_delete(self, queue_url):
         if self.queue_exists(queue_url=queue_url) is False: return False
@@ -85,14 +93,22 @@ class SQS:
                 break
         return messages
 
-    def queue_message_send(self,queue_url, body,attributes_data=None):
-        if attributes_data is None:
-            return self.client().send_message(QueueUrl=queue_url, MessageBody=body).get('MessageId')
-        else:
-            attributes = {}
+    def queue_message_send(self,queue_url, body, message_group_id=None, attributes_data=None):
+
+        kwargs = {"QueueUrl"         : queue_url,
+                  "MessageBody"      : body     ,
+                  "MessageAttributes": {}}
+
+        if attributes_data:
             for key,value in attributes_data.items():
-                attributes[key] = { 'StringValue': value , 'DataType': 'String'}
-            return self.client().send_message(QueueUrl=queue_url,MessageBody=body, MessageAttributes=attributes).get('MessageId')
+                kwargs['MessageAttributes'][key] = { 'StringValue': value , 'DataType': 'String'}
+        if message_group_id:
+            kwargs["MessageGroupId"] = message_group_id
+
+        return self.client().send_message(**kwargs).get('MessageId')
+
+    def queue_message_send_fifo(self, queue_url, message_group_id, body, attributes_data=None):
+        return self.queue_message_send(queue_url=queue_url, message_group_id=message_group_id, body=body, attributes_data=attributes_data)
 
     def queue_messages_count(self, queue_url):
         return int(self.queue_attributes(queue_url=queue_url).get('ApproximateNumberOfMessages'))
@@ -133,6 +149,26 @@ class SQS:
                   'AWSAccountIds': aws_account_ids ,
                   'Actions'      : actions         }
         return self.client().add_permission(**params)
+
+    # todo: see if there is a better way to do this. It shouldn't be needed to write this method, but boto3's add_permission doesn't seem to have the ability to control the Condition and Pricipal values
+    def permission_add_for_service(self, queue_url, action, source_arn, effect, service, resource):
+        policy_statement_id = f'{action}-rule-{source_arn}'
+        statement  = { 'Action'   : action,
+                       'Condition': {'ArnEquals': {'aws:SourceArn':source_arn}},
+                       'Effect'   : effect,
+                       'Principal': {'Service': service},
+                       'Resource' : resource,
+                       'Sid'      : policy_statement_id }
+
+        policy = self.policy(queue_url=queue_url)
+        if policy == {}:
+            policy = {'Statement' : []           ,
+                      'Version'   : '2008-10-17' }
+        policy.get('Statement').append(statement)
+        policy_str = json_to_str(policy)
+        self.queue_attributes_update(queue_url=queue_url, new_attributes={"Policy": policy_str})
+        return self.policy(queue_url=queue_url)
+
 
     @catch
     def permission_delete(self, queue_url, label):

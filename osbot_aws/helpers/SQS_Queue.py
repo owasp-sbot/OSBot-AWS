@@ -1,5 +1,7 @@
 import json
 
+from osbot_utils.utils.Misc import random_string
+
 from osbot_utils.utils.Json import json_dumps, json_loads
 
 from osbot_aws.apis.SQS import SQS
@@ -13,10 +15,10 @@ from osbot_aws.apis.Session import Session
 from osbot_utils.utils import Misc
 
 class SQS_Queue:                                        # todo refactor main methods to SSM class
-    def __init__(self, queue_name=None, queue_url=None):
-        self.queue_name    = queue_name
-        self.queue_url     = queue_url
-
+    def __init__(self, queue_name=None, queue_url=None, message_group_id=False):
+        self.queue_name       = queue_name
+        self.queue_url        = queue_url
+        self.message_group_id = message_group_id or random_string(prefix="message_group_id-")
 
     @cache
     def sqs(self):
@@ -25,7 +27,7 @@ class SQS_Queue:                                        # todo refactor main met
     # main methods
 
     def add(self, body, attributes=None):
-        self.message_send(body,attributes)
+        self.message_send(body=body,attributes_data=attributes)
         return self
 
     def arn(self):
@@ -37,8 +39,11 @@ class SQS_Queue:                                        # todo refactor main met
     def attributes_update(self, new_attributes):
         return self.sqs().queue_attributes_update(queue_url=self.url(), new_attributes=new_attributes)
 
-    def create(self,attributes=None):
+    def create(self, attributes=None):
         return self.sqs().queue_create(queue_name=self.queue_name, attributes=attributes)
+
+    def create_fifo(self, attributes=None):
+        return self.sqs().queue_create_fifo(queue_name=self.queue_name, attributes=attributes)
 
     def delete(self):
         return self.sqs().queue_delete(queue_url=self.url())
@@ -58,14 +63,18 @@ class SQS_Queue:                                        # todo refactor main met
     def info(self):                         # consistent method with similar classes like Lambda
         return self.sqs().queue_info(queue_url=self.url())
 
+    def fifo(self):
+        return self.info().get('FifoQueue') == 'true'
+
     def message_raw(self):
         return self.sqs().queue_message_get_raw(queue_url=self.url())
 
     def message_delete(self, receipt_handle):
         return self.sqs().queue_message_delete(queue_url=self.url(), receipt_handle=receipt_handle)
 
-    def message_send(self,body,attributes_data=None):
-        return self.sqs().queue_message_send(queue_url=self.url(), body=body, attributes_data=attributes_data)
+    def message_send(self,body, message_group_id=None, attributes_data=None):
+        message_group_id = message_group_id or self.message_group_id                                # allow this value to be overwritten per request
+        return self.sqs().queue_message_send(queue_url=self.url(), body=body, message_group_id=message_group_id, attributes_data=attributes_data)
 
     def messages_in_queue(self):
         return self.sqs().queue_messages_count(queue_url=self.url())
@@ -85,9 +94,9 @@ class SQS_Queue:                                        # todo refactor main met
     def policy(self):
         return self.sqs().policy(queue_url=self.url())
 
-    def push(self, data):
+    def push(self, data, attributes_data=None):
         if data:
-            self.message_send(json_dumps(data))
+            self.message_send(body=json_dumps(data),attributes_data=attributes_data)
         return self
 
     def pop(self, delete_message=True):

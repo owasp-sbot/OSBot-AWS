@@ -63,20 +63,6 @@ class test_SQS_Queue(Test_Helper):
         self.queue.push([{'var_5': 'value_5'}, {'var_6': 'value_7'}])                       # push an array
         assert self.queue.pull() == [{'var_5': 'value_5'}, {'var_6': 'value_7'}]            # comes back as an array
 
-    @aws_inject('account_id,region')
-    def test_permissions(self, account_id, region):
-        label           = 'the-permission-id'
-        aws_account_ids = [account_id]
-        actions         = ['SendMessage']
-        assert self.queue.policy() == {}
-        self.queue.permission_add(label=label, aws_account_ids=aws_account_ids, actions=actions)
-        assert self.queue.permissions() == [ { 'Action'   : f'SQS:{actions[0]}',
-                                              'Effect'   : 'Allow',
-                                              'Principal': {'AWS': f'arn:aws:iam::{account_id}:root'},
-                                              'Resource' : f'arn:aws:sqs:{region}:{account_id}:{self.queue_name}',
-                                              'Sid'      : label}]
-        self.queue.permission_delete(label=label)
-        assert self.queue.permissions() == []
 
 
     # # Skipped test (created during development, move to separate class)
