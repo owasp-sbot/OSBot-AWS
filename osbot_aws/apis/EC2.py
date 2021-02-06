@@ -38,7 +38,7 @@ class EC2:
 
         return self.client().describe_images(**kwargs).get('Images')
 
-    def  instance_create(self, image_id, name='created by osbot_aws', instance_type='t2.micro', iam_instance_profile=None, key_name=None, network_interface=None, tags=None,):
+    def instance_create(self, image_id, name='created by osbot_aws', instance_type='t2.micro', iam_instance_profile=None, key_name=None, network_interface=None, tags=None):
         kwargs = {  "ImageId"      : image_id                                                               ,
                     "InstanceType" : instance_type                                                          ,
                     "MaxCount"     : 1                                                                      ,
@@ -241,6 +241,13 @@ class EC2:
             self.client().delete_security_group(GroupName=security_group_name)
         return self.security_group_exists(security_group_id=security_group_id, security_group_name=security_group_name) is False
 
+    def security_group_default(self):
+        default_vpc_id  = self.vpc_default().get('VpcId')
+        default_groups  =  self.security_groups(group_by='GroupName').get('default')
+        for default_group in default_groups:
+            if default_group.get('VpcId') == default_vpc_id:
+                return default_group
+
     def security_group_exists(self, security_group_id=None, security_group_name=None):
         return self.security_group(security_group_id=security_group_id, security_group_name=security_group_name) is not None
 
@@ -264,6 +271,11 @@ class EC2:
     def subnet_delete(self, subnet_id):
         return self.client().delete_subnet(SubnetId=subnet_id)
 
+    @index_by
+    def subnet_default_for_az(self):
+        """this will return one of the 3 default subnets"""
+        return self.subnets_default_for_az().pop()
+
     def subnet_exists(self, subnet_id):
         return self.subnet(subnet_id) is not None
 
@@ -279,6 +291,10 @@ class EC2:
             if e.response.get('Error', {}).get('Code') == 'InvalidSubnetID.NotFound':
                 return []
             raise
+
+    @index_by
+    def subnets_default_for_az(self):
+        return self.subnets(group_by='DefaultForAz').get(True)
 
     def tag_specifications_create(self, tags=None, name=None, resource_type=None):
         data =  []
@@ -314,6 +330,9 @@ class EC2:
 
     def vpc_delete(self, vpc_id):
         self.client().delete_vpc(VpcId=vpc_id)                          # add rest of normal delete methods
+
+    def vpc_default(self):
+        return self.vpcs(index_by='IsDefault').get(True)
 
     def vpc_exists(self, vpc_id):
         return self.vpc(vpc_id) is not None

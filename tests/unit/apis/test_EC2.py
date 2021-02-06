@@ -186,9 +186,13 @@ class test_EC2(TestCase):
         assert self.ec2.security_group_delete(security_group_name = security_group_name) is True
         assert self.ec2.security_group_exists(security_group_id   = security_group_id  ) is False
 
+    def test_security_group_default(self):
+        pprint(self.ec2.security_group_default())
+
     def test_security_groups(self):
         result = self.ec2.security_groups(index_by='GroupId')
         assert len(result) > 0
+        pprint(result)
 
     def test_subnet_create(self):
         with Temp_VPC() as temp_vpc:
@@ -199,9 +203,18 @@ class test_EC2(TestCase):
             self.ec2.subnet_delete(subnet_id)
             assert self.ec2.subnet_exists(subnet_id) is False
 
+    def test_subnet_default_for_az(self):
+        result = self.ec2.subnet_default_for_az()
+        pprint(result)
+
     def test_subnets(self):
         result = self.ec2.subnets(index_by='SubnetId')
         assert len(result) > 0
+        #pprint(result)
+
+    def test_subnets_default_for_az(self):
+        result = self.ec2.subnets_defaults_for_az()
+        assert len(result) == 3                         # in most regions I believe this should be set to 3
 
     def test_vpc(self):
         vpc_id = self.ec2.vpcs_ids().pop()
@@ -234,10 +247,13 @@ class test_EC2(TestCase):
         self.ec2.vpc_delete(vpc_id)
         assert self.ec2.vpc_exists(vpc_id) is False
 
+    def test_vpc_default(self):
+        pprint(self.ec2.vpc_default())
+
     def test_vpcs(self):
         result = self.ec2.vpcs(index_by='VpcId')
         assert len(result) > 0
-        #pprint(result)
+        pprint(result)
 
     @pytest.mark.skip('test can takes 30 to 50 secs to execute')                    # todo move to integration tests (where we can have longer running tests
     def test_wait_for_instance_running(self):                                       # todo create test that mocks the excution

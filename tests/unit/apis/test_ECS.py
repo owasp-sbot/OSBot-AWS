@@ -3,6 +3,7 @@ import sys ;
 import pytest
 
 from osbot_aws.apis.Cloud_Watch_Logs import Cloud_Watch_Logs
+from osbot_aws.apis.EC2 import EC2
 from osbot_utils.utils.Misc import random_string
 
 from osbot_aws.AWS_Config import AWS_Config
@@ -130,13 +131,19 @@ class test_ECS(TestCase):
                 self.ecs.task_delete(task)
 
     def test_task_run(self):
-        image_name             = 'ubuntu'
+        ec2                    = EC2()
+        image_name             = 'hello-world' #'ubuntu'
         task_family            = f"test_run_for_{image_name}"
         task_definition_config = self.ecs.task_definition_setup(task_family=task_family, image_name=image_name)
         task_definition        = self.ecs.task_definition_create(task_definition_config=task_definition_config)
-        pprint(task_definition)
+        task_definition_arn    = task_definition.get('taskDefinitionArn')
+        subnet_id              = ec2.subnet_default_for_az().get('SubnetId')
+        security_group_id      = ec2.security_group_default().get('GroupId')
 
-        return
+
+        #return subnet_id, security_group_id, task_definition_arn
+
+
         account_id             = self.ecs.account_id
         region                 = self.ecs.region
 
@@ -146,16 +153,21 @@ class test_ECS(TestCase):
         execution_role         = 'execution_role_{0}'.format(task_name)
 
         cluster                = self.cluster_name #'FargateCluster'
-        subnet_id              = 'subnet-49391932'
-        security_group_id      = 'sg-e6ea548e'
+        #subnet_id              = 'subnet-49391932'
+        #security_group_id      = 'sg-e6ea548e'
 
         task_name = 'create_and_run_task:45'
-        task_arn = f'arn:aws:ecs:{region}:{account_id}:task-definition/{task_name}'
-
-        task_run_arn = self.ecs.task_run(cluster, task_arn, subnet_id, security_group_id).get('taskArn')
+        #task_arn = f'arn:aws:ecs:{region}:{account_id}:task-definition/{task_name}'
+        task_arn = task_definition_arn
+        task_run_arn = self.ecs.task_run(cluster, task_arn, subnet_id, security_group_id)
+        pprint(task_run_arn)
+            #.get('taskArn')
 
         task_details = self.ecs.task_wait_for_completion(cluster, task_run_arn, sleep_for=1, log_status = True)
-        Dev.pprint(task_details)
+        pprint(task_details)
+        self.ecs.task_definition_delete(task_definition_arn=task_definition_arn)
+
+        #Dev.pprint(task_details)
 
     @pytest.mark.skip("to fix")
     def test_task_details(self):
