@@ -82,8 +82,14 @@ class SQS_Queue:                                        # todo refactor main met
     def messages_not_visible(self):
         return self.sqs().queue_messages_count_not_visible(queue_url=self.url())
 
+    def name(self):
+        return self.queue_name
+
     def permission_add(self, label, aws_account_ids, actions):
         return self.sqs().permission_add(queue_url=self.url(), label=label, aws_account_ids=aws_account_ids, actions=actions)
+
+    def permission_add_for_service(self, source_arn, service, resource):
+        return self.sqs().permission_add_for_service(queue_url=self.url(), service=service, source_arn=source_arn, resource=resource)
 
     def permission_delete(self, label):
         return self.sqs().permission_delete(queue_url=self.url(), label=label)

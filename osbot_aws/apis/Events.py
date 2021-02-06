@@ -41,17 +41,19 @@ class Events:
                 return None
             raise
 
+    def rule_arn(self, rule_name, event_bus_name=None):
+        rule = self.rule(rule_name=rule_name, event_bus_name=event_bus_name)
+        if rule:
+            return rule.get('Arn')
+
     @remove_return_value('ResponseMetadata')
-    def rule_create(self, rule_name, event_source, description=None, role_arn=None, tags=None):
+    def rule_create(self, rule_name, event_source, description=None, tags=None, event_bus_name=None):
         kwargs = {  "Name"          : rule_name                            ,
                     "EventPattern"  : f'{{ "source": ["{event_source}"] }}',
                     "Description"   : description or ''                    ,
                     "State"         : 'ENABLED'                            ,
-                    "Tags"          : []                                   ,
-                    #ScheduleExpression = 'string',
-                    #EventBusName = 'string'
-                    }
-        if role_arn: kwargs['RoleArn'] = role_arn
+                    "Tags"          : []                                   }
+        if event_bus_name: kwargs['EventBusName'] = event_bus_name
         if tags:
             for key,value in tags.items():
                 kwargs['Tags'].append({'Key':key, 'Value':value})
@@ -82,9 +84,12 @@ class Events:
         return self.targets(rule_name, index_by='Id').get(target_id)
 
     @remove_return_value('ResponseMetadata')
-    def target_create(self, rule_name, target_id, target_arn):
+    def target_create(self, rule_name, target_id, target_arn, target_attributes=None):
         target = {"Arn": target_arn ,
                   "Id" : target_id  }
+
+        if target_attributes:
+            target.update(target_attributes)
 
         kwargs = { "Rule"   : rule_name    ,
                    "Targets" : [target]     }

@@ -151,7 +151,7 @@ class SQS:
         return self.client().add_permission(**params)
 
     # todo: see if there is a better way to do this. It shouldn't be needed to write this method, but boto3's add_permission doesn't seem to have the ability to control the Condition and Pricipal values
-    def permission_add_for_service(self, queue_url, action, source_arn, effect, service, resource):
+    def permission_add_for_service(self, queue_url, source_arn, service, resource, action='sqs:SendMessage', effect='Allow'):
         policy_statement_id = f'{action}-rule-{source_arn}'
         statement  = { 'Action'   : action,
                        'Condition': {'ArnEquals': {'aws:SourceArn':source_arn}},

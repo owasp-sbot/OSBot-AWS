@@ -10,7 +10,7 @@ from osbot_utils.utils.Misc import random_string, list_set, wait
 from osbot_aws.apis.SQS import SQS
 
 
-class test_SQS_Queue(TestCase):
+class test_SQS(TestCase):
 
     queue = None
 
@@ -122,12 +122,19 @@ class test_SQS_Queue(TestCase):
         effect              = 'Allow'
         service             = 'events.amazonaws.com'
         resource            = "an_resource"
-        result = self.sqs.permission_add_for_service(queue_url, action, source_arn, effect, service, resource)
+        result = self.sqs.permission_add_for_service(queue_url=queue_url, action=action, source_arn=source_arn, effect=effect, service=service, resource=resource)
 
         assert result ==  { 'Statement': [ { 'Action'   : 'sqs:SendMessage'                            ,
                                              'Condition': {'ArnEquals': {'aws:SourceArn': source_arn }},
                                              'Effect'   : effect                                       ,
                                              'Principal': {'Service': service                         },
-                                             'Resource' : 'an_resource'                                ,
+                                             'Resource' : resource                                     ,
                                              'Sid'      : f'sqs:SendMessage-rule-{source_arn}'       }],
                             'Version': '2008-10-17'}
+
+
+    # def test__delete_temp_queues(self):
+    #     for queue in self.sqs.queues():
+    #         if queue.get('QueueName').startswith('k8_unit_tests_'):
+    #             queue_url = queue.get('QueueUrl')
+    #             print(self.sqs.queue_delete(queue_url=queue_url))
