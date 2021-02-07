@@ -36,14 +36,14 @@ class Cloud_Watch_Logs():
 
     @remove_return_value(field_name='ResponseMetadata')
     def log_events(self, log_group_name, log_stream_name):
-        result = self.client().get_log_events(logGroupName=log_group_name, logStreamName=log_stream_name)
-        return result
-        # todo add support for these filters
-        # startTime = 123,
-        # endTime = 123,
-        # nextToken = 'string',
-        # limit = 123,
-        # startFromHead = True | False
+        return '\n'.join(self.log_events_messages(log_group_name=log_group_name, log_stream_name=log_stream_name))
+
+    def log_events_messages(self, log_group_name, log_stream_name):
+        messages = []
+        events = self.log_events_raw(log_group_name=log_group_name, log_stream_name=log_stream_name).get('events')
+        for event in events:
+            messages.append(event.get('message'))
+        return messages
 
     @remove_return_value(field_name='ResponseMetadata')
     def log_events_put(self, log_group_name, log_stream_name, log_events, next_sequence_token=None):
@@ -56,6 +56,17 @@ class Cloud_Watch_Logs():
 
         result = self.client().put_log_events(**kwargs)
         return result.get('nextSequenceToken')
+
+    @remove_return_value(field_name='ResponseMetadata')
+    def log_events_raw(self, log_group_name, log_stream_name):
+        result = self.client().get_log_events(logGroupName=log_group_name, logStreamName=log_stream_name)
+        return result
+        # todo add support for these filters
+        # startTime = 123,
+        # endTime = 123,
+        # nextToken = 'string',
+        # limit = 123,
+        # startFromHead = True | False
 
     def log_group(self,log_group_name):
         log_group_arn = self.log_group_arn(log_group_name)
@@ -159,7 +170,7 @@ class Cloud_Watch_Logs():
 
     def wait_for_log_events(self, log_group_name, log_stream_name, max_attempts=20 ,sleep_for=0.1):
         for i in range(0, max_attempts):
-            result = self.log_events(log_group_name=log_group_name, log_stream_name=log_stream_name)
+            result = self.log_events_raw(log_group_name=log_group_name, log_stream_name=log_stream_name)
             events = result.get('events')
             if len(events) > 0:
                 #print(f' got logs after {i} * {sleep_for} seconds')        # note: when coding this this value was between 4 and 8

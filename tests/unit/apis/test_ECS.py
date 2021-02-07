@@ -221,15 +221,17 @@ class test_Simulate_Test_Run_Error(TestCase):
     def setUp(self):
         STS().check_current_session_credentials()
         self.cluster_name        = 'Simulate_Test_Run'
-        self.image_name          = 'ubuntu'
+        #self.image_name          = 'ubuntu'
+        self.image_name          = "hello-world"
         self.task_family         = f"test_run_for_{self.image_name}"
         self.task_name           = f'temp_task_on_{self.cluster_name}'
         self.execution_role      = f'{self.task_family}_execution_role'
         self.task_role           = f'{self.task_family}_task_role'
         self.cluster             = None
-        self.cluster_arn         = 'arn:aws:ecs:eu-west-1:785217600689:cluster/Simulate_Test_Run'
-        self.task_definition_arn = 'arn:aws:ecs:eu-west-1:785217600689:task-definition/test_run_for_ubuntu:4'
-        self.task_id             = 'cda0d6dceb704fa7962a2c9fa28b6f17'
+
+        #self.cluster_arn         = 'arn:aws:ecs:eu-west-1:785217600689:cluster/Simulate_Test_Run'
+        self.task_definition_arn = 'arn:aws:ecs:eu-west-1:785217600689:task-definition/test_run_for_hello-world:1'
+        self.task_id             = '1e9fbeba27fb43cc889e4b546123a0af'
         self.task_arn            = f'arn:aws:ecs:eu-west-1:785217600689:task/Simulate_Test_Run/{self.task_id}'
         self.ecs                 = ECS()
 
@@ -265,16 +267,31 @@ class test_Simulate_Test_Run_Error(TestCase):
         task_definition = self.ecs.task_definition(task_definition_arn=self.task_definition_arn)
         task            = self.ecs.task_details(cluster_name=self.cluster_name, task_arn=self.task_arn)
 
-        #print('\n\n\n*********** task definition*************\n')
-        #pprint(task_definition)
-        #print('\n\n\n*********** task *************\n')
-        # pprint(task)
+        print('\n\n\n*********** task definition*************\n')
+        pprint(task_definition)
+        print('\n\n\n*********** task *************\n')
+        pprint(task)
         #self.ecs.task_wait_for_completion(cluster_name=self.cluster_name, task_arn=self.task_arn,log_status=True)
-        with Catch():
-            #pprint(self.ecs.tasks(cluster_name=self.cluster_name))
-            pprint(self.ecs.tasks(cluster_name=self.cluster_name))
+        #with Catch():
+        #    #pprint(self.ecs.tasks(cluster_name=self.cluster_name))
+        #    pprint(self.ecs.tasks(cluster_name=self.cluster_name))
 
+    def test_task_logs(self):
+        task_definition      = self.ecs.task_definition(task_definition_arn=self.task_definition_arn)
+        task                 = self.ecs.task_details(cluster_name=self.cluster_name, task_arn=self.task_arn)
+        task_arn             = task.get('taskArn')
+        task_id              = task_arn.split('/').pop()
+        container_definition = task_definition.get('containerDefinitions')[0]
+        log_configuration    = container_definition.get('logConfiguration')
+        image_name           = container_definition.get('name')
 
-        #pprint(task.get('containers'))
-
+        log_group_name     = log_configuration.get('options').get('awslogs-group')
+        log_stream_prefix  = log_configuration.get('options').get('awslogs-stream-prefix')
+        #pprint(log_configuration)
+        logs = Cloud_Watch_Logs()
+        #pprint(logs.log_streams(log_group_name=log_group_name, log_stream_name_prefix=log_stream_prefix))
+        log_stream_name = f'{log_stream_prefix}/{image_name}/{task_id}'
+        #pprint(log_stream)
+        print()
+        print(logs.log_events(log_group_name=log_group_name,log_stream_name=log_stream_name))
 
