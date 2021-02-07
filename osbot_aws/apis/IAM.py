@@ -265,13 +265,13 @@ class IAM:
             return None
 
     def role_create(self, policy_document, skip_if_exists=True):
-        if type(policy_document) is not str:
-            policy_document = json.dumps(policy_document)
         if self.role_exists():
             if skip_if_exists:
                 return self.role_info()                     # todo: confirm that the values we get from self.role_info() are compatible with the values in .get('Role') (below)
             else:
                 self.role_delete()
+        if type(policy_document) is not str:
+            policy_document = json.dumps(policy_document)
         return self.iam().create_role(RoleName=self.role_name, AssumeRolePolicyDocument=policy_document).get('Role')
 
     def role_delete(self):

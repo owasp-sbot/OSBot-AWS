@@ -165,7 +165,7 @@ class test_ECS(TestCase):
         cluster = 'FargateCluster'
         tast_arn = 'arn:aws:ecs:eu-west-2:244560807427:task/{0}'.format(task_id)
 
-        result = self.ecs.task_details(cluster, tast_arn)
+        result = self.ecs.task(cluster, tast_arn)
         Dev.pprint(result)
         Dev.pprint(result.get('lastStatus'))
         Dev.pprint(result.get('containers'))
@@ -221,8 +221,8 @@ class test_Simulate_Test_Run_Error(TestCase):
     def setUp(self):
         STS().check_current_session_credentials()
         self.cluster_name        = 'Simulate_Test_Run'
-        #self.image_name          = 'ubuntu'
-        self.image_name          = "hello-world"
+        self.image_name          = 'ubuntu'
+        #self.image_name          = "hello-world"
         self.task_family         = f"test_run_for_{self.image_name}"
         self.task_name           = f'temp_task_on_{self.cluster_name}'
         self.execution_role      = f'{self.task_family}_execution_role'
@@ -231,6 +231,7 @@ class test_Simulate_Test_Run_Error(TestCase):
 
         #self.cluster_arn         = 'arn:aws:ecs:eu-west-1:785217600689:cluster/Simulate_Test_Run'
         self.task_definition_arn = 'arn:aws:ecs:eu-west-1:785217600689:task-definition/test_run_for_hello-world:1'
+        self.task_definition_arn = 'arn:aws:ecs:eu-west-1:785217600689:task-definition/test_run_for_ubuntu:4'
         self.task_id             = '1e9fbeba27fb43cc889e4b546123a0af'
         self.task_arn            = f'arn:aws:ecs:eu-west-1:785217600689:task/Simulate_Test_Run/{self.task_id}'
         self.ecs                 = ECS()
@@ -257,6 +258,7 @@ class test_Simulate_Test_Run_Error(TestCase):
         ec2                    = EC2()
         subnet_id              = ec2.subnet_default_for_az().get('SubnetId')
         security_group_id      = ec2.security_group_default().get('GroupId')
+        #for i in range(0,5):
         task                   = self.ecs.task_create(cluster_name=self.cluster_name, task_definition_arn=self.task_definition_arn, subnet_id=subnet_id, security_group_id=security_group_id)
 
         self.task_arn = task.get('taskArn')
@@ -265,7 +267,7 @@ class test_Simulate_Test_Run_Error(TestCase):
 
     def test_task_details(self):
         task_definition = self.ecs.task_definition(task_definition_arn=self.task_definition_arn)
-        task            = self.ecs.task_details(cluster_name=self.cluster_name, task_arn=self.task_arn)
+        task            = self.ecs.task(cluster_name=self.cluster_name, task_arn=self.task_arn)
 
         print('\n\n\n*********** task definition*************\n')
         pprint(task_definition)
@@ -278,7 +280,7 @@ class test_Simulate_Test_Run_Error(TestCase):
 
     def test_task_logs(self):
         task_definition      = self.ecs.task_definition(task_definition_arn=self.task_definition_arn)
-        task                 = self.ecs.task_details(cluster_name=self.cluster_name, task_arn=self.task_arn)
+        task                 = self.ecs.task(cluster_name=self.cluster_name, task_arn=self.task_arn)
         task_arn             = task.get('taskArn')
         task_id              = task_arn.split('/').pop()
         container_definition = task_definition.get('containerDefinitions')[0]

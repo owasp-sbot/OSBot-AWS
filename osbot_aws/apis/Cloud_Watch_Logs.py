@@ -34,7 +34,6 @@ class Cloud_Watch_Logs():
     def export_tasks(self):
         return self.client().describe_export_tasks().get('exportTasks')
 
-    @remove_return_value(field_name='ResponseMetadata')
     def log_events(self, log_group_name, log_stream_name):
         return '\n'.join(self.log_events_messages(log_group_name=log_group_name, log_stream_name=log_stream_name))
 

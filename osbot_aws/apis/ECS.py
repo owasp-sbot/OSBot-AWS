@@ -1,23 +1,18 @@
 from time import sleep
 
-from osbot_utils.decorators.lists.group_by import group_by
+from osbot_utils.decorators.lists.group_by  import group_by
+from osbot_aws.apis.Cloud_Watch_Logs        import Cloud_Watch_Logs
+from osbot_aws.apis.STS                     import STS
+from osbot_aws.helpers.IAM_Role             import IAM_Role
+from osbot_utils.decorators.lists.index_by  import index_by
+from osbot_utils.decorators.methods.cache   import cache
+from osbot_utils.utils.Dev                  import Dev
+from osbot_aws.apis.Session                 import Session
+from osbot_utils.utils.Misc                 import list_get
 
-from osbot_aws.apis.Cloud_Watch_Logs import Cloud_Watch_Logs
-from osbot_aws.apis.STS import STS
-from osbot_aws.helpers.IAM_Role import IAM_Role
-
-from osbot_utils.decorators.lists.index_by import index_by
-
-from osbot_aws.AWS_Config import AWS_Config
-
-from osbot_utils.decorators.methods.cache import cache
-
-from osbot_utils.utils.Dev import Dev
-
-from osbot_aws.apis.Cloud_Watch import Cloud_Watch
-from osbot_aws.apis.IAM import IAM
-from osbot_aws.apis.Session import Session
-
+# todo: find good solution to capture/manage these config values (See also values in EC2 class)
+ECS_WAITER_DELAY        = 1             # default was 6 seconds
+ECS_WAITER_MAX_ATTEMPTS = 600           # default was 100 times
 
 class ECS:
 
@@ -126,6 +121,10 @@ class ECS:
     def task_definition_exists(self, task_definition_arn):
         return self.task_definition(task_definition_arn=task_definition_arn) is not None
 
+    def task_definition_latest(self, task_family):
+        result = self.client().describe_task_definition(taskDefinition=task_family)
+        return result.get('taskDefinition')
+
     def task_definition_not_exists(self, task_definition_arn):
         return self. task_definition_exists(task_definition_arn=task_definition_arn) is False
 
@@ -147,7 +146,7 @@ class ECS:
                  'memory'             : '2048'               ,
                  'execution_role_arn' : execution_role_arn   ,
                  'network_mode'       : 'awsvpc'             ,
-                 'requires'           : 'FARGATE'            ,
+                 'requires'           : 'FARGATE'            ,      # todo: add support for EC2 Instances
                  'task_family'        : task_family          ,
                  'task_role_arn'      : task_role_arn        }
 
@@ -160,8 +159,15 @@ class ECS:
             data.append(self.task_definition(task_definition_arn=task_definition_arn))
         return data
 
-    def task_definitions_arns(self, task_family):
-        return self.client().list_task_definitions(familyPrefix=task_family).get('taskDefinitionArns')
+    def task_definitions_arns(self, task_family,status='ACTIVE'):
+        kwargs = { 'familyPrefix': task_family ,
+                    'status'     : status      }
+
+        return self.client().list_task_definitions(**kwargs).get('taskDefinitionArns')
+
+    def task(self, cluster_name, task_arn):
+        result = self.client().describe_tasks(cluster=cluster_name, tasks=[task_arn]).get('tasks')
+        return list_get(result,0)
 
     def task_create(self, cluster_name, task_definition_arn, subnet_id, security_group_id, launch_type='FARGATE', assign_public_ip='ENABLED'):
         kwargs = {
@@ -179,14 +185,13 @@ class ECS:
         except Exception as error:
             return "{0}".format(error)
 
-    def task_details(self, cluster_name, task_arn):
-        result = self.client().describe_tasks(cluster=cluster_name, tasks=[task_arn])
-        return result.get('tasks').pop()
+    def task_exists(self, cluster_name, task_arn):
+        return self.task(cluster_name=cluster_name, task_arn=task_arn) is not None
 
     def task_wait_for_completion(self, cluster_name, task_arn, sleep_for=1, max_attempts=30, log_status=False):
         build_info = ''
         for i in range(0,max_attempts):
-            build_info    = self.task_details(cluster_name, task_arn)
+            build_info    = self.task(cluster_name, task_arn)
             last_Status  = build_info.get('lastStatus')
             #current_phase = build_info.get('currentPhase')
             if log_status:
@@ -262,3 +267,26 @@ class ECS:
             iam_role.attach_policy(policy_name=policy_name, policy_document=policy_document)
             if policy_name in iam_role.iam.role_policies():
                 return iam_role
+
+    def wait_for(self, waiter_type, kwargs):
+        waiter = self.client().get_waiter(waiter_type)
+        waiter.config.delay        = ECS_WAITER_DELAY
+        waiter.config.max_attempts = ECS_WAITER_MAX_ATTEMPTS
+        return waiter.wait(**kwargs)
+
+
+    #todo: add other two waiters: wait_for_services_inactive and wait_for_services_stable
+
+    def wait_for_tasks_running(self, cluster_name, task_arn):
+        waiter_type = 'tasks_running'
+        kwargs      = { "cluster" : cluster_name,
+                        "tasks"   : [task_arn  ]}
+        self.wait_for(waiter_type, kwargs)
+        return self.task(cluster_name=cluster_name, task_arn=task_arn)
+
+    def wait_for_tasks_stopped(self, cluster_name, task_arn):
+        waiter_type = 'tasks_stopped'
+        kwargs      = { "cluster" : cluster_name,
+                        "tasks"   : [task_arn  ]}
+        self.wait_for(waiter_type, kwargs)
+        return self.task(cluster_name=cluster_name, task_arn=task_arn)
