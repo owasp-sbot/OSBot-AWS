@@ -43,8 +43,12 @@ class ECS:
         return f'arn:aws:ecs:{self.region}:{self.account_id}:cluster/{cluster_name}'
 
     def cluster_create(self, cluster_name):
-        response = self.client().create_cluster(clusterName=cluster_name)
-        return response.get('cluster')
+        cluster_arn = self.cluster_arn(cluster_name=cluster_name)
+        if self.cluster_exists(cluster_arn):
+            return self.cluster(cluster_arn)
+        else:
+            response = self.client().create_cluster(clusterName=cluster_name)
+            return response.get('cluster')
         
     def cluster_delete(self, cluster_arn):
         response = self.client().delete_cluster(cluster=cluster_arn)
@@ -94,8 +98,6 @@ class ECS:
         task_role_arn      = task_definition_config.get('task_role_arn'     )
         requires           = task_definition_config.get('requires'          )
 
-    #task_family, image_name, task_role_arn, execution_role_arn, log_group_name, log_stream_name, ):
-
         Cloud_Watch_Logs().log_stream_create(log_group_name=log_group_name, log_stream_name=log_stream_name)
 
         kwargs = { 'family'              : task_family           ,
@@ -127,18 +129,18 @@ class ECS:
     def task_definition_not_exists(self, task_definition_arn):
         return self. task_definition_exists(task_definition_arn=task_definition_arn) is False
 
-    def task_definition_setup(self, task_family, image_name):
+    def task_definition_setup(self, task_family, image_name, roles_skip_if_exists=False):
         task_role_name      = f'{task_family}_task_role'
         execution_role_name = f'{task_family}_execution_role'
         log_group_name      = "ecs-task-on-{0}".format(image_name)
 
-        task_role_iam       = self.policy_create_for_task_role     (task_role_name     )
-        execution_role_iam  = self.policy_create_for_execution_role(execution_role_name)
+        task_role_iam       = self.policy_create_for_task_role     (task_role_name     , skip_if_exists=roles_skip_if_exists)
+        execution_role_iam  = self.policy_create_for_execution_role(execution_role_name, skip_if_exists=roles_skip_if_exists)
 
         task_role_arn       = task_role_iam     .arn()
         execution_role_arn  = execution_role_iam.arn()
 
-        return { 'cpu'                : '1024'               ,
+        return { 'cpu'                : '1024'               ,      # 1 CPU
                  'image_name'         : image_name           ,
                  'log_group_name'     : log_group_name       ,
                  'log_stream_name'    : task_family          ,
@@ -161,14 +163,14 @@ class ECS:
     def task_definitions_arns(self, task_family):
         return self.client().list_task_definitions(familyPrefix=task_family).get('taskDefinitionArns')
 
-    def task_run(self, cluster, task_definition_arn,subnet_id,security_group, launch_type='FARGATE', assign_public_ip='ENABLED'):
+    def task_create(self, cluster_name, task_definition_arn, subnet_id, security_group_id, launch_type='FARGATE', assign_public_ip='ENABLED'):
         kwargs = {
-                    'cluster'             : cluster             ,
+                    'cluster'             : cluster_name        ,
                     'taskDefinition'      : task_definition_arn ,
                     'launchType'          : launch_type         ,
-                    'networkConfiguration': { 'awsvpcConfiguration': { 'subnets'        : [ subnet_id],
-                                                                       'securityGroups' : [ security_group],
-                                                                       'assignPublicIp' : assign_public_ip  } },
+                    'networkConfiguration': { 'awsvpcConfiguration': { 'subnets'        : [ subnet_id        ],
+                                                                       'securityGroups' : [ security_group_id],
+                                                                       'assignPublicIp' : assign_public_ip   }},
                  }
 
         try:
@@ -177,16 +179,14 @@ class ECS:
         except Exception as error:
             return "{0}".format(error)
 
-    def task_delete(self, task_arn):
-        return self.client().deregister_task_definition(taskDefinition=task_arn)
-
-    def task_details(self, cluster, task_arn):
-        result = self.client().describe_tasks(cluster=cluster, tasks=[task_arn])
+    def task_details(self, cluster_name, task_arn):
+        result = self.client().describe_tasks(cluster=cluster_name, tasks=[task_arn])
         return result.get('tasks').pop()
 
-    def task_wait_for_completion(self, cluster, task_arn, sleep_for=1, max_attempts=30, log_status=False):
+    def task_wait_for_completion(self, cluster_name, task_arn, sleep_for=1, max_attempts=30, log_status=False):
+        build_info = ''
         for i in range(0,max_attempts):
-            build_info    = self.task_details(cluster, task_arn)
+            build_info    = self.task_details(cluster_name, task_arn)
             last_Status  = build_info.get('lastStatus')
             #current_phase = build_info.get('currentPhase')
             if log_status:
@@ -196,10 +196,27 @@ class ECS:
             sleep(sleep_for)
         return build_info
 
-    def tasks(self):
-        return self.client().list_task_definitions().get('taskDefinitionArns')
+    @index_by
+    @group_by
+    def tasks(self, cluster_name, task_arns=None):
+        if task_arns is None:
+            task_arns = self.tasks_arns(cluster_name=cluster_name)
+        kwargs = {"cluster": cluster_name,
+                  "tasks"  : task_arns}
+        return self.client().describe_tasks(**kwargs).get('tasks')
 
+    def tasks_arns(self,cluster_name, task_family=None):
+        all_tasks_arns= []
+        all_tasks_arns.extend(self.tasks_arns_on_status(cluster_name=cluster_name, task_family=task_family, status= 'RUNNING'))
+        all_tasks_arns.extend(self.tasks_arns_on_status(cluster_name=cluster_name, task_family=task_family, status= 'STOPPED'))
+        return all_tasks_arns
 
+    def tasks_arns_on_status(self, cluster_name, task_family=None, status='RUNNING'):
+        kwargs = { "cluster"      : cluster_name,
+                   'desiredStatus': status     }
+        if task_family:
+            kwargs['family'] = task_family
+        return self.client().list_tasks(**kwargs).get('taskArns')
 
     def policy_create_for_task_role(self, role_name, skip_if_exists=True):
         policy = { "Version"    : "2008-10-17",
@@ -212,7 +229,8 @@ class ECS:
 
 
     def policy_create_for_execution_role(self, role_name, skip_if_exists=True):
-        cloud_watch_arn = "arn:aws:logs:{0}:{1}:log-group:awslogs-*".format(self.region, self.account_id)
+        #cloud_watch_arn = "arn:aws:logs:{0}:{1}:log-group:awslogs-*".format(self.region, self.account_id)
+        cloud_watch_arn = f"arn:aws:logs:{self.region}:{self.account_id}:log-group:*"
         role_document   = { "Version"   : "2008-10-17",
                             "Statement" : [ { "Effect": "Allow",
                                               "Principal": { "Service": "ecs-tasks.amazonaws.com"},

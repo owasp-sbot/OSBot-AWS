@@ -1,6 +1,9 @@
 import sys ;
 
 import pytest
+from osbot_utils.testing.Catch import Catch
+
+from osbot_utils.decorators.methods.catch import catch
 
 from osbot_aws.apis.Cloud_Watch_Logs import Cloud_Watch_Logs
 from osbot_aws.apis.EC2 import EC2
@@ -37,17 +40,17 @@ class test_ECS(TestCase):
         cls.cluster_arn  = cls.ecs.cluster_arn(cls.cluster_name)
 
         #create test cluster
-        cluster = cls.ecs.cluster_create(cls.cluster_name)
-        assert cluster.get('clusterArn'       ) == cls.cluster_arn
-        assert cluster.get('clusterName'      ) == cls.cluster_name
-        assert cluster.get('runningTasksCount')==0
+        cls.cluster = cls.ecs.cluster_create(cls.cluster_name)
+        assert cls.cluster.get('clusterArn'       ) == cls.cluster_arn
+        assert cls.cluster.get('clusterName'      ) == cls.cluster_name
+        assert cls.cluster.get('runningTasksCount')==0
         assert cls.cluster_arn in cls.ecs.clusters_arns()
         assert cls.ecs.cluster_exists(cluster_arn=cls.cluster_arn) is True
 
-    @classmethod
-    def tearDownClass(cls) -> None:
-        cls.ecs.cluster_delete(cls.cluster_name)
-        assert cls.ecs.cluster_exists(cluster_arn=cls.cluster_arn) is False
+    # @classmethod
+    # def tearDownClass(cls) -> None:
+    #     cls.ecs.cluster_delete(cls.cluster_name)
+    #     assert cls.ecs.cluster_exists(cluster_arn=cls.cluster_arn) is False
 
     def test__init__(self):
         assert type(self.ecs.client()).__name__ == 'ECS'
@@ -109,63 +112,50 @@ class test_ECS(TestCase):
         assert self.ecs.task_definition_delete(task_definition_arn        ) is True
         assert self.ecs.task_definition_exists(task_definition_arn        ) is False
 
+    # (already tested in test_task_definition_create)
+    # def test_task_definition_delete(self):
+    #     task_definitions_arns = self.ecs.task_definitions_arns(self.task_family)
+    #     for task_definition_arn in task_definitions_arns:
+    #         assert self.ecs.task_definition_delete(task_definition_arn=task_definition_arn) is True
 
-    def test_task_definition_delete(self):
-        task_definitions_arns = self.ecs.task_definitions_arns(self.task_family)
-        for task_definition_arn in task_definitions_arns:
-            assert self.ecs.task_definition_delete(task_definition_arn=task_definition_arn) is True
-
-    def test_task_definitions(self):
-        result = self.ecs.task_definitions(self.task_family)
-        pprint(result)
-
-    #def test_task_definitions_arns(self):
-    #    result = self.ecs.task_definitions_arns(self.task_family)
-    #    pprint(result)
-
-    def test_task_delete(self):
-        tasks  = self.ecs.tasks()
-        for task in tasks:
-            if 'family_created_via' in task:
-                Dev.pprint('deleting task: {0}'.format(task))
-                self.ecs.task_delete(task)
 
     def test_task_run(self):
         ec2                    = EC2()
-        image_name             = 'hello-world' #'ubuntu'
+        image_name             = 'ubuntu' # 'hello-world' #
         task_family            = f"test_run_for_{image_name}"
         task_definition_config = self.ecs.task_definition_setup(task_family=task_family, image_name=image_name)
         task_definition        = self.ecs.task_definition_create(task_definition_config=task_definition_config)
         task_definition_arn    = task_definition.get('taskDefinitionArn')
+        pprint(task_definition_arn)
+        #task_definition_arn    =  'arn:aws:ecs:eu-west-2:785217600689:task/test_ecs_cluster_2/0177a42f9a3b4df6b4e3fc71c9a91544'
+
         subnet_id              = ec2.subnet_default_for_az().get('SubnetId')
         security_group_id      = ec2.security_group_default().get('GroupId')
 
 
-        #return subnet_id, security_group_id, task_definition_arn
-
-
-        account_id             = self.ecs.account_id
-        region                 = self.ecs.region
+        #account_id             = self.ecs.account_id
+        #region                 = self.ecs.region
 
         cluster_name           = self.cluster_name
         task_name              = 'temp_task_on_{0}'  .format(cluster_name)
-        task_role              = 'task_role_{0}'     .format(task_name)
-        execution_role         = 'execution_role_{0}'.format(task_name)
+        #task_role              = 'task_role_{0}'     .format(task_name)
+        #execution_role         = 'execution_role_{0}'.format(task_name)
 
         cluster                = self.cluster_name #'FargateCluster'
         #subnet_id              = 'subnet-49391932'
         #security_group_id      = 'sg-e6ea548e'
 
-        task_name = 'create_and_run_task:45'
+        #task_name = 'create_and_run_task:45'
         #task_arn = f'arn:aws:ecs:{region}:{account_id}:task-definition/{task_name}'
         task_arn = task_definition_arn
-        task_run_arn = self.ecs.task_run(cluster, task_arn, subnet_id, security_group_id)
+        task_run_arn = self.ecs.task_create(cluster, task_arn, subnet_id, security_group_id)
         pprint(task_run_arn)
-            #.get('taskArn')
 
-        task_details = self.ecs.task_wait_for_completion(cluster, task_run_arn, sleep_for=1, log_status = True)
-        pprint(task_details)
-        self.ecs.task_definition_delete(task_definition_arn=task_definition_arn)
+        #task_details = self.ecs.task_details(cluster=cluster,task_arn=task_run_arn)
+        #self.ecs.task_wait_for_completion(cluster, task_run_arn, sleep_for=1, log_status = True)
+        #pprint(task_details)
+
+        #self.ecs.task_definition_delete(task_definition_arn=task_definition_arn)
 
         #Dev.pprint(task_details)
 
@@ -180,9 +170,8 @@ class test_ECS(TestCase):
         Dev.pprint(result.get('lastStatus'))
         Dev.pprint(result.get('containers'))
 
-    @pytest.mark.skip("to fix")
-    def test_tasks(self):
-        result = self.ecs.tasks()
+    def test_task_definitions(self):
+        result = self.ecs.tasks_definitions()
         Dev.pprint(result)
         assert len(result) > 1
         assert ':task-definition/' in result[0]
@@ -211,7 +200,7 @@ class test_ECS(TestCase):
         task_arn     = self.ecs.task_create(task_name, task_role, execution_role).get('taskDefinitionArn')
 
         # Run Task
-        task_run = self.ecs.task_run(cluster_name, task_arn, subnet_id, security_group_id)
+        task_run = self.ecs.task_create(cluster_name, task_arn, subnet_id, security_group_id)
         task_run_arn = task_run.get('taskArn')
         task_details = self.ecs.task_wait_for_completion(cluster_name, task_run_arn)
 
@@ -225,3 +214,67 @@ class test_ECS(TestCase):
         messages = self.cloud_watch.logs_get_messages(log_group_name, stream_name)
         # Print details
         Dev.pprint(messages)
+
+
+class test_Simulate_Test_Run_Error(TestCase):
+
+    def setUp(self):
+        STS().check_current_session_credentials()
+        self.cluster_name        = 'Simulate_Test_Run'
+        self.image_name          = 'ubuntu'
+        self.task_family         = f"test_run_for_{self.image_name}"
+        self.task_name           = f'temp_task_on_{self.cluster_name}'
+        self.execution_role      = f'{self.task_family}_execution_role'
+        self.task_role           = f'{self.task_family}_task_role'
+        self.cluster             = None
+        self.cluster_arn         = 'arn:aws:ecs:eu-west-1:785217600689:cluster/Simulate_Test_Run'
+        self.task_definition_arn = 'arn:aws:ecs:eu-west-1:785217600689:task-definition/test_run_for_ubuntu:4'
+        self.task_id             = 'cda0d6dceb704fa7962a2c9fa28b6f17'
+        self.task_arn            = f'arn:aws:ecs:eu-west-1:785217600689:task/Simulate_Test_Run/{self.task_id}'
+        self.ecs                 = ECS()
+
+    def test_create_roles(self):
+        self.ecs.policy_create_for_task_role     (self.task_role     , skip_if_exists=False)
+        self.ecs.policy_create_for_execution_role(self.execution_role, skip_if_exists=False)
+
+    def test_setup_cluster(self):
+        self.cluster     = self.ecs.cluster_create(cluster_name=self.cluster_name)
+        self.cluster_arn = self.ecs.cluster_arn(cluster_name=self.cluster_name)
+        assert self.ecs.cluster_exists(cluster_arn=self.cluster_arn)
+        pprint(self.cluster_arn)
+
+    def test_create_task_definition(self):
+        task_definition_config   = self.ecs.task_definition_setup(task_family=self.task_family, image_name=self.image_name)
+        task_definition          = self.ecs.task_definition_create(task_definition_config=task_definition_config)
+        task_definition_arn      = task_definition.get('taskDefinitionArn')
+
+        self.task_definition_arn = task_definition_arn
+        pprint(self.task_definition_arn)
+
+    def test_task_create(self):
+        ec2                    = EC2()
+        subnet_id              = ec2.subnet_default_for_az().get('SubnetId')
+        security_group_id      = ec2.security_group_default().get('GroupId')
+        task                   = self.ecs.task_create(cluster_name=self.cluster_name, task_definition_arn=self.task_definition_arn, subnet_id=subnet_id, security_group_id=security_group_id)
+
+        self.task_arn = task.get('taskArn')
+        #self.ecs.task_wait_for_completion()
+        pprint(self.task_arn)
+
+    def test_task_details(self):
+        task_definition = self.ecs.task_definition(task_definition_arn=self.task_definition_arn)
+        task            = self.ecs.task_details(cluster_name=self.cluster_name, task_arn=self.task_arn)
+
+        #print('\n\n\n*********** task definition*************\n')
+        #pprint(task_definition)
+        #print('\n\n\n*********** task *************\n')
+        # pprint(task)
+        #self.ecs.task_wait_for_completion(cluster_name=self.cluster_name, task_arn=self.task_arn,log_status=True)
+        with Catch():
+            #pprint(self.ecs.tasks(cluster_name=self.cluster_name))
+            pprint(self.ecs.tasks(cluster_name=self.cluster_name))
+
+
+        #pprint(task.get('containers'))
+
+
