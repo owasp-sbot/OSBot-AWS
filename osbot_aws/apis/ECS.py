@@ -1,5 +1,7 @@
 from time import sleep
 
+from botocore.exceptions import ClientError
+
 from osbot_utils.decorators.lists.group_by  import group_by
 from osbot_aws.apis.Cloud_Watch_Logs        import Cloud_Watch_Logs
 from osbot_aws.apis.STS                     import STS
@@ -72,10 +74,11 @@ class ECS:
     #     return log_group_name,log_group_region,log_group_stream_prefix
 
     def task_definition(self, task_definition_arn):
-        result          = self.client().describe_task_definition(taskDefinition=task_definition_arn)
-        task_definition = result.get('taskDefinition')
-        if task_definition and task_definition.get('status') == 'ACTIVE':       # threat inactive task definitions as non existent (to address AWS weird bug of not allowing task definitions to be deleted)
-            return task_definition
+        if task_definition_arn:
+            result          = self.client().describe_task_definition(taskDefinition=task_definition_arn)
+            task_definition = result.get('taskDefinition')
+            if task_definition and task_definition.get('status') == 'ACTIVE':       # threat inactive task definitions as non existent (to address AWS weird bug of not allowing task definitions to be deleted)
+                return task_definition
 
 
     def task_definition_arn(self, task_family, revision):
@@ -122,8 +125,13 @@ class ECS:
         return self.task_definition(task_definition_arn=task_definition_arn) is not None
 
     def task_definition_latest(self, task_family):
-        result = self.client().describe_task_definition(taskDefinition=task_family)
-        return result.get('taskDefinition')
+        try:
+            result = self.client().describe_task_definition(taskDefinition=task_family)
+            return result.get('taskDefinition')
+        except ClientError as e:
+            if e.response.get('Error', {}).get('Message') == 'Unable to describe task definition.':
+                return {}
+            raise
 
     def task_definition_not_exists(self, task_definition_arn):
         return self. task_definition_exists(task_definition_arn=task_definition_arn) is False

@@ -15,15 +15,16 @@ class test_ECS_Fargate_Task(TestCase):
 
     @classmethod
     def setUpClass(cls) -> None:
-        cls.cluster_name        = 'test_ECS_Fargate_Task'
+        cls.cluster_name        = 'test_ECS_Fargate_Task-hello-world'
         cls.image_name          = 'hello-world'
         cls.version             = 4
         cls.fargate_task        = ECS_Fargate_Task(cluster_name=cls.cluster_name, image_name=cls.image_name)
         cls.cluster_arn         = cls.fargate_task.cluster_arn()
-        cls.task_definition_arn = cls.fargate_task.task_definition_arn()
 
         cls.fargate_task.setup()
-        #cls.fargate_task.create()
+
+        cls.task_definition_arn = cls.fargate_task.task_definition_arn()
+        cls.fargate_task.create()
 
     @classmethod
     def tearDownClass(cls) -> None:

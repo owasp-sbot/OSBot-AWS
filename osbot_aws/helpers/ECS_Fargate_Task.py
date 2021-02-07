@@ -32,8 +32,10 @@ class ECS_Fargate_Task:
         return self.ecs.cluster_arn(cluster_name=self.cluster_name)
 
     def delete_all(self):
-        return self.ecs.task_definitions_arns(task_family=self.task_family)
-        pass
+        task_definitions_arns = self.ecs.task_definitions_arns(task_family=self.task_family)
+        for task_definition_arn in task_definitions_arns:
+            self.ecs.task_definition_delete(task_definition_arn=task_definition_arn)
+        return self.ecs.cluster_delete(cluster_arn=self.cluster_arn())
 
     def setup(self):
         self.setup_cluster()
