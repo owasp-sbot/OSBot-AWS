@@ -1,6 +1,6 @@
 from osbot_aws.apis.Events import Events
 from osbot_utils.utils.Json import json_to_str
-from osbot_utils.utils.Misc import random_string, date_now
+from osbot_utils.utils.Misc import random_string, date_time_now
 
 
 class Event_Rule:
@@ -45,7 +45,7 @@ class Event_Rule:
     def send_event(self, event_data):
         if type(event_data) is not str:
             event_data = json_to_str(event_data, pretty=False)
-        event  = {   'Time'      : date_now()       ,
+        event  = {   'Time'      : date_time_now()       ,
                      'Source'    : self.event_source,
                      "DetailType": "myTestType"     ,
                      'Detail'    : event_data       }

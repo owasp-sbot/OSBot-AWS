@@ -196,6 +196,12 @@ class ECS:
     def task_exists(self, cluster_name, task_arn):
         return self.task(cluster_name=cluster_name, task_arn=task_arn) is not None
 
+    def task_stop(self, cluster_name, task_arn):
+        kwargs = {'cluster': cluster_name,
+                  'task'   : task_arn    }
+
+        return self.client().stop_task(**kwargs).get('taskDefinitionArns')
+
     def task_wait_for_completion(self, cluster_name, task_arn, sleep_for=1, max_attempts=30, log_status=False):
         build_info = ''
         for i in range(0,max_attempts):

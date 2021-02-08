@@ -1,3 +1,5 @@
+from osbot_aws.apis.IAM import IAM
+
 from osbot_aws.apis.Cloud_Watch_Logs import Cloud_Watch_Logs
 from osbot_utils.decorators.lists.index_by import index_by
 
@@ -31,11 +33,22 @@ class ECS_Fargate_Task:
     def cluster_arn(self):
         return self.ecs.cluster_arn(cluster_name=self.cluster_name)
 
-    def delete_all(self):
+    def delete_cluster_task_definition_tasks_roles(self):
+        # stop task
+        self.stop()
+        self.wait_for_task_stopped()
+
+        # delete task_definitions
         task_definitions_arns = self.ecs.task_definitions_arns(task_family=self.task_family)
         for task_definition_arn in task_definitions_arns:
             self.ecs.task_definition_delete(task_definition_arn=task_definition_arn)
-        return self.ecs.cluster_delete(cluster_arn=self.cluster_arn())
+
+        # delete roles
+        IAM(role_name=self.iam_execution_role).role_delete()
+        IAM(role_name=self.iam_task_role).role_delete()
+
+        # delete cluster
+        self.ecs.cluster_delete(cluster_arn=self.cluster_arn())
 
     def setup(self):
         self.setup_cluster()
@@ -54,6 +67,9 @@ class ECS_Fargate_Task:
         task_definition_config = self.ecs.task_definition_setup (task_family=self.task_family,image_name=self.image_name)
         task_definition        = self.ecs.task_definition_create(task_definition_config=task_definition_config)
         return { "task_definition_config": task_definition_config, "task_definition": task_definition }
+
+    def stop(self):
+        return self.ecs.task_stop(cluster_name=self.cluster_name, task_arn=self.task_arn)
 
     def task_config(self):
         task_config = { "cluster_name"          : self.cluster_name                                                          ,

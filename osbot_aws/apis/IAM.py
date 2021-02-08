@@ -16,8 +16,8 @@ from osbot_utils.utils import Misc
 
 class IAM:
     def __init__(self, user_name=None, role_name=None):
-        self.user_name   = user_name
-        self.role_name   = role_name
+        self.user_name   = user_name                        # todo: refactor this variable into the method's definition (to make it consistent with the other APIs)
+        self.role_name   = role_name                        #       this will be a bit of a breaking change to code that uses this class for role management
 
     # helpers
     @cache

@@ -5,7 +5,7 @@ from osbot_aws.decorators.aws_inject import aws_inject
 from osbot_utils.utils.Json          import json_parse
 from osbot_aws.apis.Events           import Events
 from osbot_utils.utils.Dev           import pprint
-from osbot_utils.utils.Misc import date_now, random_string, wait
+from osbot_utils.utils.Misc import date_time_now, random_string, wait
 
 
 class test_Events(TestCase):
@@ -49,7 +49,7 @@ class test_Events(TestCase):
             #assert queue.url() == SQS().queue_url_from_queue_arn(queue_arn=queue.arn())
 
             event_data = f'{{"id":"event_1", "value***": "{random_string()}"}}'
-            event      = {   'Time'      : date_now(),
+            event      = {   'Time'      : date_time_now(),
                              'Source'    : self.rule_event_source,
                              "DetailType": "myTestType",
                              'Detail'    : event_data,
