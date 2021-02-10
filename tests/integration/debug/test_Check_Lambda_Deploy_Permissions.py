@@ -30,6 +30,9 @@ class test_Check_Lambda_Deploy_Permissions(TestCase):
         self.expected_s3_prefix  = 'lambdas'
         self.expected_role_name  = None
         self.expected_s3_bucket  = f'{self.expected_account_id}-osbot-{self.expected_s3_prefix}'
+        self.expected_module     = 'osbot_aws.lambdas.dev.hello_world'
+        self.function_name       = 'osbot_aws_lambdas_dev_hello_world'
+        self.lambda_handler      = run
 
 
     def test_aws_config(self ):
@@ -66,21 +69,20 @@ class test_Check_Lambda_Deploy_Permissions(TestCase):
         assert self.s3.file_exists(bucket=bucket, key=temp_s3_key) is False
 
     def test_lambda_upload_file(self):
-        lambda_handler = run
-        deploy_lambda  = Deploy_Lambda(lambda_handler)
+        deploy_lambda  = Deploy_Lambda(self.lambda_handler)
         package        = deploy_lambda.package
-        aws_lambda     =  package.aws_lambda
+        aws_lambda     = package.aws_lambda
 
         deploy_lambda.add_function_source_code()
 
-        assert run.__module__                          == 'osbot_aws.lambdas.dev.hello_world'
+        assert run.__module__                          == self.expected_module
         assert run.__name__                            == 'run'
         assert '/osbot_aws/lambdas/dev/hello_world.py' in package.get_files()
         assert len(files_list(aws_lambda.folder_code)) == len(package.get_files())
         assert file_exists(path_combine(aws_lambda.folder_code, 'osbot_aws/lambdas/dev/hello_world.py'))
 
-        assert aws_lambda.s3_bucket == '785217600689-osbot-lambdas'
-        assert aws_lambda.s3_key    == 'lambdas/osbot_aws.lambdas.dev.hello_world.zip'
+        assert aws_lambda.s3_bucket == f'{self.expected_account_id}-osbot-lambdas'
+        assert aws_lambda.s3_key    == f'lambdas/{self.expected_module}.zip'
 
         assert self.s3.file_exists(bucket=aws_lambda.s3_bucket, key=aws_lambda.s3_key) is True
         assert self.s3.file_delete(bucket=aws_lambda.s3_bucket, key=aws_lambda.s3_key) is True
@@ -89,6 +91,52 @@ class test_Check_Lambda_Deploy_Permissions(TestCase):
         self.s3.folder_upload(folder=aws_lambda.folder_code, s3_bucket=aws_lambda.s3_bucket, s3_key=aws_lambda.s3_key)
 
         assert self.s3.file_exists(bucket=aws_lambda.s3_bucket, key=aws_lambda.s3_key) is True
+
+    def test_lambda_create_manually(self):
+        deploy_lambda  = Deploy_Lambda(self.lambda_handler)
+        aws_lambda     = deploy_lambda.package.aws_lambda
+        function_arn   = f'arn:aws:lambda:{self.expected_region}:{self.expected_account_id}:function:{self.function_name}'
+
+        aws_lambda.delete()
+
+        assert aws_lambda.exists() is False
+
+        result = aws_lambda.create()
+
+        data   = result.get('data')
+
+        assert aws_lambda.exists() is True
+
+        assert result.get('status'          ) == 'ok'
+        assert result.get('name'            ) == self.function_name
+        assert result.get('status'          ) == 'ok'
+        assert data.get  ('CodeSize'        )  > 80000
+        assert data.get  ('FunctionArn'     ) == function_arn
+        assert data.get  ('Handler'         ) == f'{self.expected_module}.run'
+        assert data.get  ('LastUpdateStatus') == 'Successful'
+        assert data.get  ('MemorySize'      ) == 10240
+        assert data.get  ('PackageType'     ) == 'Zip'
+
+        assert aws_lambda.invoke() == 'From lambda code, hello None'
+        assert aws_lambda.delete()
+        assert aws_lambda.invoke() == { 'error': 'An error occurred (ResourceNotFoundException) when calling the ' 
+                                                 'Invoke operation: Function not found: ' 
+                                                f'{function_arn}' }
+
+
+    def test_lambda_create_using_deploy(self):
+        deploy_lambda  = Deploy_Lambda(self.lambda_handler)
+        aws_lambda     = deploy_lambda.package.aws_lambda
+
+        aws_lambda.delete()
+
+        assert aws_lambda.exists   () is False
+
+        assert deploy_lambda.deploy() is True
+        assert aws_lambda.exists   () is True
+        assert aws_lambda.invoke   () == 'From lambda code, hello None'
+        assert aws_lambda.delete   () is True
+
 
 
 
