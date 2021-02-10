@@ -1,5 +1,11 @@
 from unittest import TestCase
 
+from osbot_utils.utils.Files import folder_files, files_list, path_combine, file_exists
+
+from osbot_aws.deploy.Deploy_Lambda import Deploy_Lambda
+
+from osbot_aws.lambdas.dev.hello_world import run
+
 from osbot_utils.utils.Misc import random_string
 
 from osbot_aws.AWS_Config import AWS_Config
@@ -58,5 +64,27 @@ class test_Check_Lambda_Deploy_Permissions(TestCase):
         self.s3.file_create_from_string(file_contents=temp_contents, bucket=bucket, key=temp_s3_key)
         assert self.s3.file_delete(bucket=bucket, key=temp_s3_key) is True
         assert self.s3.file_exists(bucket=bucket, key=temp_s3_key) is False
+
+    def test_lambda_upload_file(self):
+        lambda_handler = run
+        deploy_lambda  = Deploy_Lambda(lambda_handler)
+        package        = deploy_lambda.package
+        aws_lambda     =  package.aws_lambda
+
+        deploy_lambda.add_function_source_code()
+
+        assert run.__module__                          == 'osbot_aws.lambdas.dev.hello_world'
+        assert run.__name__                            == 'run'
+        assert '/osbot_aws/lambdas/dev/hello_world.py' in package.get_files()
+        assert len(files_list(aws_lambda.folder_code)) == len(package.get_files())
+        assert file_exists(path_combine(aws_lambda.folder_code, 'osbot_aws/lambdas/dev/hello_world.py'))
+
+        assert aws_lambda.s3_bucket == '785217600689-osbot-lambdas'
+        assert aws_lambda.s3_key    == 'lambdas/osbot_aws.lambdas.dev.hello_world.zip'
+
+        assert self.s3.file_exists(bucket=aws_lambda.s3_bucket, key=aws_lambda.s3_key) is True
+        assert self.s3.file_delete(bucket=aws_lambda.s3_bucket, key=aws_lambda.s3_key) is True
+        assert self.s3.file_exists(bucket=aws_lambda.s3_bucket, key=aws_lambda.s3_key) is False
+
 
 
