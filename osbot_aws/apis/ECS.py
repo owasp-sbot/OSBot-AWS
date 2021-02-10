@@ -8,9 +8,9 @@ from osbot_aws.apis.STS                     import STS
 from osbot_aws.helpers.IAM_Role             import IAM_Role
 from osbot_utils.decorators.lists.index_by  import index_by
 from osbot_utils.decorators.methods.cache   import cache
-from osbot_utils.utils.Dev                  import Dev
+from osbot_utils.utils.Dev import Dev, pprint
 from osbot_aws.apis.Session                 import Session
-from osbot_utils.utils.Misc                 import list_get
+from osbot_utils.utils.Misc import list_get, wait
 
 # todo: find good solution to capture/manage these config values (See also values in EC2 class)
 ECS_WAITER_DELAY        = 1             # default was 6 seconds
@@ -30,13 +30,19 @@ class ECS:
     def sts(self):
         return STS()
 
+    @cache
+    def cloud_watch_logs(self):
+        return Cloud_Watch_Logs()
+
     @index_by
-    def cluster(self, cluster_arn):
+    def cluster(self, cluster_arn=None):
+        if cluster_arn is None:
+            cluster_arn = self.cluster_arn()
         result = self.clusters(clusters_arns=[cluster_arn])
         if len(result) == 1:
             return result[0]
 
-    def cluster_arn(self, cluster_name):
+    def cluster_arn(self, cluster_name='default'):
         return f'arn:aws:ecs:{self.region}:{self.account_id}:cluster/{cluster_name}'
 
     def cluster_create(self, cluster_name):
@@ -66,37 +72,119 @@ class ECS:
     def clusters_arns(self):
         return self.client().list_clusters().get('clusterArns')
 
-    # def task_get_log_details(self, task_name):
-    #
-    #     cloud_watch =
-    #     if cloud_watch.log_group_exists(log_group_name) is False:
-    #         cloud_watch.log_group_create(log_group_name)
-    #     return log_group_name,log_group_region,log_group_stream_prefix
+    def container(self, task_arn, image_name, cluster_name='default'):
+        return self.containers(task_arn=task_arn, cluster_name=cluster_name, index_by='name').get(image_name)
 
-    def task_definition(self, task_definition_arn):
-        if task_definition_arn:
-            result          = self.client().describe_task_definition(taskDefinition=task_definition_arn)
-            task_definition = result.get('taskDefinition')
-            if task_definition and task_definition.get('status') == 'ACTIVE':       # threat inactive task definitions as non existent (to address AWS weird bug of not allowing task definitions to be deleted)
-                return task_definition
+    def container_definition(self, task_definition_arn, image_name):
+       return self.containers_definitions(task_definition_arn=task_definition_arn, index_by='name').get(image_name)
+
+    @index_by
+    def containers(self, task_arn, cluster_name='default'):
+        return self.task(cluster_name=cluster_name, task_arn=task_arn).get('containers')
+
+    @index_by
+    def containers_definitions(self,task_definition_arn):
+        return self.task_definition(task_definition_arn=task_definition_arn).get('containerDefinitions')
+
+    @index_by
+    @group_by
+    def container_instances(self, cluster_name='default', instance_status='ACTIVE'):
+        container_instances_arns = self.container_instances_arns(cluster_name=cluster_name, instance_status=instance_status)
+        kwargs = { "cluster"            : cluster_name             ,
+                   "containerInstances" : container_instances_arns }
+
+        container_instances = self.client().describe_container_instances(**kwargs).get('containerInstances')
+        # fix container_instance.get('attributes') since they are not in easy to consume key:value pairs
+        for container_instance in container_instances:
+            attributes_original = container_instance.get('attributes')
+            attributes          = {}
+            for attribute in attributes_original:
+                key   = attribute.get('name')
+                value = attribute.get('value')
+                attributes[key] = value
+            container_instance['attributes'] = attributes
+
+        return container_instances
+
+    def container_instances_arns(self, cluster_name='default', instance_status='ACTIVE'):
+        kwargs = { "cluster": cluster_name    ,
+                   "status" : instance_status }
+
+        return self.client().list_container_instances(**kwargs).get('containerInstanceArns')
+
+    def log_stream_config(self, task_arn, task_definition_arn, image_name, cluster_name='default'):
+        task                 = self.task(cluster_name=cluster_name, task_arn=task_arn)
+        task_arn             = task.get('taskArn')
+        task_id              = task_arn.split('/').pop()
+        container_definition = self.container_definition(task_definition_arn=task_definition_arn, image_name=image_name)
+        log_configuration    = container_definition.get('logConfiguration')
+        #image_name           = container_definition.get('name')
+        log_group_name       = log_configuration.get('options').get('awslogs-group')
+        log_stream_prefix    = log_configuration.get('options').get('awslogs-stream-prefix')
+        log_stream_name      = f'{log_stream_prefix}/{image_name}/{task_id}'
+        config               = {"log_group_name" : log_group_name  ,
+                                "log_stream_name": log_stream_name }
+        return config
+
+    def log_stream_exists(self, task_arn, task_definition_arn, image_name, cluster_name='default'):
+        config          = self.log_stream_config(task_arn=task_arn, task_definition_arn=task_definition_arn, image_name=image_name, cluster_name=cluster_name)
+        log_group_name  = config.get('log_group_name')
+        log_stream_name = config.get('log_stream_name')
+        return self.cloud_watch_logs().log_stream_exists(log_group_name=log_group_name, log_stream_name=log_stream_name)
+
+    def logs(self, task_arn, task_definition_arn, image_name, cluster_name='default'):
+        log_stream_config = self.log_stream_config(task_arn=task_arn, task_definition_arn=task_definition_arn, image_name=image_name, cluster_name=cluster_name)
+        log_group_name    = log_stream_config.get('log_group_name')
+        log_stream_name   = log_stream_config.get('log_stream_name')
+        return self.cloud_watch_logs().log_events(log_group_name=log_group_name, log_stream_name=log_stream_name)
+
+    def logs_wait_for_data(self, task_arn, task_definition_arn, image_name, cluster_name='default',max_attempts=60 ,sleep_for=1):
+        for i in range(0, max_attempts):                                                                                                    # for max_attempts
+            logs = self.logs(task_arn=task_arn,task_definition_arn=task_definition_arn,image_name=image_name,cluster_name=cluster_name)     # get logs (returns '' if cloud trail doesn't exist or has no data)
+            if logs:                                                                                                                        # if there is data
+                return logs                                                                                                                 # return it
+            wait(sleep_for)                                                                                                                 # if not, wait for sleep_for amount
+
+    def task_definition(self, task_definition_arn=None, task_family=None):
+        try:
+            if task_definition_arn is None:
+                task_definition_arn = task_family
+            if task_definition_arn:
+                result          = self.client().describe_task_definition(taskDefinition=task_definition_arn)
+                task_definition = result.get('taskDefinition')
+                if task_definition and task_definition.get('status') == 'ACTIVE':       # threat inactive task definitions as non existent (to address AWS weird bug of not allowing task definitions to be deleted)
+                    return task_definition
+        except ClientError as e:
+            if e.response.get('Error', {}).get('Message') != 'Unable to describe task definition.':
+                raise
+        return {}
 
 
     def task_definition_arn(self, task_family, revision):
         return f'arn:aws:ecs:{self.region}:{self.account_id}:task-definition/{task_family}:{revision}'
 
-    def task_definition_create(self, task_definition_config):
-        cpu                = task_definition_config.get('cpu'               )
-        execution_role_arn = task_definition_config.get('execution_role_arn')
-        log_group_name     = task_definition_config.get('log_group_name'    )
-        log_stream_name    = task_definition_config.get('log_stream_name'   )
-        image_name         = task_definition_config.get('image_name'        )
-        memory             = task_definition_config.get('memory'            )
-        network_mode       = task_definition_config.get('network_mode'      )
-        task_family        = task_definition_config.get('task_family'       )
-        task_role_arn      = task_definition_config.get('task_role_arn'     )
-        requires           = task_definition_config.get('requires'          )
+    def task_definition_create(self, task_definition_config, skip_if_exists=True):
+        cpu                 = task_definition_config.get('cpu'                )
+        execution_role_name = task_definition_config.get('execution_role_name')
+        log_group_name      = task_definition_config.get('log_group_name'     )
+        log_stream_name     = task_definition_config.get('log_stream_name'    )
+        image_name          = task_definition_config.get('image_name'         )
+        memory              = task_definition_config.get('memory'             )
+        network_mode        = task_definition_config.get('network_mode'       )
+        task_family         = task_definition_config.get('task_family'        )
+        task_role_name      = task_definition_config.get('task_role_name'     )
+        requires            = task_definition_config.get('requires'           )
 
-        Cloud_Watch_Logs().log_stream_create(log_group_name=log_group_name, log_stream_name=log_stream_name)
+        if skip_if_exists and self.task_definition_exists(task_family=task_family):
+            return self.task_definition(task_family=task_family)
+
+        # create policies if needed
+        iam_task_role       = self.policy_create_for_task_role(task_role_name)
+        iam_execution_role  = self.policy_create_for_execution_role(execution_role_name)
+        task_role_arn       = iam_task_role.arn()
+        execution_role_arn  = iam_execution_role.arn()
+
+        self.cloud_watch_logs().log_stream_create(log_group_name=log_group_name, log_stream_name=log_stream_name)
 
         kwargs = { 'family'              : task_family           ,
                    'taskRoleArn'         : task_role_arn         ,
@@ -112,51 +200,34 @@ class ECS:
                                                                                        "awslogs-stream-prefix": log_stream_name }}, }],
                    "requiresCompatibilities": [ requires] }
 
-        try:
-            return self.client().register_task_definition(**kwargs).get('taskDefinition')
-        except Exception as error:
-            return "{0}".format(error)
+
+        return self.client().register_task_definition(**kwargs).get('taskDefinition')
 
     def task_definition_delete(self, task_definition_arn):
         result = self.client().deregister_task_definition(taskDefinition=task_definition_arn)
         return result.get('taskDefinition').get('status') == 'INACTIVE'
 
-    def task_definition_exists(self, task_definition_arn):
-        return self.task_definition(task_definition_arn=task_definition_arn) is not None
-
-    def task_definition_latest(self, task_family):
-        try:
-            result = self.client().describe_task_definition(taskDefinition=task_family)
-            return result.get('taskDefinition')
-        except ClientError as e:
-            if e.response.get('Error', {}).get('Message') == 'Unable to describe task definition.':
-                return {}
-            raise
+    def task_definition_exists(self, task_definition_arn=None, task_family=None):
+        return self.task_definition(task_definition_arn=task_definition_arn,task_family=task_family) != {}
 
     def task_definition_not_exists(self, task_definition_arn):
         return self. task_definition_exists(task_definition_arn=task_definition_arn) is False
 
-    def task_definition_setup(self, task_family, image_name, roles_skip_if_exists=False):
-        task_role_name      = f'{task_family}_task_role'
-        execution_role_name = f'{task_family}_execution_role'
-        log_group_name      = "ecs-task-on-{0}".format(image_name)
+    def task_definition_setup(self, task_family, image_name, cpu='256', memory='512', network_mode='awsvpc', requires='FARGATE'):
+        task_role_name      = f'ecs-role-task__{self.region}__{task_family}'
+        execution_role_name = f'ecs-role-execution__{self.region}__{task_family}'
+        log_group_name      = f'ecs-task-on-{image_name}'
 
-        task_role_iam       = self.policy_create_for_task_role     (task_role_name     , skip_if_exists=roles_skip_if_exists)
-        execution_role_iam  = self.policy_create_for_execution_role(execution_role_name, skip_if_exists=roles_skip_if_exists)
-
-        task_role_arn       = task_role_iam     .arn()
-        execution_role_arn  = execution_role_iam.arn()
-
-        return { 'cpu'                : '1024'               ,      # 1 CPU
+        return { 'cpu'                : cpu                  ,
                  'image_name'         : image_name           ,
                  'log_group_name'     : log_group_name       ,
                  'log_stream_name'    : task_family          ,
-                 'memory'             : '2048'               ,
-                 'execution_role_arn' : execution_role_arn   ,
-                 'network_mode'       : 'awsvpc'             ,
-                 'requires'           : 'FARGATE'            ,      # todo: add support for EC2 Instances
+                 'memory'             : memory               ,
+                 'execution_role_name': execution_role_name  ,
+                 'network_mode'       : network_mode         ,
+                 'requires'           : requires             ,
                  'task_family'        : task_family          ,
-                 'task_role_arn'      : task_role_arn        }
+                 'task_role_name'     : task_role_name       }
 
     @index_by
     @group_by
@@ -177,7 +248,7 @@ class ECS:
         result = self.client().describe_tasks(cluster=cluster_name, tasks=[task_arn]).get('tasks')
         return list_get(result,0)
 
-    def task_create(self, cluster_name, task_definition_arn, subnet_id, security_group_id, launch_type='FARGATE', assign_public_ip='ENABLED'):
+    def task_create(self, task_definition_arn, subnet_id, security_group_id, cluster_name='default', launch_type='FARGATE', assign_public_ip='ENABLED'):
         kwargs = {
                     'cluster'             : cluster_name        ,
                     'taskDefinition'      : task_definition_arn ,
@@ -187,11 +258,17 @@ class ECS:
                                                                        'assignPublicIp' : assign_public_ip   }},
                  }
 
-        try:
-            result = self.client().run_task(**kwargs)
-            return result.get('tasks')[0]
-        except Exception as error:
-            return "{0}".format(error)
+        result = self.client().run_task(**kwargs)
+        return result.get('tasks')[0]
+
+    def task_create_ec2(self, task_definition_arn):
+        kwargs = {"taskDefinition" : task_definition_arn ,
+                  "launchType"     : "EC2"               ,
+                  "count"          : 1                   }                                           # only create one instance
+
+        result = self.client().run_task(**kwargs)
+        return result
+        #return result.get('tasks')[0]
 
     def task_exists(self, cluster_name, task_arn):
         return self.task(cluster_name=cluster_name, task_arn=task_arn) is not None
@@ -202,18 +279,18 @@ class ECS:
 
         return self.client().stop_task(**kwargs).get('taskDefinitionArns')
 
-    def task_wait_for_completion(self, cluster_name, task_arn, sleep_for=1, max_attempts=30, log_status=False):
-        build_info = ''
-        for i in range(0,max_attempts):
-            build_info    = self.task(cluster_name, task_arn)
-            last_Status  = build_info.get('lastStatus')
-            #current_phase = build_info.get('currentPhase')
-            if log_status:
-                Dev.pprint("[{0}] {1}".format(i,last_Status))
-            if last_Status == 'DEPROVISIONING' or last_Status == 'STOPPED':
-                return build_info
-            sleep(sleep_for)
-        return build_info
+    # def task_wait_for_completion(self, task_arn, cluster_name='default', sleep_for=1, max_attempts=30, log_status=False):  # todo: replace with waiters that
+    #     build_info = ''
+    #     for i in range(0,max_attempts):
+    #         build_info    = self.task(cluster_name=cluster_name, task_arn=task_arn)
+    #         last_Status  = build_info.get('lastStatus')
+    #         #current_phase = build_info.get('currentPhase')
+    #         if log_status:
+    #             Dev.pprint("[{0}] {1}".format(i,last_Status))
+    #         if last_Status == 'DEPROVISIONING' or last_Status == 'STOPPED':
+    #             return build_info
+    #         sleep(sleep_for)
+    #     return build_info
 
     @index_by
     @group_by
@@ -224,7 +301,7 @@ class ECS:
                   "tasks"  : task_arns}
         return self.client().describe_tasks(**kwargs).get('tasks')
 
-    def tasks_arns(self,cluster_name, task_family=None):
+    def tasks_arns(self,cluster_name='default', task_family=None):
         all_tasks_arns= []
         all_tasks_arns.extend(self.tasks_arns_on_status(cluster_name=cluster_name, task_family=task_family, status= 'RUNNING'))
         all_tasks_arns.extend(self.tasks_arns_on_status(cluster_name=cluster_name, task_family=task_family, status= 'STOPPED'))
@@ -291,16 +368,16 @@ class ECS:
 
     #todo: add other two waiters: wait_for_services_inactive and wait_for_services_stable
 
-    def wait_for_tasks_running(self, cluster_name, task_arn):
+    def wait_for_task_running(self, task_arn, cluster_name='default'):
         waiter_type = 'tasks_running'
         kwargs      = { "cluster" : cluster_name,
                         "tasks"   : [task_arn  ]}
-        self.wait_for(waiter_type, kwargs)
+        self.wait_for(waiter_type=waiter_type, kwargs=kwargs)
         return self.task(cluster_name=cluster_name, task_arn=task_arn)
 
-    def wait_for_tasks_stopped(self, cluster_name, task_arn):
+    def wait_for_task_stopped(self, task_arn, cluster_name='default'):
         waiter_type = 'tasks_stopped'
         kwargs      = { "cluster" : cluster_name,
                         "tasks"   : [task_arn  ]}
-        self.wait_for(waiter_type, kwargs)
+        self.wait_for(waiter_type=waiter_type, kwargs=kwargs)
         return self.task(cluster_name=cluster_name, task_arn=task_arn)

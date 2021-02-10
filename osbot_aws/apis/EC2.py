@@ -272,9 +272,8 @@ class EC2:
         return self.client().delete_subnet(SubnetId=subnet_id)
 
     @index_by
-    def subnet_default_for_az(self):
-        """this will return one of the 3 default subnets"""
-        return self.subnets_default_for_az().pop()
+    def subnet_default_for_az(self, az_index=1):
+        return list_get(self.subnets_default_for_az(), az_index)
 
     def subnet_exists(self, subnet_id):
         return self.subnet(subnet_id) is not None

@@ -2,11 +2,18 @@ import unittest
 
 import pytest
 
+from osbot_aws.apis.STS import STS
+from osbot_utils.testing.Catch import Catch
+from osbot_utils.utils.Json import json_to_str
+
+from osbot_utils.utils.Misc import wait
+
 from osbot_aws.AWS_Config import AWS_Config
 from osbot_aws.helpers.Test_Helper import Test_Helper
 from osbot_aws.apis.IAM import IAM
 
 from osbot_utils.utils.Assert import Assert
+from osbot_utils.utils.Dev import pprint
 
 account_id       = AWS_Config().aws_session_account_id()
 delete_created   = True
@@ -14,9 +21,9 @@ test_user        = 'test_user'
 test_user_arn    = 'arn:aws:iam::{0}:user/test_user'.format(account_id)
 test_role        = 'test_role'
 test_role_arn    = 'arn:aws:iam::{0}:role/test_role'.format(account_id)
-policy_document  = {'Statement': [ { 'Action': 'sts:AssumeRole',
-                                                 'Effect': 'Allow',
-                                                 'Principal': { 'Service': 'codebuild.amazonaws.com'}}]}
+policy_document  = {'Statement': [ { 'Action'   : 'sts:AssumeRole',
+                                     'Effect'   : 'Allow',
+                                     'Principal': { 'Service': 'codebuild.amazonaws.com'}}]}
 
 
 class Test_IAM(Test_Helper):
@@ -156,6 +163,55 @@ class Test_IAM(Test_Helper):
                         .field_is_equal('AssumeRolePolicyDocument', policy_document)
         )
         assert self.iam.role_arn() == test_role_arn
+
+    def test_role_create_assume_role(self):
+        sts = STS()
+        current_user_arn = sts.caller_identity_arn()
+        original_policy  = {'Statement': [ { 'Action'   : 'sts:AssumeRole',
+                                             'Effect'   : 'Allow',
+                                             'Principal': { 'Service': 'codebuild.amazonaws.com'}}]}
+
+        new_policy       = {'Statement': [{'Action'   : 'sts:AssumeRole',
+                                           'Effect'   : 'Allow',
+                                           'Principal': {'AWS': current_user_arn } }]}
+
+        test_role        = IAM(role_name="temp_role_to_test_assume_role")
+
+        test_role.role_create(original_policy)
+        role_arn = test_role.role_arn()
+        current_assume_policy = test_role.role_assume_policy()
+        test_role.role_assume_policy_update(new_policy)
+
+        for i in range(0,15):
+            with Catch(log_exception=False):
+                sts.assume_role(role_arn=role_arn)
+                sts.assume_role(role_arn=role_arn)
+                sts.assume_role(role_arn=role_arn)
+                sts.assume_role(role_arn=role_arn)
+                sts.assume_role(role_arn=role_arn)
+                sts.assume_role(role_arn=role_arn)
+                sts.assume_role(role_arn=role_arn)
+                sts.assume_role(role_arn=role_arn)
+
+                pprint('got credentials')
+                break
+            print(f'after {i} seconds')
+            wait(1)
+
+        assert sts.assume_role(role_arn=role_arn).get('Credentials') is not None
+        test_role.role_assume_policy_update(current_assume_policy)
+        assert test_role.role_assume_policy() == current_assume_policy
+        test_role.role_delete()
+
+        # credentials = sts.assume_role(role_arn=role_arn).get('Credentials')
+        # aws_access_key_id = credentials.get('AccessKeyId')
+        # aws_secret_access_key = credentials.get('SecretAccessKey')
+        # aws_session_token = credentials.get('SessionToken')
+        #
+        # import boto3
+        # session = boto3.Session(aws_access_key_id=aws_access_key_id,
+        #                         aws_secret_access_key=aws_secret_access_key,
+        #                         aws_session_token=aws_session_token)
 
     def test_role_info(self):
         role = self.iam.set_role_name(test_role).role_info()                # also tests the set_role_name function

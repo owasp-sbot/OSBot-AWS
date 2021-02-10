@@ -1,7 +1,10 @@
 import pytest
 from unittest                        import TestCase
+
+from osbot_aws.apis.IAM import IAM
+
 from osbot_aws.apis.Cloud_Watch_Logs import Cloud_Watch_Logs
-from osbot_aws.apis.EC2              import EC2
+from osbot_utils.utils.Dev import pprint
 from osbot_utils.utils.Misc          import random_string
 from osbot_aws.apis.STS              import STS
 from osbot_aws.apis.ECS              import ECS
@@ -57,6 +60,14 @@ class test_ECS(TestCase):
         result = self.ecs.clusters_arns()
         assert self.cluster_arn in result
 
+    def test_container_instances(self):                     # todo: add provision of EC2 container instance so that these tests have data to assert
+        result = self.ecs.container_instances()
+        #pprint(result)
+
+    def test_container_instances_arns(self):
+        result = self.ecs.container_instances_arns()
+        #pprint(result)
+
     def test_policy_create_for_task_role(self):
         role_name = 'task_role_create_and_run_task'
         iam_role  = self.ecs.policy_create_for_task_role(role_name)
@@ -82,8 +93,8 @@ class test_ECS(TestCase):
         revision            = task_definition.get('revision')
         assert  task_definition_arn           == self.ecs.task_definition_arn(task_family, revision)
         assert task_definition.get('family' ) == task_family
-        assert task_definition.get('cpu'    ) == '1024'
-        assert task_definition.get('memory' ) == '2048'
+        assert task_definition.get('cpu'    ) == '128'              # minimum value
+        assert task_definition.get('memory' ) == '128'
 
         assert task_definition_arn in self.ecs.task_definitions(task_family=self.task_family, index_by='taskDefinitionArn')
 
@@ -93,6 +104,12 @@ class test_ECS(TestCase):
         assert self.ecs.task_definition_exists(task_definition_arn        ) is True
         assert self.ecs.task_definition_delete(task_definition_arn        ) is True
         assert self.ecs.task_definition_exists(task_definition_arn        ) is False
+
+        iam_task_role      = IAM(role_name=task_definition_config.get('task_role_name'))
+        iam_execution_role = IAM(role_name=task_definition_config.get('execution_role_name'))
+
+        assert iam_task_role     .role_delete() is True
+        assert iam_execution_role.role_delete() is True
 
 
 

@@ -1,15 +1,9 @@
 from unittest                           import TestCase
-
 import pytest
-
 from osbot_aws.apis.STS import STS
-from osbot_utils.testing.Catch import Catch
-
 from osbot_aws.apis.IAM import IAM
 from osbot_utils.testing.Duration import Duration
-
-from osbot_utils.utils.Misc import wait, date_time_now, print_time_now
-from osbot_utils.utils.Dev              import pprint
+from osbot_utils.utils.Misc import wait
 from osbot_aws.helpers.ECS_Fargate_Task import ECS_Fargate_Task
 
 
@@ -32,15 +26,17 @@ class test_ECS_Fargate_Task(TestCase):
 
     @classmethod
     def tearDownClass(cls) -> None:
-        #if cls.delete_on_tear_down:
         cls.test_delete_cluster_task_definition_tasks_roles(cls)
+        pass
 
     def setUp(self) -> None:
         self.ecs = self.fargate_task.ecs
 
-    def test_setup(self):
-        assert self.ecs.cluster_exists        (cluster_arn         = self.cluster_arn        ) is True
-        assert self.ecs.task_definition_exists(task_definition_arn = self.task_definition_arn) is True
+    def test_container(self):
+        result = self.fargate_task.container()
+        assert result.get('lastStatus') == 'PENDING'
+        assert result.get('name'      ) == self.image_name
+        assert result.get('taskArn'   ) == self.fargate_task.task_arn
 
     def test_create(self):
         task_arn = self.fargate_task.task_arn
@@ -48,35 +44,36 @@ class test_ECS_Fargate_Task(TestCase):
 
     @pytest.mark.skip("Don't execute during normal test execution")
     def test_delete_cluster_task_definition_tasks_roles(self):
-
-        cluster_name        = self.cluster_name
-        cluster_arn         = self.cluster_arn
-        task_definition_arn = self.task_definition_arn
-        task__arn           = self.fargate_task.task_arn
+        cluster_name           = self.cluster_name
+        cluster_arn            = self.cluster_arn
+        task_definition_arn    = self.task_definition_arn
+        task__arn              = self.fargate_task.task_arn
+        task_family            = self.fargate_task.task_family
+        image_name             = self.fargate_task.image_name
+        task_definition_config = self.fargate_task.ecs.task_definition_setup(task_family=task_family,image_name=image_name)
+        task_role_name         = task_definition_config.get('task_role_name'     )
+        execution_role_name    = task_definition_config.get('execution_role_name')
+        iam_role_task          = IAM(role_name=task_role_name                    )
+        iam_role_execution     = IAM(role_name=execution_role_name               )
 
         # check that everything exists before
         assert self.fargate_task.ecs.cluster_exists        (cluster_arn=cluster_arn                      ) is True
         assert self.fargate_task.ecs.task_definition_exists(task_definition_arn=task_definition_arn      ) is True
         assert self.fargate_task.ecs.task_exists           (cluster_name=cluster_name, task_arn=task__arn) is True
-        #assert self.fargate_task.status                                       () == 'PROVISIONING' (is STOPPED when called from Teardown)
-        assert IAM(role_name=self.fargate_task.iam_execution_role).role_exists() is True
-        assert IAM(role_name=self.fargate_task.iam_execution_role).role_exists() is True
+        #assert self.fargate_task.status                   () == 'PROVISIONING' (is STOPPED when called from Teardown)
+
+        assert iam_role_task     .role_exists()
+        assert iam_role_execution.role_exists()
 
         self.fargate_task.delete_cluster_task_definition_tasks_roles()
 
         # check that everything is deleted after
         assert self.fargate_task.ecs.cluster_exists        (cluster_arn=cluster_arn                      ) is False
         assert self.fargate_task.ecs.task_definition_exists(task_definition_arn=task_definition_arn      ) is False
-        assert self.fargate_task.status                                       () == 'STOPPED'
-        assert IAM(role_name=self.fargate_task.iam_execution_role).role_exists() is False
-        assert IAM(role_name=self.fargate_task.iam_execution_role).role_exists() is False
+        assert self.fargate_task.status                    () == 'STOPPED'
 
-
-    def test_container(self):
-        result = self.fargate_task.container()
-        assert result.get('lastStatus') == 'PENDING'
-        assert result.get('name'      ) == self.image_name
-        assert result.get('taskArn'   ) == self.fargate_task.task_arn
+        assert iam_role_task     .role_not_exists()
+        assert iam_role_execution.role_not_exists()
 
     def test_info(self):
         result = self.fargate_task.info()
@@ -91,6 +88,10 @@ class test_ECS_Fargate_Task(TestCase):
                 return
         logs = self.fargate_task.logs()                     # get logs
         assert "Hello from Docker!" in logs                 # confirm we got the correct logs
+
+    def test_setup(self):
+        assert self.ecs.cluster_exists        (cluster_arn         = self.cluster_arn        ) is True
+        assert self.ecs.task_definition_exists(task_definition_arn = self.task_definition_arn) is True
 
 
     @pytest.mark.skip("tested on delete test (also has side effect with running with all other tests")

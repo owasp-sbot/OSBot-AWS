@@ -7,6 +7,7 @@ from osbot_utils.decorators.lists.group_by import group_by
 from osbot_utils.decorators.lists.index_by import index_by
 from osbot_utils.decorators.methods.cache import cache
 from osbot_utils.decorators.methods.catch import catch
+from osbot_utils.utils.Json import json_to_str
 from osbot_utils.utils.Misc import random_string
 
 from osbot_aws.AWS_Config import AWS_Config
@@ -21,7 +22,7 @@ class IAM:
 
     # helpers
     @cache
-    def iam(self):
+    def client(self):                                          # rename to client
         return Session().client('iam')
 
     @cache
@@ -88,7 +89,7 @@ class IAM:
     @group_by
     @index_by
     def access_keys(self):
-        return self.iam().list_access_keys().get('AccessKeyMetadata')
+        return self.client().list_access_keys().get('AccessKeyMetadata')
 
     @cache
     def account_id(self, profile_name=None):
@@ -114,7 +115,7 @@ class IAM:
         return data
 
     def get_data(self, method, field_id, use_paginator, **kwargs):
-        paginator = self.iam().get_paginator(method)
+        paginator = self.client().get_paginator(method)
         for page in paginator.paginate(**kwargs):
             for id in page.get(field_id):
                 yield id
@@ -126,14 +127,14 @@ class IAM:
 
     @catch
     def login_profile(self):
-        return self.iam().get_login_profile(UserName=self.user_name)
+        return self.client().get_login_profile(UserName=self.user_name)
 
     def login_profile_create(self, password, reset_required=True):
-        return self.iam().create_login_profile(UserName=self.user_name, Password=password, PasswordResetRequired=reset_required)
+        return self.client().create_login_profile(UserName=self.user_name, Password=password, PasswordResetRequired=reset_required)
 
     def login_profile_delete(self):
         if self.login_profile_exists():
-            self.iam().delete_login_profile(UserName=self.user_name)
+            self.client().delete_login_profile(UserName=self.user_name)
 
     def login_profile_exists(self):
         return self.login_profile().get('error') is None
@@ -149,7 +150,7 @@ class IAM:
         policy_arn = self.policy_arn(policy_name, policy_path, account_id)
         if type(policy_document) is not str:
             policy_document = json.dumps(policy_document)
-        data = self.iam().create_policy_version(PolicyArn=policy_arn, PolicyDocument=policy_document,SetAsDefault=True).get('Policy')
+        data = self.client().create_policy_version(PolicyArn=policy_arn, PolicyDocument=policy_document, SetAsDefault=True).get('Policy')
         return {'status': 'ok', 'policy_name': policy_name, 'policy_arn': policy_arn, 'data': data}
 
     def policies_create(self, policies, project_name=None, recreate_policy=False):
@@ -178,7 +179,7 @@ class IAM:
             if type(policy_document) is not str:
                 policy_document = json.dumps(policy_document)
             try:
-                data       = self.iam().create_policy(PolicyName=policy_name, PolicyDocument=policy_document).get('Policy')
+                data       = self.client().create_policy(PolicyName=policy_name, PolicyDocument=policy_document).get('Policy')
                 policy_arn = data.get('Arn')
                 return {'status': 'ok'     , 'policy_name': policy_name, 'policy_arn': policy_arn                  , 'data': data                     }
             except Exception as error:
@@ -197,20 +198,23 @@ class IAM:
         else:
             return False
         self.policy_detach_roles(policy_arn)
-        self.iam().delete_policy(PolicyArn= policy_arn)
+        self.client().delete_policy(PolicyArn= policy_arn)
         return self.policy_exists(policy_arn) is False
 
     def policy_delete_by_name(self, policy_name, policy_path='/',account_id=None):
         policy_arn = self.policy_arn(policy_name,policy_path,account_id)
         if self.policy_exists(policy_arn) is False: return False
-        self.iam().delete_policy(PolicyArn= policy_arn)
+        self.client().delete_policy(PolicyArn= policy_arn)
         return self.policy_exists(policy_arn) is False
 
     def policy_info(self, policy_arn):
         try:
-            return self.iam().get_policy(PolicyArn=policy_arn).get('Policy')
+            return self.client().get_policy(PolicyArn=policy_arn).get('Policy')
         except:
             return None
+
+    def policy_inline_delete(self, policy_name):
+        return self.client().delete_role_policy(RoleName=self.role_name, PolicyName=policy_name)
 
     def policy_details(self, policy_arn):
         try:
@@ -218,13 +222,13 @@ class IAM:
             if policy_info:
                 policy_arn     = policy_info.get('Arn')
                 version_id     = policy_info.get('DefaultVersionId')
-                policy_version = self.iam().get_policy_version(PolicyArn=policy_arn, VersionId=version_id).get('PolicyVersion')
+                policy_version = self.client().get_policy_version(PolicyArn=policy_arn, VersionId=version_id).get('PolicyVersion')
                 return {'policy_arn': policy_arn, 'policy_name': policy_info.get('PolicyName'), 'policy_info' : policy_info, 'policy_version': policy_version}
         except:
             return None
 
     def policy_detach_roles(self,policy_arn):
-        policy_roles = self.iam().list_entities_for_policy(PolicyArn=policy_arn).get('PolicyRoles')
+        policy_roles = self.client().list_entities_for_policy(PolicyArn=policy_arn).get('PolicyRoles')
         for role in policy_roles:
             IAM(role_name=role.get('RoleName')).role_policy_detach(policy_arn)
         return self
@@ -255,12 +259,20 @@ class IAM:
     def role_arn(self):
         return Misc.get_value(self.role_info(), 'Arn')
 
+    def role_assume_policy(self):
+        return self.role_info().get('AssumeRolePolicyDocument')
+
+    def role_assume_policy_update(self, policy_document):
+        if type(policy_document) is not str:
+            policy_document = json_to_str(policy_document)
+        return self.client().update_assume_role_policy(RoleName=self.role_name, PolicyDocument=policy_document)
+
     def role_exists(self):
         return self.role_info() is not None
 
     def role_info(self):
         try:
-            return self.iam().get_role(RoleName=self.role_name).get('Role')
+            return self.client().get_role(RoleName=self.role_name).get('Role')
         except:
             return None
 
@@ -272,13 +284,13 @@ class IAM:
                 self.role_delete()
         if type(policy_document) is not str:
             policy_document = json.dumps(policy_document)
-        return self.iam().create_role(RoleName=self.role_name, AssumeRolePolicyDocument=policy_document).get('Role')
+        return self.client().create_role(RoleName=self.role_name, AssumeRolePolicyDocument=policy_document).get('Role')
 
     def role_delete(self):
         if self.role_exists() is False:
             return False                                            # make sure it exists
         self.role_policies_detach_and_delete()                      # delete all associated policies
-        self.iam().delete_role(RoleName=self.role_name)
+        self.client().delete_role(RoleName=self.role_name)
         return self.role_exists() is False
 
     def role_not_exists(self):
@@ -289,11 +301,14 @@ class IAM:
         self.role_policies_detach(policies_arns)
         self.policies_delete     (policies_arns)
 
+    def role_policy_add(self, policy_name, policy_document):
+        return self.client().put_role_policy(RoleName=self.role_name,PolicyName=policy_name,PolicyDocument=policy_document)
+
     def role_policy_attach(self,policy_arn):
-        return self.iam().attach_role_policy(RoleName=self.role_name, PolicyArn=policy_arn)
+        return self.client().attach_role_policy(RoleName=self.role_name, PolicyArn=policy_arn)
 
     def role_policy_detach(self, policy_arn):
-        self.iam().detach_role_policy(RoleName=self.role_name, PolicyArn=policy_arn)
+        self.client().detach_role_policy(RoleName=self.role_name, PolicyArn=policy_arn)
 
     def role_policies_detach(self, policies_arn):
         for policy_arn in policies_arn:
@@ -307,11 +322,13 @@ class IAM:
 
     @catch
     @index_by
-    def role_policies(self):
+    def role_policies(self):                # todo add support for inline policies (a number of methods will need refactoring
         policies = {}
         if self.role_name:
             for item in self.get_data('list_attached_role_policies', 'AttachedPolicies', True, RoleName=self.role_name):
                 policies[item.get('PolicyName')] = item.get('PolicyArn')
+            #for policy_name in self.get_data('list_role_policies', 'PolicyNames', True, RoleName=self.role_name):
+            #    policies[policy_name] = ''
         return policies
 
     def role_policies_statements(self, just_statements = False):
@@ -338,7 +355,7 @@ class IAM:
         return self.users(index_by='UserName')
 
     def user_access_key_create(self, wait_for_key_working=False):
-        access_key = self.iam().create_access_key(UserName=self.user_name).get('AccessKey')
+        access_key = self.client().create_access_key(UserName=self.user_name).get('AccessKey')
         if wait_for_key_working:
             if self.access_key__wait_until_key_is_working(access_key) is False:
                 return None
@@ -346,10 +363,10 @@ class IAM:
 
 
     def user_access_key_delete(self, access_key_id):
-        return self.iam().delete_access_key(UserName=self.user_name, AccessKeyId=access_key_id)
+        return self.client().delete_access_key(UserName=self.user_name, AccessKeyId=access_key_id)
 
     def user_access_keys(self):
-        return self.iam().list_access_keys(UserName=self.user_name).get('AccessKeyMetadata')
+        return self.client().list_access_keys(UserName=self.user_name).get('AccessKeyMetadata')
 
     def user_access_keys_delete_all(self):
         for access_key in self.user_access_keys():
@@ -357,25 +374,25 @@ class IAM:
         return len(self.user_access_keys()) == 0
 
     def user_attach_policy(self, policy_arn):
-        return self.iam().attach_user_policy(UserName=self.user_name, PolicyArn=policy_arn)
+        return self.client().attach_user_policy(UserName=self.user_name, PolicyArn=policy_arn)
 
     def user_exists(self):
         return self.user_info().get('error') is None
 
     @catch
     def user_info(self):
-        return self.iam().get_user(UserName=self.user_name).get('User')
+        return self.client().get_user(UserName=self.user_name).get('User')
 
     def user_create(self):
         if self.user_exists() is False:
-            return self.iam().create_user(UserName=self.user_name).get('User')
+            return self.client().create_user(UserName=self.user_name).get('User')
         return self.user_info()
 
     def user_delete(self):
         if self.user_exists() is False: return False            # return False if user doesn't exist
         self.login_profile_delete()                             # delete user's profile
         self.user_access_keys_delete_all()                      # delete user's access keys
-        self.iam().delete_user(UserName=self.user_name)         # delete user
+        self.client().delete_user(UserName=self.user_name)         # delete user
         return self.user_exists() is False                      # return True if user doesn't exist any more (which it shouldn't)
 
     def set_user_name (self, value): self.user_name   = value ;return self
@@ -400,7 +417,7 @@ class IAM:
             'MaxAttempts': max_attempts or 20               # 20 is default boto3 value for Delay
         }
 
-        waiter = self.iam().get_waiter(waiter_name)
+        waiter = self.client().get_waiter(waiter_name)
         waiter.wait(**kwargs)
         return waiter
 

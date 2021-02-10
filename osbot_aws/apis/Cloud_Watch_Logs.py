@@ -35,7 +35,9 @@ class Cloud_Watch_Logs():
         return self.client().describe_export_tasks().get('exportTasks')
 
     def log_events(self, log_group_name, log_stream_name):
-        return '\n'.join(self.log_events_messages(log_group_name=log_group_name, log_stream_name=log_stream_name))
+        if self.log_stream_exists(log_group_name=log_group_name, log_stream_name=log_stream_name):
+            return '\n'.join(self.log_events_messages(log_group_name=log_group_name, log_stream_name=log_stream_name))
+        return ''
 
     def log_events_messages(self, log_group_name, log_stream_name):
         messages = []

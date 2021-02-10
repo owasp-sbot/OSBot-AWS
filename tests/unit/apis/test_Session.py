@@ -4,7 +4,7 @@ import pytest
 from osbot_aws.AWS_Config import AWS_Config
 
 from osbot_aws.apis.Session import Session
-from osbot_aws.helpers.Temp_User import Temp_User
+from osbot_aws.apis.test_helpers.Temp_User import Temp_User
 from osbot_utils.testing.Unit_Test import Unit_Test
 
 
