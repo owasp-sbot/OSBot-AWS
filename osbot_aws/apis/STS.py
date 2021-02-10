@@ -40,7 +40,7 @@ class STS:
     @cache
     def check_current_session_credentials(self):        # todo: see if there is a faster way to do this, at the moment it takes about 500ms which is quite a lot
         if AWS_Config().dev_skip_aws_key_check() == "True":
-            return
+            return False
         exception = None
         try:
             self.caller_identity()
@@ -55,6 +55,7 @@ class STS:
                        f"\n\n"
                        f"\tBoto3 Error message: {error_code}  {error_message}")
             self.raise_bad_credentials_exception(message)
+        return True
 
     def raise_bad_credentials_exception(self, message):
         if self.print_error_message:
