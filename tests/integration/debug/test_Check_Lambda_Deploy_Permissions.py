@@ -86,5 +86,9 @@ class test_Check_Lambda_Deploy_Permissions(TestCase):
         assert self.s3.file_delete(bucket=aws_lambda.s3_bucket, key=aws_lambda.s3_key) is True
         assert self.s3.file_exists(bucket=aws_lambda.s3_bucket, key=aws_lambda.s3_key) is False
 
+        self.s3.folder_upload(folder=aws_lambda.folder_code, s3_bucket=aws_lambda.s3_bucket, s3_key=aws_lambda.s3_key)
+
+        assert self.s3.file_exists(bucket=aws_lambda.s3_bucket, key=aws_lambda.s3_key) is True
+
 
 
