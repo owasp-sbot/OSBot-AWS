@@ -35,3 +35,13 @@ class test_Check_Lambda_Deploy_Permissions(TestCase):
         assert self.sts.caller_identity_account()           == '785217600689'
         assert self.sts.check_current_session_credentials() is True
         assert self.sts.current_region_name()               == self.expected_region
+
+    def test_s3_access(self):
+        expected_file   = 'lambdas/k8_live_servers.lambdas.screenshot.zip'
+        buckets         = self.s3.buckets()
+        files_in_bucket = self.s3.find_files(self.expected_s3_bucket, self.expected_s3_prefix)
+
+        assert len(buckets)            > 0
+        assert self.expected_s3_bucket in buckets
+        assert len(files_in_bucket)    > 0
+        assert expected_file           in files_in_bucket
