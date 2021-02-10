@@ -361,7 +361,6 @@ class IAM:
                 return None
         return access_key
 
-
     def user_access_key_delete(self, access_key_id):
         return self.client().delete_access_key(UserName=self.user_name, AccessKeyId=access_key_id)
 

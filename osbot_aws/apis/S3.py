@@ -157,10 +157,10 @@ class S3:
         except ClientError:                                     # when file not found
             return False
 
-    def file_copy               (self, src_bucket, src_key, dest_bucket, dest_key   ):
+    def file_copy(self, src_bucket, src_key, dest_bucket, dest_key):
         return self.s3().copy({'Bucket': src_bucket, 'Key': src_key}, dest_bucket,dest_key )
 
-    def file_create_from_string_as_gzip (self, file_contents, bucket, key                   ):
+    def file_create_from_string_as_gzip(self, file_contents, bucket, key):
         tmp_path = tempfile.NamedTemporaryFile().name
 
         with gzip.open(tmp_path,'w') as file:                       # create gzip on tmp_file
@@ -169,14 +169,14 @@ class S3:
         os.remove(tmp_path)                                         # delete tmp file
         return True
 
-    def file_create_from_string (self, file_contents, bucket, key                   ):
+    def file_create_from_string (self, file_contents, bucket, key):
         with tempfile.NamedTemporaryFile() as temp:                     # use tempfile api to create temp file
             temp.write(str.encode(file_contents))                       # write contents
             temp.flush()                                                # flush contents to make sure everything has been written
             self.s3().upload_file(temp.name, bucket,key)              # upload file using s3 api
             return True
 
-    def file_delete             (self, bucket, key                                  ):
+    def file_delete(self, bucket, key):
         result = self.s3().delete_object(Bucket=bucket, Key=key)              # delete file from s3
         return result.get('ResponseMetadata').get('HTTPStatusCode') == 204
 
@@ -194,7 +194,7 @@ class S3:
         except:                                                               # if we get an exception
             return False                                                      # file doesn't exists (return false)
 
-    def file_move               (self,src_bucket, src_key, dest_bucket, dest_key):
+    def file_move               (self,src_bucket, src_key, dest_bucket, dest_key):      # todo: fix this formating which was an experiment to see what it would look like when all the code was collapsed
         self.file_copy(src_bucket, src_key, dest_bucket, dest_key)
         self.file_delete(src_bucket, src_key)
         return self.file_exists(dest_bucket, dest_key)

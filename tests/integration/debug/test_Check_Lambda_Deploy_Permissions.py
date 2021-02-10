@@ -1,5 +1,7 @@
 from unittest import TestCase
 
+from osbot_utils.utils.Misc import random_string
+
 from osbot_aws.AWS_Config import AWS_Config
 
 from osbot_aws.apis.S3 import S3
@@ -36,7 +38,7 @@ class test_Check_Lambda_Deploy_Permissions(TestCase):
         assert self.sts.check_current_session_credentials() is True
         assert self.sts.current_region_name()               == self.expected_region
 
-    def test_s3_access(self):
+    def test_s3_read_access(self):
         expected_file   = 'lambdas/k8_live_servers.lambdas.screenshot.zip'
         buckets         = self.s3.buckets()
         files_in_bucket = self.s3.find_files(self.expected_s3_bucket, self.expected_s3_prefix)
@@ -45,3 +47,16 @@ class test_Check_Lambda_Deploy_Permissions(TestCase):
         assert self.expected_s3_bucket in buckets
         assert len(files_in_bucket)    > 0
         assert expected_file           in files_in_bucket
+
+    def test_s3_write_access(self):
+        temp_contents  = random_string(length=1024)
+        temp_file_name = f"{random_string()}_temp_file.txt"
+        bucket         = self.expected_s3_bucket
+        temp_s3_key    = f'{self.expected_s3_prefix}/{temp_file_name}'
+
+        assert self.s3.file_exists(bucket=bucket, key=temp_s3_key) is False
+        self.s3.file_create_from_string(file_contents=temp_contents, bucket=bucket, key=temp_s3_key)
+        assert self.s3.file_delete(bucket=bucket, key=temp_s3_key) is True
+        assert self.s3.file_exists(bucket=bucket, key=temp_s3_key) is False
+
+
