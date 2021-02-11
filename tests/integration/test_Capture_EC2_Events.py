@@ -4,7 +4,6 @@ from osbot_utils.utils.Misc import wait
 
 from osbot_aws.apis.test_helpers.Temp_Event_Rule import Temp_Event_Rule
 from osbot_aws.apis.test_helpers.Temp_SQS_Queue import Temp_SQS_Queue
-from osbot_utils.utils.Dev import pprint
 
 
 class test_Capture_EC2_Events(TestCase):

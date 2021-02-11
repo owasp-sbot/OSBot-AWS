@@ -1,6 +1,6 @@
 from osbot_utils.decorators.lists.index_by import index_by
 
-from osbot_utils.utils.Json import json_loads, json_to_str
+from osbot_utils.utils.Json import json_loads, json_dumps
 
 from osbot_utils.utils.Misc import array_pop, array_get, list_set
 
@@ -165,7 +165,7 @@ class SQS:
             policy = {'Statement' : []           ,
                       'Version'   : '2008-10-17' }
         policy.get('Statement').append(statement)
-        policy_str = json_to_str(policy)
+        policy_str = json_dumps(policy)
         self.queue_attributes_update(queue_url=queue_url, new_attributes={"Policy": policy_str})
         return self.policy(queue_url=queue_url)
 

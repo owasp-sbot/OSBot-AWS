@@ -7,7 +7,7 @@ from osbot_utils.decorators.lists.group_by import group_by
 from osbot_utils.decorators.lists.index_by import index_by
 from osbot_utils.decorators.methods.cache import cache
 from osbot_utils.decorators.methods.catch import catch
-from osbot_utils.utils.Json import json_to_str
+from osbot_utils.utils.Json import json_dumps
 from osbot_utils.utils.Misc import random_string
 
 from osbot_aws.AWS_Config import AWS_Config
@@ -264,7 +264,7 @@ class IAM:
 
     def role_assume_policy_update(self, policy_document):
         if type(policy_document) is not str:
-            policy_document = json_to_str(policy_document)
+            policy_document = json_dumps(policy_document)
         return self.client().update_assume_role_policy(RoleName=self.role_name, PolicyDocument=policy_document)
 
     def role_exists(self):

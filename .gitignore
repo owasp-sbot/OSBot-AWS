@@ -7,3 +7,4 @@ _dev_env
 report.json
 osbot_aws.egg-info
 .env
+venv
