@@ -364,6 +364,7 @@ class IAM:
     def user_access_key_delete(self, access_key_id):
         return self.client().delete_access_key(UserName=self.user_name, AccessKeyId=access_key_id)
 
+    @index_by
     def user_access_keys(self):
         return self.client().list_access_keys(UserName=self.user_name).get('AccessKeyMetadata')
 
@@ -393,6 +394,9 @@ class IAM:
         self.user_access_keys_delete_all()                      # delete user's access keys
         self.client().delete_user(UserName=self.user_name)         # delete user
         return self.user_exists() is False                      # return True if user doesn't exist any more (which it shouldn't)
+
+    def user_polices(self):
+        return self.client().list_user_policies(UserName=self.user_name)
 
     def set_user_name (self, value): self.user_name   = value ;return self
     def set_role_name (self, value): self.role_name   = value; return self
