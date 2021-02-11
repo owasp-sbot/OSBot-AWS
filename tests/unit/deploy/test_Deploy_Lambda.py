@@ -22,7 +22,7 @@ class test_Deploy_Lambda(TestCase):
     code_folder = None
 
     @staticmethod
-    def setup_test_enviroment__Deploy_Lambda(cls):  # todo: refactor into separate class
+    def setup_test_environment__Deploy_Lambda(cls):  # todo: refactor into separate class
         Test_Helper().check_aws_token()
         cls.lambda_name    =  "osbot_test_deploy_lambda"
         cls.lambda_code  = Temp_Folder_With_Lambda_File(cls.lambda_name)
@@ -42,17 +42,17 @@ class test_Deploy_Lambda(TestCase):
         cls.lambda_function = cls.lambda_module.run
 
     @staticmethod
-    def teardown_test_enviroment__Deploy_Lambda(cls):
+    def teardown_test_environment__Deploy_Lambda(cls):
         sys.path.remove(cls.code_folder)
         pass
 
     @classmethod
     def setUpClass(cls) -> None:
-        cls.setup_test_enviroment__Deploy_Lambda(cls)
+        cls.setup_test_environment__Deploy_Lambda(cls)
 
     @classmethod
     def tearDownClass(cls):
-        cls.teardown_test_enviroment__Deploy_Lambda(cls)
+        cls.teardown_test_environment__Deploy_Lambda(cls)
 
 
 
