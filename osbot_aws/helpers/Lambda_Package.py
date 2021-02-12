@@ -5,7 +5,7 @@ from osbot_aws.AWS_Config import AWS_Config
 
 from osbot_aws.apis.Lambda import Lambda
 from osbot_aws.apis.test_helpers.Temp_Aws_Roles import Temp_Aws_Roles
-from osbot_utils.utils.Files import folder_copy, Files
+from osbot_utils.utils.Files import folder_copy, Files, folder_not_exists
 
 
 class Lambda_Package:
@@ -41,7 +41,8 @@ class Lambda_Package:
 
     def add_folder(self, source, ignore=None):
         destination = Files.path_combine(self.tmp_folder,Files.file_name(source))
-        folder_copy(source, destination,ignore)
+        if folder_not_exists(destination):
+            folder_copy(source=source, destination=destination,ignore_pattern=ignore)
         self.remove_files('__pycache__')
         return self
 
@@ -60,6 +61,7 @@ class Lambda_Package:
         return self
 
     def add_osbot_aws(self):
+        self.add_osbot_utils()
         self.add_module('osbot_aws')
 
     def add_osbot_utils(self):

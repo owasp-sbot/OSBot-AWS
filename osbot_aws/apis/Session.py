@@ -52,7 +52,7 @@ class Session:
         except Exception as error:
             return {'status': 'error', 'data': '{0}'.format(error) }
 
-    def client(self, service_name, profile_name=None, region_name=None, check_credentials=True):
+    def client(self, service_name, profile_name=None, region_name=None, check_credentials=False):       # todo: find better way to do these checks in tests (since doing it here adds quite a bit of overhead
         client = self.client_boto3(service_name,profile_name,region_name).get('client')
         if check_credentials:
             STS().check_current_session_credentials()

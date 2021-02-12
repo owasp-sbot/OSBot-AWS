@@ -5,7 +5,7 @@ import pytest
 from osbot_aws.apis.shell.Shell_Server import Shell_Server
 from osbot_utils.utils.Dev import Dev
 
-@pytest.mark.skip('Fix tests')
+#@pytest.mark.skip('Fix tests')
 class test_Shell_Server(TestCase):
 
     def setUp(self) -> None:
@@ -17,13 +17,16 @@ class test_Shell_Server(TestCase):
             Dev.pprint(self.result)
 
     def _shell_invoke(self, method_name, method_kwargs=None):
-        event = {'shell': {'method_name': method_name, 'method_kwargs': method_kwargs}}
-        return self.server.invoke(event)
+        event = {'method_name': method_name, 'method_kwargs': method_kwargs}
+        return self.server.invoke(event).get('return_value')
 
     # test methods
     def test_invoke(self):
         assert self.server.invoke({}) is None
-        assert self.server.invoke({'shell': {'method_name':'ping', 'method_kwargs': {}}}) == 'pong'
+        assert self.server.invoke({'method_name':'ping', 'method_kwargs': {}}) == { 'method_invoked': True,
+                                                                                    'method_kwargs': {},
+                                                                                    'method_name': 'ping',
+                                                                                    'return_value': 'pong'}
         assert self.server.invoke({'shell': {'method_name':'aaaa', 'method_kwargs': {}}}) is None
         assert self._shell_invoke('ping', {}  ) == 'pong'
         assert self._shell_invoke('ping', None) == 'pong'
