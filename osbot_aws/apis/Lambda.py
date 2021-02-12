@@ -142,7 +142,7 @@ class Lambda:
         #todo refactor the return value below into an object
         return FunctionName, Runtime, Role, Handler, MemorySize, Timeout, TracingConfig, Code, Layers, Environment, PackageType
 
-    def delete(self):                                               # todo  Delete Lambda function method should also delete cloud formation logs #6 (https://github.com/owasp-sbot/OSBot-AWS/issues/6)
+    def delete(self):                # todo  Delete Lambda function method should also delete cloud formation logs #6 (https://github.com/owasp-sbot/OSBot-AWS/issues/6)
 
         if self.exists() is False:
             return False
@@ -199,6 +199,9 @@ class Lambda:
     def invoke_async(self, payload = None):
         if payload is None: payload = {}
         return self.client().invoke(FunctionName=self.name, Payload=json.dumps(payload), InvocationType='Event')
+
+    def invoke_return_logs(self, payload=None):
+        return 'here'
 
     @index_by
     def functions(self):

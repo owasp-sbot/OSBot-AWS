@@ -60,7 +60,7 @@ class Test_IAM(Test_Helper):
 
     @unittest.skip("Doesn't work in CodeBuild since there is only one configuration in there")
     def test_account_id(self):
-        account_id_1 = self.iam.account_id('gs-detect-aws')
+        account_id_1 = self.iam.account_id('gs-detect-aws')             # todo: rewrite since account_id doesn't take this parameter any more
         assert AWS_Config().aws_session_profile_name() == 'gs-detect-aws'
 
         self.iam._account_id = None

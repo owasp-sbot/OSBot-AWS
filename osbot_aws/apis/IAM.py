@@ -3,6 +3,8 @@ from time import sleep
 
 import boto3
 from botocore import waiter
+
+from osbot_aws.apis.STS import STS
 from osbot_utils.decorators.lists.group_by import group_by
 from osbot_utils.decorators.lists.index_by import index_by
 from osbot_utils.decorators.methods.cache import cache
@@ -92,10 +94,8 @@ class IAM:
         return self.client().list_access_keys().get('AccessKeyMetadata')
 
     @cache
-    def account_id(self, profile_name=None):
-        if profile_name is not None:                                    # if profile_name is set
-            AWS_Config().set_aws_session_profile_name(profile_name)     # set it globally (since this will be used by all boto3 clients)
-        return self.caller_identity().get('Account')
+    def account_id(self):
+        return STS().current_account_id()
 
     def check_aws_security_tokens(self):
         try:
@@ -141,7 +141,7 @@ class IAM:
 
     def policy_arn(self, policy_name, policy_path='/',account_id=None):
         if policy_name is None: return policy_name
-        if account_id is None: account_id = self.account_id()
+        if account_id  is None: account_id = self.account_id()
         if policy_path is None or policy_path == '/':
             return 'arn:aws:iam::{0}:policy/{1}'.format(account_id, policy_name)
         return 'arn:aws:iam::{0}:policy{1}/{2}' .format(account_id, policy_path, policy_name)
@@ -334,7 +334,7 @@ class IAM:
     def role_policies_statements(self, just_statements = False):
         if just_statements:
             statements = []
-            for items in self.role_policies_statements().values():
+            for items in self.role_policies_statements(just_statements=False).values():     # todo: find a better way to do this, this pattern looks and feels weird
                 statements.extend(items)
             return statements
 

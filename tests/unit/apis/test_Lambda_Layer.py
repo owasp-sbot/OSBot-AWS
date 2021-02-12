@@ -91,3 +91,10 @@ class test_Lambda_Layer(Test_Helper):
     def test_versions(self):
         assert len(Lambda_Layer(self.layer_name).versions()) >0
 
+
+    # def test_add_layers(self):
+    #     #layer = 'arn:aws:lambda:eu-west-1:311800962295:layer:test_simple_layer:1'
+    #     layer = 'arn:aws:lambda:eu-west-1:764866452798:layer:chrome-aws-lambda:8'       # chrome
+    #     layer = 'arn:aws:lambda:eu-west-1:764866452798:layer:libreoffice-brotli:1'      # libreoffice
+    #     self.aws_lambda.configuration_update(Layers=[f'{layer}'])
+    #     self.result = self.aws_lambda.info()

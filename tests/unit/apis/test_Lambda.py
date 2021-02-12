@@ -1,6 +1,8 @@
 from time import sleep
 
 import pytest
+
+from osbot_aws.helpers.IAM_Utils import IAM_Utils
 from osbot_utils.utils import Misc
 from osbot_utils.utils.Files import file_exists, file_contents, Files
 
@@ -157,17 +159,19 @@ class test_Lambda(Test_Helper):
 
 
     def test_event_source_create(self):
+        iam_utils = IAM_Utils()
         with Temp_Lambda() as temp_lambda:                                      # create a temp lambda function that will deleted on exit
-            with Temp_SQS_Queue() as queue:                                    # create a temp sqs queue that will be deleted on exit
+            with Temp_SQS_Queue() as queue:                                     # create a temp sqs queue that will be deleted on exit
+
                 event_source_arn = queue.arn()
                 lambda_name      = temp_lambda.lambda_name
                 aws_lambda       = temp_lambda.aws_lambda
 
                 aws_lambda.configuration_update(Timeout=10)                     # needs to be less than 30 (which is the default value sent in the queue)
-                queue.policy_add_sqs_permissions_to_lambda_role(lambda_name)    # add permissions needed to role
+                iam_utils.policy_add_sqs_permissions_to_lambda_role(lambda_name)    # add permissions needed to role
                 sleep(2)                                                        # todo: need a better solution to find out when the permission is available
                 aws_lambda.event_source_create(event_source_arn, lambda_name)   # todo: add asserts
-                queue.policy_remove_sqs_permissions_to_lambda_role(lambda_name) # remove permissions todo: create custom role
+                iam_utils.policy_remove_sqs_permissions_to_lambda_role(lambda_name) # remove permissions todo: create custom role
 
     def test_event_source_delete(self):
         for uuid in self.aws_lambda.event_sources(index_by='UUID'):
@@ -195,12 +199,16 @@ class test_Lambda(Test_Helper):
             result = temp_lambda.aws_lambda.invoke_async({'name': temp_lambda.lambda_name})
             assert result.get('StatusCode') == 202
 
+    def test_invoke_return_logs(self):
+        with Temp_Lambda() as temp_lambda:
+            self.result = temp_lambda.aws_lambda.invoke_return_logs()
+
     def test_functions(self):
         functions = list(self.aws_lambda.functions())
         if len(functions) == 0:
             pytest.skip("There where no Lambda functions in the target AWS region ")
         assert len(functions) > 0
-        assert set(functions.pop(0)) == {'CodeSha256', 'CodeSize'     , 'Description'  , 'FunctionArn', 'FunctionName',
+        assert set(functions.pop(0)) == {'CodeSha256', 'CodeSize'     , 'Description'  , 'Environment', 'FunctionArn', 'FunctionName',
                                            'Handler'   , 'LastModified' , 'MemorySize'   , 'PackageType', 'RevisionId' , 'Role'        ,
                                            'Runtime'   , 'Timeout'      , 'TracingConfig', 'Version'                    }
 

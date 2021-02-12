@@ -116,6 +116,9 @@ class SQS_Queue:                                        # todo refactor main met
             self.queue_url = self.sqs().queue_url(queue_name=self.queue_name)
         return self.queue_url
 
+# todo refactor methods bellow into an Lambda Helper class (there are a couple unit tests that need this)
+
+
 SQS_Queue.next = SQS_Queue.pop
 SQS_Queue.pull = SQS_Queue.pop
 SQS_Queue.size = SQS_Queue.messages_in_queue

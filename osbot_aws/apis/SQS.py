@@ -184,20 +184,3 @@ class SQS:
         if value:
             return json_loads(value)
         return {}
-
-
-    # todo refactor methods bellow into an Lambda Helper class (there are a couple unit tests that need this)
-    #
-    # self.lambda_policy = 'arn:aws:iam::aws:policy/service-role/AWSLambdaSQSQueueExecutionRole'
-    #
-    # def policy_add_sqs_permissions_to_lambda_role(self, lambda_name):
-    #     aws_lambda    = Lambda(lambda_name)
-    #     iam_role_name = aws_lambda.configuration().get('Role').split(':role/').pop()
-    #     IAM(role_name=iam_role_name).role_policy_attach(self.lambda_policy)
-    #     return iam_role_name
-    #
-    # def policy_remove_sqs_permissions_to_lambda_role(self, lambda_name):
-    #     aws_lambda    = Lambda(lambda_name)
-    #     iam_role_name = aws_lambda.configuration().get('Role').split(':role/').pop()
-    #     IAM(role_name=iam_role_name).role_policy_detach(self.lambda_policy)
-    #     return iam_role_name

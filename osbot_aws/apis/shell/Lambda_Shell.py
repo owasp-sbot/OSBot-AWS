@@ -32,7 +32,9 @@ class Lambda_Shell:
 
     @cache                                                   # cache this value since it doesn't change in the lifetime of a lambda function
     def get_lambda_shell_auth(self):
-        return Secrets(self.secret_id).value_from_json_string().get('key')
+        data = Secrets(self.secret_id).value_from_json_string()
+        if data:
+            return data.get('key')
 
     def reset_lambda_shell_auth(self):
         value = {'key' : random_uuid() }
