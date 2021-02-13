@@ -1,5 +1,6 @@
 from osbot_aws.helpers.Test_Helper import Test_Helper
 from osbot_aws.apis.Lambda_Docker import Lambda_Docker
+from osbot_utils.utils.Dev import pprint
 
 
 class test_Lambda_Http(Test_Helper):

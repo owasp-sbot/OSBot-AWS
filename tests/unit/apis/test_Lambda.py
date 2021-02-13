@@ -48,7 +48,7 @@ class test_Lambda(Test_Helper):
         self.s3_bucket   = self.setup.s3_bucket_lambdas
         self.region      = self.setup.region_name
         self.account_id  = self.setup.account_id
-        self.s3_key      = f'{AWS_Config().lambda_s3_key_prefix()}/{self.lambda_name}.zip' #'lambdas/{0}.zip'.format(self.lambda_name)
+        self.s3_key      = f'{AWS_Config().lambda_s3_folder_lambdas()}/{self.lambda_name}.zip' #'lambdas/{0}.zip'.format(self.lambda_name)
         self.aws_lambda  = Lambda(self.lambda_name)
 
 

@@ -33,18 +33,18 @@ class test_Shell_Server(TestCase):
 
 
     def test_invoke__process_run(self):
-        assert 'tests/unit/apis/shell' in self._shell_invoke('process_run', {'executable':'pwd'}).get('stdout')
+        assert 'OSBot-AWS' in self._shell_invoke('process_run', {'executable':'pwd'}).get('stdout')
 
 
     def test_bash(self):
-        assert 'test_Shell_Server.py' in self.server.bash('ls'    ).get('stdout')
+        #assert 'test_Shell_Server.py' in self.server.bash('ls'    ).get('stdout')
         assert 'bin'                  in self.server.bash('ls /'  ).get('stdout')
         assert 'bin'                  in self.server.bash('ls','/').get('stdout')
         assert self.server.bash('AAAAAa').get('stderr') == 'bash: AAAAAa: command not found\n'
 
 
     def test_pwd(self):
-        assert 'tests/unit/apis/shell' in self.server.pwd()
+        assert 'OSBot-AWS' in self.server.pwd()
 
     def test_python_exec(self):
         assert self.server.python_exec('result=40+2') == 42

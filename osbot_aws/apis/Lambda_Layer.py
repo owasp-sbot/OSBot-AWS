@@ -15,14 +15,14 @@ from osbot_utils.utils.Process import run_process
 
 
 class Lambda_Layer:
-    def __init__(self, layer_name='', runtimes=None, license_info=None, s3_bucket=None, description=None, version_arn=None, version_number=None):
+    def __init__(self, layer_name='', runtimes=None, license_info=None, s3_bucket=None, s3_folder=None, description=None, version_number=None):
         self.layer_name      = layer_name.replace('.', '-')
         #self.folders_mapping = folders_mapping  or {}
         self.runtimes        = runtimes         or ['python3.8', 'python3.7', 'python3.6']
-        self.license_info    = license_info     or 'https://github.com/filetrust/gw-proxy-serverless/blob/master/LICENSE'
+        self.license_info    = license_info     or 'https://github.com/owasp-sbot/OSBot-AWS/blob/master/LICENSE'
         self.description     = description      or ''
         self.s3_bucket       = s3_bucket        or AWS_Config().lambda_s3_bucket()
-        self.s3_folder       = 'layers'
+        self.s3_folder       = s3_folder        or AWS_Config().lambda_s3_folder_layers()
         self.s3_key          = f'{self.s3_folder}/{self.layer_name}.zip'
         self.version_number  = version_number
 
@@ -49,7 +49,7 @@ class Lambda_Layer:
     def create_from_pip(self, package_name, pip_executable='pip3'):
         path_install = temp_folder()
         install_result = run_process(pip_executable, ['install','-t',path_install,package_name])
-        if install_result.get('stderr') == '':
+        if install_result.get('error') is None and install_result.get('stderr').startswith('ERROR') is False:
             return self.create_from_folder(path_install)
         else:
             return {'status': 'error', 'error':install_result.get('stderr'), 'stdout': install_result.get('stdout')}

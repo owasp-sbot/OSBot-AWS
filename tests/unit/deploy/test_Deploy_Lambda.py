@@ -73,7 +73,7 @@ class test_Deploy_Lambda(TestCase):
         package = self.deploy.get_package()
         assert package.lambda_name == 'osbot_test_deploy_lambda.osbot_test_deploy_lambda'
         assert package.s3_bucket   == self.aws_config.lambda_s3_bucket()
-        assert package.s3_key      == f'{self.aws_config.lambda_s3_key_prefix()}/{package.lambda_name}.zip'
+        assert package.s3_key      == f'{self.aws_config.lambda_s3_folder_lambdas()}/{package.lambda_name}.zip'
         assert package.role_arn    == f"arn:aws:iam::{self.aws_config.aws_session_account_id()}:role/temp_role_for_lambda_invocation"
         assert folder_exists(package.tmp_folder)
 

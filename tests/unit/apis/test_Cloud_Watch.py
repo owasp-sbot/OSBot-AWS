@@ -30,6 +30,7 @@ class test_Cloud_Watch(TestCase):
         result = self.cloud_watch.anomaly_detectors()
         assert type(result) is list
 
+    @pytest.mark.skip('write test with with creating and deleting dashboards')
     def test_dashboards(self):
         result = self.cloud_watch.dashboards()
         assert len(result) > 0

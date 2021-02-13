@@ -37,7 +37,7 @@ class test_SQS_Queue(Test_Helper):
     def test_message_send(self):
         message_1 = Misc.random_string_and_numbers(prefix='Hello_')
         message_2 = Misc.random_string_and_numbers(prefix='World_')
-        self.queue.add(message_1).add(message_2)
+        self.queue.add(body=message_1).add(body=message_2)
         messages = [self.queue.get_message(),self.queue.get_message()]
         assert message_1 in messages
         assert message_2 in messages
@@ -47,7 +47,7 @@ class test_SQS_Queue(Test_Helper):
         body = 'this is the body of the message.... 132'
         attributes = {'var_1': 'value_1', 'var_2': 'value_2'}
 
-        self.queue.message_send(body,attributes)
+        self.queue.message_send(body=body,attributes_data=attributes)
         data = self.queue.get_message_with_attributes()
         assert body       == data[0]
         assert attributes == data[1]

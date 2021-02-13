@@ -35,7 +35,7 @@ class test_Check_Lambda_Deploy_Permissions(TestCase):
         assert self.aws_config.aws_session_account_id()  == self.expected_account_id
         assert self.aws_config.aws_session_region_name() == self.expected_region
         assert self.aws_config.lambda_role_name()        == self.expected_role_name
-        assert self.aws_config.lambda_s3_key_prefix()    == self.expected_s3_prefix
+        assert self.aws_config.lambda_s3_folder_lambdas() == self.expected_s3_prefix
         assert self.aws_config.lambda_s3_bucket()        == self.expected_s3_bucket
 
     def test_check_sts_credentials(self):

@@ -93,8 +93,7 @@ class SQS:
                 break
         return messages
 
-    def queue_message_send(self,queue_url, body, message_group_id=None, attributes_data=None):
-
+    def queue_message_send(self, queue_url, body, message_group_id=None, attributes_data=None):
         kwargs = {"QueueUrl"         : queue_url,
                   "MessageBody"      : body     ,
                   "MessageAttributes": {}}

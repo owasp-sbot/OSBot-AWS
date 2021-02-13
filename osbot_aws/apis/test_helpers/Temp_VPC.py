@@ -33,39 +33,47 @@ class Temp_VPC:
     def create_internet_gateway(self):
         if self.add_internet_gateway:
             self.vpc.create_internet_gateway()
+        return self
 
     def create_route_table(self):
         if self.add_route_table:
             self.vpc.create_route_table()
+        return self
 
     def create_security_group(self):
         if self.add_security_group:
             self.vpc.create_security_group()
+        return self
 
     def create_subnet(self):
         if self.add_subnet:
             self.vpc.create_subnet()
+        return self
 
     def create_vpc(self):
-        if True:
-            self.vpc.create_vpc()
+        self.vpc.create_vpc()
+        return self
 
     def delete_internet_gateway(self):
         if self.add_internet_gateway:
             self.vpc.delete_internet_gateway()
+        return self
 
     def delete_security_group(self):
         if self.add_security_group:
             self.vpc.delete_security_group()
+        return self
 
     def delete_subnet(self):
         if self.add_subnet:
             self.vpc.delete_subnet()
+        return self
 
     def delete_route_table(self):
         if self.add_route_table:
-                                        self.vpc.delete_route_table()
+            self.vpc.delete_route_table()
+        return self
 
     def delete_vpc(self):
-        if True:
-                                        self.vpc.delete_vpc()
+        self.vpc.delete_vpc()
+        return self

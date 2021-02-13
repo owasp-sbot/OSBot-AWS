@@ -13,7 +13,7 @@ class Lambda_Package:
         self.lambda_name   = lambda_name
         self.aws_lambda    = Lambda(self.lambda_name)
         self.s3_bucket     = AWS_Config().lambda_s3_bucket()
-        self.s3_key        = f'{AWS_Config().lambda_s3_key_prefix()}/{self.lambda_name}.zip'
+        self.s3_key        = f'{AWS_Config().lambda_s3_folder_lambdas()}/{self.lambda_name}.zip'
         self.role_arn      = Temp_Aws_Roles().for_lambda_invocation__role_arn()
         self.tmp_folder    = Files.temp_folder('tmp_lambda_')
 

@@ -11,11 +11,12 @@ class Lambda_Docker:
         run_params = ["run", "--rm", "--entrypoint", "bash", self.docker_image, "-c",cmd]
         return Process.run("docker", run_params)
 
-    def invoke(self, cmd):
-        run_params = ["run", "--rm",
-                      "--entrypoint", "bash",
-                      self.docker_image, "-c", cmd]
-        # docker run --rm                             \
+    # todo: finish this method
+    # def invoke(self, cmd):
+    #     run_params = ["run", "--rm",
+    #                   "--entrypoint", "bash",
+    #                   self.docker_image, "-c", cmd]
+    #     # docker run --rm                             \
 
         #           -v "$PWD":/var/task:ro,delegated \
         #           lambci/lambda:python3.8          \

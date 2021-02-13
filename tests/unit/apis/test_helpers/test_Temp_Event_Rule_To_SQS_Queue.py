@@ -19,7 +19,7 @@ class test_Temp_Event_Rule_To_SQS_Queue(TestCase):
             wait(0.6)                                   # wait for rules to activate
             with Temp_EC2_Instance() as ec2_instance:
                 assert ec2_instance.exists()
-            wait(0.6)                                   # wait for events to be captured by rule and send to queue
+            wait(2.0)                                   # todo add method to wait for events to be captured by rule and send to queue
 
             message_1   = _.sqs_queue.pop()
             message_2   = _.sqs_queue.pop()

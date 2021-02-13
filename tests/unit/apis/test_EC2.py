@@ -1,5 +1,3 @@
-import sys ;
-
 import pytest
 from osbot_utils.utils.Files import file_exists, file_contents, file_delete
 
@@ -14,8 +12,8 @@ from osbot_utils.utils.Dev                import pprint
 class test_EC2(TestCase):
     def setUp(self):
         self.ec2 = EC2()
-        #self.image_id = 'ami-00f8b1192da5566c5'  # amazon linux 2 in eu-west-1
-        self.image_id = 'ami-074882b79a16e2e6e'  # amazon linux 2 in eu-west-2  # todo: write helper class to find test amis
+        self.image_id = 'ami-00f8b1192da5566c5'  # amazon linux 2 in eu-west-1
+        #self.image_id = 'ami-074882b79a16e2e6e'  # amazon linux 2 in eu-west-2  # todo: write helper class to find test amis
 
 
     def test__init__(self):
@@ -80,7 +78,7 @@ class test_EC2(TestCase):
     def test_internet_gateways(self):
         temp_vpc = Temp_VPC(add_internet_gateway=True)
         with temp_vpc:
-            internet_gateway_id = temp_vpc.internet_gateway_id
+            internet_gateway_id = temp_vpc.vpc.internet_gateway_id
             assert internet_gateway_id in self.ec2.internet_gateways(index_by='InternetGatewayId')
 
     def test_key_pair_create(self):
@@ -108,8 +106,8 @@ class test_EC2(TestCase):
     def test_route_create(self):
         temp_vpc = Temp_VPC(add_route_table=True, add_internet_gateway=True)
         with temp_vpc:
-            route_table_id      = temp_vpc.route_table_id
-            internet_gateway_id = temp_vpc.internet_gateway_id
+            route_table_id      = temp_vpc.vpc.route_table_id
+            internet_gateway_id = temp_vpc.vpc.internet_gateway_id
             self.ec2.route_create(route_table_id=route_table_id,internet_gateway_id=internet_gateway_id)
             route_table         = self.ec2.route_table(route_table_id=route_table_id)
             assert route_table.get('Routes').pop() == { 'DestinationCidrBlock': '0.0.0.0/0'         ,
@@ -119,8 +117,8 @@ class test_EC2(TestCase):
     def test_route_table_associate(self):
         temp_vpc =Temp_VPC(add_route_table=True, add_subnet=True)
         with temp_vpc:
-            route_table_id = temp_vpc.route_table_id
-            subnet_id      = temp_vpc.subnet_id
+            route_table_id = temp_vpc.vpc.route_table_id
+            subnet_id      = temp_vpc.vpc.subnet_id
             association_id = self.ec2.route_table_associate(route_table_id=route_table_id, subnet_id=subnet_id).get('AssociationId')
             route_table    = self.ec2.route_table(route_table_id)
             association    = route_table.get('Associations')[0]
@@ -213,7 +211,7 @@ class test_EC2(TestCase):
         #pprint(result)
 
     def test_subnets_default_for_az(self):
-        result = self.ec2.subnets_defaults_for_az()
+        result = self.ec2.subnets_default_for_az()
         assert len(result) == 3                         # in most regions I believe this should be set to 3
 
     def test_vpc(self):

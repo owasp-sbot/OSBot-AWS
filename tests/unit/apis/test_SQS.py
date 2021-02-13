@@ -42,10 +42,10 @@ class test_SQS(TestCase):
     def test_create_fifo(self):
         temp_queue_name  = f"osbot_unit_tests_an-fifo-temp_queue-{random_string()}.fifo"
         message_group_id = 'message_group_id'
-        fifo_queue       = SQS_Queue(queue_name=temp_queue_name, message_group_id=message_group_id)
+        fifo_queue       = SQS_Queue(queue_name=temp_queue_name, fifo_message_group_id=message_group_id)
         queue_url        = fifo_queue.create_fifo()
 
-        assert fifo_queue.message_group_id                    == message_group_id
+        assert fifo_queue.fifo_message_group_id == message_group_id
         assert self.sqs.queue_url(queue_name=temp_queue_name) == queue_url
         assert self.sqs.queue_exists(queue_url=queue_url)     is True
         assert fifo_queue.fifo()                              is True

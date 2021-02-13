@@ -15,10 +15,10 @@ from osbot_aws.apis.Session import Session
 from osbot_utils.utils import Misc
 
 class SQS_Queue:                                        # todo refactor main methods to SSM class
-    def __init__(self, queue_name=None, queue_url=None, message_group_id=False):
-        self.queue_name       = queue_name
-        self.queue_url        = queue_url
-        self.message_group_id = message_group_id or random_string(prefix="message_group_id-")
+    def __init__(self, queue_name=None, queue_url=None, fifo_message_group_id=False):
+        self.queue_name            = queue_name
+        self.queue_url             = queue_url
+        self.fifo_message_group_id = fifo_message_group_id or random_string(prefix="message_group_id-")
 
     @cache
     def sqs(self):
@@ -26,8 +26,12 @@ class SQS_Queue:                                        # todo refactor main met
 
     # main methods
 
-    def add(self, body, attributes=None):
-        self.message_send(body=body,attributes_data=attributes)
+    def add(self, body, message_group_id=None, attributes_data=None):
+        self.message_send(body=body, message_group_id=message_group_id, attributes_data=attributes_data)
+        return self
+
+    def add_fifo(self, body, fifo_message_group_id=None, attributes_data=None):
+        self.message_send_fifo(body=body, fifo_message_group_id=fifo_message_group_id, attributes_data=attributes_data)
         return self
 
     def arn(self):
@@ -72,9 +76,12 @@ class SQS_Queue:                                        # todo refactor main met
     def message_delete(self, receipt_handle):
         return self.sqs().queue_message_delete(queue_url=self.url(), receipt_handle=receipt_handle)
 
-    def message_send(self,body, message_group_id=None, attributes_data=None):
-        message_group_id = message_group_id or self.message_group_id                                # allow this value to be overwritten per request
+    def message_send(self, body, message_group_id=None, attributes_data=None):
         return self.sqs().queue_message_send(queue_url=self.url(), body=body, message_group_id=message_group_id, attributes_data=attributes_data)
+
+    def message_send_fifo(self,body, fifo_message_group_id=None, attributes_data=None):
+        message_group_id = fifo_message_group_id or self.fifo_message_group_id  # allow this value to be overwritten per request
+        return self.message_send(body=body, message_group_id= message_group_id, attributes_data=attributes_data)
 
     def messages_in_queue(self):
         return self.sqs().queue_messages_count(queue_url=self.url())
@@ -100,9 +107,22 @@ class SQS_Queue:                                        # todo refactor main met
     def policy(self):
         return self.sqs().policy(queue_url=self.url())
 
-    def push(self, data, attributes_data=None):
+    def push(self, data, message_group_id=None, attributes_data=None):
         if data:
-            self.message_send(body=json_dumps(data),attributes_data=attributes_data)
+            if type(data) is not str:
+                body = json_dumps(data)
+            else:
+                body = data
+            self.message_send(body=body, message_group_id=message_group_id, attributes_data=attributes_data)
+        return self
+
+    def push_fifo(self, data, fifo_message_group_id=None, attributes_data=None):
+        if data:
+            if type(data) is not str:
+                body = json_dumps(data)
+            else:
+                body = data
+            self.message_send_fifo(body=body, fifo_message_group_id=fifo_message_group_id,attributes_data=attributes_data)
         return self
 
     def pop(self, delete_message=True):
@@ -115,9 +135,6 @@ class SQS_Queue:                                        # todo refactor main met
         if self.queue_url  is None:
             self.queue_url = self.sqs().queue_url(queue_name=self.queue_name)
         return self.queue_url
-
-# todo refactor methods bellow into an Lambda Helper class (there are a couple unit tests that need this)
-
 
 SQS_Queue.next = SQS_Queue.pop
 SQS_Queue.pull = SQS_Queue.pop
