@@ -1,24 +1,18 @@
+import pytest
 from time import sleep
 
-import pytest
-
-from osbot_aws.apis.STS import STS
-from osbot_aws.helpers.IAM_Utils import IAM_Utils
-from osbot_utils.utils import Misc
-from osbot_utils.utils.Dev import pprint
-from osbot_utils.utils.Files import file_exists, file_contents, Files
-
-from osbot_aws.AWS_Config import AWS_Config
-from osbot_aws.OSBot_Setup import OSBot_Setup
-from osbot_aws.apis.IAM import IAM
-from osbot_aws.apis.S3 import S3
-from osbot_aws.apis.Session import Session
-from osbot_aws.helpers.Test_Helper           import Test_Helper
-from osbot_aws.apis.Lambda                   import Lambda
-from osbot_aws.apis.test_helpers.Temp_Lambda import Temp_Folder_With_Lambda_File, Temp_Lambda
+from osbot_aws.helpers.IAM_Utils                 import IAM_Utils
+from osbot_utils.utils                           import Misc
+from osbot_utils.utils.Files                     import file_exists, file_contents, Files
+from osbot_aws.AWS_Config                        import AWS_Config
+from osbot_aws.apis.S3                           import S3
+from osbot_aws.helpers.Test_Helper               import Test_Helper
+from osbot_aws.apis.Lambda                       import Lambda
+from osbot_aws.apis.test_helpers.Temp_Lambda     import Temp_Folder_With_Lambda_File, Temp_Lambda
 from osbot_aws.apis.test_helpers.Temp_SQS_Queue  import Temp_SQS_Queue
-from osbot_aws.helpers.IAM_Role              import IAM_Role
-from osbot_utils.utils.Assert import Assert
+from osbot_aws.helpers.IAM_Role                  import IAM_Role
+from osbot_utils.utils.Assert                    import Assert
+from osbot_utils.utils.Misc                      import  list_contains
 
 
 class test_Lambda(Test_Helper):
@@ -31,17 +25,13 @@ class test_Lambda(Test_Helper):
         cls.account_id  = cls.aws_config.aws_session_account_id()
         cls.s3_bucket   = cls.aws_config.lambda_s3_bucket()
         cls.region      = cls.aws_config.aws_session_region_name()
-        if cls.s3.bucket_not_exists(cls.s3_bucket):
-           cls.s3.bucket_create(bucket=cls.s3_bucket, region=cls.region)
-           print('>>>> Created bucket', cls.s3_bucket)
+        # if cls.s3.bucket_not_exists(cls.s3_bucket):                       # todo: find what this adds 3 seconds to the test
+        #    cls.s3.bucket_create(bucket=cls.s3_bucket, region=cls.region)
+        #    print('>>>> Created bucket', cls.s3_bucket)
 
     def setUp(self):
         super().setUp()
-        self.lambda_name = 'tmp_lambda_dev_test'
-        #self.setup       = super().setUp()
-        #self.s3_bucket   = self.setup.s3_bucket_lambdas
-        #self.region      = self.setup.region_name
-        #self.account_id  = self.setup.account_id
+        self.lambda_name = 'temp_lambda_dev_test'                    # todo: see if this is really neded here
         self.s3_key      = f'{AWS_Config().lambda_s3_folder_lambdas()}/{self.lambda_name}.zip'
         self.aws_lambda  = Lambda(self.lambda_name)
 
@@ -79,11 +69,6 @@ class test_Lambda(Test_Helper):
             assert lambda_api.alias_delete(temp_lambda.lambda_name, alias_name) == {}
             assert lambda_api.aliases(function_name=temp_lambda.arn())          == []
 
-    def test_create_function__no_params(self):
-        assert self.aws_lambda.create() == { 'data'   : None    ,
-                                             'error'  : None    ,
-                                             'message': 'for function tmp_lambda_dev_test, could not find provided s3 bucket and s3 key: None None',
-                                             'status' : 'error' }
 
     def test_create_function(self):
         role_arn   = IAM_Role(self.lambda_name + '__tmp_role').create_for__lambda().get('role_arn')
@@ -120,7 +105,7 @@ class test_Lambda(Test_Helper):
 
         expected_arn = 'arn:aws:lambda:{0}:{1}:function:{2}'.format(self.region,self.account_id,self.lambda_name)              # expected arn value
 
-        (Assert(data).field_is_equal('CodeSize'     , 209                      )                                  # confirm lambda creation details
+        (Assert(data).field_is_equal('CodeSize'     , 242                      )                                  # confirm lambda creation details
                      .field_is_equal('FunctionArn'  , expected_arn             )
                      .field_is_equal('FunctionName' , self.lambda_name         )
                      .field_is_equal('Handler'      , self.lambda_name + '.run')
@@ -136,18 +121,23 @@ class test_Lambda(Test_Helper):
         assert self.aws_lambda.delete() is True     # confirm Lambda was deleted
 
 
-    def test_create_function_using_image_container(self):
-        pass
-        # self.image_uri = "785217600689.dkr.ecr.eu-west-1.amazonaws.com/python-for-lambda:latest"
-        # todo write test that checks the ability to use images for deployment
+    # def test_create_function_using_image_container(self):
+    #     pass
+    #     # self.image_uri = "785217600689.dkr.ecr.eu-west-1.amazonaws.com/python-for-lambda:latest"
+    #     # todo write test that checks the ability to use images for deployment
 
     def test_create_function__bad_s3_key_(self):
         self.aws_lambda.set_role('').set_s3_bucket('').set_s3_key('')
         assert self.aws_lambda.create() == {'data'   : None,
                                             'error'  : None,
-                                            'message': 'for function tmp_lambda_dev_test, could not find provided s3 bucket and s3 key:  ',
+                                            'message': 'for function temp_lambda_dev_test, could not find provided s3 bucket and s3 key:  ',
                                             'status' : 'error'}
 
+    def test_create_function__no_params(self):
+        assert self.aws_lambda.create() == { 'data'   : None    ,
+                                             'error'  : None    ,
+                                             'message': 'for function temp_lambda_dev_test, could not find provided s3 bucket and s3 key: None None',
+                                             'status' : 'error' }
     def test_configuration(self):
         with Temp_Lambda() as temp_lambda:
             aws_lambda = temp_lambda.aws_lambda
@@ -193,11 +183,22 @@ class test_Lambda(Test_Helper):
             assert response.get('StatusCode') == 200
 
     def test_invoke_raw_with_logs(self):
-        lambda_name = 'temp_lambda_4KX1A4'
-        temp_lambda = Temp_Lambda(lambda_name=lambda_name)
-        pprint(temp_lambda.exists())
-        #self.result = temp_lambda.create()
+        payload     = {'name' : 'test'}
+        with Temp_Lambda() as aws_lambda:
+            result         = aws_lambda.invoke_return_logs(payload)
+            execution_logs = result.get('execution_logs')
+            request_id     = result.get('request_id')
+            assert result['status'      ]           == 'ok'
+            assert result['name'        ]           == aws_lambda.lambda_name
+            assert result['return_value']           == f'hello {payload["name"]}'
+            assert f'START RequestId: {request_id}' in execution_logs
+            assert f'END RequestId: {request_id}'   in execution_logs
+            assert 'OSBot inside an Lambda :)'      in execution_logs
+            assert 'Version: $LATEST'               in execution_logs
+            assert 'Duration:'                      in execution_logs
 
+
+            assert aws_lambda.aws_lambda.invoke_dry_run().get('StatusCode') == 204  # todo move to dedicated function (once we have one test function created for all tests)
 
     def test_invoke(self):
         with Temp_Lambda() as temp_lambda:
@@ -222,6 +223,18 @@ class test_Lambda(Test_Helper):
                                            'Handler'   , 'LastModified' , 'MemorySize'   , 'PackageType', 'RevisionId' , 'Role'        ,
                                            'Runtime'   , 'Timeout'      , 'TracingConfig', 'Version'                    }
 
+    @pytest.mark.skip("Takes 20 seconds to run due to the delays in AWS to deliver the logs from Lambda to CloudWatch")
+    def test_log_group(self):
+        with Temp_Lambda(delete_on_exit=True) as aws_lambda:
+            result         = aws_lambda.invoke_return_logs()
+            request_id     = result.get("request_id")
+            filter_pattern = f'"{request_id}"'
+            log_group      = aws_lambda.aws_lambda.log_group()
+            messages       = log_group.group_messages_wait_for_pattern(filter_pattern=filter_pattern)
+            message        = list_contains(messages, 'Duration:').pop()
+
+        assert len(messages)            == 3
+        assert message.find(request_id) > -1
 
     def test_policy__permissions(self):
         with Temp_Lambda() as temp_lambda:

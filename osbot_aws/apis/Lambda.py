@@ -1,5 +1,6 @@
 import json
 
+from osbot_aws.apis.Logs import Logs
 from osbot_utils.decorators.lists.index_by import index_by
 from osbot_utils.decorators.methods.cache import cache
 from osbot_utils.decorators.methods.catch import catch
@@ -7,7 +8,7 @@ from osbot_utils.decorators.methods.remove_return_value import remove_return_val
 
 from osbot_aws.apis.Session import Session
 from osbot_aws.apis.S3 import S3
-from osbot_utils.utils.Misc import get_missing_fields, wait, random_string
+from osbot_utils.utils.Misc import get_missing_fields, wait, random_string, base64_to_str, list_set
 from osbot_utils.utils.Status import status_ok, status_error, status_warning
 
 
@@ -122,11 +123,12 @@ class Lambda:
         return kwargs
 
 
-    def delete(self):                # todo  Delete Lambda function method should also delete cloud formation logs #6 (https://github.com/owasp-sbot/OSBot-AWS/issues/6)
-
+    def delete(self, delete_log_group=True):                # todo  Delete Lambda function method should also delete cloud formation logs #6 (https://github.com/owasp-sbot/OSBot-AWS/issues/6)
         if self.exists() is False:
             return False
         self.client().delete_function(FunctionName=self.name)
+        if delete_log_group:
+            self.log_group().group_delete()
         return self.exists() is False
 
     @catch
@@ -157,10 +159,17 @@ class Lambda:
     def info(self):
         return self.client().get_function(FunctionName=self.name)
 
-    def invoke_raw(self, payload = None):
+    def invoke_raw(self, payload = None, client_context=None, log_type='None', qualifier=None):
         try:
-            if payload is None: payload = {}
-            response      = self.client().invoke(FunctionName=self.name, Payload = json.dumps(payload))
+            kwargs = { "FunctionName" : self.name                 ,
+                       "Payload"      : json.dumps(payload or {}) ,
+                       'LogType'      : log_type                  }
+            if client_context:
+                kwargs['ClientContext'] = client_context
+            if qualifier:
+                kwargs['Qualifier'    ] = qualifier
+
+            response      = self.client().invoke(**kwargs)
 
             result_bytes  = response.get('Payload').read()
             result_string = result_bytes.decode('utf-8')
@@ -170,23 +179,43 @@ class Lambda:
             return { 'status': 'error', 'name': self.name, 'data' : '{0}'.format(error) }
 
     def invoke(self, payload = None):
-        if payload is None: payload = {}
         result = self.invoke_raw(payload)
         if result.get('status') == 'ok':
             return result.get('data')
         return {'error': result.get('data')}
 
     def invoke_async(self, payload = None):
-        if payload is None: payload = {}
-        return self.client().invoke(FunctionName=self.name, Payload=json.dumps(payload), InvocationType='Event')
+        kwargs = { "FunctionName"  : self.name                  ,
+                   "Payload"       : json.dumps(payload or {})  ,
+                   "InvocationType": 'Event'                    }
+        return self.client().invoke(**kwargs)
+
+    def invoke_dry_run(self, payload = None):
+        kwargs = { "FunctionName"  : self.name                  ,
+                   "Payload"       : json.dumps(payload or {})  ,
+                   "InvocationType": 'DryRun'                   }
+        return self.client().invoke(**kwargs)
 
     def invoke_return_logs(self, payload=None):
-        return 'here'
+        result                   = self.invoke_raw(payload=payload, log_type='Tail')
+        logs                     = result.get('response').get('LogResult')
+        result['execution_logs'] = base64_to_str(logs)
+        result['return_value'  ] = result.get('data')
+        result['request_id'    ] = result.get('response').get('ResponseMetadata').get('RequestId')
+        del result['data'    ]
+        del result['response']
+        return result
 
     @index_by
     def functions(self):
         return self._call_method_with_paginator('list_functions', 'Functions')
 
+    @index_by
+    def functions_names(self):
+        return list_set(self.functions(index_by='FunctionName'))
+
+    def log_group(self):
+        return Logs(group_name=f'/aws/lambda/{self.name}')
 
     def permission_add(self, function_arn, statement_id, action, principal, source_arn=None):
         try:

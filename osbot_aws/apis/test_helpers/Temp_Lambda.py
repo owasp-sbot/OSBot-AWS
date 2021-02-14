@@ -6,13 +6,13 @@ from osbot_utils.utils.Misc import random_string_and_numbers
 
 
 class Temp_Lambda:
-    def __init__(self, lambda_name=None):
+    def __init__(self, lambda_name=None, delete_on_exit=True):
         self.lambda_name    = lambda_name or "temp_lambda_{0}".format(random_string_and_numbers())
         self.aws_lambda     = Lambda(self.lambda_name)
         self.tmp_folder     = Temp_Folder_With_Lambda_File(self.lambda_name).create_temp_file()
         self.role_arn       = Temp_Aws_Roles().for_lambda_invocation__role_arn() # todo: refactor to have option to create the role programatically (needs feature to wait for role to be available)
         self.create_log     = None
-        self.delete_on_exit = True
+        self.delete_on_exit = delete_on_exit
         self.s3_bucket      = AWS_Config().lambda_s3_bucket()
         self.s3_key         = 'unit_tests/lambdas/{0}.zip'.format(self.lambda_name)
         self.s3             = self.aws_lambda.s3()
@@ -51,6 +51,9 @@ class Temp_Lambda:
 
     def invoke(self, params=None):
         return self.aws_lambda.invoke(params)
+
+    def invoke_return_logs(self, params=None):
+        return self.aws_lambda.invoke_return_logs(params)
 
     def invoke_raw(self, params=None):
         return self.aws_lambda.invoke_raw(params)
