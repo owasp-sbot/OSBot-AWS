@@ -3,6 +3,7 @@ import sys
 from pprint import pprint
 from unittest import TestCase
 
+from osbot_aws.apis.STS import STS
 from osbot_utils.utils.Misc import wait
 
 from osbot_aws.AWS_Config import AWS_Config
@@ -23,7 +24,7 @@ class test_Deploy_Lambda(TestCase):
 
     @staticmethod
     def setup_test_environment__Deploy_Lambda(cls):  # todo: refactor into separate class
-        Test_Helper().check_aws_token()
+        STS().check_current_session_credentials()
         cls.lambda_name    =  "osbot_test_deploy_lambda"
         cls.lambda_code  = Temp_Folder_With_Lambda_File(cls.lambda_name)
         cls.code_folder  = cls.lambda_code.folder

@@ -2,6 +2,7 @@ from pprint import pprint
 from time import sleep
 from unittest.case import skip
 
+from osbot_aws.apis.STS import STS
 from osbot_utils.testing.Logging import Logging
 
 from osbot_aws.helpers.IAM_Role_With_Policy import IAM_Role_With_Policy
@@ -19,7 +20,7 @@ class test_API_Gateway(Test_Helper):
 
     @staticmethod
     def setup_test_enviroment__API_Gateway(cls):            # todo: refactor into separate class
-        Test_Helper().check_aws_token()
+        STS().check_current_session_credentials()
         api_gateway     = API_Gateway()
         result          = api_gateway.rest_api_create(cls.test_api_name)
         cls.test_api_id = result['id']

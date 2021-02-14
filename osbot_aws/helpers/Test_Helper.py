@@ -25,11 +25,6 @@ class Test_Helper(TestCase):
             pprint(self.result)
 
         self.save_png(self.png_data, self.png_file)
-    def check_aws_token(self):
-        result = IAM().check_aws_security_tokens()
-        if result.get('status') == 'Error':
-            raise Exception(result['error'])
-        return
 
     def lambda_package(self, lambda_name, profile_name = None, account_id=None, region=None):
         return self.osbot_setup(profile_name=profile_name,account_id=account_id,region=region).lambda_package(lambda_name)
