@@ -2,8 +2,10 @@ from time import sleep
 
 import pytest
 
+from osbot_aws.apis.STS import STS
 from osbot_aws.helpers.IAM_Utils import IAM_Utils
 from osbot_utils.utils import Misc
+from osbot_utils.utils.Dev import pprint
 from osbot_utils.utils.Files import file_exists, file_contents, Files
 
 from osbot_aws.AWS_Config import AWS_Config
@@ -23,9 +25,7 @@ class test_Lambda(Test_Helper):
 
     @staticmethod
     def setup_test_enviroment_Lambda():            # todo: refactor into separate class
-
-        Test_Helper().check_aws_token()
-
+        STS().check_current_session_credentials()
         s3                = S3()
         setup             = OSBot_Setup()
         s3_bucket_lambdas = setup.s3_bucket_lambdas
@@ -39,7 +39,6 @@ class test_Lambda(Test_Helper):
     @classmethod
     def setUpClass(cls) -> None:
         cls.setup_test_enviroment_Lambda()
-
 
     def setUp(self):
         super().setUp()
@@ -86,7 +85,10 @@ class test_Lambda(Test_Helper):
             assert lambda_api.aliases(function_name=temp_lambda.arn())          == []
 
     def test_create_function__no_params(self):
-        assert self.aws_lambda.create() == {'error': "missing fields in create_function: ['role', 's3_bucket', 's3_key']"}
+        assert self.aws_lambda.create() == { 'data'   : None    ,
+                                             'error'  : None    ,
+                                             'message': 'for function tmp_lambda_dev_test, could not find provided s3 bucket and s3 key: None None',
+                                             'status' : 'error' }
 
     def test_create_function(self):
         role_arn   = IAM_Role(self.lambda_name + '__tmp_role').create_for__lambda().get('role_arn')
@@ -98,13 +100,18 @@ class test_Lambda(Test_Helper):
                                  .set_folder_code(tmp_folder.folder)
         )
 
-        assert self.aws_lambda.create_params() == (self.lambda_name, 'python3.8'              ,     # confirm values that will be passed to the boto3's create_function
-                                                   role_arn        , self.lambda_name + '.run',
-                                                   10240           , 900                      ,
-                                                   { 'Mode'    : 'PassThrough'               },
-                                                   { 'S3Bucket': self.s3_bucket               ,
-                                                     'S3Key'   : self.s3_key                 },
-                                                   None, None, 'Zip')
+        create_kwargs  = self.aws_lambda.create_kwargs()
+        assert create_kwargs == {'Code'         : {'S3Bucket': self.s3_bucket   ,
+                                                   'S3Key'   : self.s3_key     },
+                                 'FunctionName' : self.lambda_name              ,
+                                 'Handler'      : self.lambda_name + '.run'     ,
+                                 'MemorySize'   : 10240                         ,
+                                 'PackageType'  : 'Zip'                         ,
+                                 'Role'         : role_arn                      ,
+                                 'Runtime'      : 'python3.8'                   ,
+                                 'Tags'         : {}                            ,
+                                 'Timeout'      : 900                           ,
+                                 'TracingConfig': {'Mode': 'PassThrough'       }}
 
         assert self.aws_lambda.upload() is True
 
@@ -141,9 +148,10 @@ class test_Lambda(Test_Helper):
 
     def test_create_function__bad_s3_key_(self):
         self.aws_lambda.set_role('').set_s3_bucket('').set_s3_key('')
-        assert self.aws_lambda.create() == { 'data'  : 'could not find provided s3 bucket and s3 key',
-                                             'name'  : 'tmp_lambda_dev_test'                         ,
-                                             'status': 'error'                                       }
+        assert self.aws_lambda.create() == {'data'   : None,
+                                            'error'  : None,
+                                            'message': 'for function tmp_lambda_dev_test, could not find provided s3 bucket and s3 key:  ',
+                                            'status' : 'error'}
 
     def test_configuration(self):
         with Temp_Lambda() as temp_lambda:
@@ -188,6 +196,13 @@ class test_Lambda(Test_Helper):
             assert name   == temp_lambda.lambda_name
             assert data   == 'hello {0}'.format(temp_lambda.lambda_name)
             assert response.get('StatusCode') == 200
+
+    # def test_invoke_raw_with_logs(self):
+    #     lambda_name = 'temp_lambda_4KX1A4'
+    #     temp_lambda = Temp_Lambda(lambda_name=lambda_name)
+    #     pprint(temp_lambda.exists())
+    #     #self.result = temp_lambda.create()
+
 
     def test_invoke(self):
         with Temp_Lambda() as temp_lambda:
@@ -240,9 +255,6 @@ class test_Lambda(Test_Helper):
         (self.aws_lambda.set_s3_bucket   (self.s3_bucket       )
                         .set_s3_key      (self.s3_key          )
                         .set_folder_code(tmp_folder.folder   ))
-
-        #self.aws_lambda.upload()
-        #assert tmp_folder.s3_file_exists() is True
 
         downloaded_file = self.aws_lambda.s3().file_download(self.s3_bucket, self.s3_key)             # download file uploaded
         assert file_exists(downloaded_file) is True
