@@ -178,7 +178,8 @@ class Test_IAM(Test_Helper):
         test_role        = IAM(role_name="temp_role_to_test_assume_role")
 
         test_role.role_create(original_policy)
-        role_arn = test_role.role_arn()
+        role_arn              = test_role.role_arn()
+
         current_assume_policy = test_role.role_assume_policy()
         test_role.role_assume_policy_update(new_policy)
 
@@ -186,12 +187,12 @@ class Test_IAM(Test_Helper):
             with Catch(log_exception=False):
                 sts.assume_role(role_arn=role_arn)
                 sts.assume_role(role_arn=role_arn)
-                sts.assume_role(role_arn=role_arn)
-                sts.assume_role(role_arn=role_arn)
-                sts.assume_role(role_arn=role_arn)
-                sts.assume_role(role_arn=role_arn)
-                sts.assume_role(role_arn=role_arn)
-                sts.assume_role(role_arn=role_arn)
+                # sts.assume_role(role_arn=role_arn)
+                # sts.assume_role(role_arn=role_arn)
+                # sts.assume_role(role_arn=role_arn)
+                # sts.assume_role(role_arn=role_arn)
+                # sts.assume_role(role_arn=role_arn)
+                # sts.assume_role(role_arn=role_arn)
 
                 pprint('got credentials')
                 break

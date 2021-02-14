@@ -95,7 +95,7 @@ class test_ECS(TestCase):
         assert  task_definition_arn           == self.ecs.task_definition_arn(task_family, revision)
         assert task_definition.get('family' ) == task_family
         assert task_definition.get('cpu'    ) == '256'              # minimum value
-        assert task_definition.get('memory' ) == '256'
+        assert task_definition.get('memory' ) == '512'
 
         assert task_definition_arn in self.ecs.task_definitions(task_family=self.task_family, index_by='taskDefinitionArn')
 

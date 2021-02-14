@@ -1,7 +1,9 @@
-from botocore.exceptions import ClientError
-from osbot_aws.AWS_Config import AWS_Config
-
+from botocore.exceptions                  import ClientError
+from osbot_aws.AWS_Config                 import AWS_Config
+from osbot_utils.testing.Catch            import Catch
 from osbot_utils.decorators.methods.cache import cache
+from osbot_utils.utils.Dev import pprint
+from osbot_utils.utils.Misc               import wait
 
 class STS:
     """
@@ -19,6 +21,35 @@ class STS:
         kwargs = { "RoleArn"        : role_arn,
                    "RoleSessionName": role_session_name}
         return self.client().assume_role(**kwargs)
+
+    def assume_role__wait_until_enabled(self, role_name, sleep_for=1, max_attempts=10):
+        """this method will try to get a valid assume_role result for the role provided
+            it will do this by temporarily replacing the current assume policy with one
+            that has the current user as the principal
+            """
+        from osbot_aws.helpers.IAM_Role import IAM_Role
+        iam_role = IAM_Role(role_name=role_name)
+        current_user_arn = self.caller_identity_arn()
+        temp_policy      = {'Statement': [{'Action'   : 'sts:AssumeRole'           ,
+                                           'Effect'   : 'Allow'                    ,
+                                           'Principal': {'AWS': '*'}}]}
+
+        current_assume_policy = iam_role.iam.role_assume_policy()
+        iam_role.iam.role_assume_policy_update(temp_policy)
+        pprint(iam_role.iam.role_assume_policy())
+
+        for i in range(0,max_attempts):
+            try:
+                self.assume_role(role_arn=role_arn)
+                self.assume_role(role_arn=role_arn)
+                pprint('got credentials')
+                break
+            except Exception as exception:
+                pprint(exception)
+            print(f'after {i} seconds')
+            wait(sleep_for)
+        #return role_arn
+
 
     def current_account_id(self):
         return self.caller_identity_account()

@@ -54,8 +54,8 @@ class test_EC2(TestCase):
         assert instance_details.get('instance_type' ) == instance_type
         assert instance_details.get('state'         ) == {'Code': 0, 'Name': 'pending'}
 
-        result_delete        = self.ec2.instance_delete(instance_id)
-        terminating_instance = result_delete.get('TerminatingInstances')[0]
+        terminating_instance        = self.ec2.instance_delete(instance_id)
+        #terminating_instance = result_delete.get('TerminatingInstances')[0]
 
         assert terminating_instance.get('CurrentState') == {'Code': 32, 'Name': 'shutting-down'}
         assert terminating_instance.get('InstanceId'  ) == instance_id
@@ -133,7 +133,7 @@ class test_EC2(TestCase):
 
     def test_route_table_create(self):
         with Temp_VPC() as temp_vpc:
-            vpc_id          = temp_vpc.vpc_id
+            vpc_id          = temp_vpc.vpc.vpc_id
             tags            = { 'Name': 'osbot_aws - test route table' }
             route_table_id  = self.ec2.route_table_create(vpc_id=vpc_id, tags=tags).get('RouteTableId')
             assert self.ec2.route_table_exists(route_table_id) is True
@@ -149,7 +149,7 @@ class test_EC2(TestCase):
         port                 = 22
         account_id           = STS().current_account_id()
         with Temp_VPC() as temp_vpc:
-            vpc_id            = temp_vpc.vpc_id
+            vpc_id            = temp_vpc.vpc.pc_id
             security_group_id = self.ec2.security_group_create(security_group_name=security_group_name, description=description, vpc_id=vpc_id).get('data').get('security_group_id')
 
             self.ec2.security_group_authorize_ingress(security_group_id=security_group_id, port=port)
@@ -194,7 +194,7 @@ class test_EC2(TestCase):
 
     def test_subnet_create(self):
         with Temp_VPC() as temp_vpc:
-            vpc_id     = temp_vpc.vpc_id
+            vpc_id     = temp_vpc.vpc.vpc_id
             tags       = { 'Name': 'osbot_aws - test route table' }
             subnet_id  = self.ec2.subnet_create(vpc_id=vpc_id, tags=tags).get('SubnetId')
             assert self.ec2.subnet_exists(subnet_id) is True

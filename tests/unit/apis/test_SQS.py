@@ -53,7 +53,7 @@ class test_SQS(TestCase):
 
         messages = ['1st message', '2nd message', '3rd message']
         for message in messages:
-            fifo_queue.push(message)
+            fifo_queue.push_fifo(message)
 
         assert fifo_queue.messages_in_queue() == 3
 

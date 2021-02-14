@@ -4,7 +4,7 @@ import pytest
 from osbot_aws.AWS_Config import AWS_Config
 
 from osbot_aws.apis.Session import Session
-from osbot_aws.apis.test_helpers.Temp_User import Temp_User
+from osbot_aws.apis.test_helpers.Temp_IAM_User import Temp_IAM_User
 from osbot_utils.testing.Unit_Test import Unit_Test
 
 
@@ -37,7 +37,7 @@ class test_Session(Unit_Test):
         assert self.session.session().profile_name == AWS_Config().aws_session_profile_name()
         assert self.session.session().region_name  == AWS_Config().aws_session_region_name()
 
-        with Temp_User() as temp_user:
+        with Temp_IAM_User() as temp_user:
             iam       = temp_user.iam
             user_info = iam.user_info()
 

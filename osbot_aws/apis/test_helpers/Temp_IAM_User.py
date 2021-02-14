@@ -1,8 +1,8 @@
 from osbot_aws.apis.IAM import IAM
-from osbot_utils.utils.Misc import random_filename, random_string
+from osbot_utils.utils.Misc import random_string
 
 
-class Temp_User:
+class Temp_IAM_User:
     def __init__(self):
         self.user_name  = f'temp_user_{random_string()}'
         self.iam        = IAM(user_name=self.user_name)
