@@ -23,31 +23,26 @@ from osbot_utils.utils.Assert import Assert
 
 class test_Lambda(Test_Helper):
 
-    @staticmethod
-    def setup_test_enviroment_Lambda():            # todo: refactor into separate class
-        STS().check_current_session_credentials()
-        s3                = S3()
-        setup             = OSBot_Setup()
-        s3_bucket_lambdas = setup.s3_bucket_lambdas
-        s3_region         = setup.region_name
-
-        if s3.bucket_not_exists(s3_bucket_lambdas):
-            s3.bucket_create(s3_bucket_lambdas, s3_region)
-            print('>>>> Created bucket', s3_bucket_lambdas)
-
-
     @classmethod
     def setUpClass(cls) -> None:
-        cls.setup_test_enviroment_Lambda()
+        #STS().check_current_session_credentials()
+        cls.s3          = S3()
+        cls.aws_config  = AWS_Config()
+        cls.account_id  = cls.aws_config.aws_session_account_id()
+        cls.s3_bucket   = cls.aws_config.lambda_s3_bucket()
+        cls.region      = cls.aws_config.aws_session_region_name()
+        if cls.s3.bucket_not_exists(cls.s3_bucket):
+           cls.s3.bucket_create(bucket=cls.s3_bucket, region=cls.region)
+           print('>>>> Created bucket', cls.s3_bucket)
 
     def setUp(self):
         super().setUp()
         self.lambda_name = 'tmp_lambda_dev_test'
-        self.setup       = super().setUp()
-        self.s3_bucket   = self.setup.s3_bucket_lambdas
-        self.region      = self.setup.region_name
-        self.account_id  = self.setup.account_id
-        self.s3_key      = f'{AWS_Config().lambda_s3_folder_lambdas()}/{self.lambda_name}.zip' #'lambdas/{0}.zip'.format(self.lambda_name)
+        #self.setup       = super().setUp()
+        #self.s3_bucket   = self.setup.s3_bucket_lambdas
+        #self.region      = self.setup.region_name
+        #self.account_id  = self.setup.account_id
+        self.s3_key      = f'{AWS_Config().lambda_s3_folder_lambdas()}/{self.lambda_name}.zip'
         self.aws_lambda  = Lambda(self.lambda_name)
 
 
@@ -197,11 +192,11 @@ class test_Lambda(Test_Helper):
             assert data   == 'hello {0}'.format(temp_lambda.lambda_name)
             assert response.get('StatusCode') == 200
 
-    # def test_invoke_raw_with_logs(self):
-    #     lambda_name = 'temp_lambda_4KX1A4'
-    #     temp_lambda = Temp_Lambda(lambda_name=lambda_name)
-    #     pprint(temp_lambda.exists())
-    #     #self.result = temp_lambda.create()
+    def test_invoke_raw_with_logs(self):
+        lambda_name = 'temp_lambda_4KX1A4'
+        temp_lambda = Temp_Lambda(lambda_name=lambda_name)
+        pprint(temp_lambda.exists())
+        #self.result = temp_lambda.create()
 
 
     def test_invoke(self):

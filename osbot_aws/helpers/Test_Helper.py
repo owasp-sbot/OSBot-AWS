@@ -9,25 +9,24 @@ from    osbot_aws.apis.IAM      import IAM
 
 class Test_Helper(TestCase):
 
-    def setUp(self) -> OSBot_Setup:
+    def setUp(self): #-> OSBot_Setup:
         logging.getLogger().addHandler(logging.StreamHandler())
+        self.result     = None
+        self.png_data   = None
+        self.png_file   = '/tmp/unit-test.png'
         print()
-        return self.osbot_setup()
+        #return self.osbot_setup()
 
-    def osbot_setup(self,profile_name = None, account_id=None, region=None) -> OSBot_Setup:
-        self.result   = None
-        self.png_data = None
-        self.png_file = '/tmp/unit-test.png'
-        return OSBot_Setup(profile_name=profile_name, account_id=account_id, region_name=region)
+    #def osbot_setup(self,profile_name = None, account_id=None, region=None) -> OSBot_Setup:
+        #return OSBot_Setup(profile_name=profile_name, account_id=account_id, region_name=region)
 
     def tearDown(self):
         if self.result is not None:
             pprint(self.result)
-
         self.save_png(self.png_data, self.png_file)
 
-    def lambda_package(self, lambda_name, profile_name = None, account_id=None, region=None):
-        return self.osbot_setup(profile_name=profile_name,account_id=account_id,region=region).lambda_package(lambda_name)
+    # def lambda_package(self, lambda_name, profile_name = None, account_id=None, region=None):
+    #     return self.osbot_setup(profile_name=profile_name,account_id=account_id,region=region).lambda_package(lambda_name)
 
     @staticmethod
     def print(result):

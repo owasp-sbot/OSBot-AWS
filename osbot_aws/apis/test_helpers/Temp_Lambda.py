@@ -24,8 +24,7 @@ class Temp_Lambda:
 
     def __exit__(self, type, value, traceback):
         if self.delete_on_exit:
-            assert self.aws_lambda.delete() is True
-            self.delete_s3_file()
+            self.delete()
 
     def arn(self):
         return self.aws_lambda.function_Arn()
@@ -39,6 +38,10 @@ class Temp_Lambda:
         self.create_log = self.aws_lambda.create()
         assert self.exists() is True
         return self.create_log
+
+    def delete(self):
+        assert self.aws_lambda.delete()
+        self.delete_s3_file()
 
     def exists(self):
         return self.aws_lambda.exists()
@@ -61,4 +64,3 @@ class Temp_Lambda:
     def delete_s3_file(self):
         self.s3.file_delete(self.s3_bucket, self.s3_key)
         assert self.s3_file_exists() is False
-        return self
