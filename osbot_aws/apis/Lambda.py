@@ -1,5 +1,6 @@
 import json
 
+from osbot_aws.apis.Logs import Logs
 from osbot_utils.decorators.lists.index_by import index_by
 from osbot_utils.decorators.methods.cache import cache
 from osbot_utils.decorators.methods.catch import catch
@@ -7,7 +8,8 @@ from osbot_utils.decorators.methods.remove_return_value import remove_return_val
 
 from osbot_aws.apis.Session import Session
 from osbot_aws.apis.S3 import S3
-from osbot_utils.utils.Misc import get_missing_fields, wait
+from osbot_utils.utils.Misc import get_missing_fields, wait, random_string, base64_to_str, list_set
+from osbot_utils.utils.Status import status_ok, status_error, status_warning
 
 
 class Lambda:
@@ -20,12 +22,13 @@ class Lambda:
         self.handler        = name + '.run'
         self.name           = name.replace('.','_')
         self.folder_code    = None
-        self.image_uri      = None                          # when using container images
+        self.image_uri      = None                              # when using container images
         self.role           = None
         self.s3_bucket      = None
         self.s3_key         = None
         self.layers         = None
         self.env_variables  = None
+        self.tags           = {}
 
     # cached dependencies
 
@@ -76,77 +79,56 @@ class Lambda:
     def aliases(self,function_name):
         return self.client().list_aliases(FunctionName=function_name).get('Aliases')
 
-    def create(self):
-        missing_fields = get_missing_fields(self,['name', 'runtime', 'role','handler', 'memory','timeout','s3_bucket', 's3_key'])
-        if len(missing_fields) > 0:
-            return { 'error': 'missing fields in create_function: {0}'.format(missing_fields) }
-
-        (name, runtime, role, handler, memory_size, timeout, tracing_config, code, layers, environment, package_type) = self.create_params()
-
-        if self.exists() is True:
-            return {'status': 'warning', 'name': self.name, 'data': 'lambda function already exists'}
-
-        if self.image_uri:
-            pass
-        elif self.s3().file_exists(code.get('S3Bucket'), code.get('S3Key')) is False:
-            return {'status': 'error', 'name': self.name, 'data': 'could not find provided s3 bucket and s3 key'}
-
-        try:
-            kwargs = {'FunctionName'  : name           ,
-                      'Role'          : role           ,
-
-                      'MemorySize'    : memory_size    ,
-                      'Timeout'       : timeout        ,
-                      'TracingConfig' : tracing_config ,
-                      'PackageType'   : package_type   ,
-                      'Code'          : code           }
-
-            if package_type == 'Zip':
-                kwargs['Runtime'] = runtime
-                kwargs['Handler'] = handler
-            if layers      : kwargs['Layers'     ] = layers
-            if environment : kwargs['Environment'] = environment
-
-            data = self.client().create_function(**kwargs)
-
-            return { 'status': 'ok', 'name': self.name , 'data' : data }
-        except Exception as error:
-            return {'status': 'error', 'data': '{0}'.format(error)}
-
     @remove_return_value('ResponseMetadata')
     def configuration(self):
         return self.client().get_function_configuration(FunctionName=self.name)
-        #return self.info().get('Configuration')
 
     def configuration_update(self,**kvargs):
         return self.client().update_function_configuration(FunctionName=self.name,**kvargs)
 
-    def create_params(self):
-        FunctionName  = self.name
-        Runtime       = self.runtime
-        Role          = self.role
-        Handler       = self.handler
-        MemorySize    = self.memory
-        Timeout       = self.timeout
-        Layers        = self.layers
-        Environment   = {'Variables': self.env_variables} if self.env_variables else None
-        TracingConfig = { 'Mode': self.trace_mode }
+    def create(self):
+        kwargs = self.create_kwargs()
 
+        kwargs_status = self.validate_create_kwargs(kwargs)
+        if kwargs_status.get('status') != 'ok':
+            return kwargs_status
+        try:
+            data = self.client().create_function(**kwargs)
+            return { 'status': 'ok', 'name': self.name , 'data' : data }
+        except Exception as error:
+            return {'status': 'error', 'data': '{0}'.format(error)}
+
+    def create_kwargs(self):
+        kwargs = {  'FunctionName'  : self.name or  random_string(prefix='temp_lambda_') ,
+                    'MemorySize'    : self.memory                                        ,
+                    'Role'          : self.role                                          ,
+                    'Timeout'       : self.timeout                                       ,
+                    'TracingConfig' : { 'Mode': self.trace_mode }                        ,
+                    'Tags'          : self.tags                                          }
+
+        if self.env_variables:
+            kwargs['Environment'] = {'Variables': self.env_variables}
         if self.image_uri:
-            Code        = {'ImageUri': self.image_uri}
-            PackageType = "Image"
+            kwargs['Code'       ] = {'ImageUri': self.image_uri}
+            kwargs['PackageType'] = "Image"
         else:
-            Code        = {"S3Bucket": self.s3_bucket, "S3Key": self.s3_key}
-            PackageType = "Zip"
+            kwargs['Code'       ] = {"S3Bucket": self.s3_bucket, "S3Key": self.s3_key}
+            kwargs['PackageType'] = "Zip"
+            kwargs['Runtime'    ] = self.runtime
+            kwargs['Handler'    ] = self.handler
 
-        #todo refactor the return value below into an object
-        return FunctionName, Runtime, Role, Handler, MemorySize, Timeout, TracingConfig, Code, Layers, Environment, PackageType
+        if self.layers:
+            kwargs['Layers'] = self.layers
 
-    def delete(self):                                               # todo  Delete Lambda function method should also delete cloud formation logs #6 (https://github.com/owasp-sbot/OSBot-AWS/issues/6)
+        return kwargs
 
+
+    def delete(self, delete_log_group=True):                # todo  Delete Lambda function method should also delete cloud formation logs #6 (https://github.com/owasp-sbot/OSBot-AWS/issues/6)
         if self.exists() is False:
             return False
         self.client().delete_function(FunctionName=self.name)
+        if delete_log_group:
+            self.log_group().group_delete()
         return self.exists() is False
 
     @catch
@@ -177,10 +159,17 @@ class Lambda:
     def info(self):
         return self.client().get_function(FunctionName=self.name)
 
-    def invoke_raw(self, payload = None):
+    def invoke_raw(self, payload = None, client_context=None, log_type='None', qualifier=None):
         try:
-            if payload is None: payload = {}
-            response      = self.client().invoke(FunctionName=self.name, Payload = json.dumps(payload))
+            kwargs = { "FunctionName" : self.name                 ,
+                       "Payload"      : json.dumps(payload or {}) ,
+                       'LogType'      : log_type                  }
+            if client_context:
+                kwargs['ClientContext'] = client_context
+            if qualifier:
+                kwargs['Qualifier'    ] = qualifier
+
+            response      = self.client().invoke(**kwargs)
 
             result_bytes  = response.get('Payload').read()
             result_string = result_bytes.decode('utf-8')
@@ -190,20 +179,43 @@ class Lambda:
             return { 'status': 'error', 'name': self.name, 'data' : '{0}'.format(error) }
 
     def invoke(self, payload = None):
-        if payload is None: payload = {}
         result = self.invoke_raw(payload)
         if result.get('status') == 'ok':
             return result.get('data')
         return {'error': result.get('data')}
 
     def invoke_async(self, payload = None):
-        if payload is None: payload = {}
-        return self.client().invoke(FunctionName=self.name, Payload=json.dumps(payload), InvocationType='Event')
+        kwargs = { "FunctionName"  : self.name                  ,
+                   "Payload"       : json.dumps(payload or {})  ,
+                   "InvocationType": 'Event'                    }
+        return self.client().invoke(**kwargs)
+
+    def invoke_dry_run(self, payload = None):
+        kwargs = { "FunctionName"  : self.name                  ,
+                   "Payload"       : json.dumps(payload or {})  ,
+                   "InvocationType": 'DryRun'                   }
+        return self.client().invoke(**kwargs)
+
+    def invoke_return_logs(self, payload=None):
+        result                   = self.invoke_raw(payload=payload, log_type='Tail')
+        logs                     = result.get('response').get('LogResult')
+        result['execution_logs'] = base64_to_str(logs)
+        result['return_value'  ] = result.get('data')
+        result['request_id'    ] = result.get('response').get('ResponseMetadata').get('RequestId')
+        del result['data'    ]
+        del result['response']
+        return result
 
     @index_by
     def functions(self):
         return self._call_method_with_paginator('list_functions', 'Functions')
 
+    @index_by
+    def functions_names(self):
+        return list_set(self.functions(index_by='FunctionName'))
+
+    def log_group(self):
+        return Logs(group_name=f'/aws/lambda/{self.name}')
 
     def permission_add(self, function_arn, statement_id, action, principal, source_arn=None):
         try:
@@ -293,6 +305,20 @@ class Lambda:
             kwargs['FunctionName'] = self.name
             return self.client().update_function_configuration(**kwargs)
 
+    def validate_create_kwargs(self, kwargs):
+        name      = kwargs.get('FunctionName'    )
+        code      = kwargs.get('Code'        , {})
+        image_uri = code  .get('ImageUri'        )
+        s3_bucket = code  .get('S3Bucket'        )
+        s3_key    = code  .get('S3Key'           )
+
+        if Lambda(name=name).exists():
+            return status_warning(message=f'lambda function already exists: {name}')
+
+        if image_uri is None:
+            if self.s3().file_not_exists(s3_bucket, s3_key):
+                return status_error(message=f'for function {name}, could not find provided s3 bucket and s3 key: {s3_bucket} {s3_key}')
+        return status_ok()
 
     def wait_for_state(self, state, max_wait_count=40, wait_interval=1):
         for i in range(0, max_wait_count):

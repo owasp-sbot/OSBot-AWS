@@ -4,7 +4,6 @@ from osbot_aws.apis.test_helpers.Temp_Aws_Roles import Temp_Aws_Roles
 from osbot_aws.helpers.Test_Helper import Test_Helper
 from osbot_aws.apis.test_helpers.Temp_Lambda import Temp_Lambda
 
-@pytest.mark.skip('Fix tests')
 class test_Temp_Lambda(Test_Helper):
 
     @staticmethod
@@ -17,8 +16,6 @@ class test_Temp_Lambda(Test_Helper):
     @classmethod
     def setUpClass(cls) -> None:
         cls.setup_test_enviroment()
-
-
 
     def setUp(self):
         super().setUp()

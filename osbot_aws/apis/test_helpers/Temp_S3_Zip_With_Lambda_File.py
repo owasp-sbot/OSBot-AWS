@@ -8,7 +8,7 @@ class Temp_S3_Zip_With_Lambda_File:
     def __init__(self, file_name=None,s3_bucket=None, s3_prefix=None):
         self.file_name    = file_name or f"temp_zip_file_{random_string_and_numbers()}"
         self.s3_bucket    = AWS_Config().lambda_s3_bucket()
-        self.s3_prefix    = f'{AWS_Config().lambda_s3_key_prefix()}/unit_tests/temp_zips'
+        self.s3_prefix    = f'{AWS_Config().lambda_s3_folder_lambdas()}/unit_tests/temp_zips'
         self.s3_key       = f'{self.s3_prefix}/{self.file_name}.zip'
         self.folder       = None
         self.lambda_code  = "def run(event, context): return 'hello {0}'.format(event.get('name'))"

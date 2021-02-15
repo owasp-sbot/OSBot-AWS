@@ -10,4 +10,4 @@ class test_VPC(TestCase):
         # thrown it means that everything went ok
         temp_vpc = Temp_VPC(add_internet_gateway=True, add_route_table=True, add_security_group=True, add_subnet=True)
         with temp_vpc:
-             pass
+             pass                   # todo add tests to check correct setup of VPC environment

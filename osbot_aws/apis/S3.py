@@ -88,7 +88,6 @@ class S3:
     def bucket_not_exists(self, bucket_name):
         return self.bucket_exists(bucket_name) is False
 
-
     def buckets(self):
         data = []
         for bucket in self.s3().list_buckets().get('Buckets'):
@@ -97,7 +96,7 @@ class S3:
         #return sorted(list({ bucket['Name'] for bucket in self.s3().list_buckets().get('Buckets')}))
         #
 
-    def _files_raw(self, bucket, prefix='', filter=''                 ):
+    def _files_raw(self, bucket, prefix='', filter=''):
         params = {'Bucket': bucket}
         if isinstance(prefix, str):                                            # if prefix is a string, filter on list_objects_v2
             params['Prefix'] = prefix
@@ -118,14 +117,14 @@ class S3:
             except KeyError:
                 break
 
-    def find_files(self, bucket, prefix='', filter=''                 ):
+    def find_files(self, bucket, prefix='', filter=''):
         return list({ item['Key'] for item in self._files_raw(bucket, prefix, filter) })
 
-    def file_contents(self, bucket, key                                  ):
+    def file_contents(self, bucket, key):
         obj = self.s3().get_object(Bucket=bucket, Key=key)                    # get object data from s3
         return obj['Body'].read().decode('utf-8')                               # extract body and decode it
 
-    def file_contents_from_gzip(self, bucket, key                                  ):
+    def file_contents_from_gzip(self, bucket, key):
         obj = self.s3().get_object(Bucket=bucket, Key=key)                    # get object data from s3
         bytestream = BytesIO(obj['Body'].read())
         return GzipFile(None, 'rb', fileobj=bytestream).read().decode('utf-8')
@@ -194,12 +193,15 @@ class S3:
         except:                                                               # if we get an exception
             return False                                                      # file doesn't exists (return false)
 
-    def file_move               (self,src_bucket, src_key, dest_bucket, dest_key):      # todo: fix this formating which was an experiment to see what it would look like when all the code was collapsed
+    def file_move(self,src_bucket, src_key, dest_bucket, dest_key):
         self.file_copy(src_bucket, src_key, dest_bucket, dest_key)
         self.file_delete(src_bucket, src_key)
         return self.file_exists(dest_bucket, dest_key)
 
-    def file_upload             (self,file , bucket, folder):
+    def file_not_exists(self,bucket, key):
+        return self.file_exists(bucket=bucket, key=key) is False
+
+    def file_upload(self,file , bucket, folder):
         if not os.path.isfile(file):                                            # check that file to upload exists locally
             return None                                                         # if not return None
 
@@ -217,13 +219,11 @@ class S3:
         self.file_upload_to_key(file, bucket, key)
         return key
 
-
     def folder_upload (self, folder, s3_bucket, s3_key):
         file = Files.zip_folder(folder)
         self.file_upload_to_key(file, s3_bucket, s3_key)
         os.remove(file)
         return self
-
 
     def policy(self, s3_bucket):
         try:
@@ -261,9 +261,3 @@ class S3:
                             'Version'  : '2012-10-17' })
         return self.s3().put_bucket_policy(Bucket= s3_bucket, Policy=policy)
         #return policy
-
-# def split_s3_url(s3_url):
-#     url = urlparse(s3_url)
-#     bucket = url.netloc
-#     path = url.path.lstrip('/')
-#     return bucket, path

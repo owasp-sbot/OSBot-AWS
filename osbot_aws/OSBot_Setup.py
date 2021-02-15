@@ -3,7 +3,7 @@ from osbot_aws.apis.S3 import S3
 from osbot_aws.helpers.Lambda_Package import Lambda_Package
 
 
-class OSBot_Setup:
+class OSBot_Setup:      # todo refactor out this code, most of this has been moved into aws_config and Deploy_Lambda
 
     def __init__(self, bot_name= None, profile_name = None, account_id=None, region_name=None, lambda_s3_bucket=None, lambda_role_name=None):
         aws_config = AWS_Config()

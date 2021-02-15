@@ -3,6 +3,7 @@ import sys
 from pprint import pprint
 from unittest import TestCase
 
+from osbot_aws.apis.STS import STS
 from osbot_utils.utils.Misc import wait
 
 from osbot_aws.AWS_Config import AWS_Config
@@ -22,8 +23,8 @@ class test_Deploy_Lambda(TestCase):
     code_folder = None
 
     @staticmethod
-    def setup_test_enviroment__Deploy_Lambda(cls):  # todo: refactor into separate class
-        Test_Helper().check_aws_token()
+    def setup_test_environment__Deploy_Lambda(cls):  # todo: refactor into separate class
+        STS().check_current_session_credentials()
         cls.lambda_name    =  "osbot_test_deploy_lambda"
         cls.lambda_code  = Temp_Folder_With_Lambda_File(cls.lambda_name)
         cls.code_folder  = cls.lambda_code.folder
@@ -42,17 +43,17 @@ class test_Deploy_Lambda(TestCase):
         cls.lambda_function = cls.lambda_module.run
 
     @staticmethod
-    def teardown_test_enviroment__Deploy_Lambda(cls):
+    def teardown_test_environment__Deploy_Lambda(cls):
         sys.path.remove(cls.code_folder)
         pass
 
     @classmethod
     def setUpClass(cls) -> None:
-        cls.setup_test_enviroment__Deploy_Lambda(cls)
+        cls.setup_test_environment__Deploy_Lambda(cls)
 
     @classmethod
     def tearDownClass(cls):
-        cls.teardown_test_enviroment__Deploy_Lambda(cls)
+        cls.teardown_test_environment__Deploy_Lambda(cls)
 
 
 
@@ -73,7 +74,7 @@ class test_Deploy_Lambda(TestCase):
         package = self.deploy.get_package()
         assert package.lambda_name == 'osbot_test_deploy_lambda.osbot_test_deploy_lambda'
         assert package.s3_bucket   == self.aws_config.lambda_s3_bucket()
-        assert package.s3_key      == f'{self.aws_config.lambda_s3_key_prefix()}/{package.lambda_name}.zip'
+        assert package.s3_key      == f'{self.aws_config.lambda_s3_folder_lambdas()}/{package.lambda_name}.zip'
         assert package.role_arn    == f"arn:aws:iam::{self.aws_config.aws_session_account_id()}:role/temp_role_for_lambda_invocation"
         assert folder_exists(package.tmp_folder)
 

@@ -60,7 +60,8 @@ class test_ECS(TestCase):
         result = self.ecs.clusters_arns()
         assert self.cluster_arn in result
 
-    def test_container_instances(self):                     # todo: add provision of EC2 container instance so that these tests have data to assert
+    @pytest.mark.skip('write test with with data')                      # todo: add provision of EC2 container instance so that these tests have data to assert
+    def test_container_instances(self):
         result = self.ecs.container_instances()
         #pprint(result)
 
@@ -93,8 +94,8 @@ class test_ECS(TestCase):
         revision            = task_definition.get('revision')
         assert  task_definition_arn           == self.ecs.task_definition_arn(task_family, revision)
         assert task_definition.get('family' ) == task_family
-        assert task_definition.get('cpu'    ) == '128'              # minimum value
-        assert task_definition.get('memory' ) == '128'
+        assert task_definition.get('cpu'    ) == '256'              # minimum value
+        assert task_definition.get('memory' ) == '256'
 
         assert task_definition_arn in self.ecs.task_definitions(task_family=self.task_family, index_by='taskDefinitionArn')
 

@@ -7,7 +7,7 @@ class test_Temp_User(Unit_Test):
 
     def test__init__(self):
         temp_name = Temp_User().user_name
-        assert len(temp_name) == 16
+        assert len(temp_name) == 18
         assert temp_name.startswith('temp_user_')
         assert IAM(user_name=temp_name).user_exists() is False
 

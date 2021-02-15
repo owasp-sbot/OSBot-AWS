@@ -6,43 +6,54 @@ from osbot_utils.utils.Misc import random_string_and_numbers
 
 
 class Temp_Lambda:
-    def __init__(self):
-        self.lambda_name    = "temp_lambda_{0}".format(random_string_and_numbers())
+    def __init__(self, lambda_name=None, delete_on_exit=True):
+        self.lambda_name    = lambda_name or "temp_lambda_{0}".format(random_string_and_numbers())
         self.aws_lambda     = Lambda(self.lambda_name)
         self.tmp_folder     = Temp_Folder_With_Lambda_File(self.lambda_name).create_temp_file()
-        self.role_arn       = Temp_Aws_Roles().for_lambda_invocation__role_arn()
+        self.role_arn       = Temp_Aws_Roles().for_lambda_invocation__role_arn() # todo: refactor to have option to create the role programatically (needs feature to wait for role to be available)
         self.create_log     = None
-        self.delete_on_exit = True
+        self.delete_on_exit = delete_on_exit
         self.s3_bucket      = AWS_Config().lambda_s3_bucket()
         self.s3_key         = 'unit_tests/lambdas/{0}.zip'.format(self.lambda_name)
         self.s3             = self.aws_lambda.s3()
 
 
     def __enter__(self):
-        (
-            self.aws_lambda.set_role       (self.role_arn)
-                           .set_s3_bucket  (self.s3_bucket          )
-                           .set_s3_key     (self.s3_key             )
-                           .set_folder_code(self.tmp_folder.folder )
-        )
-        self.aws_lambda.upload()
-        self.create_log = self.aws_lambda.create()
-        assert self.aws_lambda.exists() == True
+        self.create()
         return self
 
     def __exit__(self, type, value, traceback):
         if self.delete_on_exit:
-            assert self.aws_lambda.delete() is True
-            self.delete_s3_file()
+            self.delete()
 
     def arn(self):
         return self.aws_lambda.function_Arn()
+
+    def create(self):
+        (self.aws_lambda.set_role       (self.role_arn)
+                        .set_s3_bucket  (self.s3_bucket         )
+                        .set_s3_key     (self.s3_key            )
+                        .set_folder_code(self.tmp_folder.folder )
+                        .upload())
+        self.create_log = self.aws_lambda.create()
+        assert self.exists() is True
+        return self.create_log
+
+    def delete(self):
+        assert self.aws_lambda.delete()
+        self.delete_s3_file()
+
+    def exists(self):
+        return self.aws_lambda.exists()
 
     def info(self):
         return self.aws_lambda.info()
 
     def invoke(self, params=None):
         return self.aws_lambda.invoke(params)
+
+    def invoke_return_logs(self, params=None):
+        return self.aws_lambda.invoke_return_logs(params)
 
     def invoke_raw(self, params=None):
         return self.aws_lambda.invoke_raw(params)
@@ -56,4 +67,3 @@ class Temp_Lambda:
     def delete_s3_file(self):
         self.s3.file_delete(self.s3_bucket, self.s3_key)
         assert self.s3_file_exists() is False
-        return self

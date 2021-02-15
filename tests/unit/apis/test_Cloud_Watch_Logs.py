@@ -1,5 +1,8 @@
 from time import time
 from unittest import TestCase
+
+import pytest
+
 from osbot_utils.utils.Misc import random_string, wait, wait_for
 from osbot_aws.apis.Cloud_Watch_Logs import Cloud_Watch_Logs
 from osbot_utils.utils.Dev import pprint
@@ -110,6 +113,7 @@ class test_Cloud_Watch_Logs(TestCase):
         result = self.logs.metric_filters()
         assert result == []                                    # todo add test for this method
 
+    @pytest.mark.skip("test with creating and delete")
     def test_queries(self):
         result = self.logs.queries()
         assert result == []                                    # todo add test for this method

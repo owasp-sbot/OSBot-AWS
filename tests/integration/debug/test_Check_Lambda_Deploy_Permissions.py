@@ -1,19 +1,15 @@
 from unittest import TestCase
 
+from osbot_aws.apis.IAM import IAM
+
 from osbot_utils.utils.Files import folder_files, path_combine, file_exists
-
 from osbot_aws.deploy.Deploy_Lambda import Deploy_Lambda
-
 from osbot_aws.lambdas.dev.hello_world import run
-
-from osbot_utils.utils.Misc import random_string
-
+from osbot_utils.utils.Misc import random_string, list_set
 from osbot_aws.AWS_Config import AWS_Config
-
 from osbot_aws.apis.S3 import S3
-
-from osbot_aws.apis.Lambda import Lambda
-from osbot_aws.apis.STS import STS
+from osbot_aws.apis.Lambda      import Lambda
+from osbot_aws.apis.STS         import STS
 from osbot_utils.utils.Dev import pprint
 
 
@@ -39,7 +35,7 @@ class test_Check_Lambda_Deploy_Permissions(TestCase):
         assert self.aws_config.aws_session_account_id()  == self.expected_account_id
         assert self.aws_config.aws_session_region_name() == self.expected_region
         assert self.aws_config.lambda_role_name()        == self.expected_role_name
-        assert self.aws_config.lambda_s3_key_prefix()    == self.expected_s3_prefix
+        assert self.aws_config.lambda_s3_folder_lambdas() == self.expected_s3_prefix
         assert self.aws_config.lambda_s3_bucket()        == self.expected_s3_bucket
 
     def test_check_sts_credentials(self):
@@ -141,4 +137,12 @@ class test_Check_Lambda_Deploy_Permissions(TestCase):
 
 
 
+    def test_user_privs(self):
+        user_name       = 'AlekhAnejaUpwork'
+        access_key_id   = 'AKIA3NUU5XSYZRQYXMP2'
+        iam_user        = IAM(user_name=user_name)
 
+        assert iam_user.user_exists()
+        assert list_set(iam_user.user_access_keys(index_by='AccessKeyId')) == [access_key_id]
+
+        pprint(iam_user.user_polices())

@@ -1,5 +1,6 @@
 from pprint import pprint
 
+from osbot_aws.apis.STS import STS
 from osbot_aws.helpers.Test_Helper import Test_Helper
 from osbot_aws.helpers.Rest_API import Rest_API
 
@@ -9,7 +10,6 @@ class test_Rest_API(Test_Helper):
 
     @staticmethod
     def setup_test_enviroment__Rest_API(cls):            # todo: refactor into separate class
-        Test_Helper().check_aws_token()
         rest_api = Rest_API(cls.test_rest_api_name)
         rest_api.create()
 

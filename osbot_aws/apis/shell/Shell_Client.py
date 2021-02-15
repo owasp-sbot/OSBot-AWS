@@ -32,7 +32,7 @@ class Shell_Client:
     def reset(self):
         if self.aws_lambda.s3_bucket is None:                                                                     # if these values are not set
             self.aws_lambda.set_s3_bucket(AWS_Config().lambda_s3_bucket())                                               # use default values
-            self.aws_lambda.set_s3_key   (f'{AWS_Config().lambda_s3_key_prefix()}/{self.aws_lambda.original_name}.zip')  # which are needed
+            self.aws_lambda.set_s3_key   (f'{AWS_Config().lambda_s3_folder_lambdas()}/{self.aws_lambda.original_name}.zip')  # which are needed
         return self.aws_lambda.update_lambda_code()                                                               # to trigger the update (which will reset the lambda and force a cold start on next lambda invocation)
 
     def python_exec(self, code):
