@@ -1,4 +1,5 @@
 git+https://github.com/owasp-sbot/OSBot-Utils.git
+git+https://github.com/k8-proxy/k8-py-kubernetes.git
 boto3
 python-dotenv
 mangum
