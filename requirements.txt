@@ -1,5 +1,5 @@
 git+https://github.com/owasp-sbot/OSBot-Utils.git
-git+https://github.com/k8-proxy/k8-kubernetes.git
+git+https://github.com/k8-proxy/k8-py-kubernetes.git@remove-submodule
 boto3
 python-dotenv
 mangum
