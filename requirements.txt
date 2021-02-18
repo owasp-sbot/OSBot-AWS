@@ -1,6 +1,8 @@
 git+https://github.com/owasp-sbot/OSBot-Utils.git
 boto3
 python-dotenv
+mangum
+fastapi
 
 # for development
 pytest

@@ -1,9 +1,10 @@
-from datetime import date, timedelta
+import uuid
+from datetime                             import date, timedelta
 
 from osbot_utils.decorators.methods.cache import cache
-from osbot_aws.apis.Lambda import Lambda
-from osbot_aws.apis.IAM import IAM
-from osbot_aws.apis.Session import Session
+from osbot_aws.apis.Lambda                import Lambda
+from osbot_aws.apis.IAM                   import IAM
+from osbot_aws.apis.Session               import Session
 
 
 class API_Gateway:
@@ -173,19 +174,28 @@ class API_Gateway:
         except Exception as error:
             return f'{error}'
 
-    def integration_add_permission_to_lambda(self,api_id, lambda_name):
+    def integration_add_permission_to_lambda(self,api_id, lambda_name, request_path = None):
         # create permission to allow lambda function to be invoked by API Gateway
         iam           = IAM()
         aws_acct_id   = iam.account_id()
         aws_region    = iam.region()
         aws_lambda    = Lambda(lambda_name)
         function_arn  = aws_lambda.function_Arn()#'gw_bot.lambdas.dev.hello_world'
-        statement_id  = 'allow-api-gateway-invoke'
+        statement_id  = str(uuid.uuid4())        # This should be unique to enable multiple route for a same lambda
         action        = 'lambda:InvokeFunction'
         principal     = 'apigateway.amazonaws.com'
-        source_arn    = f'arn:aws:execute-api:{aws_region}:{aws_acct_id}:{api_id}/*/GET/'
+        default_path  = 'GET/'
+        if request_path:
+            default_path = request_path
+        """
+        This should be more than enough to handle most of the proxy integration. 
+        '/'         : route is mapped to f'arn:aws:execute-api:{aws_region}:{aws_acct_id}:{api_id}/*/*/'
+        '/{proxy+}' : route is mapped to f'arn:aws:execute-api:{aws_region}:{aws_acct_id}:{api_id}/*/*/*'
+        
+        Further consideration would be needed if we want to add specific routes with specific method
+        """
+        source_arn    = f'arn:aws:execute-api:{aws_region}:{aws_acct_id}:{api_id}/*/{default_path}'
 
-        aws_lambda.permission_delete(function_arn, statement_id) # remove in case there was already a permission with this name
         return aws_lambda.permission_add(function_arn, statement_id, action, principal, source_arn)
 
     def integration_response(self, api_id, resource_id, http_method, status_code):
@@ -262,7 +272,7 @@ class API_Gateway:
     #    return self._call_method_return_items(method_name="get_stages", params={'restApiId':api_id},index_by=index_by)
 
     def resource(self, api_id, path):
-        return self.resources(api_id, index_by='path').get(path,{})
+        return self.resources(api_id, index_by='path').get(path, {})
 
     def resource_id(self, api_id, path):
         return self.resource(api_id,path).get('id')

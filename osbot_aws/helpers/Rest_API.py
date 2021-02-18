@@ -51,14 +51,23 @@ class Rest_API:
         status_code        = '200'
         response_models    = {'application/json': 'Empty'}
         response_templates = {'application/json': ''}
+        request_path       = None
+        """
+        Special handling for route '/' and '/{proxy+}', so that lambda has proper handling in integration_add_permission_to_lambda
+        """
+        if from_path == '/':
+            request_path   = '*/'
+        if from_path == '/{proxy+}':
+            request_path   = '*/*'
+
         method_create               = self.api_gateway.method_create(self.api_id, resource_id,from_method)
-        integration_create__lambda  = self.api_gateway.integration_create__lambda(self.id(), resource_id, lambda_name,from_method)
-        integration_add_permission  = self.api_gateway.integration_add_permission_to_lambda(self.id(), lambda_name)
+        integration_create__lambda  = self.api_gateway.integration_create__lambda(self.id(), resource_id, lambda_name, from_method)
+        integration_add_permission  = self.api_gateway.integration_add_permission_to_lambda(self.id(), lambda_name, request_path)
         method_response_create      = self.api_gateway.method_response_create(self.id(),resource_id,from_method, status_code,response_models)
         integration_response_create = self.api_gateway.integration_response_create(self.id(),resource_id, from_method,status_code, response_templates)
         return { 'method_create'              : method_create               ,
-                 'integration_create__lambda' : integration_create__lambda    ,
-                 'integration_add_permission' : integration_add_permission,
+                 'integration_create__lambda' : integration_create__lambda  ,
+                 'integration_add_permission' : integration_add_permission  ,
                  'method_response_create'     : method_response_create      ,
                  'integration_response_create': integration_response_create }
 

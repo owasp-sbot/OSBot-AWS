@@ -232,7 +232,7 @@ class Lambda:
     def permission_delete(self, function_name, statement_id):
         try:
             params = {  'FunctionName': function_name,
-                        'StatementId' : statement_id,                        }
+                        'StatementId' : statement_id }
             return self.client().remove_permission(**params)
         except Exception as error:
             return {'error': f'{error}'}
