@@ -1,9 +1,12 @@
 from botocore.exceptions                  import ClientError
 from osbot_aws.AWS_Config                 import AWS_Config
+from osbot_aws.exceptions.Session_Bad_Credentials import Session_Bad_Credentials
 from osbot_utils.testing.Catch            import Catch
 from osbot_utils.decorators.methods.cache import cache
 from osbot_utils.utils.Dev import pprint
 from osbot_utils.utils.Misc               import wait
+from osbot_utils.utils.Status import status_warning, status_ok, status_error
+
 
 class STS:
     """
@@ -15,7 +18,7 @@ class STS:
     @cache
     def client(self):
         from osbot_aws.apis.Session import Session                      # recursive dependency
-        return Session().client('sts', check_credentials=False)
+        return Session().client('sts')
 
     def assume_role(self, role_arn, role_session_name='temp_session'):
         kwargs = { "RoleArn"        : role_arn,
@@ -71,26 +74,10 @@ class STS:
     @cache
     def check_current_session_credentials(self):        # todo: see if there is a faster way to do this, at the moment it takes about 500ms which is quite a lot
         if AWS_Config().dev_skip_aws_key_check() == "True":
-            return False
-        exception = None
+            return status_warning("dev_skip_aws_key_check was true")
         try:
-            self.caller_identity()
+            caller_arn = self.caller_identity().get('Arn')
         except ClientError as client_error:
             exception = client_error.response.get('Error')
-        if exception:
-            error_code    = exception.get("Code")
-            error_message = exception.get('Message')
-            message = (f"\tCurrent Security credentials are invalid! \n\n"
-                       f"\tPlease check: current environment values, "
-                       f"profile name or value in your ~/.aws/credentials file"
-                       f"\n\n"
-                       f"\tBoto3 Error message: {error_code}  {error_message}")
-            self.raise_bad_credentials_exception(message)
-        return True
-
-    def raise_bad_credentials_exception(self, message):
-        if self.print_error_message:
-            print("\n*********** OSBot_AWS ***********\n")             # todo move to OSBot_AWS Logging class
-            print(f"{message}")
-            print("\n*********** OSBot_AWS ***********\n")
-        raise Exception(message)
+            raise Session_Bad_Credentials(exception)
+        return status_ok(f'AWS credentials are ok for {caller_arn}')

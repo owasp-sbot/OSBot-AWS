@@ -12,6 +12,7 @@ class test_Lambda_Shell(Test_Helper):
 
     def test_reset_lambda_shell_auth(self):
         self.lambda_shell.reset_lambda_shell_auth()
+
         assert len(self.lambda_shell.get_lambda_shell_auth().split('-')) == 5
 
     def test_get_lambda_shell_auth(self):
