@@ -3,6 +3,7 @@ from time import sleep
 
 import boto3
 from botocore import waiter
+from osbot_utils.decorators.methods.cache_on_self import cache_on_self
 
 from osbot_aws.apis.STS import STS
 from osbot_utils.decorators.lists.group_by import group_by
@@ -23,19 +24,19 @@ class IAM:
         self.role_name   = role_name                        #       this will be a bit of a breaking change to code that uses this class for role management
 
     # helpers
-    @cache
+    @cache_on_self
     def client(self):                                          # rename to client
         return Session().client('iam')
 
-    @cache
+    @cache_on_self
     def resource(self):
         return Session().resource('iam')
 
-    @cache
+    @cache_on_self
     def session(self):
         return Session().session()
 
-    @cache
+    @cache_on_self
     def sts(self):
         return Session().client('sts')
 
@@ -93,7 +94,7 @@ class IAM:
     def access_keys(self):
         return self.client().list_access_keys().get('AccessKeyMetadata')
 
-    @cache
+    @cache_on_self
     def account_id(self):
         return STS().current_account_id()
 
@@ -105,7 +106,7 @@ class IAM:
             return { 'status': "Error", 'error':error, "data":None}
 
 
-    @cache
+    @cache_on_self
     def region(self):
         return self.session().region_name
 

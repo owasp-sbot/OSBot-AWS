@@ -1,6 +1,7 @@
 import json
 
 from osbot_utils.decorators.methods.cache import cache
+from osbot_utils.decorators.methods.cache_on_self import cache_on_self
 from osbot_utils.decorators.methods.catch import catch
 
 from osbot_aws.apis.Lambda import Lambda
@@ -12,7 +13,7 @@ from osbot_aws.apis.Session import Session
 
 class Firehose:
 
-    @cache
+    @cache_on_self
     def firehose(self):
         return Session().client('firehose')
 

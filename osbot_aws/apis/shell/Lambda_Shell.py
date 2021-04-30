@@ -1,6 +1,7 @@
 from functools import wraps
 
 from osbot_utils.decorators.methods.cache import cache
+from osbot_utils.decorators.methods.cache_on_self import cache_on_self
 
 from osbot_aws.apis.Secrets import Secrets
 from osbot_aws.apis.shell.Shell_Server import Shell_Server
@@ -30,7 +31,7 @@ class Lambda_Shell:
         self.secret_id     = 'lambda_shell_auth'
         self.shell_command = shell_command or {}
 
-    @cache                                                   # cache this value since it doesn't change in the lifetime of a lambda function
+    @cache_on_self                                              # cache this value since it doesn't change in the lifetime of a lambda function
     def get_lambda_shell_auth(self):
         data = Secrets(self.secret_id).value_from_json_string()
         if data:

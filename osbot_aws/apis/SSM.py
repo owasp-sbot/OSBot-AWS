@@ -3,6 +3,7 @@ from osbot_utils.decorators.lists.index_by import index_by
 from osbot_utils.decorators.lists.group_by import group_by
 
 from osbot_utils.decorators.methods.cache import cache
+from osbot_utils.decorators.methods.cache_on_self import cache_on_self
 
 from osbot_aws.apis.Session import Session
 
@@ -11,7 +12,7 @@ class SSM:
     def __init__(self):
         pass
 
-    @cache
+    @cache_on_self
     def client(self):
         return Session().client('ssm')
 

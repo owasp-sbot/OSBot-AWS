@@ -1,4 +1,6 @@
 from botocore.exceptions import ClientError
+from osbot_utils.decorators.methods.cache_on_self import cache_on_self
+
 from osbot_aws.AWS_Config import AWS_Config
 
 from osbot_utils.decorators.methods.cache import cache
@@ -10,7 +12,7 @@ class STS:
     def __init__(self, print_error_message=True):
         self.print_error_message = print_error_message                  # todo: need to find a better way to have the bad credentials errors showing up in IDE when development
 
-    @cache
+    @cache_on_self
     def client(self):
         from osbot_aws.apis.Session import Session                      # recursive dependency
         return Session().client('sts', check_credentials=False)
@@ -35,9 +37,7 @@ class STS:
     def caller_identity_arn(self):
         return self.caller_identity().get('Arn')
 
-
-
-    @cache
+    @cache_on_self
     def check_current_session_credentials(self):        # todo: see if there is a faster way to do this, at the moment it takes about 500ms which is quite a lot
         if AWS_Config().dev_skip_aws_key_check() == "True":
             return False

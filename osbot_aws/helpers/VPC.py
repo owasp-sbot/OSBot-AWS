@@ -1,4 +1,5 @@
 from osbot_utils.decorators.methods.cache import cache
+from osbot_utils.decorators.methods.cache_on_self import cache_on_self
 
 from osbot_aws.apis.EC2 import EC2
 
@@ -13,7 +14,7 @@ class VPC:
         self.vpc_name             = vpc_name
         self.tags                 = tags
 
-    @cache
+    @cache_on_self
     def ec2(self):
         return EC2()
 

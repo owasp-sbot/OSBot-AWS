@@ -1,4 +1,5 @@
 from botocore.exceptions import ClientError
+from osbot_utils.decorators.methods.cache_on_self import cache_on_self
 
 from osbot_utils.decorators.methods.remove_return_value import remove_return_value
 
@@ -10,7 +11,8 @@ from osbot_utils.decorators.methods.cache import cache
 
 
 class Events:
-    @cache
+
+    @cache_on_self
     def client(self):
         return Session().client('events')
 

@@ -1,5 +1,7 @@
 import json
 
+from osbot_utils.decorators.methods.cache_on_self import cache_on_self
+
 from osbot_aws.apis.Logs import Logs
 from osbot_utils.decorators.lists.index_by import index_by
 from osbot_utils.decorators.methods.cache import cache
@@ -32,11 +34,11 @@ class Lambda:
 
     # cached dependencies
 
-    @cache
+    @cache_on_self
     def client(self):
         return Session().client('lambda')
 
-    @cache
+    @cache_on_self
     def s3(self):
         return S3()
 
@@ -151,7 +153,7 @@ class Lambda:
         except:
             return False
 
-    @cache
+    @cache_on_self
     def function_Arn(self):
         return self.info().get('Configuration').get('FunctionArn')
 
