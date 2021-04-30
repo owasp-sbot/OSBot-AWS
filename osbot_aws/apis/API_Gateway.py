@@ -118,7 +118,7 @@ class API_Gateway:
                   'stageName': stage}
         return self._call_method('create_deployment',params)
 
-    def domain_name_add_path_mapping(self, rest_api_id, domain_name, base_path, stage='Prod'):
+    def domain_name_add_path_mapping(self, rest_api_id, domain_name, base_path, stage='prod'):
         try:
             params = { 'domainName' : domain_name ,
                        'basePath'   : base_path   ,

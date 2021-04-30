@@ -21,7 +21,7 @@ class Rest_API:
         self.api_id = None
         return self
 
-    def deploy(self, stage='Prod'):
+    def deploy(self, stage='prod'):
         return self.api_gateway.deployment_create(self.id(),stage)
 
     def id(self):
@@ -76,9 +76,9 @@ class Rest_API:
     def test_method(self, path='/',method='GET'):
         return self.api_gateway.method_invoke_test(self.id(),self.resource_id(path), method)
 
-    def url(self,path='', stage='Prod'):
+    def url(self,path='', stage='prod'):
         region = IAM().region()
         return self.api_gateway.stage_url(self.id(), region, stage, resource=path)
 
-    def invoke_GET(self, path='', stage='Prod'):
+    def invoke_GET(self, path='', stage='prod'):
         return GET(self.url(path,stage))
