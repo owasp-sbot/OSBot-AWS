@@ -18,8 +18,9 @@ class Deploy_Lambda:
         root_module_name = self.handler.__module__.split(".").pop(0)
         self.package.add_module(root_module_name)
 
-    def add_osbot_aws  (self):    self.package.add_osbot_aws  () ; return self
-    def add_osbot_utils(self):    self.package.add_osbot_utils() ; return self
+    def add_osbot_aws    (self):    self.package.add_osbot_aws    () ; return self
+    def add_osbot_utils  (self):    self.package.add_osbot_utils  () ; return self
+    def add_osbot_elastic(self):    self.package.add_osbot_elastic() ; return self
 
     def delete(self):
         return self.lambda_function().delete()
