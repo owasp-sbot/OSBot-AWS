@@ -1,5 +1,4 @@
 IMAGE_TYPE=python-for-lambda
-IMAGE_TYPE=icap-client
 ACCOUNT_ID="785217600689"
 REGION="eu-west-1"
 PROFILE="${ACCOUNT_ID}_AdministratorAccess"

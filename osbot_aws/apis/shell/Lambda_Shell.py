@@ -19,7 +19,6 @@ SHELL_VAR_RETURN_VALUE   = 'return_value'
 def lambda_shell(function):
     @wraps(function)
     def wrapper(event, context=None):
-
         shell_server = Lambda_Shell(event.get(SHELL_VAR))
         if shell_server.valid_shell_request():
             return shell_server.invoke()
