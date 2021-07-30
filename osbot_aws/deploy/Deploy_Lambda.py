@@ -34,6 +34,10 @@ class Deploy_Lambda:
     def invoke(self, params=None):
         return self.lambda_function().invoke(params)
 
+    def invoke_async(self, params=None):
+        return self.lambda_function().invoke_async(params)
+
+
     def get_package(self):
         package = Lambda_Package(self.module_name)
         package.aws_lambda.set_s3_bucket(self.osbot_setup.s3_bucket_lambdas)
