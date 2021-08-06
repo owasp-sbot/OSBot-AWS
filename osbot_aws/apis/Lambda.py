@@ -314,6 +314,8 @@ class Lambda:
         s3_bucket = code  .get('S3Bucket'        )
         s3_key    = code  .get('S3Key'           )
 
+        if len(name) > 64:
+            return status_error(message="lambda functions name cannot be bigger than 64 chars", data=self.name)
         if Lambda(name=name).exists():
             return status_warning(message=f'lambda function already exists: {name}')
 
@@ -333,3 +335,9 @@ class Lambda:
 
     def wait_for_state_active(self, **kwargs):
         return self.wait_for_state("Active", **kwargs)
+
+def invoke_lambda(lambda_name, payload):
+    return Lambda(name=lambda_name).invoke(payload)
+
+def invoke_lambda_async(lambda_name, payload):
+    return Lambda(name=lambda_name).invoke_async(payload)
