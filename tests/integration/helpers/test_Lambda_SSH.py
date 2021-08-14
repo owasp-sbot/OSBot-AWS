@@ -6,7 +6,7 @@ from osbot_utils.utils.Files        import path_combine, file_exists
 from osbot_aws.helpers.Lambda_SSH   import Lambda_SSH
 from osbot_aws.apis.Secrets         import Secrets
 
-#@pytest.mark.skip("To add when in use")
+@pytest.mark.skip("needs setup that creates a temp server to ssh into")
 class test_Lambda_SSH(TestCase):
 
     @classmethod
@@ -42,3 +42,18 @@ class test_Lambda_SSH(TestCase):
         path_to_ssh_key   = path_combine(load_path_to_keys, self.key_name + ".pem")
         assert file_exists(path_to_ssh_key)
         pprint(self.lambda_ssh.upload_ssh_key_to_secret_store(path_to_ssh_key))
+
+    # def test_deploy_and_invoke_lambda(self):
+    #     assert self.lambda_ssh.deploy_lambda()
+    #     ssh_command = 'uname'
+    #     result = self.lambda_ssh.invoke_lambda(ssh_command)
+    #     pprint(result)
+
+    def test_invoke_lambda(self):
+        ssh_command = 'uname'
+        result = self.lambda_ssh.invoke_lambda(ssh_command)
+        assert result == 'Linux\n'
+
+    # def test_invoke_with_port_forward(self):          # not sure we need this
+    #     port_forward = {"local_port": 8080 ,
+    #                     "remote_ip" : }

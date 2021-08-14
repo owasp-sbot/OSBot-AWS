@@ -2,7 +2,7 @@ from unittest                             import TestCase
 from osbot_utils.utils.Misc               import list_set
 from osbot_aws.helpers.Lambda_SSH_Kubectl import Lambda_SSH_Kubectl
 
-
+@pytest.mark.skip("needs setup that creates a temp server to ssh into")
 class test_Lambda_SSH_Kubectl(TestCase):
 
     @classmethod
