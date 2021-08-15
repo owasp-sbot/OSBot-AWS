@@ -79,9 +79,15 @@ class EC2:
     def instance_exists(self, instance_id):
         return self.instance_details(instance_id=instance_id) is not None
 
-    def instances_details(self):
+    def instances_details(self, filters=None):
         instances = {}
-        for instance in self.resource().instances.all():
+        if filter is None:
+            resource_data = self.resource().instances.all()
+        else:
+            if type(filters) is not list:
+                filters=[filters]
+            resource_data = self.resource().instances.filter(Filters=filters)
+        for instance in resource_data:
             instance_id = instance.instance_id
             instances[instance_id] = self.format_instance_details(instance)
         return instances
