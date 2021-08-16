@@ -39,7 +39,7 @@ class EC2:
 
         return self.client().describe_images(**kwargs).get('Images')
 
-    def instance_create(self, image_id, name='created by osbot_aws', instance_type='t2.micro', iam_instance_profile=None, key_name=None, network_interface=None, tags=None):
+    def instance_create(self, image_id, name='created by osbot_aws', instance_type='t2.micro', iam_instance_profile=None, key_name=None, network_interface=None, tags=None, security_group_id=None):
         kwargs = {  "ImageId"      : image_id                                                               ,
                     "InstanceType" : instance_type                                                          ,
                     "MaxCount"     : 1                                                                      ,
@@ -49,6 +49,7 @@ class EC2:
         if iam_instance_profile : kwargs["IamInstanceProfile"] = iam_instance_profile
         if key_name             : kwargs["KeyName"           ] = key_name
         if network_interface    : kwargs['NetworkInterfaces' ] = [network_interface]
+        if security_group_id    : kwargs['SecurityGroupIds'  ] = [security_group_id]
 
         result   = self.client().run_instances(**kwargs)
         instance = result.get('Instances')[0]
@@ -98,6 +99,9 @@ class EC2:
 
     def instance_stop(self, instance_id):
         self.client().stop_instances(InstanceIds=[instance_id])
+
+    def instance_terminate(self, instance_id):
+        self.client().terminate_instances(InstanceIds=[instance_id])
 
     def internet_gateway(self, internet_gateway_id):
         result = self.internet_gateways(internet_gateways_ids=[internet_gateway_id])
