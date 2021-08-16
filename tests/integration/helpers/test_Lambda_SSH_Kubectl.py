@@ -1,4 +1,7 @@
 from unittest                             import TestCase
+
+import pytest
+
 from osbot_utils.utils.Misc               import list_set
 from osbot_aws.helpers.Lambda_SSH_Kubectl import Lambda_SSH_Kubectl
 

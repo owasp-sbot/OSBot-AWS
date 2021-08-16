@@ -59,6 +59,7 @@ class EC2:
             return { 'cpus'         : target.cpu_options['CoreCount']     ,
                      'image_id'     : target.image_id                     ,
                      'instance_type': target.instance_type                ,
+                     'instance_id'  : target.instance_id                  ,
                      'public_ip'    : target.public_ip_address            ,
                      'state'        : target.state                        ,
                      'tags'         : target.tags                         }
@@ -91,6 +92,12 @@ class EC2:
             instance_id = instance.instance_id
             instances[instance_id] = self.format_instance_details(instance)
         return instances
+
+    def instance_start(self, instance_id):
+        self.client().start_instances(InstanceIds=[instance_id])
+
+    def instance_stop(self, instance_id):
+        self.client().stop_instances(InstanceIds=[instance_id])
 
     def internet_gateway(self, internet_gateway_id):
         result = self.internet_gateways(internet_gateways_ids=[internet_gateway_id])
