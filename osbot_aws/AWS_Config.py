@@ -33,3 +33,7 @@ class AWS_Config:
     def set_lambda_s3_folder_lambdas(self, value): os.environ['OSBOT_LAMBDA_S3_FOLDER_LAMBDAS'  ] = value ; return value
     def set_lambda_role_name        (self, value): os.environ['OSBOT_LAMBDA_ROLE_NAME'          ] = value ; return value
     def set_bot_name                (self, value): os.environ['OSBOT_NAME'                      ] = value ; return value
+
+
+def set_aws_session_region_name(region_name):
+    AWS_Config().set_aws_session_region_name(region_name)

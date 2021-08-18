@@ -11,7 +11,7 @@ from osbot_utils.decorators.lists.group_by import group_by
 from osbot_utils.decorators.lists.index_by import index_by
 from osbot_utils.decorators.methods.cache import cache
 from osbot_aws.apis.Session import Session
-from osbot_utils.utils.Misc import list_set, list_get
+from osbot_utils.utils.Misc import list_set, list_get, list_index_by
 from osbot_utils.utils.Status import status_warning, status_ok
 
 # todo: find good solution to capture/manage these config values
@@ -39,17 +39,19 @@ class EC2:
 
         return self.client().describe_images(**kwargs).get('Images')
 
-    def instance_create(self, image_id, name='created by osbot_aws', instance_type='t2.micro', iam_instance_profile=None, key_name=None, network_interface=None, tags=None, security_group_id=None):
+    def instance_create(self, image_id, name='created by osbot_aws', instance_type='t2.micro', iam_instance_profile=None, key_name=None,
+                              network_interface=None, tags=None, security_group_id=None , block_device_mappings=None):
         kwargs = {  "ImageId"      : image_id                                                               ,
                     "InstanceType" : instance_type                                                          ,
                     "MaxCount"     : 1                                                                      ,
                     "MinCount"     : 1                                                                      ,
                     'TagSpecifications': self.tag_specifications_create(tags=tags, name=name,resource_type='instance')}
 
-        if iam_instance_profile : kwargs["IamInstanceProfile"] = iam_instance_profile
-        if key_name             : kwargs["KeyName"           ] = key_name
-        if network_interface    : kwargs['NetworkInterfaces' ] = [network_interface]
-        if security_group_id    : kwargs['SecurityGroupIds'  ] = [security_group_id]
+        if block_device_mappings : kwargs["BlockDeviceMappings"] = block_device_mappings
+        if iam_instance_profile  : kwargs["IamInstanceProfile" ] = iam_instance_profile
+        if key_name              : kwargs["KeyName"            ] = key_name
+        if network_interface     : kwargs['NetworkInterfaces'  ] = [network_interface]
+        if security_group_id     : kwargs['SecurityGroupIds'   ] = [security_group_id]
 
         result   = self.client().run_instances(**kwargs)
         instance = result.get('Instances')[0]
@@ -66,12 +68,21 @@ class EC2:
                      'tags'         : target.tags                         }
         return {}
 
+    def instance_block_devices(self, instance_id):
+        instance = self.instance_details_raw(instance_id)
+        if instance:
+            return list_index_by(instance.block_device_mappings, "DeviceName")
+
     def instance_details(self, instance_id):
+        instance = self.instance_details_raw(instance_id)
+        return self.format_instance_details(instance)
+
+    def instance_details_raw(self, instance_id):
         kwargs = { }
         if instance_id: kwargs['InstanceIds'] = [instance_id]
         result = self.resource().instances.filter(**kwargs)             # todo see client().describe_instances is a better method to use
         for instance in result:
-            return self.format_instance_details(instance)
+            return instance
 
     def instance_delete(self, instance_id):
         if self.instance_exists(instance_id):
@@ -102,6 +113,23 @@ class EC2:
 
     def instance_terminate(self, instance_id):
         self.client().terminate_instances(InstanceIds=[instance_id])
+
+    def instance_volumes_ids(self, instance_id):
+        volume_ids = []
+        for block_device in self.instance_block_devices(instance_id).values():
+            volume_id = block_device.get('Ebs', {}).get('VolumeId')                 # todo: see what other options could exist apart from EBS
+            if volume_id:
+                volume_ids.append(volume_id)
+        return volume_ids
+
+    @index_by
+    @group_by
+    def instance_volumes(self, instance_id=None):
+        volumes_ids = []
+        if instance_id:
+            volumes_ids = self.instance_volumes_ids(instance_id)
+        volumes_data = self.client().describe_volumes(VolumeIds=volumes_ids)
+        return volumes_data.get('Volumes')
 
     def internet_gateway(self, internet_gateway_id):
         result = self.internet_gateways(internet_gateways_ids=[internet_gateway_id])
@@ -388,4 +416,4 @@ class EC2:
     def wait_for_instance_stopped   (self, instance_id): return self.wait_for('instance_stopped'    , {"InstanceIds": [instance_id]})
     def wait_for_instance_terminated(self, instance_id): return self.wait_for('instance_terminated' , {"InstanceIds": [instance_id]})
 
-    def wait_for_vpc_available      (self, vpc_id): return self.wait_for('vpc_available', {"VpcIds": [vpc_id]})
+    def wait_for_vpc_available      (self, vpc_id     ): return self.wait_for('vpc_available', {"VpcIds": [vpc_id]})
