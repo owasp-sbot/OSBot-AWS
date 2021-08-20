@@ -1,4 +1,9 @@
+import os
+import sys
+
 from botocore.exceptions import ClientError
+from osbot_utils.utils.Status import status_ok, status_error, status_warning
+
 from osbot_utils.decorators.methods.cache_on_self import cache_on_self
 
 from osbot_aws.AWS_Config import AWS_Config
@@ -37,16 +42,12 @@ class STS:
     def caller_identity_arn(self):
         return self.caller_identity().get('Arn')
 
-    @cache_on_self
-    def check_current_session_credentials(self):        # todo: see if there is a faster way to do this, at the moment it takes about 500ms which is quite a lot
-        if AWS_Config().dev_skip_aws_key_check() == "True":
-            return False
-        exception = None
+    def check_aws_session(self):
         try:
             self.caller_identity()
+            return status_ok()
         except ClientError as client_error:
             exception = client_error.response.get('Error')
-        if exception:
             error_code    = exception.get("Code")
             error_message = exception.get('Message')
             message = (f"\tCurrent Security credentials are invalid! \n\n"
@@ -54,12 +55,31 @@ class STS:
                        f"profile name or value in your ~/.aws/credentials file"
                        f"\n\n"
                        f"\tBoto3 Error message: {error_code}  {error_message}")
-            self.raise_bad_credentials_exception(message)
-        return True
+            return status_error(message=message, error=client_error)
 
-    def raise_bad_credentials_exception(self, message):
+    @cache_on_self
+    def check_current_session_credentials(self, raise_exception=True):        # todo: see if there is a faster way to do this, at the moment it takes about 500ms which is quite a lot
+        if AWS_Config().dev_skip_aws_key_check() == "True":
+            return status_warning(message="check was skipped")
+        result = self.check_aws_session()
+        if result.get('status') == 'error':
+            self.print_bad_credentials_exception(result.get('message'))
+            #if exit_on_error:
+            #    self.end_process_bad_credentials_exception()
+            if raise_exception:
+                self.raise_bad_credentials_exception(result.get('message'))
+        return result
+
+    def print_bad_credentials_exception(self, message):
         if self.print_error_message:
             print("\n*********** OSBot_AWS ***********\n")             # todo move to OSBot_AWS Logging class
             print(f"{message}")
             print("\n*********** OSBot_AWS ***********\n")
+
+    def raise_bad_credentials_exception(self, message):
+        sys.trackbacklimit = 0
         raise Exception(message)
+
+    # def end_process_bad_credentials_exception(self):          # todo: figure out how to do this (since this always throws an exception stack trace, at least in testing)
+    #     quit(0)
+    #     exit(0)
