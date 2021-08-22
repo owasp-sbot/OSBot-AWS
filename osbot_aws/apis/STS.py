@@ -58,13 +58,13 @@ class STS:
             return status_error(message=message, error=client_error)
 
     @cache_on_self
-    def check_current_session_credentials(self, raise_exception=True):        # todo: see if there is a faster way to do this, at the moment it takes about 500ms which is quite a lot
+    def check_current_session_credentials(self, raise_exception=True):          # todo: see if there is a faster way to do this, at the moment it takes about 500ms which is quite a lot
         if AWS_Config().dev_skip_aws_key_check() == "True":
             return status_warning(message="check was skipped")
         result = self.check_aws_session()
         if result.get('status') == 'error':
             self.print_bad_credentials_exception(result.get('message'))
-            #if exit_on_error:
+            #if exit_on_error:                                                  # todo: see better way to do this
             #    self.end_process_bad_credentials_exception()
             if raise_exception:
                 self.raise_bad_credentials_exception(result.get('message'))
@@ -83,3 +83,9 @@ class STS:
     # def end_process_bad_credentials_exception(self):          # todo: figure out how to do this (since this always throws an exception stack trace, at least in testing)
     #     quit(0)
     #     exit(0)
+
+def check_current_aws_credentials(raise_exception=True):
+    return STS().check_current_session_credentials(raise_exception=raise_exception)
+
+def current_aws_region():
+    return STS().current_region_name()

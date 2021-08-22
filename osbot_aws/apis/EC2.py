@@ -63,9 +63,15 @@ class EC2:
                      'image_id'     : target.image_id                     ,
                      'instance_type': target.instance_type                ,
                      'instance_id'  : target.instance_id                  ,
+                     'key_name'     : target.key_name                     ,
+                     'launch_time'  : target.meta.data.get('LauchTime')   ,
+                     'private_ip'   : target.private_ip_address           ,
                      'public_ip'    : target.public_ip_address            ,
+                     'subnet_id'    : target.meta.data.get('SubnetId')    ,
+                     'spot_id'      : target.spot_instance_request_id     ,
                      'state'        : target.state                        ,
-                     'tags'         : target.tags                         }
+                     'tags'         : target.tags                         ,
+                     'vpc_id'       : target.meta.data.get('VpcId')       }
         return {}
 
     def instance_block_devices(self, instance_id):

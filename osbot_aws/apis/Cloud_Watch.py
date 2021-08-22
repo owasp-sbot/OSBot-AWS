@@ -1,4 +1,13 @@
 import boto3
+from osbot_utils.utils.Dev import pprint
+
+from osbot_aws.apis.Boto_Helpers import Boto_Helpers
+
+from osbot_utils.utils.Files import file_create_from_bytes
+
+from osbot_utils.utils.Json import json_parse, json_to_str
+
+from osbot_utils.utils.Misc import list_set
 
 from osbot_utils.decorators.lists.index_by import index_by
 from osbot_utils.decorators.methods.cache  import cache
@@ -26,13 +35,130 @@ class Cloud_Watch():
         result = self.client().describe_anomaly_detectors().get('AnomalyDetectors')
         return result
 
+    def dashboard(self, dashboard_name):
+        try:
+            dashboard_data = self.client().get_dashboard(DashboardName=dashboard_name)
+            dashboard = {"arn"    : dashboard_data.get('DashboardArn' ),
+                         "widgets": (json_parse(dashboard_data.get('DashboardBody')).get('widgets')),
+                         "name"   : dashboard_data.get('DashboardName') }
+            from osbot_utils.utils.Dev import pprint
+            #pprint(dashboard_data)
+            return dashboard
+        except Exception:          # can't use botocore.errorfactory.ResourceNotFound because that is not exposed
+            return {}
+
     @index_by
     def dashboards(self):
         return self.client().list_dashboards().get('DashboardEntries')
 
+    def dashboards_names(self):
+        return list_set(self.dashboards(index_by='DashboardName'))
+
     def insight_rules(self):
         result = self.client().describe_insight_rules().get('InsightRules')
         return result
+
+    # see https://docs.aws.amazon.com/AmazonCloudWatch/latest/APIReference/CloudWatch-Metric-Widget-Structure.html#CloudWatch-Metric-Widget-Metrics-Array-Format
+    # formula is [Namespace, MetricName, Dimension1Name, Dimension1Value, Dimension2Name, Dimension2Value...{Options Object}]
+    def metric_widget_image(self, metric_widget, save_to_disk=True, path_image_file=None):
+        if type(metric_widget) is not str:
+            metric_widget = json_to_str(metric_widget)
+        response = self.client().get_metric_widget_image(MetricWidget=metric_widget)
+        png_bytes = response.get('MetricWidgetImage')
+        if save_to_disk:
+            return file_create_from_bytes(bytes=png_bytes, extension=".png", path=path_image_file)
+        return png_bytes
+
+    def metric_image(self, namespace, metric_name, dimensions, options=None, region=None, title=None, path_image_file=None):
+        if options is None:
+            options = {}
+        metric = [namespace, metric_name]
+        if dimensions:
+            for name, value in dimensions.items():
+                metric.append(name )         # dimension_name_i
+                metric.append(value)         # dimension_value_i
+        if options:
+            metric.append(options)
+
+        metric_widget = { "metrics": [metric]}
+        if region:
+            metric_widget['region'] = region
+        if title:
+            metric_widget['title'] = title
+
+        #"title": "Title of the graph",
+            # "view": "timeSeries",
+            # "stacked": false,
+            # "width": 600,
+            # "height": 400,
+            # "start": "-PT3H",
+            # "end": "P0D"
+        return self.metric_widget_image(metric_widget=metric_widget, path_image_file=path_image_file)
+
+    def metric_list_raw(self, namespace, metric_name=None, dimensions=None, recently_active='PT3H'):
+        kwargs = {"Namespace": namespace}
+        if metric_name:
+            kwargs['MetricName'] = metric_name
+        if dimensions:
+            dimensions_data = []
+            for key, value in dimensions.items():
+                dimensions_data.append({"Key": key, "Value": value })
+            kwargs['Dimensions'] = dimensions_data
+        if recently_active:
+             kwargs['RecentlyActive'] = recently_active
+        return Boto_Helpers.invoke_using_paginator(self.client(), "list_metrics","Metrics", **kwargs)
+
+    def metric_list(self,namespace, metric_name=None, dimensions=None, recently_active='PT3H', max_results=10000):
+        results_paginated = self.metric_list_raw(namespace=namespace, metric_name=metric_name, dimensions=dimensions,recently_active=recently_active)
+        results           = {}
+        items_added       = 0
+        for result in results_paginated:
+            _dimensions  = result.get('Dimensions')
+            _metric_name = result.get('MetricName')
+            _namespace   = result.get('Namespace')
+
+            if results.get(_namespace) is None:
+                results[_namespace] = {}
+            result_namespace = results[_namespace]
+
+            if result_namespace.get(_metric_name) is None:
+                result_namespace[_metric_name] = {}
+            result_metric_name = result_namespace[_metric_name]
+
+            for result_dimension in _dimensions:
+                dimension_name  = result_dimension.get('Name')
+                dimension_value = result_dimension.get('Value')
+
+                if result_metric_name.get(dimension_name) is None:
+                    result_metric_name[dimension_name] = []
+                result_dimension_name = result_metric_name[dimension_name]
+
+                result_dimension_name.append(dimension_value)
+                items_added+=1
+            if items_added > max_results:
+                return results
+        return results
+
+    def metric_statistics(self, namespace, metric_name, dimensions, start_time=None, end_time=None, period=60, statistics=None, extended_statistics=None, unit=None):
+        kwargs = {  "Namespace" : namespace   ,
+                    "MetricName": metric_name ,
+                    "Dimensions": dimensions  ,       # { 'Name': 'string', 'Value': 'string'},
+                    "Period"    : period
+                }
+        if start_time:
+            kwargs['StartTime'] = start_time
+        if start_time:
+            kwargs['EndTime'] = end_time
+        if statistics:
+            kwargs['Statistics'] = statistics       # 'SampleCount'|'Average'|'Sum'|'Minimum'|'Maximum',
+        if statistics:
+            kwargs['ExtendedStatistics'] = extended_statistics
+        if unit:
+            kwargs['Unit'] = unit                   # 'Seconds'|'Microseconds'|'Milliseconds'|'Bytes'|'Kilobytes'|'Megabytes'|'Gigabytes'|'Terabytes'|'Bits'|'Kilobits'|'Megabits'|'Gigabits'|'Terabits'|'Percent'|'Count'|'Bytes/Second'|'Kilobytes/Second'|'Megabytes/Second'|'Gigabytes/Second'|'Terabytes/Second'|'Bits/Second'|'Kilobits/Second'|'Megabits/Second'|'Gigabits/Second'|'Terabits/Second'|'Count/Second'|'None'
+        return self.client().get_metric_statistics(**kwargs)
+
+
+
 
     def metrics(self):                                          # todo add filter and pagination
         return self.client().list_metrics().get('Metrics')
