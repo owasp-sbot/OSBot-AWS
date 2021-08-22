@@ -35,5 +35,5 @@ class AWS_Config:
     def set_bot_name                (self, value): os.environ['OSBOT_NAME'                      ] = value ; return value
 
 
-def set_aws_session_region_name(region_name):
+def set_aws_region(region_name):
     AWS_Config().set_aws_session_region_name(region_name)

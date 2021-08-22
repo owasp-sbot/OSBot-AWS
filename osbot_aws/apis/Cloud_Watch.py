@@ -7,7 +7,7 @@ from osbot_utils.utils.Files import file_create_from_bytes
 
 from osbot_utils.utils.Json import json_parse, json_to_str
 
-from osbot_utils.utils.Misc import list_set
+from osbot_utils.utils.Misc import list_set, unique
 
 from osbot_utils.decorators.lists.index_by import index_by
 from osbot_utils.decorators.methods.cache  import cache
@@ -108,11 +108,13 @@ class Cloud_Watch():
              kwargs['RecentlyActive'] = recently_active
         return Boto_Helpers.invoke_using_paginator(self.client(), "list_metrics","Metrics", **kwargs)
 
-    def metric_list(self,namespace, metric_name=None, dimensions=None, recently_active='PT3H', max_results=10000):
+    # this is paginated, so be careful with using recently_active=None and max_results not being set
+    def metric_list(self, namespace, metric_name=None, dimensions=None, recently_active='PT3H', max_results=-1):
         results_paginated = self.metric_list_raw(namespace=namespace, metric_name=metric_name, dimensions=dimensions,recently_active=recently_active)
         results           = {}
         items_added       = 0
         for result in results_paginated:
+            #pprint(result)
             _dimensions  = result.get('Dimensions')
             _metric_name = result.get('MetricName')
             _namespace   = result.get('Namespace')
@@ -135,8 +137,15 @@ class Cloud_Watch():
 
                 result_dimension_name.append(dimension_value)
                 items_added+=1
-            if items_added > max_results:
-                return results
+            if max_results !=-1 and items_added > max_results:
+                break
+        pprint(items_added)
+        # sort and unique dimensions data
+        for namespace in results.values():
+            for metric_name, metric_values in namespace.items():
+                for dimension_name, dimension_values in metric_values.items():
+                    metric_values[dimension_name] = unique(metric_values[dimension_name])
+
         return results
 
     def metric_statistics(self, namespace, metric_name, dimensions, start_time=None, end_time=None, period=60, statistics=None, extended_statistics=None, unit=None):
@@ -163,10 +172,41 @@ class Cloud_Watch():
     def metrics(self):                                          # todo add filter and pagination
         return self.client().list_metrics().get('Metrics')
 
+    def namespaces_list(self):
+        return ["AWS/AmplifyHosting" , "AWS/ApiGateway" , "AWS/AppRunner" , "AWS/AppStream" , "AWS/AppSync" ,
+                "AWS/Athena" , "Backup" , "AWS/Billing" , "AWS/CertificateManager" , "AWS/ACMPrivateCA" ,
+                "AWS/Chatbot" , "AWS/ClientVPN" , "AWS/CloudFront" , "AWS/CloudHSM" , "AWS/CloudSearch" ,
+                "AWS/Logs" , "AWS/CodeBuild" , "AWS/CodeGuruProfiler" , "AWS/Cognito" , "AWS/Connect" ,
+                "AWS/DataLifecycleManager" , "AWS/DataSync" , "AWS/DMS" , "AWS/DX" , "AWS/DocDB" , "AWS/DynamoDB" ,
+                "AWS/DAX" , "AWS/EC2" , "AWS/ElasticGPUs" , "AWS/EC2Spot" , "AWS/AutoScaling" , "AWS/ElasticBeanstalk" ,
+                "AWS/EBS" , "AWS/ECS" , "AWS/ECS/ManagedScaling" , "AWS/EFS" , "AWS/ElasticInference" , "AWS/ApplicationELB" ,
+                "AWS/NetworkELB" , "AWS/GatewayELB" , "AWS/ELB" , "AWS/ElasticTranscoder" , "AWS/ElastiCache" ,
+                "AWS/ElastiCache" , "AWS/ES" , "AWS/ElasticMapReduce" , "AWS/MediaConnect" , "AWS/MediaConvert" ,
+                "AWS/MediaLive" , "AWS/MediaPackage" , "AWS/MediaStore" , "AWS/MediaTailor" , "AWS/Events" , "AWS/FSx" ,
+                "AWS/FSx" , "AWS/GameLift" , "AWS/GlobalAccelerator" , "Glue" , "AWS/GroundStation" , "AWS/HealthLake" ,
+                "AWS/Inspector" , "AWS/IVS" , "AWS/IoT" , "AWS/IoTAnalytics" , "AWS/IoTSiteWise" , "AWS/ThingsGraph" ,
+                "AWS/KMS" , "AWS/Cassandra" , "AWS/KinesisAnalytics" , "AWS/Firehose" , "AWS/Kinesis" , "AWS/KinesisVideo" ,
+                "AWS/Lambda" , "AWS/Lex" , "AWS/Location" , "AWS/LookoutMetrics" , "AWS/ML" , "AWS/Kafka" , "AWS/AmazonMQ" ,
+                "AWS/Neptune" , "AWS/NetworkFirewall" , "AWS/OpsWorks" , "AWS/Polly" , "AWS/QLDB" , "AWS/Redshift" ,
+                "AWS/RDS" , "AWS/Robomaker" , "AWS/Route53" , "AWS/SageMaker" , "AWS/SDKMetrics" , "AWS/ServiceCatalog" ,
+                "AWS/DDoSProtection" , "AWS/SES" , "AWS/SNS" , "AWS/SQS" , "AWS/S3" , "AWS/SWF" , "AWS/States" ,
+                "AWS/StorageGateway" , "AWS/SSM-RunCommand" , "AWS/Textract" , "AWS/Timestream" , "AWS/Transfer" ,
+                "AWS/Translate" , "AWS/TrustedAdvisor" , "AWS/NATGateway" , "AWS/TransitGateway" , "AWS/VPN" , "AWS/WAFV2" ,
+                "WAF" , "AWS/WorkMail" , "AWS/WorkSpaces"]
+
+    def namespace_metrics(self, namespace, metric_name=None, dimensions=None, recently_active='PT3H'):
+        result = self.metric_list(namespace=namespace, metric_name=metric_name, dimensions=dimensions, recently_active=recently_active)
+        namespace_data = result.get(namespace,{})
+        metrics = {}
+        for metric_name, metric_data in namespace_data.items():
+            metrics[metric_name] = list_set(metric_data)
+        return metrics
 
     def tags_for_resource(self, resource_arn):
         result = self.client().list_tags_for_resource(ResourceARN=resource_arn)
         return result
+
+
 
 
 
