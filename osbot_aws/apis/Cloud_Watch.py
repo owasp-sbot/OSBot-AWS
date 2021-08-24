@@ -1,4 +1,8 @@
+from datetime import datetime, timedelta
+
 import boto3
+from osbot_utils.testing.Duration import Duration
+
 from osbot_utils.utils.Dev import pprint
 
 from osbot_aws.apis.Boto_Helpers import Boto_Helpers
@@ -7,7 +11,7 @@ from osbot_utils.utils.Files import file_create_from_bytes
 
 from osbot_utils.utils.Json import json_parse, json_to_str
 
-from osbot_utils.utils.Misc import list_set, unique
+from osbot_utils.utils.Misc import list_set, unique, wait
 
 from osbot_utils.decorators.lists.index_by import index_by
 from osbot_utils.decorators.methods.cache  import cache
@@ -58,6 +62,23 @@ class Cloud_Watch():
         result = self.client().describe_insight_rules().get('InsightRules')
         return result
 
+    def metric_add(self, namespace, metric_name, dimensions, value, storage_resolution=1, unit='None'):
+        dimensions_data = []
+        kwargs =  {"metric_data" : [ { 'MetricName'         : metric_name        ,
+                                      'Dimensions'          : dimensions_data    ,
+                                      'Unit'                : unit               ,
+                                       "StorageResolution"  : storage_resolution ,
+                                      'Value'               : value             }],
+                    "namespace" : namespace}
+        if dimensions:
+            for name, value in dimensions.items():
+                dimensions_data.append({'Name':name, "Value": value})
+        return self.metric_add_raw(**kwargs)
+
+    def metric_add_raw(self, namespace, metric_data):
+        result = self.client().put_metric_data(Namespace=namespace, MetricData=metric_data)
+        return result.get('ResponseMetadata',{}).get('HTTPStatusCode') == 200
+
     # see https://docs.aws.amazon.com/AmazonCloudWatch/latest/APIReference/CloudWatch-Metric-Widget-Structure.html#CloudWatch-Metric-Widget-Metrics-Array-Format
     # formula is [Namespace, MetricName, Dimension1Name, Dimension1Value, Dimension2Name, Dimension2Value...{Options Object}]
     def metric_widget_image(self, metric_widget, save_to_disk=True, path_image_file=None):
@@ -69,7 +90,52 @@ class Cloud_Watch():
             return file_create_from_bytes(bytes=png_bytes, extension=".png", path=path_image_file)
         return png_bytes
 
-    def metric_image(self, namespace, metric_name, dimensions, options=None, region=None, title=None, path_image_file=None):
+    def metric_data(self, namespace, metric_name, dimensions=None, query_id='metric_query', start_time=None, end_time=None, period=60, stat='Average', unit=None):
+        dimensions_data     = []
+        metric_stat         = { 'Namespace' : namespace       ,
+                                'MetricName': metric_name     ,
+                                'Dimensions': dimensions_data }
+
+        metric_data_query   = { 'Id'        : query_id ,
+                                'MetricStat': { 'Metric' : metric_stat   ,
+                                                'Period' : period        ,
+                                                'Stat'   : stat          ,
+                                                #'Unit'   : unit
+                                                }}
+
+        if unit:
+            metric_data_query['MetricStat']['Unit'] = unit
+        if dimensions:
+            for name, value in dimensions.items():
+                dimensions_data.append({"Name": name, "Value": value })
+
+
+        if start_time is None:
+            start_time= datetime.utcnow() - timedelta(minutes=60)
+
+        if end_time is None:
+            end_time=  datetime.utcnow()
+
+        kwargs = { "MetricDataQueries": [metric_data_query] ,
+                   "StartTime"        : start_time          ,
+                   "EndTime"          : end_time            }
+
+        return self.client().get_metric_data(**kwargs).get('MetricDataResults')
+
+    def metric_data__wait_for_value(self, value, max_attempts=20, **metric_data_kwargs):
+        for i in range(0,max_attempts):
+            for result in self.metric_data(**metric_data_kwargs):   # this call takes about ~0.14 secs (so no need to add extra delay)
+                if value in result.get("Values"):
+                    return True
+        return False
+
+
+
+
+    def metric_image(self, namespace, metric_name, dimensions=None, options=None,
+                           region=None, title=None, period=None, path_image_file=None,
+                           start='-PT10M', end='P0D', stacked=True, height=400, width=600,
+                           stat="Average", theme='dark', view='timeSeries'):
         if options is None:
             options = {}
         metric = [namespace, metric_name]
@@ -79,20 +145,28 @@ class Cloud_Watch():
                 metric.append(value)         # dimension_value_i
         if options:
             metric.append(options)
+        metrics = [metric]
 
-        metric_widget = { "metrics": [metric]}
-        if region:
-            metric_widget['region'] = region
-        if title:
-            metric_widget['title'] = title
+        return self.metrics_image(metrics,region=region, title=title, period=period, path_image_file=path_image_file,
+                           start=start, end=end, stacked=stacked, height=height, width=width,
+                           stat=stat, theme=theme, view=view)
 
-        #"title": "Title of the graph",
-            # "view": "timeSeries",
-            # "stacked": false,
-            # "width": 600,
-            # "height": 400,
-            # "start": "-PT3H",
-            # "end": "P0D"
+    def metrics_image(self, metrics, region=None, title=None, period=None, path_image_file=None,
+                           start='-PT10M', end='P0D', stacked=False, height=400, width=600,
+                           stat="Average", theme='dark', view='timeSeries'):
+        metric_widget = { "metrics": metrics}
+        if region   : metric_widget['region' ] = region
+        if title    : metric_widget['title'  ] = title
+        if period   : metric_widget['period' ] = period
+        if start    : metric_widget['start'  ] = start
+        if end      : metric_widget['end'    ] = end
+        if stacked  : metric_widget['stacked'] = stacked
+        if width    : metric_widget['width'  ] = width
+        if height   : metric_widget['height' ] = height
+        if stat     : metric_widget['stat'   ] = stat   # SampleCount | Average | Sum | Minimum | Maximum | p?? | TM(??:??), TC(??:??) | TS(??:??) | WM(??:??) | PR(??:??) | IQM # see https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/Statistics-definitions.html
+        if theme    : metric_widget['theme'  ] = theme  # light | dark
+        if view     : metric_widget['view'   ] = view   # timeSeries | bar | pie
+
         return self.metric_widget_image(metric_widget=metric_widget, path_image_file=path_image_file)
 
     def metric_list_raw(self, namespace, metric_name=None, dimensions=None, recently_active='PT3H'):
@@ -139,7 +213,7 @@ class Cloud_Watch():
                 items_added+=1
             if max_results !=-1 and items_added > max_results:
                 break
-        pprint(items_added)
+
         # sort and unique dimensions data
         for namespace in results.values():
             for metric_name, metric_values in namespace.items():
@@ -148,29 +222,33 @@ class Cloud_Watch():
 
         return results
 
-    def metric_statistics(self, namespace, metric_name, dimensions, start_time=None, end_time=None, period=60, statistics=None, extended_statistics=None, unit=None):
+    def metric_statistics(self, namespace, metric_name, dimensions=None, start_time=None, end_time=None, period=60, statistics=None, extended_statistics=None, unit=None):
         kwargs = {  "Namespace" : namespace   ,
                     "MetricName": metric_name ,
-                    "Dimensions": dimensions  ,       # { 'Name': 'string', 'Value': 'string'},
                     "Period"    : period
                 }
+        if dimensions:
+            dimensions_data = []
+            for name, value in dimensions.items():
+                dimensions_data.append({"Name": name, "Value": value })
+            kwargs['Dimensions'] = dimensions_data
         if start_time:
             kwargs['StartTime'] = start_time
         if start_time:
             kwargs['EndTime'] = end_time
         if statistics:
             kwargs['Statistics'] = statistics       # 'SampleCount'|'Average'|'Sum'|'Minimum'|'Maximum',
-        if statistics:
+        if extended_statistics:
             kwargs['ExtendedStatistics'] = extended_statistics
         if unit:
             kwargs['Unit'] = unit                   # 'Seconds'|'Microseconds'|'Milliseconds'|'Bytes'|'Kilobytes'|'Megabytes'|'Gigabytes'|'Terabytes'|'Bits'|'Kilobits'|'Megabits'|'Gigabits'|'Terabits'|'Percent'|'Count'|'Bytes/Second'|'Kilobytes/Second'|'Megabytes/Second'|'Gigabytes/Second'|'Terabytes/Second'|'Bits/Second'|'Kilobits/Second'|'Megabits/Second'|'Gigabits/Second'|'Terabits/Second'|'Count/Second'|'None'
-        return self.client().get_metric_statistics(**kwargs)
+        return self.client().get_metric_statistics(**kwargs).get("Datapoints")
 
 
 
 
-    def metrics(self):                                          # todo add filter and pagination
-        return self.client().list_metrics().get('Metrics')
+    # def metrics(self):                                          # todo add filter and pagination
+    #     return self.client().list_metrics().get('Metrics')
 
     def namespaces_list(self):
         return ["AWS/AmplifyHosting" , "AWS/ApiGateway" , "AWS/AppRunner" , "AWS/AppStream" , "AWS/AppSync" ,
@@ -205,8 +283,4 @@ class Cloud_Watch():
     def tags_for_resource(self, resource_arn):
         result = self.client().list_tags_for_resource(ResourceARN=resource_arn)
         return result
-
-
-
-
 

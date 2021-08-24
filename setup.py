@@ -4,7 +4,7 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setup(
-    version                       = "0.6.27"               , # change this on every release
+    version                       = "0.6.28"               , # change this on every release
     name                          = "osbot_aws"  ,
     author                        = "Dinis Cruz",
     author_email                  = "dinis.cruz@owasp.org",

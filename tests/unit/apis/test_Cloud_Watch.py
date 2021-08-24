@@ -1,15 +1,12 @@
+import random
+from datetime import datetime, timedelta
 from unittest import TestCase
 
 import pytest
-
-from osbot_aws.AWS_Config import set_aws_region
-from osbot_aws.apis.STS import STS
-
 from osbot_utils.utils.Files import file_create_from_bytes, file_exists
-
 from osbot_aws.apis.Cloud_Watch import Cloud_Watch
 from osbot_utils.utils.Dev import pprint
-from osbot_utils.utils.Misc import list_set
+from osbot_utils.utils.Misc import list_set, wait, random_number
 
 
 class test_Cloud_Watch(TestCase):
@@ -42,7 +39,13 @@ class test_Cloud_Watch(TestCase):
             assert list_set(dashboard) == ['arn', 'name', 'widgets']
             for widget in dashboard.get('widgets'):
                 assert list_set(widget) == ['height', 'properties', 'type', 'width', 'x', 'y']
-            pprint(dashboard)
+                # metric_widget = widget.get('properties')
+                # if metric_widget.get('query') is not None:
+                #     pprint(metric_widget)
+                #else:
+                #    assert file_exists(self.cloud_watch.metric_widget_image(metric_widget))
+
+
 
 
 
@@ -54,6 +57,76 @@ class test_Cloud_Watch(TestCase):
     def test_insight_rules(self):
         result = self.cloud_watch.insight_rules()
         assert type(result) is list
+
+    def test_metric_add_raw(self):
+        namespace   = 'OSBot_AWS'
+        metric_name = 'an_metric_name'
+        kwargs = {"metric_data" : [ { 'MetricName': metric_name,
+                                      'Dimensions': [ { 'Name': 'Dimension_Name_1',
+                                                        'Value': 'Dimension_Value_1'},
+                                                      { 'Name': 'Dimension_Name_2',
+                                                        'Value': '1.0'},],
+                                      'Unit': 'None',
+                                      'Value': random.randint(1, 500) }],
+
+                    "namespace" : namespace}
+        result = self.cloud_watch.metric_add_raw(**kwargs)
+        assert result is True
+
+        assert self.cloud_watch.metric_list(namespace) == { 'OSBot_AWS': { 'an_metric_name': {  'an'              : ['dimension'         ],
+                                                                                                'Dimension_Name_1': ['Dimension_Value_1' ],
+                                                                                                'Dimension_Name_2': ['1.0'               ]}}}
+        image_in_tmp = "/tmp/cloud_watch_metric.png"
+        kwargs = {"namespace"      : namespace,
+                  "metric_name"    : metric_name,
+                  "dimensions"     : {"Dimension_Name_1": "Dimension_Value_1", "Dimension_Name_2": '1.0'},
+                  "path_image_file": image_in_tmp,
+                  "period"         : 1 }
+        self.cloud_watch.metric_image(**kwargs)
+
+    def test_add_metric(self):
+        namespace   = 'OSBot_AWS'
+        metric_name = 'an_metric_name'
+        dimensions  = { "an" : "dimension"}
+        temp_value  = random_number(max=1000)
+        result = self.cloud_watch.metric_add(namespace=namespace, metric_name=metric_name, dimensions=dimensions, value=temp_value)
+        assert result is True
+
+        # image_in_tmp = "/tmp/cloud_watch_metric.png"
+        # kwargs = {"namespace"       : namespace     ,
+        #           "metric_name"     : metric_name   ,
+        #           "dimensions"      : dimensions    ,
+        #           "path_image_file" : image_in_tmp  ,
+        #           "period": 30                      ,
+        #           }
+        # self.cloud_watch.metric_image(**kwargs)
+
+        #wait(wait_for)
+
+        kwargs = {"namespace"   : namespace     ,
+                  "metric_name" : metric_name   ,
+                  "dimensions"  : dimensions    ,
+                  "period"      : 1             }
+        assert self.cloud_watch.metric_data__wait_for_value(temp_value, **kwargs) is True
+
+
+    def test_metric_data(self):
+        kwargs= {"namespace"  : 'AWS/EC2'        ,
+                 "metric_name": "CPUUtilization" ,
+                 "dimensions" : {}               ,
+                 }
+        result = self.cloud_watch.metric_data(**kwargs)
+        assert len(result)> 0
+
+    # def test_metric_data__custom(self):
+    #     kwargs = {"namespace": 'OSBot_AWS',
+    #               "metric_name": "an_metric_name",
+    #               "dimensions": {"an": "dimension"}
+    #               }
+    #     result = self.cloud_watch.metric_data(**kwargs)
+    #
+    #     pprint(result)
+
 
     def test_metric_image(self):
         image_in_tmp = "/tmp/cloud_watch_metric.png"
@@ -89,14 +162,27 @@ class test_Cloud_Watch(TestCase):
                                              'Invocations', 'Throttles',  'UnreservedConcurrentExecutions']
 
 
+    def test_metric_statistics(self):
+        start_time = datetime.utcnow() - timedelta(minutes=60)
+        end_time = datetime.utcnow()
+        kwargs= {"namespace"  : 'AWS/EC2'        ,
+                 "metric_name": "CPUUtilization" ,
+                 "start_time" : start_time       ,
+                 "end_time"   : end_time         ,
+                 "statistics": ['Average']       ,
+                 "dimensions" : {}
+                 }
+        result = self.cloud_watch.metric_statistics(**kwargs)
+        assert len(result)> 0
+
     def test_metric_widget_image(self):
         metric_widget = {"metrics": [["AWS/EC2", "CPUUtilization"]]}
         metric_image = self.cloud_watch.metric_widget_image(metric_widget=metric_widget, save_to_disk=True)
         assert file_exists(metric_image)
 
-    def test_metrics(self):
-        result = self.cloud_watch.metrics()
-        assert len(result) == 500
+    # def test_metrics(self):
+    #     result = self.cloud_watch.metrics()
+    #     assert len(result) == 500
 
     def test_namespaces_list(self):
         result = self.cloud_watch.namespaces_list()
@@ -150,3 +236,13 @@ class test_Cloud_Watch(TestCase):
 
 
 
+# 'query': 'SOURCE '
+#            "'/aws/lambda/f2f_aws_lambdas_lambdas_deploy_fast_api__prod_v2' | "
+#            'fields @timestamp, @message\n'
+#            '| sort @timestamp desc\n'
+#            '| limit 20',
+#   'region': 'eu-west-1',
+#   'stacked': False,
+#   'title': 'Log group: '
+#            '/aws/lambda/f2f_aws_lambdas_lambdas_deploy_fast_api__prod_v2',
+#   'view': 'table'
