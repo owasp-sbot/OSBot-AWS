@@ -59,20 +59,34 @@ class EC2:
 
     def format_instance_details(self, target):
         if target:
-            return { 'cpus'         : target.cpu_options['CoreCount']     ,
-                     'image_id'     : target.image_id                     ,
-                     'instance_type': target.instance_type                ,
-                     'instance_id'  : target.instance_id                  ,
-                     'key_name'     : target.key_name                     ,
-                     'launch_time'  : target.meta.data.get('LauchTime')   ,
-                     'private_ip'   : target.private_ip_address           ,
-                     'public_ip'    : target.public_ip_address            ,
-                     'subnet_id'    : target.meta.data.get('SubnetId')    ,
-                     'spot_id'      : target.spot_instance_request_id     ,
-                     'state'        : target.state                        ,
-                     'tags'         : target.tags                         ,
-                     'vpc_id'       : target.meta.data.get('VpcId')       }
-        return {}
+            instance_details = { 'availability_zone': target.placement.get('AvailabilityZone'),
+                                 'block_devices': {}                                          ,
+                                 'cpus'         : target.cpu_options['CoreCount']             ,
+                                 'image_id'     : target.image_id                             ,
+                                 'instance_type': target.instance_type                        ,
+                                 'instance_id'  : target.instance_id                          ,
+                                 'key_name'     : target.key_name                             ,
+                                 'launch_time'  : target.meta.data.get('LauchTime')           ,
+                                 'private_ip'   : target.private_ip_address                   ,
+                                 'public_ip'    : target.public_ip_address                    ,
+                                 'subnet_id'    : target.meta.data.get('SubnetId')            ,
+                                 'spot_id'      : target.spot_instance_request_id             ,
+                                 'state'        : target.state                                ,
+                                 'tags'         : target.tags                                 ,
+                                 'vpc_id'       : target.meta.data.get('VpcId')               }
+
+            for block_device_mapping in target.block_device_mappings:
+                block_device_name = block_device_mapping.get('DeviceName')
+                ebs_data = block_device_mapping.get('Ebs')
+                if ebs_data is None:
+                    block_device = {"block_type": 'unknown' }               # todo: handle better (including with logging) this scenario (see if there are other possible values for this)
+                else:
+                    block_device      = {"block_type" : "Ebs"                          ,
+                                         "status"     : str(ebs_data.get('Status'    )),
+                                         "volume_id"  : str(ebs_data.get('VolumeId'  ))}
+                instance_details.get('block_devices')[block_device_name] = block_device
+
+        return instance_details
 
     def instance_block_devices(self, instance_id):
         instance = self.instance_details_raw(instance_id)
@@ -134,8 +148,7 @@ class EC2:
         volumes_ids = []
         if instance_id:
             volumes_ids = self.instance_volumes_ids(instance_id)
-        volumes_data = self.client().describe_volumes(VolumeIds=volumes_ids)
-        return volumes_data.get('Volumes')
+        return self.volumes(volumes_ids)
 
     def internet_gateway(self, internet_gateway_id):
         result = self.internet_gateways(internet_gateways_ids=[internet_gateway_id])
@@ -362,6 +375,17 @@ class EC2:
                 tag_specification['Tags'].append({'Key':key, 'Value':value})
             data.append(tag_specification)
         return data
+
+    def volume(self, volume_id=None):
+        if volume_id:
+            volumes = self.volumes([volume_id])
+            if len(volumes) ==1:
+                return volumes.pop()
+
+    def volumes(self, volumes_ids=None):
+        if volumes_ids:
+            return self.client().describe_volumes(VolumeIds=volumes_ids).get('Volumes')
+        return []
 
     def vpc(self, vpc_id):
         result = self.vpcs(vpcs_ids=[vpc_id])
