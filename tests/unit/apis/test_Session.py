@@ -10,7 +10,7 @@ from osbot_aws.apis.STS import STS
 from osbot_aws.apis.Session import Session
 from osbot_aws.apis.test_helpers.Temp_IAM_User import Temp_IAM_User
 from osbot_aws.exceptions.Session_Client_Creation_Fail import Session_Client_Creation_Fail
-from osbot_aws.helpers.boto3.View_Boto3_Rest_Calls import View_Boto_3_Rest_Calls, print_boto3_calls
+from osbot_aws.helpers.boto3.View_Boto3_Rest_Calls import View_Boto3_Rest_Calls, print_boto3_calls
 from osbot_utils.testing.Hook_Method import Hook_Method
 from osbot_utils.testing.Unit_Test import Unit_Test
 from osbot_utils.utils.Dev import pprint

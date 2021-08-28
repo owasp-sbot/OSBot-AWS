@@ -208,7 +208,7 @@ class Lambda:
 
     @index_by
     def functions(self):
-        return self._call_method_with_paginator('list_functions', 'Functions')
+        return list(self._call_method_with_paginator('list_functions', 'Functions'))
 
     @index_by
     def functions_names(self):

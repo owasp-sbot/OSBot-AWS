@@ -32,38 +32,33 @@ class Session:
         kwargs = {  "aws_access_key_id"     : aws_access_key_id     ,
                     "aws_secret_access_key" : aws_secret_access_key ,
                     "aws_session_token"     : aws_session_token     ,
-                    "region_name"           : region_name           , # I don't think we need this
+                    "region_name"           : region_name           ,                   # todo: I don't think we need this
                     "botocore_session"      : botocore_session      ,
                     "profile_name"          : profile_name          }
         session = boto3.Session(**kwargs)
 
-        # confirm credentials were found
-        if session.get_credentials() is None:
-            raise Session_No_Credentials()
-        status_ok("[botocore_session] found credentials created base session object")
+        self.credentials(session)                                                       # confirm credentials were found
+        status_ok("[botocore_session] found credentials created base session object")   # todo: after refactoring is done, see if this is still needed
 
-        # confirm credentials are least active (i.e. not expired)
-        try:
-            session.client('sts').get_caller_identity()
-        except ClientError as client_error:
-            exception = client_error.response.get('Error')
-            raise Session_Bad_Credentials(exception)
-
-        status_ok("[botocore_session] credentials are valid and can be used")
+        self.caller_identity(session)                                                   # confirm credentials are least active (i.e. not expired)
+        status_ok("[botocore_session] credentials are valid and can be used")           # todo: after refactoring is done, see if this is still needed
         return session
 
-    def credentials(self):
-        session      = self.botocore_session()
+    def credentials(self, session=None):
+        session = session or self.botocore_session()
         credentials  = session.get_credentials()
+        if credentials is None:
+            raise Session_No_Credentials()
         return { "access_key"   : credentials.access_key ,
                  "method"       : credentials.method     ,
                  "profile"      : session.profile_name   ,
                  "secret_key"   : credentials.secret_key ,
                  "token"        : credentials.token      }
 
-    def credentials_ok(self):
-        sts = self.botocore_session().client('sts')
-        return sts.get_caller_identity()
+    def credentials_ok(self):                                   # see if we still need this method
+        return self.credentials() is not None
+        #sts = self.botocore_session().client('sts')
+        #return sts.get_caller_identity()
         # try:
         # except ClientError as exception:
         #
@@ -71,6 +66,13 @@ class Session:
         #     print(exception.response['Error']['Code'])
         #     raise
 
+    def caller_identity(self, session=None):
+        session = session or self.botocore_session()
+        try:
+            return session.client('sts').get_caller_identity()             # few cases where we want to call this directly (since the STS class will use the session() method from this class
+        except ClientError as client_error:
+            exception = client_error.response.get('Error')
+            raise Session_Bad_Credentials(exception)
 
     @cache_on_self
     def session(self, aws_access_key_id=None,
