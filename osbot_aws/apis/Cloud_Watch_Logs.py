@@ -1,6 +1,7 @@
 import boto3
 import botocore
 from botocore.exceptions import ClientError
+from osbot_utils.decorators.methods.cache_on_self import cache_on_self
 
 from osbot_utils.utils.Misc import wait, wait_for
 
@@ -20,11 +21,11 @@ class Cloud_Watch_Logs():
         self.account_id  = self.sts().current_account_id()
         self.region_name = self.sts().current_region_name()
 
-    @cache
+    @cache_on_self
     def client(self):
         return Session().client('logs')
 
-    @cache
+    @cache_on_self
     def sts(self):
         return STS()
 

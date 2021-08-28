@@ -1,10 +1,11 @@
 from osbot_utils.decorators.methods.cache import cache
+from osbot_utils.decorators.methods.cache_on_self import cache_on_self
 
 from osbot_aws.apis.Session import Session
 
 class Kinesis:
 
-    @cache
+    @cache_on_self
     def kinesis(self):
         return Session().client('kinesis')
 

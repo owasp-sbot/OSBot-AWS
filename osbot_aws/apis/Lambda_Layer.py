@@ -3,6 +3,7 @@ import shutil
 
 from osbot_utils.decorators.lists.index_by import index_by
 from osbot_utils.decorators.methods.cache import cache
+from osbot_utils.decorators.methods.cache_on_self import cache_on_self
 from osbot_utils.decorators.methods.remove_return_value import remove_return_value
 from osbot_utils.decorators.methods.required_fields     import required_fields
 
@@ -28,11 +29,11 @@ class Lambda_Layer:
 
     # cached dependencies
 
-    @cache
+    @cache_on_self
     def client(self):
         return Session().client('lambda')
 
-    @cache
+    @cache_on_self
     def s3(self):
         return S3()
 

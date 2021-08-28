@@ -1,4 +1,5 @@
 from botocore.exceptions import ClientError
+from osbot_utils.decorators.methods.cache_on_self import cache_on_self
 
 from osbot_utils.decorators.methods.remove_return_value import remove_return_value
 
@@ -10,7 +11,8 @@ from osbot_utils.decorators.methods.cache import cache
 
 
 class Events:
-    @cache
+
+    @cache_on_self
     def client(self):
         return Session().client('events')
 
@@ -47,13 +49,21 @@ class Events:
             return rule.get('Arn')
 
     @remove_return_value('ResponseMetadata')
-    def rule_create(self, rule_name, event_source, description=None, tags=None, event_bus_name=None):
+    def rule_create(self, rule_name, event_source=None, event_pattern=None, schedule_expression=None, description=None, tags=None, event_bus_name=None):
         kwargs = {  "Name"          : rule_name                            ,
-                    "EventPattern"  : f'{{ "source": ["{event_source}"] }}',
                     "Description"   : description or ''                    ,
                     "State"         : 'ENABLED'                            ,
                     "Tags"          : []                                   }
-        if event_bus_name: kwargs['EventBusName'] = event_bus_name
+
+        if event_bus_name:
+            kwargs['EventBusName'] = event_bus_name
+        if event_pattern:
+            kwargs["EventPattern"] = event_pattern
+        if event_source:
+            kwargs["EventPattern"] = f'{{ "source": ["{event_source}"] }}'
+        if schedule_expression:
+            kwargs["ScheduleExpression"] = schedule_expression
+
         if tags:
             for key,value in tags.items():
                 kwargs['Tags'].append({'Key':key, 'Value':value})
@@ -92,7 +102,7 @@ class Events:
             target.update(target_attributes)
 
         kwargs = { "Rule"   : rule_name    ,
-                   "Targets" : [target]     }
+                   "Targets": [target]     }
 
         return self.client().put_targets(**kwargs)
 

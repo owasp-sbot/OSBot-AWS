@@ -1,6 +1,8 @@
 from datetime import date, timedelta
 
 from osbot_utils.decorators.methods.cache import cache
+from osbot_utils.decorators.methods.cache_on_self import cache_on_self
+
 from osbot_aws.apis.Lambda import Lambda
 from osbot_aws.apis.IAM import IAM
 from osbot_aws.apis.Session import Session
@@ -11,7 +13,7 @@ class API_Gateway:
     def __init__(self):
         pass
 
-    @cache
+    @cache_on_self
     def api_gateway(self):
         return Session().client('apigateway')
 
@@ -116,7 +118,7 @@ class API_Gateway:
                   'stageName': stage}
         return self._call_method('create_deployment',params)
 
-    def domain_name_add_path_mapping(self, rest_api_id, domain_name, base_path, stage='Prod'):
+    def domain_name_add_path_mapping(self, rest_api_id, domain_name, base_path, stage='prod'):
         try:
             params = { 'domainName' : domain_name ,
                        'basePath'   : base_path   ,
@@ -303,7 +305,7 @@ class API_Gateway:
         return self.rest_api_not_exists(api_id)
 
     def rest_api_exists(self, api_id):
-        return self.rest_api_info(api_id).get('id') == api_id
+        return api_id and self.rest_api_info(api_id).get('id') == api_id
 
     def rest_api_id(self, api_name):
         return self.rest_api(api_name).get('id')

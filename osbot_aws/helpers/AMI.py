@@ -1,3 +1,5 @@
+from osbot_utils.decorators.methods.cache_on_self import cache_on_self
+
 from osbot_aws.apis.STS import STS
 from osbot_utils.decorators.methods.cache import cache
 
@@ -7,11 +9,11 @@ class AMI:
     def __init__(self):
         self.current_region_name = self.sts().current_region_name()
 
-    @cache
+    @cache_on_self
     def sts(self):
         return STS()
 
-    @cache
+    @cache_on_self
     def ami_mappings_per_region(self):                                                          # todo find way to pre-create these in a performant way (for all regions)
         mappings = {'amazon-linux-2': { 'eu-west-1': 'ami-00f8b1192da5566c5' ,
                                         'eu-west-2': 'ami-074882b79a16e2e6e' }}

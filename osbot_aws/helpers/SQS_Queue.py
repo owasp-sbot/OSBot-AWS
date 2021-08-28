@@ -1,5 +1,6 @@
 import json
 
+from osbot_utils.decorators.methods.cache_on_self import cache_on_self
 from osbot_utils.utils.Misc import random_string
 
 from osbot_utils.utils.Json import json_dumps, json_loads
@@ -20,7 +21,7 @@ class SQS_Queue:                                        # todo refactor main met
         self.queue_url             = queue_url
         self.fifo_message_group_id = fifo_message_group_id or random_string(prefix="message_group_id-")
 
-    @cache
+    @cache_on_self
     def sqs(self):
         return SQS()
 

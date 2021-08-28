@@ -1,4 +1,5 @@
 from osbot_utils.decorators.lists.index_by import index_by
+from osbot_utils.decorators.methods.cache_on_self import cache_on_self
 
 from osbot_utils.utils.Json import json_loads, json_to_str
 
@@ -12,7 +13,7 @@ from osbot_aws.apis.Session import Session
 
 class SQS:
 
-    @cache
+    @cache_on_self
     def client(self):
         return Session().client('sqs')
 

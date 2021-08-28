@@ -8,6 +8,10 @@ from osbot_utils.utils.Process  import Process
 # todo refactor into class (see Lambda_Upload_Package})
 
 def load_dependencies(targets):
+    if type(targets) is list:
+        for target in targets:
+            load_dependency(target)
+        return
     for target in targets.split(','):
         load_dependency(target.strip())
 

@@ -64,6 +64,9 @@ class Lambda_Package:
         self.add_osbot_utils()
         self.add_module('osbot_aws')
 
+    def add_osbot_elastic(self):
+        self.add_module('osbot_elastic')
+
     def add_osbot_utils(self):
         self.add_module('dotenv')
         self.add_module('osbot_utils')

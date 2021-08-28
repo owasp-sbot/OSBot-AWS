@@ -1,7 +1,8 @@
-from botocore.exceptions                  import ClientError
-from osbot_aws.AWS_Config                 import AWS_Config
+import sys
+from botocore.exceptions import ClientError
 from osbot_aws.exceptions.Session_Bad_Credentials import Session_Bad_Credentials
-from osbot_utils.testing.Catch            import Catch
+from osbot_utils.decorators.methods.cache_on_self import cache_on_self
+from osbot_aws.AWS_Config import AWS_Config
 from osbot_utils.decorators.methods.cache import cache
 from osbot_utils.utils.Dev import pprint
 from osbot_utils.utils.Misc               import wait
@@ -15,7 +16,7 @@ class STS:
     def __init__(self, print_error_message=True):
         self.print_error_message = print_error_message                  # todo: need to find a better way to have the bad credentials errors showing up in IDE when development
 
-    @cache
+    @cache_on_self
     def client(self):
         from osbot_aws.apis.Session import Session                      # recursive dependency
         return Session().client('sts')
@@ -40,7 +41,7 @@ class STS:
         current_assume_policy = iam_role.iam.role_assume_policy()
         iam_role.iam.role_assume_policy_update(temp_policy)
         pprint(iam_role.iam.role_assume_policy())
-
+        role_arn = iam_role.arn()
         for i in range(0,max_attempts):
             try:
                 self.assume_role(role_arn=role_arn)
@@ -51,7 +52,7 @@ class STS:
                 pprint(exception)
             print(f'after {i} seconds')
             wait(sleep_for)
-        #return role_arn
+        return role_arn
 
 
     def current_account_id(self):
@@ -69,7 +70,20 @@ class STS:
     def caller_identity_arn(self):
         return self.caller_identity().get('Arn')
 
-
+    def check_aws_session(self):
+        try:
+            self.caller_identity()
+            return status_ok()
+        except ClientError as client_error:
+            exception = client_error.response.get('Error')
+            error_code    = exception.get("Code")
+            error_message = exception.get('Message')
+            message = (f"\tCurrent Security credentials are invalid! \n\n"
+                       f"\tPlease check: current environment values, "
+                       f"profile name or value in your ~/.aws/credentials file"
+                       f"\n\n"
+                       f"\tBoto3 Error message: {error_code}  {error_message}")
+            return status_error(message=message, error=client_error)
 
     @cache
     def check_current_session_credentials(self):        # todo: see if there is a faster way to do this, at the moment it takes about 500ms which is quite a lot
@@ -81,3 +95,23 @@ class STS:
             exception = client_error.response.get('Error')
             raise Session_Bad_Credentials(exception)
         return status_ok(f'AWS credentials are ok for {caller_arn}')
+
+    def print_bad_credentials_exception(self, message):
+        if self.print_error_message:
+            print("\n*********** OSBot_AWS ***********\n")             # todo move to OSBot_AWS Logging class
+            print(f"{message}")
+            print("\n*********** OSBot_AWS ***********\n")
+
+    def raise_bad_credentials_exception(self, message):
+        sys.trackbacklimit = 0
+        raise Exception(message)
+
+    # def end_process_bad_credentials_exception(self):          # todo: figure out how to do this (since this always throws an exception stack trace, at least in testing)
+    #     quit(0)
+    #     exit(0)
+
+def check_current_aws_credentials(raise_exception=True):
+    return STS().check_current_session_credentials(raise_exception=raise_exception)
+
+def current_aws_region():
+    return STS().current_region_name()

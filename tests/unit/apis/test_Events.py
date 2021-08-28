@@ -18,7 +18,10 @@ class test_Events(TestCase):
         cls.rule_description   = 'temp_description'
         cls.rule_tags          = {'Name': 'osbot_aws-test_test_rule_create'}
 
-        cls.events.rule_create(rule_name=cls.rule_name, event_source=cls.rule_event_source, description=cls.rule_description, tags=cls.rule_tags)
+        cls.events.rule_create(rule_name=cls.rule_name,
+                               event_source=cls.rule_event_source,
+                               description=cls.rule_description,
+                               tags=cls.rule_tags)
         assert cls.events.rule_exists(cls.rule_name) is True
 
     @classmethod

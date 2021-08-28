@@ -2,6 +2,7 @@ from os import chmod
 
 import boto3
 from botocore.exceptions import ClientError
+from osbot_utils.decorators.methods.cache_on_self import cache_on_self
 from osbot_utils.utils.Files import file_name, temp_folder, path_combine, file_create
 
 from osbot_utils.decorators.methods.remove_return_value import remove_return_value
@@ -10,7 +11,7 @@ from osbot_utils.decorators.lists.group_by import group_by
 from osbot_utils.decorators.lists.index_by import index_by
 from osbot_utils.decorators.methods.cache import cache
 from osbot_aws.apis.Session import Session
-from osbot_utils.utils.Misc import list_set, list_get
+from osbot_utils.utils.Misc import list_set, list_get, list_index_by
 from osbot_utils.utils.Status import status_warning, status_ok
 
 # todo: find good solution to capture/manage these config values
@@ -19,11 +20,11 @@ EC2_WAITER_MAX_ATTEMPTS = 600           # default was 40 times
 
 class EC2:
 
-    @cache
+    @cache_on_self
     def client(self):
         return Session().client('ec2')
 
-    @cache
+    @cache_on_self
     def resource(self):
         return Session().resource('ec2')
 
@@ -38,16 +39,19 @@ class EC2:
 
         return self.client().describe_images(**kwargs).get('Images')
 
-    def instance_create(self, image_id, name='created by osbot_aws', instance_type='t2.micro', iam_instance_profile=None, key_name=None, network_interface=None, tags=None):
+    def instance_create(self, image_id, name='created by osbot_aws', instance_type='t2.micro', iam_instance_profile=None, key_name=None,
+                              network_interface=None, tags=None, security_group_id=None , block_device_mappings=None):
         kwargs = {  "ImageId"      : image_id                                                               ,
                     "InstanceType" : instance_type                                                          ,
                     "MaxCount"     : 1                                                                      ,
                     "MinCount"     : 1                                                                      ,
                     'TagSpecifications': self.tag_specifications_create(tags=tags, name=name,resource_type='instance')}
 
-        if iam_instance_profile : kwargs["IamInstanceProfile"] = iam_instance_profile
-        if key_name             : kwargs["KeyName"           ] = key_name
-        if network_interface    : kwargs['NetworkInterfaces' ] = [network_interface]
+        if block_device_mappings : kwargs["BlockDeviceMappings"] = block_device_mappings
+        if iam_instance_profile  : kwargs["IamInstanceProfile" ] = iam_instance_profile
+        if key_name              : kwargs["KeyName"            ] = key_name
+        if network_interface     : kwargs['NetworkInterfaces'  ] = [network_interface]
+        if security_group_id     : kwargs['SecurityGroupIds'   ] = [security_group_id]
 
         result   = self.client().run_instances(**kwargs)
         instance = result.get('Instances')[0]
@@ -55,20 +59,50 @@ class EC2:
 
     def format_instance_details(self, target):
         if target:
-            return { 'cpus'         : target.cpu_options['CoreCount']     ,
-                     'image_id'     : target.image_id                     ,
-                     'instance_type': target.instance_type                ,
-                     'public_ip'    : target.public_ip_address            ,
-                     'state'        : target.state                        ,
-                     'tags'         : target.tags                         }
-        return {}
+            instance_details = { 'availability_zone': target.placement.get('AvailabilityZone'),
+                                 'block_devices': {}                                          ,
+                                 'cpus'         : target.cpu_options['CoreCount']             ,
+                                 'image_id'     : target.image_id                             ,
+                                 'instance_type': target.instance_type                        ,
+                                 'instance_id'  : target.instance_id                          ,
+                                 'key_name'     : target.key_name                             ,
+                                 'launch_time'  : target.meta.data.get('LauchTime')           ,
+                                 'private_ip'   : target.private_ip_address                   ,
+                                 'public_ip'    : target.public_ip_address                    ,
+                                 'subnet_id'    : target.meta.data.get('SubnetId')            ,
+                                 'spot_id'      : target.spot_instance_request_id             ,
+                                 'state'        : target.state                                ,
+                                 'tags'         : target.tags                                 ,
+                                 'vpc_id'       : target.meta.data.get('VpcId')               }
+
+            for block_device_mapping in target.block_device_mappings:
+                block_device_name = block_device_mapping.get('DeviceName')
+                ebs_data = block_device_mapping.get('Ebs')
+                if ebs_data is None:
+                    block_device = {"block_type": 'unknown' }               # todo: handle better (including with logging) this scenario (see if there are other possible values for this)
+                else:
+                    block_device      = {"block_type" : "Ebs"                          ,
+                                         "status"     : str(ebs_data.get('Status'    )),
+                                         "volume_id"  : str(ebs_data.get('VolumeId'  ))}
+                instance_details.get('block_devices')[block_device_name] = block_device
+
+        return instance_details
+
+    def instance_block_devices(self, instance_id):
+        instance = self.instance_details_raw(instance_id)
+        if instance:
+            return list_index_by(instance.block_device_mappings, "DeviceName")
 
     def instance_details(self, instance_id):
+        instance = self.instance_details_raw(instance_id)
+        return self.format_instance_details(instance)
+
+    def instance_details_raw(self, instance_id):
         kwargs = { }
         if instance_id: kwargs['InstanceIds'] = [instance_id]
         result = self.resource().instances.filter(**kwargs)             # todo see client().describe_instances is a better method to use
         for instance in result:
-            return self.format_instance_details(instance)
+            return instance
 
     def instance_delete(self, instance_id):
         if self.instance_exists(instance_id):
@@ -78,12 +112,43 @@ class EC2:
     def instance_exists(self, instance_id):
         return self.instance_details(instance_id=instance_id) is not None
 
-    def instances_details(self):
+    def instances_details(self, filters=None):
         instances = {}
-        for instance in self.resource().instances.all():
+        if filter is None:
+            resource_data = self.resource().instances.all()
+        else:
+            if type(filters) is not list:
+                filters=[filters]
+            resource_data = self.resource().instances.filter(Filters=filters)
+        for instance in resource_data:
             instance_id = instance.instance_id
             instances[instance_id] = self.format_instance_details(instance)
         return instances
+
+    def instance_start(self, instance_id):
+        self.client().start_instances(InstanceIds=[instance_id])
+
+    def instance_stop(self, instance_id):
+        self.client().stop_instances(InstanceIds=[instance_id])
+
+    def instance_terminate(self, instance_id):
+        self.client().terminate_instances(InstanceIds=[instance_id])
+
+    def instance_volumes_ids(self, instance_id):
+        volume_ids = []
+        for block_device in self.instance_block_devices(instance_id).values():
+            volume_id = block_device.get('Ebs', {}).get('VolumeId')                 # todo: see what other options could exist apart from EBS
+            if volume_id:
+                volume_ids.append(volume_id)
+        return volume_ids
+
+    @index_by
+    @group_by
+    def instance_volumes(self, instance_id=None):
+        volumes_ids = []
+        if instance_id:
+            volumes_ids = self.instance_volumes_ids(instance_id)
+        return self.volumes(volumes_ids)
 
     def internet_gateway(self, internet_gateway_id):
         result = self.internet_gateways(internet_gateways_ids=[internet_gateway_id])
@@ -311,6 +376,17 @@ class EC2:
             data.append(tag_specification)
         return data
 
+    def volume(self, volume_id=None):
+        if volume_id:
+            volumes = self.volumes([volume_id])
+            if len(volumes) ==1:
+                return volumes.pop()
+
+    def volumes(self, volumes_ids=None):
+        if volumes_ids:
+            return self.client().describe_volumes(VolumeIds=volumes_ids).get('Volumes')
+        return []
+
     def vpc(self, vpc_id):
         result = self.vpcs(vpcs_ids=[vpc_id])
         if len(result) == 1:
@@ -370,4 +446,4 @@ class EC2:
     def wait_for_instance_stopped   (self, instance_id): return self.wait_for('instance_stopped'    , {"InstanceIds": [instance_id]})
     def wait_for_instance_terminated(self, instance_id): return self.wait_for('instance_terminated' , {"InstanceIds": [instance_id]})
 
-    def wait_for_vpc_available      (self, vpc_id): return self.wait_for('vpc_available', {"VpcIds": [vpc_id]})
+    def wait_for_vpc_available      (self, vpc_id     ): return self.wait_for('vpc_available', {"VpcIds": [vpc_id]})

@@ -39,7 +39,12 @@ class test_Logs(TestCase):
         assert result.get('status') == 'ok'
         assert 'An error occurred (DataAlreadyAcceptedException)' in self.logs.event_add('an message').get('data')
         assert self.logs.event_add(message_2,sequence_token=result.get('nextSequenceToken')).get('status') == 'ok'
-        sleep(1)                              # wait for log events to be processed
+        max_attempts = 20
+        sleep_for = 0.5
+        for i in range(1, max_attempts):                        # wait for log events to be processed
+            if len(self.logs.events().get('events')) == 2:
+                break
+            sleep(sleep_for)
         assert len(self.logs.events().get('events')) ==2
         assert self.logs.messages() == [message_1, message_2]
 

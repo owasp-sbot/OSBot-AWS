@@ -67,6 +67,13 @@ class test_EC2(TestCase):
         result = self.ec2.instances_details()
         assert len(result) > 1
 
+    def test_instances_details__with_filter(self):
+        filter = [{"Name": "instance-state-name", "Values":["running"]}]
+        result = self.ec2.instances_details(filters=filter)                 # todo: add test for passing array
+        for key, instance in result.items():
+            assert instance.get('state').get('Name') == 'running'
+
+
     def test_internet_gateway_create(self):
         tags                = {'Name': 'osbot_aws - test internet gateway'}
         internet_gateway_id  = self.ec2.internet_gateway_create(tags=tags).get('InternetGatewayId')

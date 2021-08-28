@@ -1,5 +1,7 @@
 from unittest import TestCase
 
+from osbot_utils.decorators.methods.cache_on_self import cache_on_self
+
 from osbot_aws.apis.Cloud_Watch import Cloud_Watch
 from osbot_aws.apis.Lambda import Lambda
 from osbot_aws.apis.Logs import Logs
@@ -15,11 +17,11 @@ class Clean_Up_After_All_Test_Run:
     def __init__(self):
         pass
 
-    @cache
+    @cache_on_self
     def aws_lambda(self):
         return Lambda()
 
-    @cache
+    @cache_on_self
     def logs(self):
         return Logs()
 
