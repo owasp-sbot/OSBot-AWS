@@ -17,8 +17,8 @@ from osbot_utils.utils.Status import status_ok, status_error, status_warning
 class Lambda:
     def __init__(self, name=''):
         self.runtime        = 'python3.8'
-        self.memory         = 10240                             # 10 Gb (current AWS limit in Dec 2020)
-        self.timeout        = 900                               # 15 M
+        self.memory         = 512                               # default to 512Mb max is 10,000 Mb (current AWS limit in Dec 2020)
+        self.timeout        = 60                                # default to 60 secs (1m) max is 900 secs (15m)
         self.trace_mode     = 'PassThrough'                     # x-rays disabled
         self.original_name  = name
         self.handler        = name + '.run'
