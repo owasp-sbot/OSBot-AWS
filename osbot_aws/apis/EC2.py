@@ -40,7 +40,7 @@ class EC2:
         return self.client().describe_images(**kwargs).get('Images')
 
     def instance_create(self, image_id, name='created by osbot_aws', instance_type='t2.micro', iam_instance_profile=None, key_name=None,
-                              network_interface=None, tags=None, security_group_id=None , block_device_mappings=None):
+                              network_interface=None, tags=None, security_group_id=None , block_device_mappings=None , dry_run=False):
         kwargs = {  "ImageId"      : image_id                                                               ,
                     "InstanceType" : instance_type                                                          ,
                     "MaxCount"     : 1                                                                      ,
@@ -52,6 +52,9 @@ class EC2:
         if key_name              : kwargs["KeyName"            ] = key_name
         if network_interface     : kwargs['NetworkInterfaces'  ] = [network_interface]
         if security_group_id     : kwargs['SecurityGroupIds'   ] = [security_group_id]
+
+        if dry_run:
+            return kwargs
 
         result   = self.client().run_instances(**kwargs)
         instance = result.get('Instances')[0]
