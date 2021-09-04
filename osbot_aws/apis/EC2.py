@@ -2,6 +2,8 @@ from os import chmod
 
 import boto3
 from botocore.exceptions import ClientError
+
+from osbot_aws.AWS_Config import set_aws_region
 from osbot_utils.decorators.methods.cache_on_self import cache_on_self
 from osbot_utils.utils.Files import file_name, temp_folder, path_combine, file_create
 
@@ -450,3 +452,11 @@ class EC2:
     def wait_for_instance_terminated(self, instance_id): return self.wait_for('instance_terminated' , {"InstanceIds": [instance_id]})
 
     def wait_for_vpc_available      (self, vpc_id     ): return self.wait_for('vpc_available', {"VpcIds": [vpc_id]})
+
+
+def get_EC2_in_region(region_name):                     # this method is not thread save
+    set_aws_region(region_name=region_name)         # because this is a global value
+    ec2 = EC2()
+    ec2.client()                                    # get these value cached (since they depend on the global config value)
+    ec2.resource()                                  # get these value cached (since they depend on the global config value)
+    return ec2
