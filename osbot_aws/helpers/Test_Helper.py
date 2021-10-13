@@ -21,9 +21,15 @@ class Test_Helper(TestCase):
         #return OSBot_Setup(profile_name=profile_name, account_id=account_id, region_name=region)
 
     def tearDown(self):
-        if self.result is not None:
-            pprint(self.result)
-        self.save_png(self.png_data, self.png_file)
+        if hasattr(self, 'result'):
+            if self.result is not None:
+                pprint(self.result)
+        if hasattr(self, 'png_data'):
+            if hasattr(self, 'png_data') is False:
+                self.png_file = '/tmp/unit-test.png'
+            self.save_png(self.png_data, self.png_file)
+        #else:
+        #    pprint("**** TEST HELPER WARNING - super().setUp() was not called from the current setUp override method **** ")
 
     # def lambda_package(self, lambda_name, profile_name = None, account_id=None, region=None):
     #     return self.osbot_setup(profile_name=profile_name,account_id=account_id,region=region).lambda_package(lambda_name)
