@@ -32,13 +32,13 @@ class EC2:
 
     @index_by
     @group_by
-    def amis(self, owner='self', state='available', name=None, description=None):  # todo: find how to search for amis in the quick start
+    def amis(self, owner='self', state='available', name=None, description=None, ami_id=None):  # todo: find how to search for amis in the quick start
         kwargs = {'Owners' : [owner] ,
                   'Filters' : [ {'Name': 'state', 'Values': [state]}]}
 
-        if name       : kwargs.get('Filters').append({'Name': 'name'       , 'Values': [name]})
-        if description: kwargs.get('Filters').append({'Name': 'description', 'Values': [description]})
-
+        if name       : kwargs.get('Filters').append({'Name': 'name'       , 'Values': [name        ]})
+        if description: kwargs.get('Filters').append({'Name': 'description', 'Values': [description ]})
+        if ami_id     : kwargs.get('Filters').append({'Name': 'image-id'   , 'Values': [ami_id      ]})
         return self.client().describe_images(**kwargs).get('Images')
 
     def instance_create(self, image_id, name='created by osbot_aws', instance_type='t2.micro', iam_instance_profile=None, key_name=None,
@@ -119,7 +119,7 @@ class EC2:
 
     def instances_details(self, filters=None):
         instances = {}
-        if filter is None:
+        if filters is None:
             resource_data = self.resource().instances.all()
         else:
             if type(filters) is not list:
