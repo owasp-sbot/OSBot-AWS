@@ -64,6 +64,9 @@ class Lambda_Package:
         self.add_osbot_utils()
         self.add_module('osbot_aws')
 
+    def add_osbot_browser(self):
+        self.add_module('osbot_browser')
+
     def add_osbot_elastic(self):
         self.add_module('osbot_elastic')
 

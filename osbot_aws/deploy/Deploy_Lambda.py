@@ -19,6 +19,7 @@ class Deploy_Lambda:
         self.package.add_module(root_module_name)
 
     def add_osbot_aws    (self):    self.package.add_osbot_aws    () ; return self
+    def add_osbot_browser(self):    self.package.add_osbot_browser() ; return self
     def add_osbot_utils  (self):    self.package.add_osbot_utils  () ; return self
     def add_osbot_elastic(self):    self.package.add_osbot_elastic() ; return self
 
