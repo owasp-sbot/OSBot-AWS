@@ -1,5 +1,6 @@
 from osbot_aws.apis.Lambda import Lambda
 
+LOG_TO_ELK_ENABLED=True
 
 def log_info(message, data = None, index = "gw_bot_logs",category = "API_GS_Bot"):
     return log_to_elk(message=message, data=data, index=index, level='info', category=category)
@@ -18,8 +19,10 @@ def log_to_elk(message, data = None, index = "gw_bot_logs", level = "debug", cat
                 "category" : category ,
                 "data"     : data
               }
-
-    Lambda('gw_bot.lambdas.log_to_elk').invoke_async(payload)
+    if LOG_TO_ELK_ENABLED:
+        Lambda('gw_bot.lambdas.log_to_elk').invoke_async(payload)
+    else:
+        print(payload)
     return payload
 
 def slack_message(text, attachments = None, channel = None, team_id=None):  # GBMGMK88Z is the 'from-aws-lambda' channel in the GS-CST Slack workspace
