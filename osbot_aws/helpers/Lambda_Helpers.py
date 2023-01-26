@@ -1,6 +1,6 @@
 from osbot_aws.apis.Lambda import Lambda
 
-LOG_TO_ELK_ENABLED=True
+LOG_TO_ELK_ENABLED=False
 
 def log_info(message, data = None, index = "gw_bot_logs",category = "API_GS_Bot"):
     return log_to_elk(message=message, data=data, index=index, level='info', category=category)
