@@ -45,7 +45,11 @@ def pip_install_dependency(target):
     folder_create(path_lambda_dependencies)
     path_install = Files.path_combine(path_lambda_dependencies, target)
     if folder_not_exists(path_install):
-        return Process.run('pip3', ['install','-t',path_install,target])
+        return Process.run('pip3', ['install',
+                                    '--platform','manylinux1_x86_64', '--only-binary=:all:',
+                                    '-t',
+                                    path_install,
+                                    target])
     return folder_exists(path_install)
 
 def upload_dependency(target):
