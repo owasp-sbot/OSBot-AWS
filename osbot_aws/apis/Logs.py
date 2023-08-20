@@ -126,6 +126,9 @@ class Logs(Boto_Helpers):
     def groups_names(self):
         return list_set(self.groups(index_by='logGroupName'))
 
+    def name(self):
+        return self.log_group_name
+
     def stream_create(self):
         if self.stream_exists() is True: return False
         self.client().create_log_stream(logGroupName=self.log_group_name, logStreamName= self.stream_name)
@@ -149,3 +152,6 @@ class Logs(Boto_Helpers):
         for event in self.client().get_log_events(logGroupName=self.log_group_name, logStreamName=self.stream_name).get('events'):
             messages.append(event.get('message'))
         return messages
+
+    def __repr__(self):
+        return f"Logs: {self.log_group_name or ''} {self.stream_name or ''}"

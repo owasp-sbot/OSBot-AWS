@@ -201,7 +201,7 @@ class Lambda:
     def invoke_return_logs(self, payload=None):
         result                   = self.invoke_raw(payload=payload, log_type='Tail')
         logs                     = result.get('response').get('LogResult')
-        result['execution_logs'] = base64_to_str(logs)
+        result['execution_logs'] = base64_to_str(logs, encoding='utf-8')
         result['return_value'  ] = result.get('data')
         result['request_id'    ] = result.get('response').get('ResponseMetadata').get('RequestId')
         del result['data'    ]

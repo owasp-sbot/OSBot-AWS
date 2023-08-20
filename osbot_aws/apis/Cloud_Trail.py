@@ -1,6 +1,11 @@
 import datetime
 import json
 
+from osbot_utils.decorators.lists.group_by import group_by
+
+from osbot_utils.decorators.lists.index_by import index_by
+from osbot_utils.utils.Json import json_parse
+
 from osbot_aws.apis.Boto_Helpers import Boto_Helpers
 from osbot_aws.apis.S3 import S3
 from osbot_aws.apis.Session import Session
@@ -22,17 +27,37 @@ class Cloud_Trail(Boto_Helpers):                # todo write tests for this clas
     def event_selectors(self, trail_name):
         return  self.cloudtrail.get_event_selectors(TrailName=trail_name).get('EventSelectors')
 
-    def events(self,start_time, end_time, max_results=50):
-        return self.cloudtrail.lookup_events(LookupAttributes=[], StartTime=start_time,EndTime=end_time,MaxResults=max_results).get('Events')
+    def events(self, start_time, end_time, max_results=50, lookup_attributes=None):
+        kwargs = {
+            'LookupAttributes': lookup_attributes or [],
+            'StartTime'       : start_time              ,
+            'EndTime'         : end_time                ,
+            'MaxResults'      : max_results
+        }
+        return self.cloudtrail.lookup_events(**kwargs).get('Events')
 
-    def events_all(self, start_time, end_time):
-        return Boto_Helpers.invoke_using_paginator(self.cloudtrail,'lookup_events','Events', LookupAttributes=[], StartTime=start_time,EndTime=end_time)
+    def events_all(self, start_time, end_time, lookup_attributes=None):
+        kwargs = {  'api'             : self.cloudtrail         ,
+                    'method'          : 'lookup_events'         ,
+                    'field_id'        : 'Events'                ,
+                    'LookupAttributes': lookup_attributes or [] ,
+                    'StartTime'       : start_time              ,
+                    'EndTime'         : end_time                }
 
-    def events_in_last(self,minutes):
+        return Boto_Helpers.invoke_using_paginator(**kwargs)
+        #return Boto_Helpers.invoke_using_paginator(self.cloudtrail,'lookup_events','Events', LookupAttributes=lookup_attributes or [], StartTime=start_time,EndTime=end_time)
+
+    def events_in_last(self,minutes, lookup_attributes=None):
         end_time   = self.date_now()
         start_time = self.date_minutes_ago(minutes)
-        return self.events_all(start_time, end_time)
+        return self.events_all(start_time, end_time, lookup_attributes=lookup_attributes)
 
+    @index_by
+    @group_by
+    def convert_to_cloud_trail_events(self, events):
+        for event in events:
+            cloud_trail_event = json_parse(event.get('CloudTrailEvent', {}))
+            yield cloud_trail_event
     def tags(self, resource_ids=[]):
         return self.cloudtrail.list_tags(ResourceIdList=resource_ids)
 

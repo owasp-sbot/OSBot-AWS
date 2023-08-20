@@ -1,12 +1,14 @@
+from osbot_utils.utils.Dev import pformat
+
 from osbot_aws.apis.IAM import IAM
 
 
 class IAM_Policy:
-    def __init__(self, policy_name=None, policy_path=None, policy_arn=None):
+    def __init__(self, policy_name=None, statements=None, policy_path=None, policy_arn=None):
         self.iam         = IAM()
         self.policy_name = policy_name
         self.version     = "2012-10-17"
-        self.statements  = []
+        self.statements  = statements or []
         self.policy_path = policy_path
         self.account_id  = self.iam.account_id()
         self.policy_arn  = policy_arn or self.iam.policy_arn(self.policy_name, self.policy_path, self.account_id)
@@ -40,3 +42,5 @@ class IAM_Policy:
     def statement_from_aws(self):
         return self.iam.policy_statement(self.policy_arn)
 
+    def __repr__(self):
+        return f"{self.__class__.__name__}: {self.policy_name} \n { pformat(self.statements)}"

@@ -8,8 +8,11 @@ from osbot_aws.helpers.IAM_Policy import IAM_Policy
 
 
 class IAM_Role:
-    def __init__(self,role_name=None):
-        self.role_name  = role_name or f"osbot_temp_role_{random_string()}"
+    def __init__(self,role_name=None, role_arn=None):
+        if role_arn:
+            self.role_name = role_arn.split('/')[-1]
+        else:
+            self.role_name  = role_name or f"osbot_temp_role_{random_string()}"
         self.iam        = IAM(role_name=self.role_name)
 
     def add_policy_for__lambda(self):
@@ -86,6 +89,11 @@ class IAM_Role:
 
     def not_exists(self):
         return self.iam.role_not_exists()
+
+    def policies(self):
+        for policy_name, policy_statements in self.policies_statements().items():
+            yield IAM_Policy(policy_name, policy_statements)
+
 
     def policies_statements(self):
         return self.iam.role_policies_statements()
