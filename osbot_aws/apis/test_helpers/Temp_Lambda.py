@@ -27,7 +27,7 @@ class Temp_Lambda:
             self.delete()
 
     def arn(self):
-        return self.aws_lambda.function_Arn()
+        return self.aws_lambda.function_arn()
 
     def create(self):
         (self.aws_lambda.set_role       (self.role_arn)

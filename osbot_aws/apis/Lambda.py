@@ -154,7 +154,7 @@ class Lambda:
             return False
 
     @cache_on_self
-    def function_Arn(self):
+    def function_arn(self):
         return self.info().get('Configuration').get('FunctionArn')
 
     @remove_return_value('ResponseMetadata')

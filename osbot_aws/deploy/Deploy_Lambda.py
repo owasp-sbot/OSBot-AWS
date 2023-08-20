@@ -1,4 +1,5 @@
 from dotenv import load_dotenv
+from osbot_utils.utils.Misc import wait_for
 
 from osbot_aws.OSBot_Setup import OSBot_Setup
 from osbot_aws.apis.test_helpers.Temp_Aws_Roles import Temp_Aws_Roles
@@ -61,6 +62,15 @@ class Deploy_Lambda:
 
     def set_container_image(self, image_uri):
         self.package.set_image_uri(image_uri)
+
+    def wait_for_function_update_to_complete(self, lambda_function, max_attempts=20, wait_time=0.1):
+        status = None
+        for i in range(max_attempts):
+            status = lambda_function.configuration().get('LastUpdateStatus')
+            if status == 'Successful':
+                break
+            wait_for(wait_time)
+        return status
 
 # legacy methods
 Deploy_Lambda.lambda_invoke = Deploy_Lambda.invoke

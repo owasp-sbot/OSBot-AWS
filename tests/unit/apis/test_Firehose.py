@@ -20,7 +20,7 @@ class test_Firehose(Test_Helper):
         self.result = self.firehose.add_processing_lambda(stream_name=self.stream_name, lambda_name='gw_bot.lambdas.gw.proxy.on_firehose_record')
 
     def test_add_processing_lambda_set_lambda_permission(self):
-        lambda_arn = Lambda('gw_bot.lambdas.gw.proxy.on_firehose_record').function_Arn()
+        lambda_arn = Lambda('gw_bot.lambdas.gw.proxy.on_firehose_record').function_arn()
         self.result = self.firehose.add_processing_lambda_set_lambda_permission(lambda_arn=lambda_arn)
 
     def test_add_record(self):

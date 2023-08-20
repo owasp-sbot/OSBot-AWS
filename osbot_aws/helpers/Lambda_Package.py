@@ -76,7 +76,7 @@ class Lambda_Package:
         return self
 
     def arn(self):
-        return self.aws_lambda.function_Arn()
+        return self.aws_lambda.function_arn()
 
     def get_files(self):
         all_files = []
