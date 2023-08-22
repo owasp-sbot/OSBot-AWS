@@ -40,16 +40,16 @@ def load_dependency(target):
     return Files.exists(tmp_dir)
 
 
-def pip_install_dependency(target):
+def pip_install_dependency(target, target_aws_lambda=True):
     path_lambda_dependencies = Files.path_combine('.', '../../../_lambda_dependencies/')
     folder_create(path_lambda_dependencies)
     path_install = Files.path_combine(path_lambda_dependencies, target)
     if folder_not_exists(path_install):
-        return Process.run('pip3', ['install',
-                                    '--platform','manylinux1_x86_64', '--only-binary=:all:',
-                                    '-t',
-                                    path_install,
-                                    target])
+        args = ['install']
+        if target_aws_lambda:
+            args.extend(['--platform','manylinux1_x86_64', '--only-binary=:all:'])
+        args.extend(['-t', path_install, target])
+        return Process.run('pip3', args)
     return folder_exists(path_install)
 
 def upload_dependency(target):

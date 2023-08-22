@@ -54,15 +54,20 @@ class Deploy_Lambda:
 
 
 
-    def update(self):
+    def update(self, wait_for_update=True):
         self.add_function_source_code()
         if len(self.package.get_files()) == 0:                       # todo: add this check to the package.update()  method
             raise Exception("There are not files to deploy")
-        return self.package.update()
+        update_result= self.package.update()
+        if update_result.get('status') == 'ok':
+            if wait_for_update:
+                return self.wait_for_function_update_to_complete(self.lambda_function())
+        return update_result
 
     def set_container_image(self, image_uri):
         self.package.set_image_uri(image_uri)
 
+    # todo refactor into Lambda class
     def wait_for_function_update_to_complete(self, lambda_function, max_attempts=20, wait_time=0.1):
         status = None
         for i in range(max_attempts):

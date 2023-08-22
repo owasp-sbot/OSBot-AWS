@@ -1,5 +1,7 @@
 import json
 
+import botocore
+
 from osbot_utils.decorators.methods.cache_on_self import cache_on_self
 
 from osbot_aws.apis.Logs import Logs
@@ -157,6 +159,81 @@ class Lambda:
     def function_arn(self):
         return self.info().get('Configuration').get('FunctionArn')
 
+    def function_url(self, function_alias=None):
+        return self.function_url_info(function_alias).get('FunctionUrl')
+
+    def function_url_exists(self, function_alias=None):
+        return self.function_url_info(function_alias) != {}
+
+    def function_url_info(self, function_alias=None):
+        try:
+            kwargs = dict(FunctionName= self.function_arn())
+            if function_alias:
+                kwargs['Qualifier'] = function_alias
+
+            return self.client().get_function_url_config(**kwargs)
+        except Exception:                                  # todo: refactor to confirm exception is botocore.errorfactory.ResourceNotFoundException (which is not exposed)
+            return {}
+
+    def function_url_delete(self, function_alias=None):
+        if self.function_url_exists(function_alias):
+            kwargs = dict(FunctionName= self.function_arn())
+            if function_alias:
+                kwargs['Qualifier'] = function_alias
+
+            return self.client().delete_function_url_config(**kwargs)
+
+    def function_url_create(self, function_alias=None, auth_type="AWS_IAM", cors=None, invoke_mode='RESPONSE_STREAM'):
+        if self.function_url_exists(function_alias) is False:
+            function_arn   = self.function_arn()
+            auth_type      = auth_type #'NONE',
+            cors           = cors or {}
+            invoke_mode    = invoke_mode # 'BUFFERED'
+            kwargs         = dict(FunctionName = function_arn   ,
+                                  AuthType     = auth_type      ,
+                                  Cors         = cors           ,
+                                  InvokeMode   = invoke_mode    )
+            if function_alias:
+                kwargs['Qualifier'] = function_alias
+
+            return self.client().create_function_url_config(**kwargs)
+
+    def function_url_update(self, function_alias=None, auth_type=None, cors=None, invoke_mode=None):
+        if self.function_url_exists(function_alias) :
+            function_arn   = self.function_arn()
+
+            kwargs         = dict(FunctionName = function_arn)
+
+            if function_alias:
+                kwargs['Qualifier'] = function_alias
+            if auth_type:
+                kwargs['AuthType'] = auth_type
+            if cors:
+                kwargs['Cors'] = cors
+            if invoke_mode:
+                kwargs['InvokeMode'] = invoke_mode
+
+            return self.client().update_function_url_config(**kwargs)
+
+    # todo: add this policy when creating a function url with NONE auth_type
+
+    # {
+    #   "Version": "2012-10-17",
+    #   "Statement": [
+    #     {
+    #       "StatementId": "FunctionURLAllowPublicAccess",
+    #       "Effect": "Allow",
+    #       "Principal": "*",
+    #       "Action": "lambda:InvokeFunctionUrl",
+    #       "Resource": "{function_arn}",
+    #       "Condition": {
+    #         "StringEquals": {
+    #           "lambda:FunctionUrlAuthType": "NONE"
+    #         }
+    #       }
+    #     }
+    #   ]
+    # }
     @remove_return_value('ResponseMetadata')
     def info(self):
         return self.client().get_function(FunctionName=self.name)
