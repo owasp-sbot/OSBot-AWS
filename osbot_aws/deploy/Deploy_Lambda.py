@@ -13,11 +13,17 @@ class Deploy_Lambda:
         self.handler              = handler
         self.module_name          = handler.__module__
         self.role_arn             = Temp_Aws_Roles().for_lambda_invocation__role_arn()
+        # self.layers               = []
+        # self.env_variables        = {}
         self.package              = self.get_package()
 
     def add_function_source_code(self):
         root_module_name = self.handler.__module__.split(".").pop(0)
         self.package.add_module(root_module_name)
+
+    def add_module(self, module_name):
+        self.package.add_module(module_name)
+        return self
 
     def add_osbot_aws    (self):    self.package.add_osbot_aws    () ; return self
     def add_osbot_browser(self):    self.package.add_osbot_browser() ; return self
@@ -39,6 +45,8 @@ class Deploy_Lambda:
     def invoke_async(self, params=None):
         return self.lambda_function().invoke_async(params)
 
+    def files(self):
+        return self.package.get_files()
 
     def get_package(self):
         package = Lambda_Package(self.module_name)
@@ -66,6 +74,12 @@ class Deploy_Lambda:
 
     def set_container_image(self, image_uri):
         self.package.set_image_uri(image_uri)
+
+    def set_layers(self, layers):
+        self.package.set_layers(layers)
+
+    def set_env_variables(self, env_variables):
+        self.package.set_env_variables(env_variables)
 
     # todo refactor into Lambda class
     def wait_for_function_update_to_complete(self, lambda_function, max_attempts=20, wait_time=0.1):

@@ -1,11 +1,16 @@
 import os
 import importlib
 
+from osbot_utils.utils.Zip_Folder import Zip_Folder
+
+from osbot_aws.apis.Lambda_Layer import Lambda_Layer
+
 from osbot_aws.AWS_Config import AWS_Config
 
 from osbot_aws.apis.Lambda import Lambda
 from osbot_aws.apis.test_helpers.Temp_Aws_Roles import Temp_Aws_Roles
-from osbot_utils.utils.Files import folder_copy, Files, folder_not_exists
+from osbot_utils.utils.Files import folder_copy, Files, folder_not_exists, file_name, path_combine
+from osbot_utils.utils.Temp_Folder import Temp_Folder
 
 
 class Lambda_Package:
@@ -16,7 +21,8 @@ class Lambda_Package:
         self.s3_key        = f'{AWS_Config().lambda_s3_folder_lambdas()}/{self.lambda_name}.zip'
         self.role_arn      = Temp_Aws_Roles().for_lambda_invocation__role_arn()
         self.tmp_folder    = Files.temp_folder('tmp_lambda_')
-
+        self.layers        = []
+        self.env_variables = {}
         (self.aws_lambda.set_s3_bucket   (self.s3_bucket    )
                         .set_s3_key      (self.s3_key       )
                         .set_role        (self.role_arn     )
@@ -78,6 +84,20 @@ class Lambda_Package:
     def arn(self):
         return self.aws_lambda.function_arn()
 
+    def create_layer(self, target_folder, ignore_pattern=None):
+        if ignore_pattern is None:
+            ignore_pattern = ['*.pyc', '.DS_Store', '__pycache__', '.env']
+
+        layer_name   = file_name(target_folder)
+        lambda_layer = Lambda_Layer(layer_name)
+        with Temp_Folder() as _:
+            source      = target_folder
+            destination = path_combine(_.path() + '/python', file_name(source))
+            folder_copy(source=source, destination=destination, ignore_pattern=ignore_pattern)
+            with Zip_Folder(_.path()) as zip_file:
+                result = lambda_layer.create_from_zip_file_via_s3(zip_file)
+                return  result.get('LayerVersionArn')
+
     def get_files(self):
         all_files = []
         for root, dirs, files in os.walk(self.tmp_folder):
@@ -86,11 +106,21 @@ class Lambda_Package:
                 all_files.append(file_path)
         return all_files
 
+    def update_layers_and_env_variables(self):
+        with self.aws_lambda as _:
+            self.aws_lambda.set_layers       (self.layers       )
+            self.aws_lambda.set_env_variables(self.env_variables)
+            return self.aws_lambda.update_lambda_configuration()
+
     def remove_files(self,pattern):
         for file in self.get_files():
             if pattern in file:
                 file_to_delete = Files.path_combine(self.tmp_folder,file[1:])
                 Files.delete(file_to_delete)
+
+    def set_env_variables(self, env_variables):
+        self.aws_lambda.set_env_variables(env_variables)
+        return self
 
     def set_image_uri(self, image_uri):
         self.aws_lambda.image_uri = image_uri
