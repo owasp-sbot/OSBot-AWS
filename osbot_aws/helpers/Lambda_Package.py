@@ -1,6 +1,8 @@
 import os
 import importlib
+import site
 
+from osbot_utils.utils.Dev import pprint
 from osbot_utils.utils.Zip_Folder import Zip_Folder
 
 from osbot_aws.apis.Lambda_Layer import Lambda_Layer
@@ -9,7 +11,7 @@ from osbot_aws.AWS_Config import AWS_Config
 
 from osbot_aws.apis.Lambda import Lambda
 from osbot_aws.apis.test_helpers.Temp_Aws_Roles import Temp_Aws_Roles
-from osbot_utils.utils.Files import folder_copy, Files, folder_not_exists, file_name, path_combine
+from osbot_utils.utils.Files import folder_copy, Files, folder_not_exists, file_name, path_combine, folder_sub_folders
 from osbot_utils.utils.Temp_Folder import Temp_Folder
 
 
@@ -93,6 +95,20 @@ class Lambda_Package:
         with Temp_Folder() as _:
             source      = target_folder
             destination = path_combine(_.path() + '/python', file_name(source))
+            folder_copy(source=source, destination=destination, ignore_pattern=ignore_pattern)
+            with Zip_Folder(_.path()) as zip_file:
+                result = lambda_layer.create_from_zip_file_via_s3(zip_file)
+                return  result.get('LayerVersionArn')
+
+    def create_layer_from_site_packages(self, target_name, ignore_pattern=None):
+        if ignore_pattern is None:
+            ignore_pattern = ['*.pyc', '.DS_Store', '__pycache__', '.env']
+
+        with Temp_Folder() as _:
+            layer_name   = f'site_packages__{target_name}'
+            lambda_layer = Lambda_Layer(layer_name)
+            source       = site.getsitepackages()[0]
+            destination  = path_combine(_.path(), 'python')
             folder_copy(source=source, destination=destination, ignore_pattern=ignore_pattern)
             with Zip_Folder(_.path()) as zip_file:
                 result = lambda_layer.create_from_zip_file_via_s3(zip_file)
