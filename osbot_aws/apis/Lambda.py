@@ -18,6 +18,7 @@ from osbot_utils.utils.Status import status_ok, status_error, status_warning
 
 class Lambda:
     def __init__(self, name=''):
+        self.architecture   = 'x86_64'
         self.runtime        = 'python3.8'
         self.memory         = 512                               # default to 512Mb max is 10,000 Mb (current AWS limit in Dec 2020)
         self.timeout        = 60                                # default to 60 secs (1m) max is 900 secs (15m)
@@ -116,13 +117,14 @@ class Lambda:
         if self.env_variables:
             kwargs['Environment'] = {'Variables': self.env_variables}
         if self.image_uri:
-            kwargs['Code'       ] = {'ImageUri': self.image_uri}
-            kwargs['PackageType'] = "Image"
+            kwargs['Code'         ] = {'ImageUri': self.image_uri}
+            kwargs['PackageType'  ] = "Image"
         else:
-            kwargs['Code'       ] = {"S3Bucket": self.s3_bucket, "S3Key": self.s3_key}
-            kwargs['PackageType'] = "Zip"
-            kwargs['Runtime'    ] = self.runtime
-            kwargs['Handler'    ] = self.handler
+            kwargs['Code'          ] = {"S3Bucket": self.s3_bucket, "S3Key": self.s3_key}
+            kwargs['PackageType'   ] = "Zip"
+            kwargs['Runtime'       ] = self.runtime
+            kwargs['Architectures' ] = [self.architecture]     # no idea why this is an array since we get an exception when there is more than one value
+            kwargs['Handler'       ] = self.handler
 
         if self.layers:
             kwargs['Layers'] = self.layers

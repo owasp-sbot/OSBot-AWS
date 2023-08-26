@@ -120,9 +120,6 @@ class Lambda_Package:
                 return result.get('LayerVersionArn')
 
 
-            pprint(_.files())
-
-
     def create_layer_from_site_packages(self, target_name, ignore_pattern=None):
         if ignore_pattern is None:
             ignore_pattern = ['*.pyc', '.DS_Store', '__pycache__', '.env']
