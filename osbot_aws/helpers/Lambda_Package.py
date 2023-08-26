@@ -2,6 +2,8 @@ import os
 import importlib
 import site
 
+from osbot_utils.utils.Process  import Process
+
 from osbot_utils.utils.Dev import pprint
 from osbot_utils.utils.Zip_Folder import Zip_Folder
 
@@ -100,6 +102,27 @@ class Lambda_Package:
                 result = lambda_layer.create_from_zip_file_via_s3(zip_file)
                 return  result.get('LayerVersionArn')
 
+    def create_layer_from_packages(self, layer_name, packages, target_aws_lambda=True):
+        # if ignore_pattern is None:
+        #     ignore_pattern = ['*.pyc', '.DS_Store', '__pycache__', '.env']
+
+        with Temp_Folder() as _:
+            destination = path_combine(_.path(), 'python')
+            for package in packages:
+                args = ['install']
+                if target_aws_lambda:
+                    args.extend(['--platform', 'manylinux1_x86_64', '--only-binary=:all:'])
+                args.extend(['-t', destination, package])
+                Process.run('pip3', args)
+            with Zip_Folder(_.path()) as zip_file:
+                lambda_layer = Lambda_Layer(layer_name)
+                result       = lambda_layer.create_from_zip_file_via_s3(zip_file)
+                return result.get('LayerVersionArn')
+
+
+            pprint(_.files())
+
+
     def create_layer_from_site_packages(self, target_name, ignore_pattern=None):
         if ignore_pattern is None:
             ignore_pattern = ['*.pyc', '.DS_Store', '__pycache__', '.env']
@@ -122,11 +145,6 @@ class Lambda_Package:
                 all_files.append(file_path)
         return all_files
 
-    def update_layers_and_env_variables(self):
-        with self.aws_lambda as _:
-            self.aws_lambda.set_layers       (self.layers       )
-            self.aws_lambda.set_env_variables(self.env_variables)
-            return self.aws_lambda.update_lambda_configuration()
 
     def remove_files(self,pattern):
         for file in self.get_files():
@@ -136,6 +154,10 @@ class Lambda_Package:
 
     def set_env_variables(self, env_variables):
         self.aws_lambda.set_env_variables(env_variables)
+        return self
+
+    def set_layers(self, layers):
+        self.aws_lambda.set_layers(layers)
         return self
 
     def set_image_uri(self, image_uri):
