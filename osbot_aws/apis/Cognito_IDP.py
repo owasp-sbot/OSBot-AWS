@@ -30,10 +30,10 @@ class Cognito_IDP:
         try:
             response = client.initiate_auth( ClientId=client_id, AuthFlow='USER_PASSWORD_AUTH',AuthParameters=auth_parameters)
             return response
-        except client.exceptions.ResourceNotFoundException:
-            return {}
-        except client.exceptions.NotAuthorizedException:
-            return {}
+        except client.exceptions.ResourceNotFoundException as error:
+            return {'error':  error }
+        except client.exceptions.NotAuthorizedException as error:
+            return {'error': error }
 
     def auth_user_info(self, project, region, access_token):
         user_info_url = f"https://{project}.auth.{region}.amazoncognito.com/oauth2/userInfo"
