@@ -37,10 +37,10 @@ class Logs(Boto_Helpers):
                 result  = self.client().put_log_events(logGroupName=self.log_group_name,logStreamName=self.stream_name,logEvents=events, sequenceToken=sequence_token)
             else:
                 result  = self.client().put_log_events(logGroupName=self.log_group_name,logStreamName=self.stream_name,logEvents=events)
-            nextSequenceToken = result.get('nextSequenceToken')
+            next_sequence_token = result.get('nextSequenceToken')
             if result.get('rejectedLogEventsInfo') is not None:
-                return {'status': 'error', 'nextSequenceToken' : nextSequenceToken, 'data': result.get('rejectedLogEventsInfo')}
-            return {'status': 'ok', 'nextSequenceToken' : nextSequenceToken}
+                return {'status': 'error', 'nextSequenceToken' : next_sequence_token, 'data': result.get('rejectedLogEventsInfo')}
+            return {'status': 'ok', 'nextSequenceToken' : next_sequence_token}
         except Exception as error:
             return {'status': 'error', 'data': '{0}'.format(error)}
 
@@ -147,9 +147,9 @@ class Logs(Boto_Helpers):
             return self.client().describe_log_streams(logGroupName=self.log_group_name).get('logStreams')
         return self.client().describe_log_streams(logGroupName=self.log_group_name, logStreamNamePrefix=self.stream_name).get('logStreams')
 
-    def messages(self):
+    def messages(self,limit=100):
         messages = []
-        for event in self.client().get_log_events(logGroupName=self.log_group_name, logStreamName=self.stream_name).get('events'):
+        for event in self.client().get_log_events(logGroupName=self.log_group_name, logStreamName=self.stream_name,limit=limit).get('events'):
             messages.append(event.get('message'))
         return messages
 
