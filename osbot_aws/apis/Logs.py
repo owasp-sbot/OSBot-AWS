@@ -147,7 +147,7 @@ class Logs(Boto_Helpers):
             return self.client().describe_log_streams(logGroupName=self.log_group_name).get('logStreams')
         return self.client().describe_log_streams(logGroupName=self.log_group_name, logStreamNamePrefix=self.stream_name).get('logStreams')
 
-    def messages(self,limit=100):
+    def messages(self,limit=10000):
         messages = []
         for event in self.client().get_log_events(logGroupName=self.log_group_name, logStreamName=self.stream_name,limit=limit).get('events'):
             messages.append(event.get('message'))
