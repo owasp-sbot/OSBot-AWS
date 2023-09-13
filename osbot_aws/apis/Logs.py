@@ -182,9 +182,13 @@ class Logs(Boto_Helpers):
             response = self.client().get_log_events(**params)
             log_events.extend(response["events"])
             next_token = response.get("nextForwardToken")
+            #print(f'limit:{limit} len(log_events):{len(log_events)}')
             if next_token == params.get("nextToken"):
                 break
+            if len (log_events) >= limit:
+                break
             params['nextToken'] = next_token
+
         messages = []
         for event in log_events:
             messages.append(event.get('message'))
