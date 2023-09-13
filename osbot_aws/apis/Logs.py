@@ -1,5 +1,6 @@
 import calendar
 import datetime
+import time
 
 from osbot_aws.apis.Boto_Helpers import Boto_Helpers
 from osbot_aws.apis.Session import Session
@@ -147,9 +148,45 @@ class Logs(Boto_Helpers):
             return self.client().describe_log_streams(logGroupName=self.log_group_name).get('logStreams')
         return self.client().describe_log_streams(logGroupName=self.log_group_name, logStreamNamePrefix=self.stream_name).get('logStreams')
 
-    def messages(self,limit=10000):
+    def messages(self,limit=10000, hours=24, start_time=None, end_time=None):
+
+        if start_time is None:
+            start_time = int((datetime.datetime.now() - datetime.timedelta(hours=hours)).timestamp() * 1000)
+
+        if end_time is None:
+            end_time = int(time.time() * 1000)
+
+        # kwargs = dict(  logGroupName  = self.log_group_name ,
+        #                 logStreamName = self.stream_name    ,
+        #                 limit         = limit               ,
+        #                 startTime     = start_time          ,
+        #                 endTime       = end_time            )
+        # response  = self.client().get_log_events(**kwargs)
+        # #events = self.invoke_using_paginator(self.client(), 'get_log_events', 'events', **kwargs)
+
+
+        params = {
+            "logGroupName": self.log_group_name ,
+            "logStreamName": self.stream_name   ,
+            "startFromHead": True               ,
+            "startTime"    : start_time         ,
+            "endTime"      : end_time           ,
+            "limit"        : limit              }
+
+        log_events = []
+        import logging
+        logger = logging.getLogger()
+        logger.setLevel(logging.INFO)
+        while True:
+            logger.info(f"Fetching log events with params: {params}")
+            response = self.client().get_log_events(**params)
+            log_events.extend(response["events"])
+            next_token = response.get("nextForwardToken")
+            if next_token == params.get("nextToken"):
+                break
+            params['nextToken'] = next_token
         messages = []
-        for event in self.client().get_log_events(logGroupName=self.log_group_name, logStreamName=self.stream_name,limit=limit).get('events'):
+        for event in log_events:
             messages.append(event.get('message'))
         return messages
 
