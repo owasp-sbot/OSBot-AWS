@@ -65,7 +65,7 @@ class S3:
     def bucket_arn(self,bucket):
         return 'arn:aws:s3:::{0}'.format(bucket)
 
-    def bucket_create(self, bucket,region):
+    def bucket_create(self, bucket, region):
         try:
             location=self.s3().create_bucket(Bucket=bucket,CreateBucketConfiguration={'LocationConstraint': region }).get('Location')
             return { 'status':'ok', 'data':location}

@@ -2,10 +2,10 @@ from osbot_utils.utils.Files import Files, folder_zip
 
 
 class Temp_Folder_With_Lambda_File:
-    def __init__(self, file_name=None):
+    def __init__(self, file_name=None, lambda_code=None):
         self.file_name    = file_name or 'simple_lambda.py'
         self.folder       = None
-        self.lambda_code  = "def run(event, context): print('OSBot inside an Lambda :)'); return 'hello {0}'.format(event.get('name'))"
+        self.lambda_code  = lambda_code or "def run(event, context): print('OSBot inside an Lambda :)'); return 'hello {0}'.format(event.get('name'))"
         self.tmp_file     = None
         self.create_temp_file()
 

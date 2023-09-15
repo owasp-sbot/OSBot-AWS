@@ -12,8 +12,8 @@ from osbot_utils.decorators.methods.remove_return_value import remove_return_val
 
 from osbot_aws.apis.Session import Session
 from osbot_aws.apis.S3 import S3
-from osbot_utils.utils.Misc import get_missing_fields, wait, random_string, base64_to_str, list_set
-from osbot_utils.utils.Status import status_ok, status_error, status_warning
+from osbot_utils.utils.Misc import get_missing_fields, wait, random_string, base64_to_str, list_set, wait_for
+from osbot_utils.utils.Status import status_ok, status_error, status_warning, status_message
 
 
 class Lambda:
@@ -404,7 +404,16 @@ class Lambda:
         if image_uri is None:
             if self.s3().file_not_exists(s3_bucket, s3_key):
                 return status_error(message=f'for function {name}, could not find provided s3 bucket and s3 key: {s3_bucket} {s3_key}')
-        return status_ok()
+        return status_message(status='ok', message='validated ok  the lambda create_kwargs')
+
+    def wait_for_function_update_to_complete(self, max_attempts=20, wait_time=0.1):
+        status = None
+        for i in range(max_attempts):
+            status = self.configuration().get('LastUpdateStatus')
+            if status == 'Successful':
+                break
+            wait_for(wait_time)
+        return status
 
     def wait_for_state(self, state, max_wait_count=40, wait_interval=1):
         for i in range(0, max_wait_count):

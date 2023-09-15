@@ -14,6 +14,8 @@ class AWS_Config:
     def __exit__(self, type, value, traceback):
         pass
 
+    def aws_access_key_id           (self): return os.getenv('AWS_ACCESS_KEY_ID'                                                                )
+    def aws_secret_access_key       (self): return os.getenv('AWS_SECRET_ACCESS_KEY'                                                            )
     def aws_session_profile_name    (self): return os.getenv('AWS_PROFILE_NAME'                                                                 )
     def aws_session_region_name     (self): return os.getenv('AWS_DEFAULT_REGION'                                                               )
     def aws_session_account_id      (self): return os.getenv('AWS_ACCOUNT_ID'                                                                   )

@@ -69,7 +69,7 @@ class Deploy_Lambda:
         update_result= self.package.update()
         if update_result.get('status') == 'ok':
             if wait_for_update:
-                return self.wait_for_function_update_to_complete(self.lambda_function())
+                return self.lambda_function().wait_for_function_update_to_complete()
         return update_result
 
     def set_container_image(self, image_uri):
@@ -81,15 +81,6 @@ class Deploy_Lambda:
     def set_env_variables(self, env_variables):
         self.package.set_env_variables(env_variables)
 
-    # todo refactor into Lambda class
-    def wait_for_function_update_to_complete(self, lambda_function, max_attempts=20, wait_time=0.1):
-        status = None
-        for i in range(max_attempts):
-            status = lambda_function.configuration().get('LastUpdateStatus')
-            if status == 'Successful':
-                break
-            wait_for(wait_time)
-        return status
 
 # legacy methods
 Deploy_Lambda.lambda_invoke = Deploy_Lambda.invoke

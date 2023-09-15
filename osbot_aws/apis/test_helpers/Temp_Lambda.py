@@ -6,10 +6,10 @@ from osbot_utils.utils.Misc import random_string_and_numbers
 
 
 class Temp_Lambda:
-    def __init__(self, lambda_name=None, delete_on_exit=True):
+    def __init__(self, lambda_name=None, lambda_code=None, delete_on_exit=True):
         self.lambda_name    = lambda_name or "temp_lambda_{0}".format(random_string_and_numbers())
         self.aws_lambda     = Lambda(self.lambda_name)
-        self.tmp_folder     = Temp_Folder_With_Lambda_File(self.lambda_name).create_temp_file()
+        self.tmp_folder     = Temp_Folder_With_Lambda_File(file_name=self.lambda_name, lambda_code=lambda_code).create_temp_file()
         self.role_arn       = Temp_Aws_Roles().for_lambda_invocation__role_arn() # todo: refactor to have option to create the role programatically (needs feature to wait for role to be available)
         self.create_log     = None
         self.delete_on_exit = delete_on_exit
@@ -37,6 +37,7 @@ class Temp_Lambda:
                         .upload())
         self.create_log = self.aws_lambda.create()
         assert self.exists() is True
+        assert self.aws_lambda.wait_for_function_update_to_complete() == 'Successful'
         return self.create_log
 
     def delete(self):
