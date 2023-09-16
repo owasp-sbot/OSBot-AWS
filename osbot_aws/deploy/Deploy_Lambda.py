@@ -34,7 +34,7 @@ class Deploy_Lambda:
         return self.lambda_function().delete()
 
     def deploy(self):
-        return self.update().get('status') == 'ok'
+        return self.update() == 'Successful'
 
     def exists(self):
         return self.package.aws_lambda.exists()
