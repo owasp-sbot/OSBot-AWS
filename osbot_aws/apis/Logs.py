@@ -148,7 +148,7 @@ class Logs(Boto_Helpers):
             return self.client().describe_log_streams(logGroupName=self.log_group_name).get('logStreams')
         return self.client().describe_log_streams(logGroupName=self.log_group_name, logStreamNamePrefix=self.stream_name).get('logStreams')
 
-    def messages(self,limit=10000, hours=24, start_time=None, end_time=None):
+    def messages(self,limit=10000, hours=24, start_time=None, end_time=None, max_loop=5):
 
         if start_time is None:
             start_time = int((datetime.datetime.now() - datetime.timedelta(hours=hours)).timestamp() * 1000)
@@ -177,17 +177,22 @@ class Logs(Boto_Helpers):
         import logging
         logger = logging.getLogger()
         logger.setLevel(logging.INFO)
-        while True:
+        while max_loop >0:
             logger.info(f"Fetching log events with params: {params}")
             response = self.client().get_log_events(**params)
-            log_events.extend(response["events"])
+            events   = response["events"]
+            log_events.extend(events)
             next_token = response.get("nextForwardToken")
+            logger.info(f"Got {len(events)} events with next_token: {next_token}")
             #print(f'limit:{limit} len(log_events):{len(log_events)}')
+            if len(events) == 0:
+                break
             if next_token == params.get("nextToken"):
                 break
             if len (log_events) >= limit:
                 break
             params['nextToken'] = next_token
+            max_loop -=1
 
         messages = []
         for event in log_events:
