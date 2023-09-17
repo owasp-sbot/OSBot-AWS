@@ -148,7 +148,7 @@ class Logs(Boto_Helpers):
             return self.client().describe_log_streams(logGroupName=self.log_group_name).get('logStreams')
         return self.client().describe_log_streams(logGroupName=self.log_group_name, logStreamNamePrefix=self.stream_name).get('logStreams')
 
-    def messages(self,limit=10000, hours=24, start_time=None, end_time=None, max_loop=5):
+    def messages(self,limit=10000, hours=24, start_time=None, end_time=None, max_loop=25):
 
         if start_time is None:
             start_time = int((datetime.datetime.now() - datetime.timedelta(hours=hours)).timestamp() * 1000)
@@ -177,7 +177,7 @@ class Logs(Boto_Helpers):
         import logging
         logger = logging.getLogger()
         logger.setLevel(logging.INFO)
-        while max_loop >0:
+        while max_loop > 0:
             logger.info(f"Fetching log events with params: {params}")
             response = self.client().get_log_events(**params)
             events   = response["events"]
