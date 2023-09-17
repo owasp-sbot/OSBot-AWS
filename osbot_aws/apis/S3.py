@@ -4,6 +4,7 @@ import  os
 import  tempfile
 from    io                                    import BytesIO
 from    gzip                                  import GzipFile
+from    boto3.s3.transfer                     import TransferConfig
 from    botocore.errorfactory                 import ClientError
 from    osbot_utils.decorators.lists.group_by import group_by
 from    osbot_utils.decorators.lists.index_by import index_by
@@ -24,6 +25,7 @@ def s3_file_download_to(s3_bucket, s3_key, target_file, use_cache = False):
 class S3:
     def __init__(self):
         self.tmp_file_folder = 's3_temp_files'
+        self.use_threads     = True
 
     @cache
     def s3(self):                                               # todo refactor this method to be called client()
@@ -94,9 +96,12 @@ class S3:
             data.append(bucket['Name'])
         return sorted(data)
         #return sorted(list({ bucket['Name'] for bucket in self.s3().list_buckets().get('Buckets')}))
-        #
 
-    def _files_raw(self, bucket, prefix='', filter=''):
+    def dont_use_threads(self):
+        self.use_threads = False
+        return self
+
+    def files_raw(self, bucket, prefix='', filter=''):
         params = {'Bucket': bucket}
         if isinstance(prefix, str):                                            # if prefix is a string, filter on list_objects_v2
             params['Prefix'] = prefix
@@ -118,7 +123,7 @@ class S3:
                 break
 
     def find_files(self, bucket, prefix='', filter=''):
-        return list({ item['Key'] for item in self._files_raw(bucket, prefix, filter) })
+        return list({ item['Key'] for item in self.files_raw(bucket, prefix, filter) })
 
     def file_contents(self, bucket, key):
         obj = self.s3().get_object(Bucket=bucket, Key=key)                    # get object data from s3
@@ -168,11 +173,12 @@ class S3:
         os.remove(tmp_path)                                         # delete tmp file
         return True
 
-    def file_create_from_string (self, file_contents, bucket, key):
+    def file_create_from_string (self, file_contents, bucket, key, use_threads=True):
         with tempfile.NamedTemporaryFile() as temp:                     # use tempfile api to create temp file
             temp.write(str.encode(file_contents))                       # write contents
             temp.flush()                                                # flush contents to make sure everything has been written
-            self.s3().upload_file(temp.name, bucket,key)              # upload file using s3 api
+
+            self.s3().upload_file(temp.name, bucket,key, Config=self.transfer_config())                # upload file using s3 api
             return True
 
     def file_delete(self, bucket, key):
@@ -261,3 +267,6 @@ class S3:
                             'Version'  : '2012-10-17' })
         return self.s3().put_bucket_policy(Bucket= s3_bucket, Policy=policy)
         #return policy
+
+    def transfer_config(self):
+        return TransferConfig(use_threads=self.use_threads)
