@@ -11,7 +11,7 @@ setup(
     description                   = "OWASP Security Bot - AWS",
     long_description              = long_description,
     long_description_content_type = " text/markdown",
-    url                           = "https://github.com/pbx-gs/OSBot-AWS",
+    url                           = "https://github.com/owasp-sbot/OSBot-AWS",
     packages                      = find_packages(),
     classifiers                   = [ "Programming Language :: Python :: 3"   ,
                                       "License :: OSI Approved :: MIT License",
