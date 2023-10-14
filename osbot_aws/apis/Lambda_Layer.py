@@ -6,11 +6,13 @@ from osbot_utils.decorators.methods.cache import cache
 from osbot_utils.decorators.methods.cache_on_self import cache_on_self
 from osbot_utils.decorators.methods.remove_return_value import remove_return_value
 from osbot_utils.decorators.methods.required_fields     import required_fields
+from osbot_utils.utils.Temp_Folder import Temp_Folder
+from osbot_utils.utils.Zip_Folder import Zip_Folder
 
 from osbot_aws.AWS_Config import AWS_Config
 from osbot_aws.apis.S3                      import S3
 from osbot_aws.apis.Session                 import Session
-from osbot_utils.utils.Files import folder_zip, file_bytes, temp_folder, temp_file
+from osbot_utils.utils.Files import folder_zip, file_bytes, temp_folder, temp_file, file_name, path_combine, folder_copy
 from osbot_utils.utils.Http import GET_bytes_to_file
 from osbot_utils.utils.Process import run_process
 
@@ -60,9 +62,20 @@ class Lambda_Layer:
         zip_bytes = file_bytes(zip_file)
         return self.create_from_zip_bytes(zip_bytes)
 
-    def create_from_folder_via_s3(self, folder):
-        zip_file = folder_zip(folder)
-        return self.create_from_zip_file_via_s3(zip_file)
+    # def create_from_folder_via_s3(self, folder):
+    #     zip_file = folder_zip(folder)
+    #     return self.create_from_zip_file_via_s3(zip_file)
+
+    def create_from_folder_via_s3(self, source_folder, ignore_pattern=None):
+        if ignore_pattern is None:
+            ignore_pattern = ['*.pyc', '.DS_Store', '__pycache__', '.env']
+
+        with Temp_Folder(temp_prefix='lambda_layer') as _:
+            destination = path_combine(_.path(), 'python')
+            folder_copy(source=source_folder, destination=destination, ignore_pattern=ignore_pattern)
+            with Zip_Folder(_.path()) as zip_file:
+                result = self.create_from_zip_file_via_s3(zip_file)
+                return  result.get('LayerVersionArn')
 
     def create_from_pip(self, package_name, pip_executable='pip3'):
         path_install = temp_folder()
