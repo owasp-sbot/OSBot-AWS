@@ -13,17 +13,17 @@ class AWS_Config:
     def __exit__(self, type, value, traceback):
         pass
 
-    def aws_access_key_id           (self): return os.getenv('AWS_ACCESS_KEY_ID'                                                                )
-    def aws_secret_access_key       (self): return os.getenv('AWS_SECRET_ACCESS_KEY'                                                            )
-    def aws_session_profile_name    (self): return os.getenv('AWS_PROFILE_NAME'                                                                 )
-    def aws_session_region_name     (self): return os.getenv('AWS_DEFAULT_REGION'                                                               )
-    def aws_session_account_id      (self): return os.getenv('AWS_ACCOUNT_ID'                , self.sts_session_account_id()                    )
-    def dev_skip_aws_key_check      (self): return os.getenv('DEV_SKIP_AWS_KEY_CHECK'        , False                                            )     # use to not have the 500ms check that happens during this check
-    def bot_name                    (self): return os.getenv('OSBOT_NAME'                                                                       )     # todo: refactor variable to osbot_name (need to check for side effects)
-    def lambda_s3_bucket            (self): return os.getenv('OSBOT_LAMBDA_S3_BUCKET'        , f'{self.aws_session_account_id()}-osbot-lambdas' )
-    def lambda_s3_folder_layers     (self): return os.getenv('OSBOT_LAMBDA_S3_FOLDER_LAYERS' , 'layers'                                         )
-    def lambda_s3_folder_lambdas    (self): return os.getenv('OSBOT_LAMBDA_S3_FOLDER_LAMBDAS', 'lambdas'                                        )
-    def lambda_role_name            (self): return os.getenv('OSBOT_LAMBDA_ROLE_NAME'          'role-osbot-lambda'                              )
+    def aws_access_key_id           (self): return os.getenv('AWS_ACCESS_KEY_ID'                                                                  )
+    def aws_secret_access_key       (self): return os.getenv('AWS_SECRET_ACCESS_KEY'                                                              )
+    def aws_session_profile_name    (self): return os.getenv('AWS_PROFILE_NAME'                                                                   )
+    def aws_session_region_name     (self): return os.getenv('AWS_DEFAULT_REGION'                                                                 )
+    def aws_session_account_id      (self): return os.getenv('AWS_ACCOUNT_ID'                ) or  self.sts_session_account_id()
+    def dev_skip_aws_key_check      (self): return os.getenv('DEV_SKIP_AWS_KEY_CHECK'        , False                                              )     # use to not have the 500ms check that happens during this check
+    def bot_name                    (self): return os.getenv('OSBOT_NAME'                                                                         )     # todo: refactor variable to osbot_name (need to check for side effects)
+    def lambda_s3_bucket            (self): return os.getenv('OSBOT_LAMBDA_S3_BUCKET'        ) or f'{self.aws_session_account_id()}-osbot-lambdas'
+    def lambda_s3_folder_layers     (self): return os.getenv('OSBOT_LAMBDA_S3_FOLDER_LAYERS' , 'layers'                                           )
+    def lambda_s3_folder_lambdas    (self): return os.getenv('OSBOT_LAMBDA_S3_FOLDER_LAMBDAS', 'lambdas'                                          )
+    def lambda_role_name            (self): return os.getenv('OSBOT_LAMBDA_ROLE_NAME'          'role-osbot-lambda'                                )
 
 
     def set_aws_session_profile_name(self, value): os.environ['AWS_PROFILE_NAME'                ] = value ; return value

@@ -1,19 +1,30 @@
+from osbot_aws.apis.Lambda_Layer import Lambda_Layer
+
 from osbot_utils.utils.Process  import Process
 from osbot_utils.utils.Files import current_temp_folder, path_combine, folder_create, folder_sub_folders, folders_names, \
     folder_exists, folder_delete_recursively
 
 from osbot_aws.helpers.Lambda_Layers_Local import Lambda_Layers_Local
-from osbot_jira._extra_osbot_methods import folder_delete
 
 class Lambda_Layer_Create:
 
     def __init__(self, layer_name):
-        self.lambda_layers_local = Lambda_Layers_Local()
         self.layer_name          = layer_name
+        self.lambda_layer        = Lambda_Layer(self.layer_name)
+        self.lambda_layers_local = Lambda_Layers_Local()
         self.target_aws_lambda   = True
 
+    def arn_latest(self):
+        return self.lambda_layer.arn_latest()
+
+    def create(self):
+        return self.lambda_layer.create_from_folder_via_s3(self.path_layer_folder())
+
+    def delete(self):
+        return self.lambda_layer.delete()
+
     def exists(self):
-        return
+        return self.lambda_layer.exists()
 
     def install_dependency(self, dependency_name):
         if self.has_package_installed(dependency_name):

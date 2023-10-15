@@ -66,6 +66,13 @@ class Lambda:
 
     # main methods
 
+    def add_layer(self, layer_arn=None):
+        if layer_arn:
+            if self.layers is None:
+                self.layers = []
+            self.layers.append(layer_arn)
+        return self
+
     def account_settings(self):
         return self.client().get_account_settings()
 
@@ -409,9 +416,11 @@ class Lambda:
     def wait_for_function_update_to_complete(self, max_attempts=20, wait_time=0.1):
         status = None
         for i in range(max_attempts):
-            status = self.configuration().get('LastUpdateStatus')
+            configuration = self.configuration()
+            status        = configuration.get('LastUpdateStatus')
             if status == 'Successful':
                 break
+            status = configuration.get('State')         # helps to debug when the update fails
             wait_for(wait_time)
         return status
 

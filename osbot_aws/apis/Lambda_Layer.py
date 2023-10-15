@@ -21,7 +21,6 @@ class Lambda_Layer:
     def __init__(self, layer_name='', runtimes=None, license_info=None, s3_bucket=None, s3_folder=None, description=None, region=None, account_id=None):
         self.aws_config      = AWS_Config()
         self.layer_name      = layer_name.replace('.', '-')
-        #self.folders_mapping = folders_mapping  or {}
         self.runtimes        = runtimes         or ['python3.11', 'python3.10', 'python3.9']# 'python3.8', 'python3.7', 'python3.6']
         self.license_info    = license_info     or 'https://github.com/owasp-sbot/OSBot-AWS/blob/master/LICENSE'
         self.description     = description      or ''
@@ -39,7 +38,9 @@ class Lambda_Layer:
         return f'arn:aws:lambda:{self.region}:{self.account_id}:layer:{self.layer_name}:{version}'
 
     def arn_latest(self):
-        return self.arn(self.latest_version())
+        version = self.latest_version()
+        if version:
+            return self.arn(version)
 
     @cache_on_self
     def client(self):

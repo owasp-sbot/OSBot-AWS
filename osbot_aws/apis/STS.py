@@ -1,14 +1,9 @@
-import os
 import sys
 
-from botocore.exceptions import ClientError
-from osbot_utils.utils.Status import status_ok, status_error, status_warning
-
+from botocore.exceptions                          import ClientError
+from osbot_utils.utils.Status                     import status_ok, status_error, status_warning
 from osbot_utils.decorators.methods.cache_on_self import cache_on_self
-
-from osbot_aws.AWS_Config import AWS_Config
-
-from osbot_utils.decorators.methods.cache import cache
+from osbot_aws.AWS_Config                         import AWS_Config
 
 class STS:
     """

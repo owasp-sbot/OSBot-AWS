@@ -1,4 +1,5 @@
-from osbot_utils.utils.Files import Files, folder_zip
+from osbot_utils.utils.Files     import Files, folder_zip, file_write, file_exists
+from osbot_utils.utils.Functions import function_source_code
 
 
 class Temp_Folder_With_Lambda_File:
@@ -16,11 +17,11 @@ class Temp_Folder_With_Lambda_File:
         self.delete()
 
     def create_temp_file(self, new_code=None):
-        self.folder = Files.temp_folder('tmp_lambda_')
-        if new_code: self.lambda_code = new_code
-        self.tmp_file = Files.path_combine(self.folder, '{0}.py'.format(self.file_name))
-        Files.write(self.tmp_file, self.lambda_code)
-        assert Files.exists(self.tmp_file)
+        self.folder      = Files.temp_folder('tmp_lambda_')
+        self.lambda_code = new_code or function_source_code(self.lambda_code)                   # extracts source code if self.lambda_code is a function
+        self.tmp_file    = Files.path_combine(self.folder, '{0}.py'.format(self.file_name))
+        file_write(self.tmp_file, self.lambda_code)
+        assert file_exists(self.tmp_file)
         return self
 
     def delete(self):

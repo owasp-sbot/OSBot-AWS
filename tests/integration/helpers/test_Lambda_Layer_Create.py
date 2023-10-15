@@ -3,16 +3,13 @@ from contextlib import contextmanager
 from unittest import TestCase
 
 from dotenv import load_dotenv
-from osbot_aws.AWS_Config import AWS_Config
-
-from osbot_aws.apis.Lambda_Layer import Lambda_Layer
-from osbot_utils.utils.Dev import pprint
+from osbot_aws.apis.test_helpers.Temp_Lambda import Temp_Lambda
 from osbot_utils.utils.Files import parent_folder, current_temp_folder, folder_name, file_name, folder_exists, \
     folder_sub_folders
 from osbot_utils.utils.Misc import random_text, wait_for
 
 from osbot_aws.helpers.Lambda_Layer_Create import Lambda_Layer_Create, Lambda_Layers_Local
-
+from osbot_utils.utils.Temp_Sys_Path import Temp_Sys_Path
 
 
 class test_Lambda_Layer_Create(TestCase):
@@ -56,37 +53,41 @@ class test_Lambda_Layer_Create(TestCase):
 
         path_layer_folder = layer__termcolor.path_layer_folder()                                            # get path to layer folder
         try:
+            # noinspection PyUnresolvedReferences,PyPackageRequirements
             import termcolor                                                                                # confirm package is not available
             raise Exception("termcolor is available")                                                       # we should never get here
         except ModuleNotFoundError:
             pass                                                                                            # this is expected path
 
-        @contextmanager
-        def add_to_sys_path(path):                                                                          # helper method to add path to sys.path
-            sys.path.append(path)
-            try:
-                yield
-            finally:
-                sys.path.remove(path)
-
-
-        with add_to_sys_path(path_layer_folder):                                                            # use context manager to add path to sys.path
-            # noinspection PyUnresolvedReferences
+        with Temp_Sys_Path(path_layer_folder):                                                            # use context manager to add path to sys.path
+            # noinspection PyUnresolvedReferences,PyPackageRequirements
             from termcolor import colored                                                                   # this import should now work since the path is in sys.path
             assert colored('Hello, World!', 'red', force_color=True) == '\x1b[31mHello, World!\x1b[0m'      # confirm that the import works
             assert path_layer_folder in sys.path                                                            # assert that the path is in sys.path
         assert path_layer_folder not in sys.path                                                                # assert that the path is no longer in sys.path
 
-        #load_dotenv()
-        layer_name   = f'test_lambda_layer_for_{test_package}'
-        lambda_layer = Lambda_Layer(layer_name=layer_name)
-        #result = lambda_layer.create_from_folder_via_s3(path_layer_folder)
-        #pprint(result)
+        layer_arn = layer__termcolor.arn_latest()
+        if layer_arn is None:
+            layer_arn = layer__termcolor.create()
+            assert layer_arn == layer__termcolor.arn_latest()
 
-        # lambda_layer = Lambda_Layer()
-        # layers = lambda_layer.layers(index_by='LayerName')
-        # pprint(layers)
+        # temp lambda code
+        def run(event, context):
+            # noinspection PyUnresolvedReferences,PyPackageRequirements
+            import termcolor
+            return f'OSBot inside an Lambda :).... {termcolor}'
 
 
+        with Temp_Lambda(lambda_code=run, with_layer=layer_arn) as temp_lambda:
+            lambda_info = temp_lambda.info()
+            assert lambda_info.get('Configuration').get('Layers') == [{'Arn': layer_arn, 'CodeSize': 7914}]
+            assert temp_lambda.invoke() == "OSBot inside an Lambda :).... <module 'termcolor' from '/opt/python/termcolor/__init__.py'>"
+
+        assert layer__termcolor.lambda_layer.delete() is True       # delete layer in AWS
+        assert layer__termcolor.layer_folder_delete() is True       # delete layer locally
+
+        assert layer__termcolor.exists              () is False     # confirm layer doesn't exist in AWS
+        assert layer__termcolor.arn_latest          () is None      # confirm that there is no active layer in AWS
+        assert layer__termcolor.layer_folder_exists () is False     # confirm that the layer folder doesn't exist locally
 
 
