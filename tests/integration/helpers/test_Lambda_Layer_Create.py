@@ -35,7 +35,7 @@ class test_Lambda_Layer_Create(TestCase):
 
     def test_install_dependency(self):
         test_package = 'termcolor'
-        result = self.lambda_layer_create.install_dependency(test_package)
+        result = self.lambda_layer_create.add_package(test_package)
         assert result.get('exists'   ) is True
         assert result.get('installed') is True
         assert 'Successfully installed termcolor' in result.get('output')
@@ -48,7 +48,7 @@ class test_Lambda_Layer_Create(TestCase):
         test_package     = 'termcolor'                                                                          # package to install
         layer__termcolor = Lambda_Layer_Create('layer_termcolor')                                           # create layer object for package
         if layer__termcolor.has_package_installed(test_package) is False:                                   # if layer doesn't have package
-            assert layer__termcolor.install_dependency(test_package).get('installed') is True               # install package
+            assert layer__termcolor.add_package(test_package).get('installed') is True               # install package
         assert layer__termcolor.has_package_installed(test_package) is True                                 # confirm package is installed
 
         path_layer_folder = layer__termcolor.path_layer_folder()                                            # get path to layer folder

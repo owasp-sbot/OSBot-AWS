@@ -1,4 +1,7 @@
 from dotenv import load_dotenv
+from osbot_utils.testing.Duration import Duration
+
+from osbot_aws.helpers.Lambda_Layer_Create import Lambda_Layer_Create
 from osbot_utils.utils.Misc import wait_for
 
 from osbot_aws.OSBot_Setup import OSBot_Setup
@@ -78,6 +81,13 @@ class Deploy_Lambda:
     def set_layers(self, layers):
         self.package.set_layers(layers)
 
+    def set_packages_using_layer(self, packages, skip_layer_creation_if_exists=True):
+        layer_name          = f'layer_for__{self.lambda_name()}'
+        lambda_layer_create = Lambda_Layer_Create(layer_name)
+        lambda_layer_create.add_packages(packages)
+        layer_arn           = lambda_layer_create.create(skip_if_exists=skip_layer_creation_if_exists)
+        self.lambda_function().add_layer(layer_arn)
+        return lambda_layer_create
     def set_env_variables(self, env_variables):
         self.package.set_env_variables(env_variables)
 

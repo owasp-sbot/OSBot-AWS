@@ -1,6 +1,7 @@
 import json
 
 import botocore
+from osbot_utils.testing.Duration import Duration
 
 from osbot_utils.decorators.methods.cache_on_self import cache_on_self
 
@@ -12,7 +13,7 @@ from osbot_utils.decorators.methods.remove_return_value import remove_return_val
 
 from osbot_aws.apis.Session import Session
 from osbot_aws.apis.S3 import S3
-from osbot_utils.utils.Misc import get_missing_fields, wait, random_string, base64_to_str, list_set, wait_for
+from osbot_utils.utils.Misc import get_missing_fields, wait, random_string, base64_to_str, list_set, wait_for, unique
 from osbot_utils.utils.Status import status_ok, status_error, status_warning, status_message
 
 
@@ -71,6 +72,7 @@ class Lambda:
             if self.layers is None:
                 self.layers = []
             self.layers.append(layer_arn)
+            self.layers = unique(self.layers)           # make sure there are no duplicates
         return self
 
     def account_settings(self):
@@ -387,6 +389,7 @@ class Lambda:
                                                   S3Key        = self.s3_key)
 
     def update_lambda_configuration(self):
+        self.wait_for_function_update_to_complete()         # make sure there is no update also happening at this time
         kwargs = {}
         if self.layers:
             kwargs['Layers'] = self.layers

@@ -14,20 +14,8 @@ class Lambda_Layer_Create:
         self.lambda_layers_local = Lambda_Layers_Local()
         self.target_aws_lambda   = True
 
-    def arn_latest(self):
-        return self.lambda_layer.arn_latest()
-
-    def create(self):
-        return self.lambda_layer.create_from_folder_via_s3(self.path_layer_folder())
-
-    def delete(self):
-        return self.lambda_layer.delete()
-
-    def exists(self):
-        return self.lambda_layer.exists()
-
-    def install_dependency(self, dependency_name):
-        if self.has_package_installed(dependency_name):
+    def add_package(self, package_name):
+        if self.has_package_installed(package_name):
             exists    = True
             installed = False
             output    = ''
@@ -36,7 +24,7 @@ class Lambda_Layer_Create:
             args          = ['install']
             if self.target_aws_lambda:
                 args.extend(['--platform','manylinux1_x86_64', '--only-binary=:all:'])
-            args.extend(['-t', target_folder, dependency_name])
+            args.extend(['-t', target_folder, package_name])
 
             result      = Process.run('pip3', args)
             exists      = result.get('status') == 'ok'
@@ -46,6 +34,27 @@ class Lambda_Layer_Create:
         return  dict( exists    = exists    ,
                       installed = installed ,
                       output    = output    )
+
+    def add_packages(self, packages):
+        results = {}
+        for package in packages:
+            result = self.add_package(package)
+            results[package] = result
+        return results
+
+    def arn_latest(self):
+        return self.lambda_layer.arn_latest()
+
+    def create(self, skip_if_exists=True):
+        if skip_if_exists and self.exists():
+            return self.arn_latest()
+        return self.lambda_layer.create_from_folder_via_s3(self.path_layer_folder())
+
+    def delete(self):
+        return self.lambda_layer.delete()
+
+    def exists(self):
+        return self.lambda_layer.exists()
 
     def has_package_installed(self, package_name):
         return package_name in self.installed_packages()
