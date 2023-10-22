@@ -3,9 +3,11 @@ from contextlib import contextmanager
 from unittest import TestCase
 
 from dotenv import load_dotenv
+from osbot_utils.utils.Dev import pprint
+
 from osbot_aws.apis.test_helpers.Temp_Lambda import Temp_Lambda
 from osbot_utils.utils.Files import parent_folder, current_temp_folder, folder_name, file_name, folder_exists, \
-    folder_sub_folders
+    folder_sub_folders, files_list, files_names
 from osbot_utils.utils.Misc import random_text, wait_for
 
 from osbot_aws.helpers.Lambda_Layer_Create import Lambda_Layer_Create, Lambda_Layers_Local
@@ -26,25 +28,38 @@ class test_Lambda_Layer_Create(TestCase):
     def test__init__(self):
         assert self.lambda_layer_create.target_aws_lambda is True
 
-        #assert self.lambda_layer_create.layer_name     == self.layer_name
-
-    def test_path_layer_folder(self):
-        path_layer_folder = self.lambda_layer_create.path_layer_folder()
-        assert parent_folder(path_layer_folder) == self.lambda_layer_create.path_lambda_dependencies()
-        assert folder_exists(path_layer_folder) is False
-
-    def test_install_dependency(self):
+    def test_add_package(self):
         test_package = 'termcolor'
         result = self.lambda_layer_create.add_package(test_package)
         assert result.get('exists'   ) is True
         assert result.get('installed') is True
         assert 'Successfully installed termcolor' in result.get('output')
 
-        assert self.lambda_layer_create.installed_packages() == {test_package: '2.3.0'}
+        installed_packages = self.lambda_layer_create.installed_packages()
+        assert test_package in installed_packages
+        assert result       == installed_packages.get(test_package)
         assert self.lambda_layer_create.has_package_installed(test_package) is True
 
+    def test_path_path_installed_packages(self):
+        path_installed_packages = self.lambda_layer_create.path_installed_packages()
+        assert parent_folder(path_installed_packages) == self.lambda_layer_create.path_layer_folder()
+        assert file_name    (path_installed_packages) == 'installed_packages.json'
 
-    def test_execution_in_temp_layer(self):
+    def test_path_layer_folder(self):
+        path_layer_folder = self.lambda_layer_create.path_layer_folder()
+        assert parent_folder(path_layer_folder) == self.lambda_layer_create.path_lambda_dependencies()
+        assert folder_exists(path_layer_folder) is False
+
+    def test_update_installed_packages(self):
+        package_name = 'an_package'
+        data         = {'answer': 42}
+        assert 'installed_packages.json' not in files_names(files_list(self.lambda_layer_create.path_layer_folder()))
+        assert package_name not in self.lambda_layer_create.installed_packages()
+        assert self.lambda_layer_create.update_installed_packages(package_name, data) == {package_name: data}
+        assert self.lambda_layer_create.installed_packages()                          == {package_name: data}
+        assert '_osbot_installed_packages.json' in files_names(files_list(self.lambda_layer_create.path_layer_folder()))
+
+    def test_2n2__execution_in_temp_layer(self):
         test_package     = 'termcolor'                                                                          # package to install
         layer__termcolor = Lambda_Layer_Create('layer_termcolor')                                           # create layer object for package
         if layer__termcolor.has_package_installed(test_package) is False:                                   # if layer doesn't have package

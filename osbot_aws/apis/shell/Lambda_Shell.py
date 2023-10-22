@@ -28,11 +28,13 @@ def lambda_shell(function):
 class Lambda_Shell:
     def __init__(self, shell_command=None):
         self.secret_id     = 'lambda_shell_auth'
+        self.secret        = Secrets(self.secret_id)
         self.shell_command = shell_command or {}
 
+
     @cache_on_self                                              # cache this value since it doesn't change in the lifetime of a lambda function
-    def get_lambda_shell_auth(self):
-        data = Secrets(self.secret_id).value_from_json_string()
+    def get_lambda_shell_auth(self):                            # this method can be used on both client and server
+        data = self.secret.value_from_json_string()             # this will create a new secret if it doesn't exist
         if data:
             return data.get('key')
 

@@ -2,6 +2,7 @@ from osbot_aws.AWS_Config import AWS_Config
 from osbot_aws.apis.shell.Lambda_Shell import Lambda_Shell
 from osbot_aws.apis.shell.Shell_Server import Shell_Server
 from osbot_aws.apis.Lambda import Lambda                    # todo: see how to resolve the circular dependency with the Lambda Function
+from osbot_utils.utils.Functions import function_source_code
 
 
 class Shell_Client:
@@ -21,7 +22,15 @@ class Shell_Client:
             return Shell_Server().invoke(event)
 
     def exec(self, executable, params=None, cwd=None):
-        return self.process_run(executable, params, cwd).get('stdout').strip()
+        result = self.process_run(executable, params, cwd)
+        std_out = result.get('stdout', '').strip()
+        std_err = result.get('stderr', '').strip()
+        std_console = std_out + std_err
+        if std_console:
+            return std_console
+        if result.get('errorMessage'):
+            return f'Error: {result.get("errorMessage")}'
+        return result
 
     def bash(self,command, cwd=None):
         return self._invoke('bash', {'command': command, 'cwd': cwd})
@@ -37,6 +46,12 @@ class Shell_Client:
 
     def python_exec(self, code):
         return self._invoke('python_exec', {'code' : code})
+
+    def python_exec_function(self, function):
+        function_name = function.__name__
+        function_code = function_source_code(function)
+        exec_code     = f"{function_code}\nresult= {function_name}()"
+        return self.python_exec(exec_code)
 
     # command methods
 
