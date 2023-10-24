@@ -23,7 +23,7 @@ class Create_Image_ECR:
         self.ecr.repository_create(self.image_name)
         return self.ecr.repository_exists(self.image_name)
 
-    def image_name(self):
+    def full_image_name(self):
         return f'{self.image_repository()}:{self.image_tag}'
 
     def image_repository(self):
@@ -46,8 +46,8 @@ class Create_Image_ECR:
         return json_lines
 
     def run_locally(self):
-        image_name = self.image_name()
-        return self.api_docker.docker_run(image_name)
+        full_image_name = self.full_image_name()
+        return self.api_docker.docker_run(full_image_name)
 
     def create(self):
         create_repository = self.create_repository   ()
