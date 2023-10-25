@@ -1,6 +1,6 @@
 from osbot_aws.AWS_Config import AWS_Config
 from osbot_aws.apis.ECR import ECR
-from osbot_docker.API_Docker import API_Docker
+from osbot_docker.apis.API_Docker import API_Docker
 from osbot_utils.utils.Files import path_combine
 
 class Create_Image_ECR:

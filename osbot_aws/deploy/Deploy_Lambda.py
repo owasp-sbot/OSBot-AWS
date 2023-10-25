@@ -1,4 +1,6 @@
 from dotenv import load_dotenv
+from osbot_aws.AWS_Config import AWS_Config
+
 from osbot_utils.testing.Duration import Duration
 
 from osbot_aws.helpers.Lambda_Layer_Create import Lambda_Layer_Create
@@ -13,6 +15,7 @@ class Deploy_Lambda:
     def __init__(self, handler):
         load_dotenv()
         self.osbot_setup          = OSBot_Setup()
+        self.aws_config           = self.osbot_setup.aws_config
         self.handler              = handler
         self.module_name          = handler.__module__
         self.role_arn             = Temp_Aws_Roles().for_lambda_invocation__role_arn()
@@ -23,6 +26,9 @@ class Deploy_Lambda:
     def add_function_source_code(self):
         root_module_name = self.handler.__module__.split(".").pop(0)
         self.package.add_module(root_module_name)
+
+    def add_layer(self, layer_arn):
+        self.package.add_layer(layer_arn)
 
     def add_module(self, module_name):
         self.package.add_module(module_name)
@@ -78,6 +84,10 @@ class Deploy_Lambda:
     def set_container_image(self, image_uri):
         self.package.set_image_uri(image_uri)
 
+    def set_handler(self, handler):
+        self.package.set_handler(handler)
+        return self
+
     def set_layers(self, layers):
         self.package.set_layers(layers)
 
@@ -88,6 +98,11 @@ class Deploy_Lambda:
         layer_arn           = lambda_layer_create.create(skip_if_exists=skip_layer_creation_if_exists)
         self.lambda_function().add_layer(layer_arn)
         return lambda_layer_create
+
+    def set_env_variable(self, key, value):
+        self.package.set_env_variable(key, value)
+        return self
+
     def set_env_variables(self, env_variables):
         self.package.set_env_variables(env_variables)
 

@@ -46,6 +46,9 @@ class Lambda_Package:
     def reset (self             ): return self.aws_lambda.update_lambda_code()              # this will trigger a reset and force cold start on next execution
 
     # main methods
+    def add_layer(self, layer_arn):
+        self.aws_lambda.add_layer(layer_arn)
+
     def add_file(self, source):
         Files.copy(source, self.tmp_folder)
 
@@ -148,6 +151,14 @@ class Lambda_Package:
             if pattern in file:
                 file_to_delete = Files.path_combine(self.tmp_folder,file[1:])
                 Files.delete(file_to_delete)
+
+    def set_handler(self, handler):
+        self.aws_lambda.set_handler(handler)
+        return self
+
+    def set_env_variable(self, key, value):
+        self.aws_lambda.set_env_variable(key, value)
+        return self
 
     def set_env_variables(self, env_variables):
         self.aws_lambda.set_env_variables(env_variables)

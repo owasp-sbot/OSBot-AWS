@@ -350,6 +350,7 @@ class Lambda:
         except:                 # ResourceNotFoundException doesn't seem to exposed to we have to do a global capture
             return {}
 
+    def set_handler             (self, value): self.handler        = value    ; return self
     def set_role                (self, value): self.role           = value    ; return self
     def set_s3_bucket           (self, value): self.s3_bucket      = value    ; return self
     def set_s3_key              (self, value): self.s3_key         = value    ; return self
@@ -364,6 +365,11 @@ class Lambda:
     #     self.set_s3_key   (s3_key   )
     #     return self
 
+    def set_env_variable(self, key, value):
+        if self.env_variables is None:
+            self.env_variables = {}
+        self.env_variables[key] = value
+        return self
 
     def upload(self):
         self.s3().folder_upload(self.folder_code, self.s3_bucket, self.s3_key)
