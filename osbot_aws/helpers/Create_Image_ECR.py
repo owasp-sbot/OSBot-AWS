@@ -1,6 +1,7 @@
 from osbot_aws.AWS_Config import AWS_Config
 from osbot_aws.apis.ECR import ECR
 from osbot_docker.apis.API_Docker import API_Docker
+from osbot_docker.apis.Docker_Image import Docker_Image
 from osbot_utils.utils.Files import path_combine
 
 class Create_Image_ECR:
@@ -12,11 +13,12 @@ class Create_Image_ECR:
         self.image_name      = image_name
         self.image_tag       = image_tag
         self.path_images     = path_images or path_combine(__file__, '../../images')
+        self.docker_image    = Docker_Image(image_name=self.image_repository(),image_tag=self.image_tag, api_docker=self.api_docker)
 
     def build_image(self):
-        repository = self.image_repository()
-        tag        = self.image_tag
-        result     = self.api_docker.image_build(path=self.path_image(), repository=repository, tag=tag)
+        # repository = self.image_repository()
+        # tag        = self.image_tag
+        result       = self.docker_image.build(self.path_image())
         return result.get('status') == 'ok'
 
     def create_repository(self):
