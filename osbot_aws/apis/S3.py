@@ -125,9 +125,12 @@ class S3:
     def find_files(self, bucket, prefix='', filter=''):
         return list({ item['Key'] for item in self.files_raw(bucket, prefix, filter) })
 
-    def file_contents(self, bucket, key):
-        obj = self.s3().get_object(Bucket=bucket, Key=key)                    # get object data from s3
-        return obj['Body'].read().decode('utf-8')                               # extract body and decode it
+    def file_bytes(self, bucket, key):
+        obj = self.s3().get_object(Bucket=bucket, Key=key)                      # get object data from s3
+        return obj['Body'].read()                                               # returns all bytes
+
+    def file_contents(self, bucket, key, encoding='utf-8'):
+        return self.file_bytes(bucket,key).decode(encoding)                      # extract body and decode it
 
     def file_contents_from_gzip(self, bucket, key):
         obj = self.s3().get_object(Bucket=bucket, Key=key)                    # get object data from s3
@@ -215,6 +218,10 @@ class S3:
 
         self.file_upload_to_key(file, bucket, key)                                # upload file
         return key                                                              # return path to file uploaded (if succeeded)
+
+    def file_upload_from_bytes(self, file_body, bucket, key):
+        self.s3().put_object(Body=file_body, Bucket=bucket, Key=key)
+        return True
 
     def file_upload_to_key(self, file, bucket, key):
         self.s3().upload_file(file, bucket, key)                                # upload file

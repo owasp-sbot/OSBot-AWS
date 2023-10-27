@@ -2,19 +2,15 @@ import os
 import importlib
 import site
 
-from osbot_utils.utils.Process  import Process
-
-from osbot_utils.utils.Dev import pprint
-from osbot_utils.utils.Zip_Folder import Zip_Folder
-
-from osbot_aws.apis.Lambda_Layer import Lambda_Layer
-
-from osbot_aws.AWS_Config import AWS_Config
-
-from osbot_aws.apis.Lambda import Lambda
+from osbot_utils.testing.Temp_Folder            import Temp_Folder
+from osbot_utils.testing.Temp_Zip import Temp_Zip
+from osbot_utils.utils.Process                  import Process
+from osbot_aws.apis.Lambda_Layer                import Lambda_Layer
+from osbot_aws.AWS_Config                       import AWS_Config
+from osbot_aws.apis.Lambda                      import Lambda
 from osbot_aws.apis.test_helpers.Temp_Aws_Roles import Temp_Aws_Roles
-from osbot_utils.utils.Files import folder_copy, Files, folder_not_exists, file_name, path_combine, folder_sub_folders
-from osbot_utils.utils.Temp_Folder import Temp_Folder
+from osbot_utils.utils.Files                    import folder_copy, Files, folder_not_exists, path_combine, folder_name
+
 
 
 class Lambda_Package:
@@ -53,7 +49,7 @@ class Lambda_Package:
         Files.copy(source, self.tmp_folder)
 
     def add_folder(self, source, ignore=None):
-        destination = Files.path_combine(self.tmp_folder,Files.file_name(source))
+        destination = Files.path_combine(self.tmp_folder, folder_name(source))
         if folder_not_exists(destination):
             folder_copy(source=source, destination=destination,ignore_pattern=ignore)
         self.remove_files('__pycache__')
@@ -95,13 +91,13 @@ class Lambda_Package:
         if ignore_pattern is None:
             ignore_pattern = ['*.pyc', '.DS_Store', '__pycache__', '.env']
 
-        layer_name   = file_name(target_folder)
+        layer_name   = folder_name(target_folder)
         lambda_layer = Lambda_Layer(layer_name)
         with Temp_Folder() as _:
             source      = target_folder
-            destination = path_combine(_.path() + '/python', file_name(source))
+            destination = path_combine(_.path() + '/python', folder_name(source))
             folder_copy(source=source, destination=destination, ignore_pattern=ignore_pattern)
-            with Zip_Folder(_.path()) as zip_file:
+            with Temp_Zip(_.path()) as zip_file:
                 result = lambda_layer.create_from_zip_file_via_s3(zip_file)
                 return  result.get('LayerVersionArn')
 
@@ -117,7 +113,7 @@ class Lambda_Package:
                     args.extend(['--platform', 'manylinux1_x86_64', '--only-binary=:all:'])
                 args.extend(['-t', destination, package])
                 Process.run('pip3', args)
-            with Zip_Folder(_.path()) as zip_file:
+            with Temp_Zip(_.path()) as zip_file:
                 lambda_layer = Lambda_Layer(layer_name)
                 result       = lambda_layer.create_from_zip_file_via_s3(zip_file)
                 return result.get('LayerVersionArn')
@@ -133,7 +129,7 @@ class Lambda_Package:
             source       = site.getsitepackages()[0]
             destination  = path_combine(_.path(), 'python')
             folder_copy(source=source, destination=destination, ignore_pattern=ignore_pattern)
-            with Zip_Folder(_.path()) as zip_file:
+            with Temp_Zip(_.path()) as zip_file:
                 result = lambda_layer.create_from_zip_file_via_s3(zip_file)
                 return  result.get('LayerVersionArn')
 

@@ -1,7 +1,7 @@
 import sys ;
 
 import pytest
-from osbot_utils.utils.Files import Files
+from osbot_utils.utils.Files import Files, file_name
 
 sys.path.append('..')
 from unittest import TestCase
@@ -56,7 +56,7 @@ class test_Lambda_Package(TestCase):
 
         files = self.package.get_files()
         assert len(files) == 1
-        assert Files.file_name(files.pop()) == '{0}.py'.format(self.package.lambda_name)
+        assert file_name(files.pop()) == '{0}.py'.format(self.package.lambda_name)
 
         assert self.package.update().get('status') == 'ok'
         assert self.package.invoke({'name':'world'}) == 'From lambda code, hello world'
