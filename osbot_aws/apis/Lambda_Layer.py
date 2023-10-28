@@ -6,6 +6,7 @@ from osbot_aws.AWS_Config                               import AWS_Config
 from osbot_aws.apis.S3                                  import S3
 from osbot_aws.apis.Session                             import Session
 from osbot_utils.testing.Temp_Folder                    import Temp_Folder
+from osbot_utils.testing.Temp_Zip                       import Temp_Zip
 from osbot_utils.utils.Files                            import file_bytes, temp_folder, temp_file, file_name, path_combine, folder_copy
 from osbot_utils.utils.Http                             import GET_bytes_to_file
 from osbot_utils.utils.Process                          import run_process
@@ -69,8 +70,8 @@ class Lambda_Layer:
         with Temp_Folder(temp_prefix='lambda_layer') as _:
             destination = path_combine(_.path(), 'python')
             folder_copy(source=source_folder, destination=destination, ignore_pattern=ignore_pattern)
-            with Zip_Folder(_.path()) as zip_file:
-                result = self.create_from_zip_file_via_s3(zip_file)
+            with Temp_Zip(_.path()) as zip_file:
+                result = self.create_from_zip_file_via_s3(zip_file.path())
                 return  result.get('LayerVersionArn')
 
     def create_from_pip(self, package_name, pip_executable='pip3'):

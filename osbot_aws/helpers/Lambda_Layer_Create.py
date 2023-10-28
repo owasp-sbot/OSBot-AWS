@@ -1,3 +1,5 @@
+from osbot_utils.utils.Misc import list_set
+
 from osbot_utils.utils.Json import json_save_file, json_load_file
 
 from osbot_aws.apis.Lambda_Layer import Lambda_Layer
@@ -17,6 +19,12 @@ class Lambda_Layer_Create:
         self.lambda_layer        = Lambda_Layer(self.layer_name)
         self.lambda_layers_local = Lambda_Layers_Local()
         self.target_aws_lambda   = True
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        pass
 
     def add_package(self, package):
         if type(package) is dict:
@@ -70,8 +78,11 @@ class Lambda_Layer_Create:
             return self.arn_latest()
         return self.lambda_layer.create_from_folder_via_s3(self.path_layer_folder())
 
-    def delete(self):
+    def delete_layer(self):
         return self.lambda_layer.delete()
+
+    def delete_local_layer_folder(self):
+        return self.layer_folder_delete()
 
     def exists(self):
         return self.lambda_layer.exists()
@@ -107,6 +118,9 @@ class Lambda_Layer_Create:
 
         # return package_dict
 
+    def installed_packages_names(self):
+        return list_set(self.installed_packages())
+
     def layer_folder_create(self):
         return folder_create(self.path_layer_folder())
 
@@ -124,6 +138,9 @@ class Lambda_Layer_Create:
 
     def path_layer_folder(self):
         return path_combine(self.lambda_layers_local.path_lambda_dependencies(), self.layer_name)
+
+    def recreate(self):
+        return self.create(skip_if_exists=False)
 
     def update_installed_packages(self, package_name, data):
         installed_packages               = self.installed_packages()

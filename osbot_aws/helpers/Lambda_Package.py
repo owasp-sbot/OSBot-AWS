@@ -98,7 +98,7 @@ class Lambda_Package:
             destination = path_combine(_.path() + '/python', folder_name(source))
             folder_copy(source=source, destination=destination, ignore_pattern=ignore_pattern)
             with Temp_Zip(_.path()) as zip_file:
-                result = lambda_layer.create_from_zip_file_via_s3(zip_file)
+                result = lambda_layer.create_from_zip_file_via_s3(zip_file.path())
                 return  result.get('LayerVersionArn')
 
     def create_layer_from_packages(self, layer_name, packages, target_aws_lambda=True):
@@ -115,7 +115,7 @@ class Lambda_Package:
                 Process.run('pip3', args)
             with Temp_Zip(_.path()) as zip_file:
                 lambda_layer = Lambda_Layer(layer_name)
-                result       = lambda_layer.create_from_zip_file_via_s3(zip_file)
+                result       = lambda_layer.create_from_zip_file_via_s3(zip_file.path())
                 return result.get('LayerVersionArn')
 
 
@@ -130,7 +130,7 @@ class Lambda_Package:
             destination  = path_combine(_.path(), 'python')
             folder_copy(source=source, destination=destination, ignore_pattern=ignore_pattern)
             with Temp_Zip(_.path()) as zip_file:
-                result = lambda_layer.create_from_zip_file_via_s3(zip_file)
+                result = lambda_layer.create_from_zip_file_via_s3(zip_file.path())
                 return  result.get('LayerVersionArn')
 
     def get_files(self):

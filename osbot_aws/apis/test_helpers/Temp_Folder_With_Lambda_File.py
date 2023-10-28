@@ -1,5 +1,6 @@
-from osbot_utils.utils.Files     import Files, folder_zip, file_write, file_exists
+from osbot_utils.utils.Files     import Files, file_write, file_exists
 from osbot_utils.utils.Functions import function_source_code
+from osbot_utils.utils.Zip import folder_zip
 
 
 class Temp_Folder_With_Lambda_File:

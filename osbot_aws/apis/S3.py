@@ -12,6 +12,8 @@ from    osbot_utils.decorators.methods.cache  import cache
 
 from    osbot_aws.apis.Session                import Session
 from    osbot_utils.utils.Files               import Files
+from osbot_utils.utils.Zip import zip_folder
+
 
 # helper methods
 
@@ -233,7 +235,7 @@ class S3:
         return key
 
     def folder_upload (self, folder, s3_bucket, s3_key):
-        file = Files.zip_folder(folder)
+        file = zip_folder(folder)
         self.file_upload_to_key(file, s3_bucket, s3_key)
         os.remove(file)
         return self

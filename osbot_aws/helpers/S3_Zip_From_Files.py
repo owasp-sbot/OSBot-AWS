@@ -32,12 +32,6 @@ class S3_Zip_From_Files(Temp_Zip_In_Memory):
                       key       = self.s3_key     )
         return self.s3.file_upload_from_bytes(**kwargs)
 
-        # bytes = self.zip_bytes()
-        # self.s3.file_upload()
-        # #temp_zip_file = self.zip()
-        # #self.s3_upload_ok = self.s3.file_upload_to_key(temp_zip_file, self.s3_bucket, self.s3_key)
-        #self.s3_upload_ok = False
-
     def s3_file_delete(self):
         return self.s3.file_delete(self.s3_bucket, self.s3_key)
 

@@ -18,9 +18,6 @@ class test_S3_Zip_From_Files(TestCase):
             assert _.s3_prefix == 'lambdas/unit_tests/temp_zips'
             assert _.s3_key    == f'{_.s3_prefix}/{_.file_name}.zip'
 
-            # _.add_file_from_content('file_1.txt', 'content 1')
-            # pprint(_.zip_bytes_files())
-
 
     def test_s3_file_exists(self):
         file_name = 'test_s3_file_exists'

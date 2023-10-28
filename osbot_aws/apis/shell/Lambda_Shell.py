@@ -15,6 +15,12 @@ SHELL_VAR_METHOD_KWARDS  = 'method_kwargs'
 SHELL_VAR_METHOD_INVOKED = 'method_invoked'
 SHELL_VAR_RETURN_VALUE   = 'return_value'
 
+def add_lambda_shell_decorator(function_code):
+    updated_code =  "from osbot_aws.apis.shell.Lambda_Shell import lambda_shell\n" +  \
+                    "@lambda_shell\n" +                                               \
+                    function_code
+    return updated_code
+
 # decorator
 def lambda_shell(function):
     @wraps(function)
