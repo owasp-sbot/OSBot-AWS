@@ -9,6 +9,13 @@ class Lambda_Layers_OSBot:
     def __init(self):
         pass
 
+    def create__fastapi(self):
+        packages = ['fastapi', 'uvicorn']
+        with Lambda_Layer_Create('layer_for__fastapi') as _:
+            _.add_packages(packages)
+            _.recreate()
+            return _.arn_latest()
+
     def create__flask(self):
         packages = ['flask', 'serverless_wsgi']
         with Lambda_Layer_Create('layer_for__flask') as _:
@@ -21,8 +28,7 @@ class Lambda_Layers_OSBot:
                     self.PACKAGE__OSBOT_AWS     ,
                     'python-dotenv'             ]
         with Lambda_Layer_Create('layer_for__osbot_aws') as _:
-            # _.layer_folder_create()
-            # _.installed_packages_reset()                                # todo: add better support for updating packages code
+            _.installed_packages_reset()                                # todo: add way to only reset a couple specific packages
             _.add_packages(packages)
             _.recreate()
             return _.arn_latest()
@@ -33,6 +39,9 @@ class Lambda_Layers_OSBot:
             _.add_packages(packages)
             _.recreate()
             return _.arn_latest()
+
+    def fastapi(self):
+        return Lambda_Layer_Create('layer_for__fastapi').arn_latest()
 
     def flask(self):
         return Lambda_Layer_Create('layer_for__flask').arn_latest()

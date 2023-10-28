@@ -10,6 +10,11 @@ class test_Lambda_Layers_OSBot(TestCase):
     def setUp(self):
         self.lambda_layers_osbot = Lambda_Layers_OSBot()
 
+    def test_create__fastapi(self):
+        layer_arn = self.lambda_layers_osbot.create__fastapi()
+        assert 'layer_for__fastapi' in layer_arn
+        pprint(layer_arn)
+
     def test_create__flask(self):
         layer_arn = self.lambda_layers_osbot.create__flask()
         assert 'layer_for__flask' in layer_arn
