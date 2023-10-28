@@ -121,6 +121,10 @@ class Lambda_Layer_Create:
     def installed_packages_names(self):
         return list_set(self.installed_packages())
 
+    def installed_packages_reset(self):
+        json_save_file({}, self.path_installed_packages())
+        return self
+
     def layer_folder_create(self):
         return folder_create(self.path_layer_folder())
 

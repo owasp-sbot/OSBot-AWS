@@ -10,6 +10,21 @@ class test_Lambda_Layers_OSBot(TestCase):
     def setUp(self):
         self.lambda_layers_osbot = Lambda_Layers_OSBot()
 
+    def test_create__flask(self):
+        layer_arn = self.lambda_layers_osbot.create__flask()
+        assert 'layer_for__flask' in layer_arn
+        pprint(layer_arn)
+
+    def test_create__osbot_aws(self):
+        layer_arn = self.lambda_layers_osbot.create__osbot_aws()
+        assert 'layer_for__osbot_aws' in layer_arn
+        pprint(layer_arn)
+
+    def test_create__osbot_utils(self):
+        layer_arn = self.lambda_layers_osbot.create__osbot_utils()
+        assert 'layer_for__osbot_utils' in layer_arn
+        pprint(layer_arn)
+
     def test_osbot_utils(self):
         layer_arn = self.lambda_layers_osbot.osbot_utils()
         assert 'layer_for__osbot_utils' in layer_arn
@@ -17,3 +32,4 @@ class test_Lambda_Layers_OSBot(TestCase):
     def test_osbot_aws(self):
         layer_arn = self.lambda_layers_osbot.osbot_aws()
         assert 'layer_for__osbot_aws' in layer_arn
+        pprint(layer_arn)

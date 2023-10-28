@@ -1,6 +1,8 @@
 import json
 
 import botocore
+from osbot_utils.decorators.lists.group_by import group_by
+
 from osbot_utils.testing.Duration import Duration
 
 from osbot_utils.decorators.methods.cache_on_self import cache_on_self
@@ -13,7 +15,8 @@ from osbot_utils.decorators.methods.remove_return_value import remove_return_val
 
 from osbot_aws.apis.Session import Session
 from osbot_aws.apis.S3 import S3
-from osbot_utils.utils.Misc import get_missing_fields, wait, random_string, base64_to_str, list_set, wait_for, unique
+from osbot_utils.utils.Misc import get_missing_fields, wait, random_string, base64_to_str, list_set, wait_for, unique, \
+    list_index_by
 from osbot_utils.utils.Status import status_ok, status_error, status_warning, status_message
 
 
@@ -73,6 +76,11 @@ class Lambda:
                 self.layers = []
             self.layers.append(layer_arn)
             self.layers = unique(self.layers)           # make sure there are no duplicates
+        return self
+
+    def add_layers(self, layers_arn):
+        for layer_arn in layers_arn:
+            self.add_layer(layer_arn)
         return self
 
     def account_settings(self):
@@ -176,6 +184,20 @@ class Lambda:
     def function_url(self, function_alias=None):
         return self.function_url_info(function_alias).get('FunctionUrl')
 
+    def function_set_policy_to_allow_public_access(self):
+        function_arn = self.function_arn()
+        auth_type    = 'NONE'
+        statement_id = 'FunctionURLAllowPublicAccess'
+        if statement_id in self.policy_statements(index_by='Sid') :
+            self.permission_delete(function_arn, statement_id)
+
+        kwargs = { 'statement_id'          : statement_id                  ,
+                   'action'                : 'lambda:InvokeFunctionUrl'    ,
+                   'function_url_auth_type': auth_type                     ,
+                   'function_arn'          : function_arn                  ,
+                   'principal'             : '*'                           }
+        return self.permission_add(**kwargs)
+
     def function_url_exists(self, function_alias=None):
         return self.function_url_info(function_alias) != {}
 
@@ -197,12 +219,12 @@ class Lambda:
 
             return self.client().delete_function_url_config(**kwargs)
 
-    def function_url_create(self, function_alias=None, auth_type="AWS_IAM", cors=None, invoke_mode='RESPONSE_STREAM'):
+    def function_url_create(self, function_alias=None, auth_type="AWS_IAM", cors=None, invoke_mode='BUFFERED'):
         if self.function_url_exists(function_alias) is False:
             function_arn   = self.function_arn()
             auth_type      = auth_type #'NONE',
             cors           = cors or {}
-            invoke_mode    = invoke_mode # 'BUFFERED'
+            invoke_mode    = invoke_mode # 'RESPONSE_STREAM'
             kwargs         = dict(FunctionName = function_arn   ,
                                   AuthType     = auth_type      ,
                                   Cors         = cors           ,
@@ -211,6 +233,11 @@ class Lambda:
                 kwargs['Qualifier'] = function_alias
 
             return self.client().create_function_url_config(**kwargs)
+
+    def function_url_create_with_public_access(self):
+        self.function_url_create(auth_type='NONE')
+        self.function_set_policy_to_allow_public_access()
+        return self.function_url()
 
     def function_url_update(self, function_alias=None, auth_type=None, cors=None, invoke_mode=None):
         if self.function_url_exists(function_alias) :
@@ -310,14 +337,15 @@ class Lambda:
     def log_group(self):
         return Logs(group_name=f'/aws/lambda/{self.name}')
 
-    def permission_add(self, function_arn, statement_id, action, principal, source_arn=None):
+    def permission_add(self, function_arn, statement_id, action, principal, source_arn=None, function_url_auth_type=None):
         try:
             params = {  'FunctionName': function_arn,
                         'StatementId' : statement_id,
                         'Action'      : action,
                         'Principal'   : principal }
-            if source_arn:
-                params['SourceArn'] = source_arn
+            if source_arn             : params['SourceArn'          ] = source_arn
+            if function_url_auth_type : params['FunctionUrlAuthType'] = function_url_auth_type
+
             return self.client().add_permission(**params)
         except Exception as error:
             return {'error': f'{error}'}
@@ -349,6 +377,18 @@ class Lambda:
             return json.loads(policy_str)
         except:                 # ResourceNotFoundException doesn't seem to exposed to we have to do a global capture
             return {}
+
+    @index_by
+    @group_by
+    def policy_statements(self):
+        return self.policy().get('Statement', [])
+
+    def policy_statements_clear(self):
+        function_arn = self.function_arn()
+        for statement in self.policy_statements():
+            statement_id = statement.get('Sid')
+            self.permission_delete(function_name=function_arn, statement_id=statement_id)
+        return self
 
     def set_handler             (self, value): self.handler        = value    ; return self
     def set_role                (self, value): self.role           = value    ; return self
@@ -422,7 +462,7 @@ class Lambda:
                 return status_error(message=f'for function {name}, could not find provided s3 bucket and s3 key: {s3_bucket} {s3_key}')
         return status_message(status='ok', message='validated ok  the lambda create_kwargs')
 
-    def wait_for_function_update_to_complete(self, max_attempts=20, wait_time=0.1):
+    def wait_for_function_update_to_complete(self, max_attempts=40, wait_time=0.1):
         status = None
         for i in range(max_attempts):
             configuration = self.configuration()

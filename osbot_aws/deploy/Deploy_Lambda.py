@@ -1,4 +1,6 @@
 from dotenv import load_dotenv
+from osbot_aws.apis.shell.Shell_Client import Shell_Client
+
 from osbot_aws.AWS_Config import AWS_Config
 
 from osbot_utils.testing.Duration import Duration
@@ -29,6 +31,12 @@ class Deploy_Lambda:
 
     def add_layer(self, layer_arn):
         self.package.add_layer(layer_arn)
+        return self
+
+    def add_layers(self, layers_arn):
+        for layer_arn in layers_arn:
+            self.package.add_layer(layer_arn)
+        return self
 
     def add_module(self, module_name):
         self.package.add_module(module_name)
@@ -69,7 +77,8 @@ class Deploy_Lambda:
     def lambda_function(self):
         return self.package.aws_lambda
 
-
+    def lambda_shell(self):
+        return Shell_Client(self.lambda_function())
 
     def update(self, wait_for_update=True):
         self.add_function_source_code()

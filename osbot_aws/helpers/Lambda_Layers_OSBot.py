@@ -9,13 +9,36 @@ class Lambda_Layers_OSBot:
     def __init(self):
         pass
 
-    def osbot_aws(self):
-        packages = [self.PACKAGE__OSBOT_UTILS, self.PACKAGE__OSBOT_AWS,
-                    #'boto3'        ,
-                    'python-dotenv' ]
-        with Lambda_Layer_Create('layer_for__osbot_aws') as _:
+    def create__flask(self):
+        packages = ['flask', 'serverless_wsgi']
+        with Lambda_Layer_Create('layer_for__flask') as _:
             _.add_packages(packages)
-            return _.create()
+            _.create()
+            return _.arn_latest()
+
+    def create__osbot_aws(self):
+        packages = [self.PACKAGE__OSBOT_UTILS   ,
+                    self.PACKAGE__OSBOT_AWS     ,
+                    'python-dotenv'             ]
+        with Lambda_Layer_Create('layer_for__osbot_aws') as _:
+            # _.layer_folder_create()
+            # _.installed_packages_reset()                                # todo: add better support for updating packages code
+            _.add_packages(packages)
+            _.recreate()
+            return _.arn_latest()
+
+    def create__osbot_utils(self):
+        packages = [self.PACKAGE__OSBOT_UTILS, 'python-dotenv' ]
+        with Lambda_Layer_Create('layer_for__osbot_utils') as _:
+            _.add_packages(packages)
+            _.recreate()
+            return _.arn_latest()
+
+    def flask(self):
+        return Lambda_Layer_Create('layer_for__flask').arn_latest()
+
+    def osbot_aws(self):
+        return Lambda_Layer_Create('layer_for__osbot_aws').arn_latest()
 
     def osbot_utils(self):
         with Lambda_Layer_Create('layer_for__osbot_utils') as _:

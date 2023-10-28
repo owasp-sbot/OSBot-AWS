@@ -21,6 +21,9 @@ class Shell_Client:
         else:
             return Shell_Server().invoke(event)
 
+    def bash(self,command, cwd=None):
+        return self._invoke('bash', {'command': command, 'cwd': cwd})
+
     def exec(self, executable, params=None, cwd=None):
         result = self.process_run(executable, params, cwd)
         std_out = result.get('stdout', '').strip()
@@ -32,8 +35,10 @@ class Shell_Client:
             return f'Error: {result.get("errorMessage")}'
         return result
 
-    def bash(self,command, cwd=None):
-        return self._invoke('bash', {'command': command, 'cwd': cwd})
+    def exec_function(self, function):
+        return self.python_exec_function(function)
+
+
 
     def process_run(self, executable, params=None, cwd=None):
         return self._invoke('process_run', {'executable' : executable , 'params': params, 'cwd': cwd} )

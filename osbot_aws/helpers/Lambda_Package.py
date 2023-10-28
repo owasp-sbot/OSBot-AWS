@@ -45,6 +45,11 @@ class Lambda_Package:
     def add_layer(self, layer_arn):
         self.aws_lambda.add_layer(layer_arn)
 
+    def add_layers(self, layers_arn):
+        for layer_arn in layers_arn:
+            self.aws_lambda.add_layer(layer_arn)
+        return self
+
     def add_file(self, source):
         Files.copy(source, self.tmp_folder)
 
