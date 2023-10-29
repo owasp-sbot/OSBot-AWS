@@ -20,6 +20,11 @@ class test_Lambda_Layers_OSBot(TestCase):
         assert 'layer_for__flask' in layer_arn
         pprint(layer_arn)
 
+    def test_create__llms(self):
+        layer_arn = self.lambda_layers_osbot.create__llms()
+        assert 'layer_for__llms' in layer_arn
+        pprint(layer_arn)
+
     def test_create__osbot_aws(self):
         layer_arn = self.lambda_layers_osbot.create__osbot_aws()
         assert 'layer_for__osbot_aws' in layer_arn

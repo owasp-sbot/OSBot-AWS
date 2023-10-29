@@ -23,6 +23,13 @@ class Lambda_Layers_OSBot:
             _.create()
             return _.arn_latest()
 
+    def create__llms(self):
+        packages = ['openai']
+        with Lambda_Layer_Create('layer_for__llms') as _:
+            _.add_packages(packages)
+            _.recreate()
+            return _.arn_latest()
+
     def create__osbot_aws(self):
         packages = [self.PACKAGE__OSBOT_UTILS   ,
                     self.PACKAGE__OSBOT_AWS     ,
@@ -45,6 +52,9 @@ class Lambda_Layers_OSBot:
 
     def flask(self):
         return Lambda_Layer_Create('layer_for__flask').arn_latest()
+
+    def llms(self):
+        return Lambda_Layer_Create('layer_for__llms').arn_latest()
 
     def osbot_aws(self):
         return Lambda_Layer_Create('layer_for__osbot_aws').arn_latest()
