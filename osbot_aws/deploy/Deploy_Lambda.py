@@ -65,6 +65,9 @@ class Deploy_Lambda:
     def files(self):
         return self.package.get_files()
 
+    def function_url(self):
+        return self.lambda_function().function_url()
+
     def get_package(self):
         package = Lambda_Package(self.module_name)
         package.aws_lambda.set_s3_bucket(self.osbot_setup.s3_bucket_lambdas)

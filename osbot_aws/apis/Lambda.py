@@ -234,8 +234,8 @@ class Lambda:
 
             return self.client().create_function_url_config(**kwargs)
 
-    def function_url_create_with_public_access(self):
-        self.function_url_create(auth_type='NONE')
+    def function_url_create_with_public_access(self, invoke_mode='BUFFERED'):
+        self.function_url_create(auth_type='NONE', invoke_mode=invoke_mode)
         self.function_set_policy_to_allow_public_access()
         return self.function_url()
 
