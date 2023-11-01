@@ -30,6 +30,13 @@ class Lambda_Layers_OSBot:
             _.recreate()
             return _.arn_latest()
 
+    def create__mangum(self):       # todo: refactor all these create__xxx methods
+        packages = ['mangum']
+        with Lambda_Layer_Create('layer_for__mangum') as _:
+            _.add_packages(packages)
+            _.recreate()
+            return _.arn_latest()
+
     def create__osbot_aws(self):
         packages = [self.PACKAGE__OSBOT_UTILS   ,
                     self.PACKAGE__OSBOT_AWS     ,
@@ -55,6 +62,9 @@ class Lambda_Layers_OSBot:
 
     def llms(self):
         return Lambda_Layer_Create('layer_for__llms').arn_latest()
+
+    def mangum(self):
+        return Lambda_Layer_Create('layer_for__mangum').arn_latest()
 
     def osbot_aws(self):
         return Lambda_Layer_Create('layer_for__osbot_aws').arn_latest()
