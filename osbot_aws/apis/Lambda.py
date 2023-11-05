@@ -1,6 +1,8 @@
 import json
 
 import botocore
+from osbot_utils.utils.Json import json_loads
+
 from osbot_utils.decorators.lists.group_by import group_by
 
 from osbot_utils.testing.Duration import Duration
@@ -293,7 +295,9 @@ class Lambda:
 
             result_bytes  = response.get('Payload').read()
             result_string = result_bytes.decode('utf-8')
-            result        = json.loads(result_string)
+            result        = json_loads(result_string)
+            if result == {}:
+                result = {'raw_message': result_string}
             return { 'status': 'ok'   , 'name': self.name, 'data' : result , 'response': response }
         except Exception as error:
             return { 'status': 'error', 'name': self.name, 'data' : '{0}'.format(error) }
@@ -318,10 +322,12 @@ class Lambda:
 
     def invoke_return_logs(self, payload=None):
         result                   = self.invoke_raw(payload=payload, log_type='Tail')
-        logs                     = result.get('response').get('LogResult')
+        if result.get('status') == 'error':
+            return result
+        logs                     = result.get('response', {}).get('LogResult', '')
         result['execution_logs'] = base64_to_str(logs, encoding='utf-8')
         result['return_value'  ] = result.get('data')
-        result['request_id'    ] = result.get('response').get('ResponseMetadata').get('RequestId')
+        result['request_id'    ] = result.get('response', {}).get('ResponseMetadata',{}).get('RequestId')
         del result['data'    ]
         del result['response']
         return result
