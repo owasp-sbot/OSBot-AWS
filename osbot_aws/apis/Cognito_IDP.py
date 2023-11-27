@@ -25,22 +25,23 @@ class Cognito_IDP:
     @remove_return_value(field_name='ResponseMetadata')
     def auth_initiate(self, client_id, username, password):
 
-        auth_parameters = { 'USERNAME': username, 'PASSWORD': password }
+        auth_parameters = { 'USERNAME': username                ,
+                            'PASSWORD': password                ,
+                            'SCOPE'   : 'openid profile email'  }
         client = self.cognito()
         try:
             response = client.initiate_auth( ClientId=client_id, AuthFlow='USER_PASSWORD_AUTH',AuthParameters=auth_parameters)
             return response
-        except client.exceptions.ResourceNotFoundException as error:
-            return {'error':  error }
-        except client.exceptions.NotAuthorizedException as error:
-            return {'error': error }
+        except Exception as error:
+            return {'error':  str(error) }
 
+    #todo: find a workaround since this is broken in AWS (see https://stackoverflow.com/questions/52425678/access-token-does-not-contain-openid-scope-in-aws-cognito)
     def auth_user_info(self, project, region, access_token):
         user_info_url = f"https://{project}.auth.{region}.amazoncognito.com/oauth2/userInfo"
 
         headers = { 'Authorization': f"Bearer {access_token}" }
         response = requests.get(user_info_url, headers=headers)
-        return response#.json()
+        return response.json()
 
     def user_info(self,  user_pool_id, user_name):
         return self.user(user_pool_id, user_name)
@@ -78,6 +79,25 @@ class Cognito_IDP:
     def user_exists(self, user_pool_id, user_name):
         return self.user(user_pool_id, user_name) != {}
 
+    def user_pool(self, user_pool_id):
+        response  = self.cognito().describe_user_pool(UserPoolId=user_pool_id)
+        user_pool = response.get('UserPool')
+        schema    = {}
+        for attribute in user_pool.get('SchemaAttributes'):
+            schema[attribute.get('Name')] = attribute.get('AttributeDataType')
+
+        data = { 'arn'             : user_pool.get('Arn'                   ),
+                 'domain'          : user_pool.get('Domain'                ),
+                 'id'              : user_pool.get('Id'                    ),
+                 'user_count'      : user_pool.get('EstimatedNumberOfUsers'),
+                 'name'            : user_pool.get('Name'                  ),
+                 'password_policy' : user_pool.get('Policies',{}           ).get('PasswordPolicy',{}),
+                 'schema'          : schema                                 ,
+                 'status'          : user_pool.get('Status'                ),
+                 'tags'            : user_pool.get('UserPoolTags'          )}
+        return data
+
+
     def user_set_password(self, user_pool_id, user_name, password, permanent=True):
         if self.user_exists(user_pool_id, user_name):
             client   = self.cognito()
@@ -106,7 +126,7 @@ class Cognito_IDP:
                 'user_last_modified_date': datetime_to_str(user_data.get('UserLastModifiedDate', None)),
                 'username'               : user_data.get('Username'                            , None)}
 
-        for attribute in user_data.get('Attributes', []):
+        for attribute in user_data.get('UserAttributes', []):
             name       = attribute['Name']
             value      = attribute['Value']
             user[name] = value
