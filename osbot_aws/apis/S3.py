@@ -30,8 +30,12 @@ class S3:
         self.use_threads     = True
 
     @cache
-    def s3(self):                                               # todo refactor this method to be called client()
+    def client(self):
         return Session().client('s3')
+
+    @cache
+    def s3(self):                               # todo replace usages below with this method
+        return self.client()
 
     @cache
     def s3_resource(self):                                      # todo refactor this method to be called resource()
@@ -233,6 +237,27 @@ class S3:
         key = '{0}/{1}'.format(self.tmp_file_folder, Files.temp_filename(Files.file_extension(file)))
         self.file_upload_to_key(file, bucket, key)
         return key
+
+    def folder_list(self, s3_bucket, parent_folder='', return_full_path=False):
+        folders = []
+        paginator = self.client().get_paginator('list_objects_v2')
+        if parent_folder.endswith('/') is False:
+            parent_folder += '/'
+
+        operation_parameters = {
+            'Bucket': s3_bucket    ,
+            'Prefix': parent_folder,
+            'Delimiter': '/'
+        }
+        for page in paginator.paginate(**operation_parameters):
+            for common_prefix in page.get('CommonPrefixes', []):
+                folder_path = common_prefix.get('Prefix')
+                if return_full_path:
+                    folders.append(folder_path)
+                else:
+                    folder_name = folder_path.replace(parent_folder, '').replace('/', '')
+                    folders.append(folder_name)
+        return folders
 
     def folder_upload (self, folder, s3_bucket, s3_key):
         file = zip_folder(folder)

@@ -94,6 +94,11 @@ class test_Cognito_IDP(TestCase):
         result = self.cognito.user_delete(user_pool_id, user_name)
         assert result is True
 
+    def test_user_pool(self):
+        user_pool = self.cognito.user_pool(self.cognito_user_pool_id())
+        assert list_set(user_pool) == ['arn','domain','id','name','password_policy','schema','status','tags','user_count']
+        assert len(user_pool.get('schema')) > 0
+
     def test_users(self):
         users = self.cognito.users(self.cognito_user_pool_id())
         assert len(users) > 0
