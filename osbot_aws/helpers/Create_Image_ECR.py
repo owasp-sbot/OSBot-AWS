@@ -19,7 +19,8 @@ class Create_Image_ECR:
         # repository = self.image_repository()
         # tag        = self.image_tag
         result       = self.docker_image.build(self.path_image())
-        return result.get('status') == 'ok'
+        return result
+        #return result.get('status') == 'ok'
 
     def create_repository(self):
         self.ecr.repository_create(self.image_name)

@@ -26,6 +26,7 @@ class Lambda_Layers_OSBot:
     def create__llms(self):
         packages = ['openai']
         with Lambda_Layer_Create('layer_for__llms') as _:
+            _.delete_local_layer_folder()
             _.add_packages(packages)
             _.recreate()
             return _.arn_latest()
