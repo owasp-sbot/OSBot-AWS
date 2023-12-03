@@ -42,8 +42,9 @@ class Create_Image_ECR:
         return path_combine(self.path_images, self.image_name)
 
     def push_image(self):
-        json_lines = self.api_docker.image_push(self.image_repository(), self.image_tag)
-        return json_lines
+        auth_result = self.ecr_login()                             # make sure we are logged in
+        push_json_lines = self.docker_image.image_push()
+        return dict(auth_result=auth_result, push_json_lines=push_json_lines)
 
     def run_locally(self):
         full_image_name = self.full_image_name()
