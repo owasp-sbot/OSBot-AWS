@@ -24,7 +24,7 @@ from osbot_utils.utils.Status import status_ok, status_error, status_warning, st
 
 class Lambda:
     def __init__(self, name=''):
-        self.architecture   = 'x86_64'
+        self.architecture   = 'x86_64'                      # other option is 'arm64'
         self.runtime        = 'python3.11'
         self.memory         = 512                               # default to 512Mb max is 10,000 Mb (current AWS limit in Dec 2020)
         self.timeout        = 60                                # default to 60 secs (1m) max is 900 secs (15m)
@@ -126,7 +126,8 @@ class Lambda:
             return {'status': 'error', 'data': '{0}'.format(error)}
 
     def create_kwargs(self):
-        kwargs = {  'FunctionName'  : self.name or  random_string(prefix='temp_lambda_') ,
+        kwargs = {  'Architectures' : [self.architecture]                                , # no idea why this is an array since we get an exception when there is more than one value
+                    'FunctionName'  : self.name or  random_string(prefix='temp_lambda_') ,
                     'MemorySize'    : self.memory                                        ,
                     'Role'          : self.role                                          ,
                     'Timeout'       : self.timeout                                       ,
@@ -142,7 +143,6 @@ class Lambda:
             kwargs['Code'          ] = {"S3Bucket": self.s3_bucket, "S3Key": self.s3_key}
             kwargs['PackageType'   ] = "Zip"
             kwargs['Runtime'       ] = self.runtime
-            kwargs['Architectures' ] = [self.architecture]     # no idea why this is an array since we get an exception when there is more than one value
             kwargs['Handler'       ] = self.handler
 
         if self.layers:
@@ -482,8 +482,8 @@ class Lambda:
     def wait_for_state(self, state, max_wait_count=40, wait_interval=1):
         for i in range(0, max_wait_count):
             info = self.info()
-            state = info.get('Configuration').get('State')
-            if state == 'state':
+            current_state = info.get('Configuration').get('State')
+            if current_state == state:
                 return {"status" : "ok", "message": f"Status '{state}' was found after {i} * {wait_interval} seconds"}
             wait(wait_interval)
         return {"status" : "error", "message": f"Status '{state}' did not occur in {i} * {wait_interval} seconds"}
