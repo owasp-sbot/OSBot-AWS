@@ -35,10 +35,14 @@ class AWS_Config:
     def set_lambda_role_name        (self, value): os.environ['OSBOT_LAMBDA_ROLE_NAME'          ] = value ; return value
     def set_bot_name                (self, value): os.environ['OSBOT_NAME'                      ] = value ; return value
 
-
     def sts_session_account_id(self):                   # to handle when the AWS_ACCOUNT_ID is not set
         from osbot_aws.apis.STS import STS              #   the use of this method is not advised
         return STS().current_account_id()               #   since this is quite an expensive method
+
+    # helper methods
+    def account_id (self): return self.aws_session_account_id()
+    def region_name(self): return self.aws_session_region_name()
+
 
 def set_aws_region(region_name):
     AWS_Config().set_aws_session_region_name(region_name)

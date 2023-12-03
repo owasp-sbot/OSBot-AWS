@@ -1,7 +1,7 @@
 import json
 
 import botocore
-from osbot_utils.utils.Json import json_loads
+from osbot_utils.utils.Json import json_loads, json_parse
 
 from osbot_utils.decorators.lists.group_by import group_by
 
@@ -198,6 +198,7 @@ class Lambda:
                    'function_url_auth_type': auth_type                     ,
                    'function_arn'          : function_arn                  ,
                    'principal'             : '*'                           }
+
         return self.permission_add(**kwargs)
 
     def function_url_exists(self, function_alias=None):
@@ -221,6 +222,7 @@ class Lambda:
 
             return self.client().delete_function_url_config(**kwargs)
 
+    @remove_return_value('ResponseMetadata')
     def function_url_create(self, function_alias=None, auth_type="AWS_IAM", cors=None, invoke_mode='BUFFERED'):
         if self.function_url_exists(function_alias) is False:
             function_arn   = self.function_arn()
@@ -235,11 +237,14 @@ class Lambda:
                 kwargs['Qualifier'] = function_alias
 
             return self.client().create_function_url_config(**kwargs)
+        return {"status": "warning", "message": "function url already existed"}
 
     def function_url_create_with_public_access(self, invoke_mode='BUFFERED'):
-        self.function_url_create(auth_type='NONE', invoke_mode=invoke_mode)
-        self.function_set_policy_to_allow_public_access()
-        return self.function_url()
+        function_url_create     = self.function_url_create(auth_type='NONE', invoke_mode=invoke_mode)
+        self.wait_for_function_update_to_complete()
+        function_set_policy     = self.function_set_policy_to_allow_public_access()
+        self.wait_for_function_update_to_complete()
+        return dict(function_url_create=function_url_create, function_set_policy=function_set_policy)
 
     def function_url_update(self, function_alias=None, auth_type=None, cors=None, invoke_mode=None):
         if self.function_url_exists(function_alias) :
@@ -352,7 +357,10 @@ class Lambda:
             if source_arn             : params['SourceArn'          ] = source_arn
             if function_url_auth_type : params['FunctionUrlAuthType'] = function_url_auth_type
 
-            return self.client().add_permission(**params)
+            result = self.client().add_permission(**params)
+            if type(result.get('Statement')) is str:
+                return json_parse(result.get('Statement'))
+            return result
         except Exception as error:
             return {'error': f'{error}'}
 
@@ -436,11 +444,13 @@ class Lambda:
             return { 'status': 'error', 'name': self.name, 'data': '{0}'.format(error)}
 
     def update_lambda_code(self):
+        self.wait_for_function_update_to_complete()
         return self.client().update_function_code(FunctionName = self.name,
                                                   S3Bucket     = self.s3_bucket,
                                                   S3Key        = self.s3_key)
 
     def update_lambda_image_uri(self, image_uri):
+        self.wait_for_function_update_to_complete()
         self.image_uri = image_uri
         return self.client().update_function_code(FunctionName = self.name     ,
                                                   ImageUri     = self.image_uri)
@@ -479,7 +489,7 @@ class Lambda:
             configuration = self.configuration()
             status        = configuration.get('LastUpdateStatus')
             if status == 'Successful':
-                print(f"\n after  {i} attempts, update completed successfully")
+                #print(f"\n after  {i} attempts, update completed successfully")
                 break
             status = configuration.get('State')         # helps to debug when the update fails
             wait_for(wait_time)

@@ -9,6 +9,7 @@ from osbot_utils.utils.Misc import random_string_and_numbers
 
 class Temp_Lambda:
     def __init__(self, lambda_name=None, lambda_code=None, with_layer=None, delete_on_exit=True):
+        self.aws_config        = AWS_Config()
         self.lambda_name       = lambda_name or "temp_lambda_{0}".format(random_string_and_numbers())
         self.aws_lambda        = Lambda(self.lambda_name)
         self.tmp_folder        = Temp_Folder_With_Lambda_File(file_name=self.lambda_name, lambda_code=lambda_code).create_temp_file()
@@ -16,7 +17,7 @@ class Temp_Lambda:
         self.create_log        = None
         self.delete_on_exit    = delete_on_exit
         self.wait_max_attempts = 40
-        self.s3_bucket         = AWS_Config().lambda_s3_bucket()
+        self.s3_bucket         = self.aws_config.lambda_s3_bucket()
         self.s3_key            = 'unit_tests/lambdas/{0}.zip'.format(self.lambda_name)
         self.s3                = self.aws_lambda.s3()
         self.with_layer        = with_layer

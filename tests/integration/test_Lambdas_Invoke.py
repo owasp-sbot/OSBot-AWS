@@ -88,7 +88,7 @@ class test_Lambdas_Invoke(TestCase):
                 SourceArn= source_arn,
                 SourceAccount = IAM().account_id()
             )
-            Dev.pprint(result)
+            #Dev.pprint(result)
             #Dev.pprint(result == {  'Statement': '{"Sid":"1","Effect":"Allow","Principal":{"Service":"s3.amazonaws.com"},"Action":"lambda:InvokeFunction","Resource":"arn:aws:lambda:eu-west-2:244560807427:function:osbot_aws_lambdas_pocs_send_event_data_to_queue","Condition":{"StringEquals":{"AWS:SourceAccount":"244560807427"},"ArnLike":{"AWS:SourceArn":"arn:aws:sqs:eu-west-2:244560807427:unit_tests_temp_queue"}}}'})
 
         #add_notification(bucket_arn)
