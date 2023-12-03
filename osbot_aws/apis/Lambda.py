@@ -440,6 +440,11 @@ class Lambda:
                                                   S3Bucket     = self.s3_bucket,
                                                   S3Key        = self.s3_key)
 
+    def update_lambda_image_uri(self, image_uri):
+        self.image_uri = image_uri
+        return self.client().update_function_code(FunctionName = self.name     ,
+                                                  ImageUri     = self.image_uri)
+
     def update_lambda_configuration(self):
         self.wait_for_function_update_to_complete()         # make sure there is no update also happening at this time
         kwargs = {}
@@ -474,6 +479,7 @@ class Lambda:
             configuration = self.configuration()
             status        = configuration.get('LastUpdateStatus')
             if status == 'Successful':
+                print(f"\n after  {i} attempts, update completed successfully")
                 break
             status = configuration.get('State')         # helps to debug when the update fails
             wait_for(wait_time)
