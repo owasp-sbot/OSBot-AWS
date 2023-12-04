@@ -21,7 +21,10 @@ class Create_Image_ECR:
 
     def create_repository(self):
         self.ecr.repository_create(self.image_name)
-        return self.ecr.repository_exists(self.image_name)
+        return self.repository_exists()
+
+    def delete_repository(self):
+        return self.ecr.repository_delete(self.image_name)
 
     def full_image_name(self):
         return f'{self.image_repository()}:{self.image_tag}'
@@ -55,13 +58,10 @@ class Create_Image_ECR:
         ecr_login         = self.ecr_login           ()
         build_image       = self.build_image         ()
         push_image        = self.push_image          ()
-        # status            = create_repository   and   \
-        #                     build_image         and    \
-        #                     ecr_login.get('Status') == 'Login Succeeded' #\
-        #                     # push_image ????\                                    # todo: add success/error detector to push_image images logs (use json_lines_parse to parse string into json)
         return {'create_repository' : create_repository,
                 'ecr_login'         : ecr_login        ,
                 'build_image'       : build_image      ,
-                'push_image'        : push_image       ,
-                #'status'            : status
-                }
+                'push_image'        : push_image       }
+
+    def repository_exists(self):
+        return self.ecr.repository_exists(self.image_name)
