@@ -14,12 +14,13 @@ from osbot_aws.helpers.Lambda_Package import Lambda_Package
 
 class Deploy_Lambda:
 
-    def __init__(self, handler):
+    def __init__(self, handler, stage=None):
         load_dotenv()
         self.osbot_setup          = OSBot_Setup()
         self.aws_config           = self.osbot_setup.aws_config
         self.handler              = handler
         self.module_name          = handler.__module__
+        self.stage                = stage
         self.role_arn             = Temp_Aws_Roles().for_lambda_invocation__role_arn()
         # self.layers               = []
         # self.env_variables        = {}
@@ -69,13 +70,15 @@ class Deploy_Lambda:
         return self.lambda_function().function_url()
 
     def get_package(self):
-        package = Lambda_Package(self.module_name)
+        package = Lambda_Package(self.lambda_name())
         package.aws_lambda.set_s3_bucket(self.osbot_setup.s3_bucket_lambdas)
         package.aws_lambda.set_role(self.role_arn)
         return package
 
     def lambda_name(self):
-        return self.package.lambda_name
+        if self.stage is None:
+            return self.module_name
+        return f"{self.module_name}-{self.stage}"
 
     def lambda_function(self):
         return self.package.aws_lambda
