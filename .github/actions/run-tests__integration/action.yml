@@ -27,7 +27,7 @@ runs:
         run: |
           coverage run --source=${{ inputs.package_name }} -m pytest -v -s --durations=0 tests/integration/ecs
         env:
-          COVERAGE_FILE        : .coverage.unit
+          COVERAGE_FILE        : .coverage.integration.ecs
           AWS_SECRET_ACCESS_KEY: ${{ inputs.AWS_SECRET_ACCESS_KEY }}
           AWS_DEFAULT_REGION   : ${{ inputs.AWS_DEFAULT_REGION    }}
           AWS_ACCOUNT_ID       : ${{ inputs.AWS_ACCOUNT_ID        }}
