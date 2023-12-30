@@ -5,21 +5,22 @@ from botocore.client                 import BaseClient
 from osbot_utils.testing.Duration import Duration
 from osbot_utils.testing.Hook_Method import Hook_Method
 
+# todo: create unit tests specifically for this class
 # decorator
 def print_boto3_calls(function):
     @wraps(function)
     def wrapper(*args, **kwargs):
-        with View_Boto_3_Rest_Calls():
+        with View_Boto3_Rest_Calls():
             return function(*args, **kwargs)
     return wrapper
 
-class View_Boto_3_Rest_Calls:
+class View_Boto3_Rest_Calls:
     def __init__(self, on_exit_print_calls=True):
         self.target_module       = BaseClient
         self.target_method       = "_make_api_call"
         self.hook_method         = None
         self.on_exit_print_calls = on_exit_print_calls
-        self.total_duration      = Duration()
+        self.total_duration      = Duration(print_result=False)
 
     def __enter__(self):
         self.hook_method = Hook_Method(target_module=self.target_module, target_method=self.target_method)

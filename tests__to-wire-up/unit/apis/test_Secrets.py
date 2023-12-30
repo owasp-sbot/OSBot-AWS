@@ -3,12 +3,32 @@ import unittest
 from unittest import TestCase
 
 import pytest
+
+from osbot_aws.apis.STS import STS
 from osbot_utils.utils import Misc
 
 from osbot_aws.apis.Secrets import Secrets
+from osbot_utils.utils.Dev import pprint
 
-@pytest.mark.skip('Fix tests')
+
 class test_Secrets(TestCase):
+
+    id      : str
+    secrets : Secrets
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        STS().check_current_session_credentials()
+        cls.id             = 'an_secret'
+        cls.value          = 'goes here'
+        cls.secrets        = Secrets(cls.id)
+        cls.result_create = cls.secrets.create(cls.value)
+
+    @classmethod
+    def tearDownClass(cls) -> None:
+        #cls.result_delete = cls.secrets.delete()
+        assert cls.secrets.delete_no_recovery() is True
+
 
     def setUp(self):
         self.id    = 'an_secret'
@@ -23,7 +43,8 @@ class test_Secrets(TestCase):
 
     def test_create(self):
         #if self.secrets.exists() or self.secrets.deleted():
-        assert self.secrets.delete_no_recovery() is True
+        #assert self.secrets.delete_no_recovery() is True
+        pprint(self.result_create)
 
         #assert self.secrets.create(self.value) is True
 

@@ -16,6 +16,10 @@ class Secrets:
     def client(self):
         return Session().client('secretsmanager')
 
+    @cache
+    def client(self):
+        return Session().client_secrets_manager()
+
     def create(self, value='{}'):
         # noinspection PyBroadException
         try:
