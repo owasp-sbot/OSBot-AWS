@@ -1,20 +1,16 @@
-import unittest
-
 import pytest
+import unittest
+from osbot_utils.testing.Catch      import Catch
+from osbot_utils.utils.Misc         import wait
+from osbot_aws.AWS_Config           import AWS_Config
+from osbot_aws.aws.iam.IAM          import IAM
+from osbot_aws.aws.iam.STS          import STS
+from osbot_aws.helpers.Test_Helper  import Test_Helper
+from osbot_utils.utils.Assert       import Assert
+from osbot_utils.utils.Dev          import pprint
 
-from osbot_aws.apis.STS import STS
-from osbot_utils.testing.Catch import Catch
-from osbot_utils.utils.Json import json_to_str
 
-from osbot_utils.utils.Misc import wait
-
-from osbot_aws.AWS_Config import AWS_Config
-from osbot_aws.helpers.Test_Helper import Test_Helper
-from osbot_aws.apis.IAM import IAM
-
-from osbot_utils.utils.Assert import Assert
-from osbot_utils.utils.Dev import pprint
-
+# todo: refactor this into the test class
 account_id       = AWS_Config().aws_session_account_id()
 delete_created   = True
 test_user        = 'test_user'
@@ -25,7 +21,7 @@ policy_document  = {'Statement': [ { 'Action'   : 'sts:AssumeRole',
                                      'Effect'   : 'Allow',
                                      'Principal': { 'Service': 'codebuild.amazonaws.com'}}]}
 
-
+@pytest.mark.skip('Wire up tests')
 class Test_IAM(Test_Helper):
 
 

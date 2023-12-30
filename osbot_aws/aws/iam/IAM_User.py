@@ -1,7 +1,4 @@
-from functools import lru_cache
-
-from osbot_aws.apis.IAM import IAM
-
+from osbot_aws.aws.iam.IAM import IAM
 
 class IAM_User:
     def __init__(self, user_name=None):

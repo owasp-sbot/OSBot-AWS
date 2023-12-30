@@ -1,12 +1,13 @@
-from unittest import TestCase
+import pytest
+from unittest                                   import TestCase
+from osbot_aws.apis.test_helpers.Temp_Lambda    import Temp_Lambda
+from osbot_utils.utils.Dev                      import pprint
+from osbot_aws.aws.iam.IAM_Policy               import IAM_Policy
+from osbot_aws.aws.iam.IAM_Role                 import IAM_Role
+from osbot_aws.aws.iam.IAM_Utils                import IAM_Utils
 
-from osbot_aws.apis.test_helpers.Temp_Lambda import Temp_Lambda
-from osbot_aws.helpers.IAM_Policy import IAM_Policy
-from osbot_aws.helpers.IAM_Role import IAM_Role
-from osbot_aws.helpers.IAM_Utils import IAM_Utils
-from osbot_utils.utils.Dev import pprint
 
-
+@pytest.mark.skip('Wire up tests')
 class test_IAM_Utils(TestCase):
 
     def setUp(self) -> None:

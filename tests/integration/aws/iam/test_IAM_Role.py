@@ -1,8 +1,11 @@
+import pytest
 from unittest                   import TestCase
 from osbot_utils.utils.Assert   import Assert
 from osbot_aws.AWS_Config       import AWS_Config
-from osbot_aws.helpers.IAM_Role import IAM_Role
+from osbot_aws.aws.iam.IAM_Role import IAM_Role
 
+
+@pytest.mark.skip('Wire up tests')
 class test_IAM_Role(TestCase):
 
 

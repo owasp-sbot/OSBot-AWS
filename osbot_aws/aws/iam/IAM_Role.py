@@ -1,10 +1,7 @@
-from osbot_utils.decorators.lists.index_by import index_by
-from osbot_utils.utils.Misc import random_string
-
-from osbot_aws.AWS_Config import AWS_Config
-from osbot_aws.apis.IAM import IAM
-from osbot_aws.helpers.IAM_Policy import IAM_Policy
-
+from osbot_utils.utils.Misc         import random_string
+from osbot_aws.AWS_Config           import AWS_Config
+from osbot_aws.aws.iam.IAM          import IAM
+from osbot_aws.aws.iam.IAM_Policy   import IAM_Policy
 
 
 class IAM_Role:

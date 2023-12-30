@@ -3,18 +3,16 @@ import botocore
 from botocore.exceptions import ClientError
 from osbot_aws.AWS_Config import AWS_Config
 from osbot_utils.decorators.methods.cache_on_self import cache_on_self
-
 from osbot_utils.utils.Misc import wait, wait_for
-
 from osbot_utils.decorators.methods.remove_return_value import remove_return_value
-
-from osbot_aws.apis.STS import STS
 from osbot_utils.decorators.lists.index_by import index_by
 
 from osbot_utils.decorators.methods.cache import cache
 
 from osbot_aws.apis.Session import Session
 from osbot_utils.utils.Status import status_warning, status_ok, status_error
+
+from osbot_aws.aws.iam.STS import STS
 
 
 class Cloud_Watch_Logs():

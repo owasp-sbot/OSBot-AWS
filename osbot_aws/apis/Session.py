@@ -1,8 +1,8 @@
 import  boto3
-from    boto3                import Session
-from    botocore.session     import get_session
-from    osbot_aws.AWS_Config import AWS_Config
-from    osbot_aws.apis.STS   import STS
+from    boto3                   import Session
+from    botocore.session        import get_session
+from    osbot_aws.AWS_Config    import AWS_Config
+from    osbot_aws.aws.iam.STS   import STS
 
 
 class Session:

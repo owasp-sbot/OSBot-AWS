@@ -1,11 +1,10 @@
 import pytest
-from unittest                        import TestCase
-
-from osbot_aws.apis.IAM import IAM
-from osbot_aws.apis.Cloud_Watch_Logs import Cloud_Watch_Logs
-from osbot_utils.utils.Misc          import random_string
-from osbot_aws.apis.STS              import STS
-from osbot_aws.aws.ecs.ECS           import ECS
+from unittest                           import TestCase
+from osbot_aws.apis.Cloud_Watch_Logs    import Cloud_Watch_Logs
+from osbot_utils.utils.Misc             import random_string
+from osbot_aws.aws.ecs.ECS              import ECS
+from osbot_aws.aws.iam.IAM              import IAM
+from osbot_aws.aws.iam.STS              import STS
 
 
 # see tests in test_ECS_Fargate_Task for more uses of the ECS class

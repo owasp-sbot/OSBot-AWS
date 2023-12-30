@@ -1,5 +1,5 @@
-from osbot_aws.apis.IAM import IAM
 from osbot_aws.apis.Lambda import Lambda
+from osbot_aws.aws.iam.IAM import IAM
 
 
 class IAM_Utils:            # todo see if there is a better home for the methods below

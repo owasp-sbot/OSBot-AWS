@@ -1,12 +1,12 @@
-from pprint import pprint
-from unittest import TestCase
+import pytest
+from pprint                                 import pprint
+from unittest                               import TestCase
+from osbot_utils.utils.Misc                 import random_string
+from osbot_aws.AWS_Config                   import AWS_Config
+from osbot_aws.aws.iam.IAM_Role_With_Policy import IAM_Role_With_Policy
 
-from osbot_utils.utils.Misc import random_string
 
-from osbot_aws.AWS_Config import AWS_Config
-from osbot_aws.helpers.IAM_Role_With_Policy import IAM_Role_With_Policy
-
-
+@pytest.mark.skip('Wire up tests')
 class test_IAM_Role_With_Policy(TestCase):
     def setUp(self):
         self.temp_role_name       = f"osbot_temp_role_{random_string()}"

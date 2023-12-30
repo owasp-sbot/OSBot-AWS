@@ -1,5 +1,4 @@
-from osbot_aws.helpers.IAM_Role import IAM_Role
-
+from osbot_aws.aws.iam.IAM_Role import IAM_Role
 
 class IAM_Role_With_Policy(IAM_Role):
 
