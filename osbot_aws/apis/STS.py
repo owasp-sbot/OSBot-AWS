@@ -1,6 +1,6 @@
 import sys
 
-from botocore.exceptions                          import ClientError
+from botocore.exceptions import ClientError, NoCredentialsError
 from osbot_utils.utils.Status                     import status_ok, status_error, status_warning
 from osbot_utils.decorators.methods.cache_on_self import cache_on_self
 from osbot_aws.AWS_Config                         import AWS_Config
@@ -32,8 +32,10 @@ class STS:
         try:
             return self.client().get_caller_identity()
         except ClientError as client_error:
-            print(f"[error][STS] - {client_error}")
-            return {}
+            print(f"[error][STS] - ClientError {client_error}")                 # todo: add better logging support
+        except NoCredentialsError as no_credentials_error:
+            print(f"[error][STS] - NoCredentialsError {no_credentials_error}")  # todo: add better logging support
+        return {}
 
     def caller_identity_account(self):
         return self.caller_identity().get('Account')
