@@ -1,0 +1,10 @@
+# for OWSBot-Utils
+git+https://github.com/owasp-sbot/OSBot-Utils.git@dev
+python-dotenv
+
+# for OWSBot-AWS
+boto3
+
+# for testing
+pytest
+coverage
