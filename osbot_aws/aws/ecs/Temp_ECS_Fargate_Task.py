@@ -1,4 +1,4 @@
-from osbot_aws.helpers.ECS_Fargate_Task import ECS_Fargate_Task
+from osbot_aws.aws.ecs.ECS_Fargate_Task import ECS_Fargate_Task
 
 
 class Temp_ECS_Fargate_Task:

@@ -1,17 +1,13 @@
-from time import sleep
-
-from botocore.exceptions import ClientError
-from osbot_aws.AWS_Config import AWS_Config
-
+from botocore.exceptions                    import ClientError
+from osbot_aws.AWS_Config                   import AWS_Config
 from osbot_utils.decorators.lists.group_by  import group_by
 from osbot_aws.apis.Cloud_Watch_Logs        import Cloud_Watch_Logs
 from osbot_aws.apis.STS                     import STS
 from osbot_aws.helpers.IAM_Role             import IAM_Role
 from osbot_utils.decorators.lists.index_by  import index_by
 from osbot_utils.decorators.methods.cache   import cache
-from osbot_utils.utils.Dev import Dev, pprint
 from osbot_aws.apis.Session                 import Session
-from osbot_utils.utils.Misc import list_get, wait
+from osbot_utils.utils.Misc                 import list_get, wait
 
 # todo: find good solution to capture/manage these config values (See also values in EC2 class)
 ECS_WAITER_DELAY        = 1             # default was 6 seconds

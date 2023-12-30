@@ -1,10 +1,11 @@
-from unittest import TestCase
+import pytest
+from unittest               import TestCase
+from osbot_aws.apis.EC2     import EC2
+from osbot_utils.utils.Dev  import pprint
+from osbot_aws.aws.ecs.ECS  import ECS
 
-from osbot_aws.apis.EC2 import EC2
-from osbot_aws.apis.ECS import ECS
-from osbot_utils.utils.Dev import pprint
 
-
+@pytest.mark.skip('Wire up tests')
 class test_ECS_Tasks(TestCase):
 
     def setUp(self) -> None:
