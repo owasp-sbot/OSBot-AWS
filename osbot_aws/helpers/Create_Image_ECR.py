@@ -1,6 +1,7 @@
 from osbot_aws.AWS_Config import AWS_Config
 from osbot_aws.apis.ECR import ECR
-from osbot_docker.API_Docker import API_Docker
+from osbot_docker.apis.API_Docker import API_Docker
+from osbot_docker.apis.Docker_Image import Docker_Image
 from osbot_utils.utils.Files import path_combine
 
 class Create_Image_ECR:
@@ -12,18 +13,20 @@ class Create_Image_ECR:
         self.image_name      = image_name
         self.image_tag       = image_tag
         self.path_images     = path_images or path_combine(__file__, '../../images')
+        self.docker_image    = Docker_Image(image_name=self.image_repository(),image_tag=self.image_tag, api_docker=self.api_docker)
 
     def build_image(self):
-        repository = self.image_repository()
-        tag        = self.image_tag
-        result     = self.api_docker.image_build(path=self.path_image(), repository=repository, tag=tag)
-        return result.get('status') == 'ok'
+        result       = self.docker_image.build(self.path_image())
+        return result
 
     def create_repository(self):
         self.ecr.repository_create(self.image_name)
-        return self.ecr.repository_exists(self.image_name)
+        return self.repository_exists()
 
-    def image_name(self):
+    def delete_repository(self):
+        return self.ecr.repository_delete(self.image_name)
+
+    def full_image_name(self):
         return f'{self.image_repository()}:{self.image_tag}'
 
     def image_repository(self):
@@ -42,25 +45,23 @@ class Create_Image_ECR:
         return path_combine(self.path_images, self.image_name)
 
     def push_image(self):
-        json_lines = self.api_docker.image_push(self.image_repository(), self.image_tag)
-        return json_lines
+        auth_result = self.ecr_login()                             # make sure we are logged in
+        push_json_lines = self.docker_image.image_push()
+        return dict(auth_result=auth_result, push_json_lines=push_json_lines)
 
     def run_locally(self):
-        image_name = self.image_name()
-        return self.api_docker.docker_run(image_name)
+        full_image_name = self.full_image_name()
+        return self.api_docker.docker_run(full_image_name)
 
     def create(self):
         create_repository = self.create_repository   ()
         ecr_login         = self.ecr_login           ()
         build_image       = self.build_image         ()
         push_image        = self.push_image          ()
-        # status            = create_repository   and   \
-        #                     build_image         and    \
-        #                     ecr_login.get('Status') == 'Login Succeeded' #\
-        #                     # push_image ????\                                    # todo: add success/error detector to push_image images logs (use json_lines_parse to parse string into json)
         return {'create_repository' : create_repository,
                 'ecr_login'         : ecr_login        ,
                 'build_image'       : build_image      ,
-                'push_image'        : push_image       ,
-                #'status'            : status
-                }
+                'push_image'        : push_image       }
+
+    def repository_exists(self):
+        return self.ecr.repository_exists(self.image_name)

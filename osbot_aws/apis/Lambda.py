@@ -1,5 +1,12 @@
 import json
 
+import botocore
+from osbot_utils.utils.Json import json_loads, json_parse
+
+from osbot_utils.decorators.lists.group_by import group_by
+
+from osbot_utils.testing.Duration import Duration
+
 from osbot_utils.decorators.methods.cache_on_self import cache_on_self
 
 from osbot_aws.apis.Logs import Logs
@@ -10,15 +17,17 @@ from osbot_utils.decorators.methods.remove_return_value import remove_return_val
 
 from osbot_aws.apis.Session import Session
 from osbot_aws.apis.S3 import S3
-from osbot_utils.utils.Misc import get_missing_fields, wait, random_string, base64_to_str, list_set
-from osbot_utils.utils.Status import status_ok, status_error, status_warning
+from osbot_utils.utils.Misc import get_missing_fields, wait, random_string, base64_to_str, list_set, wait_for, unique, \
+    list_index_by
+from osbot_utils.utils.Status import status_ok, status_error, status_warning, status_message
 
 
 class Lambda:
     def __init__(self, name=''):
-        self.runtime        = 'python3.8'
-        self.memory         = 10240                             # 10 Gb (current AWS limit in Dec 2020)
-        self.timeout        = 900                               # 15 M
+        self.architecture   = 'x86_64'                      # other option is 'arm64'
+        self.runtime        = 'python3.11'
+        self.memory         = 512                               # default to 512Mb max is 10,000 Mb (current AWS limit in Dec 2020)
+        self.timeout        = 60                                # default to 60 secs (1m) max is 900 secs (15m)
         self.trace_mode     = 'PassThrough'                     # x-rays disabled
         self.original_name  = name
         self.handler        = name + '.run'
@@ -31,6 +40,9 @@ class Lambda:
         self.layers         = None
         self.env_variables  = None
         self.tags           = {}
+
+    def __enter__(self): return self
+    def __exit__ (self, exc_type, exc_val, exc_tb): pass
 
     # cached dependencies
 
@@ -59,6 +71,19 @@ class Lambda:
                 yield id
 
     # main methods
+
+    def add_layer(self, layer_arn=None):
+        if layer_arn:
+            if self.layers is None:
+                self.layers = []
+            self.layers.append(layer_arn)
+            self.layers = unique(self.layers)           # make sure there are no duplicates
+        return self
+
+    def add_layers(self, layers_arn):
+        for layer_arn in layers_arn:
+            self.add_layer(layer_arn)
+        return self
 
     def account_settings(self):
         return self.client().get_account_settings()
@@ -101,7 +126,8 @@ class Lambda:
             return {'status': 'error', 'data': '{0}'.format(error)}
 
     def create_kwargs(self):
-        kwargs = {  'FunctionName'  : self.name or  random_string(prefix='temp_lambda_') ,
+        kwargs = {  'Architectures' : [self.architecture]                                , # no idea why this is an array since we get an exception when there is more than one value
+                    'FunctionName'  : self.name or  random_string(prefix='temp_lambda_') ,
                     'MemorySize'    : self.memory                                        ,
                     'Role'          : self.role                                          ,
                     'Timeout'       : self.timeout                                       ,
@@ -111,13 +137,13 @@ class Lambda:
         if self.env_variables:
             kwargs['Environment'] = {'Variables': self.env_variables}
         if self.image_uri:
-            kwargs['Code'       ] = {'ImageUri': self.image_uri}
-            kwargs['PackageType'] = "Image"
+            kwargs['Code'         ] = {'ImageUri': self.image_uri}
+            kwargs['PackageType'  ] = "Image"
         else:
-            kwargs['Code'       ] = {"S3Bucket": self.s3_bucket, "S3Key": self.s3_key}
-            kwargs['PackageType'] = "Zip"
-            kwargs['Runtime'    ] = self.runtime
-            kwargs['Handler'    ] = self.handler
+            kwargs['Code'          ] = {"S3Bucket": self.s3_bucket, "S3Key": self.s3_key}
+            kwargs['PackageType'   ] = "Zip"
+            kwargs['Runtime'       ] = self.runtime
+            kwargs['Handler'       ] = self.handler
 
         if self.layers:
             kwargs['Layers'] = self.layers
@@ -154,9 +180,108 @@ class Lambda:
             return False
 
     @cache_on_self
-    def function_Arn(self):
+    def function_arn(self):
         return self.info().get('Configuration').get('FunctionArn')
 
+    def function_url(self, function_alias=None):
+        return self.function_url_info(function_alias).get('FunctionUrl')
+
+    def function_set_policy_to_allow_public_access(self):
+        function_arn = self.function_arn()
+        auth_type    = 'NONE'
+        statement_id = 'FunctionURLAllowPublicAccess'
+        if statement_id in self.policy_statements(index_by='Sid') :
+            self.permission_delete(function_arn, statement_id)
+
+        kwargs = { 'statement_id'          : statement_id                  ,
+                   'action'                : 'lambda:InvokeFunctionUrl'    ,
+                   'function_url_auth_type': auth_type                     ,
+                   'function_arn'          : function_arn                  ,
+                   'principal'             : '*'                           }
+
+        return self.permission_add(**kwargs)
+
+    def function_url_exists(self, function_alias=None):
+        return self.function_url_info(function_alias) != {}
+
+    def function_url_info(self, function_alias=None):
+        try:
+            kwargs = dict(FunctionName= self.function_arn())
+            if function_alias:
+                kwargs['Qualifier'] = function_alias
+
+            return self.client().get_function_url_config(**kwargs)
+        except Exception:                                  # todo: refactor to confirm exception is botocore.errorfactory.ResourceNotFoundException (which is not exposed)
+            return {}
+
+    def function_url_delete(self, function_alias=None):
+        if self.function_url_exists(function_alias):
+            kwargs = dict(FunctionName= self.function_arn())
+            if function_alias:
+                kwargs['Qualifier'] = function_alias
+
+            return self.client().delete_function_url_config(**kwargs)
+
+    @remove_return_value('ResponseMetadata')
+    def function_url_create(self, function_alias=None, auth_type="AWS_IAM", cors=None, invoke_mode='BUFFERED'):
+        if self.function_url_exists(function_alias) is False:
+            function_arn   = self.function_arn()
+            auth_type      = auth_type #'NONE',
+            cors           = cors or {}
+            invoke_mode    = invoke_mode # 'RESPONSE_STREAM'
+            kwargs         = dict(FunctionName = function_arn   ,
+                                  AuthType     = auth_type      ,
+                                  Cors         = cors           ,
+                                  InvokeMode   = invoke_mode    )
+            if function_alias:
+                kwargs['Qualifier'] = function_alias
+
+            return self.client().create_function_url_config(**kwargs)
+        return {"status": "warning", "message": "function url already existed"}
+
+    def function_url_create_with_public_access(self, invoke_mode='BUFFERED'):
+        function_url_create     = self.function_url_create(auth_type='NONE', invoke_mode=invoke_mode)
+        self.wait_for_function_update_to_complete()
+        function_set_policy     = self.function_set_policy_to_allow_public_access()
+        self.wait_for_function_update_to_complete()
+        return dict(function_url_create=function_url_create, function_set_policy=function_set_policy)
+
+    def function_url_update(self, function_alias=None, auth_type=None, cors=None, invoke_mode=None):
+        if self.function_url_exists(function_alias) :
+            function_arn   = self.function_arn()
+
+            kwargs         = dict(FunctionName = function_arn)
+
+            if function_alias:
+                kwargs['Qualifier'] = function_alias
+            if auth_type:
+                kwargs['AuthType'] = auth_type
+            if cors:
+                kwargs['Cors'] = cors
+            if invoke_mode:
+                kwargs['InvokeMode'] = invoke_mode
+
+            return self.client().update_function_url_config(**kwargs)
+
+    # todo: add this policy when creating a function url with NONE auth_type
+
+    # {
+    #   "Version": "2012-10-17",
+    #   "Statement": [
+    #     {
+    #       "StatementId": "FunctionURLAllowPublicAccess",
+    #       "Effect": "Allow",
+    #       "Principal": "*",
+    #       "Action": "lambda:InvokeFunctionUrl",
+    #       "Resource": "{function_arn}",
+    #       "Condition": {
+    #         "StringEquals": {
+    #           "lambda:FunctionUrlAuthType": "NONE"
+    #         }
+    #       }
+    #     }
+    #   ]
+    # }
     @remove_return_value('ResponseMetadata')
     def info(self):
         return self.client().get_function(FunctionName=self.name)
@@ -175,7 +300,9 @@ class Lambda:
 
             result_bytes  = response.get('Payload').read()
             result_string = result_bytes.decode('utf-8')
-            result        = json.loads(result_string)
+            result        = json_loads(result_string)
+            if result == {}:
+                result = {'raw_message': result_string}
             return { 'status': 'ok'   , 'name': self.name, 'data' : result , 'response': response }
         except Exception as error:
             return { 'status': 'error', 'name': self.name, 'data' : '{0}'.format(error) }
@@ -200,10 +327,12 @@ class Lambda:
 
     def invoke_return_logs(self, payload=None):
         result                   = self.invoke_raw(payload=payload, log_type='Tail')
-        logs                     = result.get('response').get('LogResult')
-        result['execution_logs'] = base64_to_str(logs)
+        if result.get('status') == 'error':
+            return result
+        logs                     = result.get('response', {}).get('LogResult', '')
+        result['execution_logs'] = base64_to_str(logs, encoding='utf-8')
         result['return_value'  ] = result.get('data')
-        result['request_id'    ] = result.get('response').get('ResponseMetadata').get('RequestId')
+        result['request_id'    ] = result.get('response', {}).get('ResponseMetadata',{}).get('RequestId')
         del result['data'    ]
         del result['response']
         return result
@@ -219,15 +348,19 @@ class Lambda:
     def log_group(self):
         return Logs(group_name=f'/aws/lambda/{self.name}')
 
-    def permission_add(self, function_arn, statement_id, action, principal, source_arn=None):
+    def permission_add(self, function_arn, statement_id, action, principal, source_arn=None, function_url_auth_type=None):
         try:
             params = {  'FunctionName': function_arn,
                         'StatementId' : statement_id,
                         'Action'      : action,
                         'Principal'   : principal }
-            if source_arn:
-                params['SourceArn'] = source_arn
-            return self.client().add_permission(**params)
+            if source_arn             : params['SourceArn'          ] = source_arn
+            if function_url_auth_type : params['FunctionUrlAuthType'] = function_url_auth_type
+
+            result = self.client().add_permission(**params)
+            if type(result.get('Statement')) is str:
+                return json_parse(result.get('Statement'))
+            return result
         except Exception as error:
             return {'error': f'{error}'}
 
@@ -259,6 +392,19 @@ class Lambda:
         except:                 # ResourceNotFoundException doesn't seem to exposed to we have to do a global capture
             return {}
 
+    @index_by
+    @group_by
+    def policy_statements(self):
+        return self.policy().get('Statement', [])
+
+    def policy_statements_clear(self):
+        function_arn = self.function_arn()
+        for statement in self.policy_statements():
+            statement_id = statement.get('Sid')
+            self.permission_delete(function_name=function_arn, statement_id=statement_id)
+        return self
+
+    def set_handler             (self, value): self.handler        = value    ; return self
     def set_role                (self, value): self.role           = value    ; return self
     def set_s3_bucket           (self, value): self.s3_bucket      = value    ; return self
     def set_s3_key              (self, value): self.s3_key         = value    ; return self
@@ -273,6 +419,11 @@ class Lambda:
     #     self.set_s3_key   (s3_key   )
     #     return self
 
+    def set_env_variable(self, key, value):
+        if self.env_variables is None:
+            self.env_variables = {}
+        self.env_variables[key] = value
+        return self
 
     def upload(self):
         self.s3().folder_upload(self.folder_code, self.s3_bucket, self.s3_key)
@@ -293,11 +444,19 @@ class Lambda:
             return { 'status': 'error', 'name': self.name, 'data': '{0}'.format(error)}
 
     def update_lambda_code(self):
+        self.wait_for_function_update_to_complete()
         return self.client().update_function_code(FunctionName = self.name,
                                                   S3Bucket     = self.s3_bucket,
                                                   S3Key        = self.s3_key)
 
+    def update_lambda_image_uri(self, image_uri):
+        self.wait_for_function_update_to_complete()
+        self.image_uri = image_uri
+        return self.client().update_function_code(FunctionName = self.name     ,
+                                                  ImageUri     = self.image_uri)
+
     def update_lambda_configuration(self):
+        self.wait_for_function_update_to_complete()         # make sure there is no update also happening at this time
         kwargs = {}
         if self.layers:
             kwargs['Layers'] = self.layers
@@ -322,13 +481,25 @@ class Lambda:
         if image_uri is None:
             if self.s3().file_not_exists(s3_bucket, s3_key):
                 return status_error(message=f'for function {name}, could not find provided s3 bucket and s3 key: {s3_bucket} {s3_key}')
-        return status_ok()
+        return status_message(status='ok', message='validated ok  the lambda create_kwargs')
+
+    def wait_for_function_update_to_complete(self, max_attempts=40, wait_time=0.1):
+        status = None
+        for i in range(max_attempts):
+            configuration = self.configuration()
+            status        = configuration.get('LastUpdateStatus')
+            if status == 'Successful':
+                #print(f"\n after  {i} attempts, update completed successfully")
+                break
+            status = configuration.get('State')         # helps to debug when the update fails
+            wait_for(wait_time)
+        return status
 
     def wait_for_state(self, state, max_wait_count=40, wait_interval=1):
         for i in range(0, max_wait_count):
             info = self.info()
-            state = info.get('Configuration').get('State')
-            if state == 'state':
+            current_state = info.get('Configuration').get('State')
+            if current_state == state:
                 return {"status" : "ok", "message": f"Status '{state}' was found after {i} * {wait_interval} seconds"}
             wait(wait_interval)
         return {"status" : "error", "message": f"Status '{state}' did not occur in {i} * {wait_interval} seconds"}

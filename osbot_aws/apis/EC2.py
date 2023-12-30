@@ -2,6 +2,8 @@ from os import chmod
 
 import boto3
 from botocore.exceptions import ClientError
+
+from osbot_aws.AWS_Config import set_aws_region
 from osbot_utils.decorators.methods.cache_on_self import cache_on_self
 from osbot_utils.utils.Files import file_name, temp_folder, path_combine, file_create
 
@@ -30,17 +32,17 @@ class EC2:
 
     @index_by
     @group_by
-    def amis(self, owner='self', state='available', name=None, description=None):  # todo: find how to search for amis in the quick start
+    def amis(self, owner='self', state='available', name=None, description=None, ami_id=None):  # todo: find how to search for amis in the quick start
         kwargs = {'Owners' : [owner] ,
                   'Filters' : [ {'Name': 'state', 'Values': [state]}]}
 
-        if name       : kwargs.get('Filters').append({'Name': 'name'       , 'Values': [name]})
-        if description: kwargs.get('Filters').append({'Name': 'description', 'Values': [description]})
-
+        if name       : kwargs.get('Filters').append({'Name': 'name'       , 'Values': [name        ]})
+        if description: kwargs.get('Filters').append({'Name': 'description', 'Values': [description ]})
+        if ami_id     : kwargs.get('Filters').append({'Name': 'image-id'   , 'Values': [ami_id      ]})
         return self.client().describe_images(**kwargs).get('Images')
 
     def instance_create(self, image_id, name='created by osbot_aws', instance_type='t2.micro', iam_instance_profile=None, key_name=None,
-                              network_interface=None, tags=None, security_group_id=None , block_device_mappings=None):
+                              network_interface=None, tags=None, security_group_id=None , block_device_mappings=None , dry_run=False):
         kwargs = {  "ImageId"      : image_id                                                               ,
                     "InstanceType" : instance_type                                                          ,
                     "MaxCount"     : 1                                                                      ,
@@ -52,6 +54,9 @@ class EC2:
         if key_name              : kwargs["KeyName"            ] = key_name
         if network_interface     : kwargs['NetworkInterfaces'  ] = [network_interface]
         if security_group_id     : kwargs['SecurityGroupIds'   ] = [security_group_id]
+
+        if dry_run:
+            return kwargs
 
         result   = self.client().run_instances(**kwargs)
         instance = result.get('Instances')[0]
@@ -114,7 +119,7 @@ class EC2:
 
     def instances_details(self, filters=None):
         instances = {}
-        if filter is None:
+        if filters is None:
             resource_data = self.resource().instances.all()
         else:
             if type(filters) is not list:
@@ -447,3 +452,11 @@ class EC2:
     def wait_for_instance_terminated(self, instance_id): return self.wait_for('instance_terminated' , {"InstanceIds": [instance_id]})
 
     def wait_for_vpc_available      (self, vpc_id     ): return self.wait_for('vpc_available', {"VpcIds": [vpc_id]})
+
+
+def get_EC2_in_region(region_name):                     # this method is not thread save
+    set_aws_region(region_name=region_name)         # because this is a global value
+    ec2 = EC2()
+    ec2.client()                                    # get these value cached (since they depend on the global config value)
+    ec2.resource()                                  # get these value cached (since they depend on the global config value)
+    return ec2
