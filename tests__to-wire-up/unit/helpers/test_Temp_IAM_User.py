@@ -1,18 +1,18 @@
 from osbot_aws.apis.IAM import IAM
-from osbot_aws.apis.test_helpers.Temp_User import Temp_User
+from osbot_aws.apis.test_helpers.Temp_IAM_User import Temp_IAM_User
 from osbot_utils.testing.Unit_Test import Unit_Test
 
 
-class test_Temp_User(Unit_Test):
+class test_Temp_IAM_User(Unit_Test):
 
     def test__init__(self):
-        temp_name = Temp_User().user_name
+        temp_name = Temp_IAM_User().user_name
         assert len(temp_name) == 18
         assert temp_name.startswith('temp_user_')
         assert IAM(user_name=temp_name).user_exists() is False
 
     def test_enter_exit(self):
-        with Temp_User() as temp_user:
+        with Temp_IAM_User() as temp_user:
             assert temp_user.iam.user_exists()                                   # inside `with block` user should exist
             assert temp_user.iam.user_exists() is True
             user_info = temp_user.iam.user_info()
