@@ -12,7 +12,7 @@ runs:
         uses: actions/cache@v3
         with:
           path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/tests/unit/requirements-integration.txt') }}
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/tests/integration/requirements-integration.txt') }}
           restore-keys: |
               ${{ runner.os }}-pip-
       - name: Install dependencies (for tests - Unit)
