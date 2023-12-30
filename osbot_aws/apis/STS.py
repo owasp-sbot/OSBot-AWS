@@ -35,6 +35,8 @@ class STS:
             print(f"[error][STS] - ClientError {client_error}")                 # todo: add better logging support
         except NoCredentialsError as no_credentials_error:
             print(f"[error][STS] - NoCredentialsError {no_credentials_error}")  # todo: add better logging support
+        except Exception as exception:
+            print(f"[error][STS] - Exception {exception}")                      # todo: add better logging support
         return {}
 
     def caller_identity_account(self):
