@@ -34,7 +34,7 @@ runs:
           AWS_ACCOUNT_ID       : ${{ inputs.AWS_ACCOUNT_ID        }}
           AWS_ACCESS_KEY_ID    : ${{ inputs.AWS_ACCESS_KEY_ID     }}
 
-          
+
       # ECS
       - name: Run pytest - Integration - ECS
         shell: bash

@@ -1,3 +1,5 @@
+from unittest import TestCase
+
 import pytest
 import unittest
 from osbot_utils.testing.Catch      import Catch
@@ -21,8 +23,7 @@ policy_document  = {'Statement': [ { 'Action'   : 'sts:AssumeRole',
                                      'Effect'   : 'Allow',
                                      'Principal': { 'Service': 'codebuild.amazonaws.com'}}]}
 
-@pytest.mark.skip('Wire up tests')
-class Test_IAM(Test_Helper):
+class Test_IAM(TestCase):
 
 
     @classmethod
@@ -47,10 +48,19 @@ class Test_IAM(Test_Helper):
             assert iam.role_arn()    is None
 
     def setUp(self):
-        super().setUp()
+        #logging.getLogger().addHandler(logging.StreamHandler())
         import warnings
         warnings.filterwarnings("ignore", category=ResourceWarning, message="unclosed.*<ssl.SSLSocket.*>")
         self.iam = IAM(user_name=test_user,role_name=test_role )
+
+    def test_setup(self):
+        assert self.iam.user_exists() is True
+        assert self.iam.role_exists() is True
+
+
+
+@pytest.mark.skip('Wire up tests')
+class Test_IAM___TO_WIRE_UP(TestCase):
 
     # ------ tests ------
 
