@@ -11,17 +11,19 @@ from unittest.mock                  import patch
 from osbot_utils.utils.Files        import parent_folder
 from osbot_aws.utils.Version        import Version
 
-EXPECTED_PACKAGES = ['osbot_aws'                  ,
-                     'osbot_aws.lambdas'          ,
-                     'osbot_aws.apis'             ,
-                     'osbot_aws.decorators'       ,
-                     'osbot_aws.deploy'           ,
-                     'osbot_aws.helpers'          ,
-                     'osbot_aws.lambdas.shell'    ,
-                     'osbot_aws.lambdas.dev'      ,
-                     'osbot_aws.lambdas.pocs'     ,
-                     'osbot_aws.apis.shell'       ,
-                     'osbot_aws.apis.test_helpers']
+EXPECTED_PACKAGES = ['osbot_aws'                    ,
+                     'osbot_aws.apis'               ,
+                     'osbot_aws.apis.shell'         ,
+                     'osbot_aws.apis.test_helpers'  ,
+                     'osbot_aws.aws'                ,
+                     'osbot_aws.aws.ecs'            ,
+                     'osbot_aws.decorators'         ,
+                     'osbot_aws.deploy'             ,
+                     'osbot_aws.helpers'            ,
+                     'osbot_aws.lambdas'            ,
+                     'osbot_aws.lambdas.dev'        ,
+                     'osbot_aws.lambdas.pocs'       ,
+                     'osbot_aws.lambdas.shell'      ]
 
 class test_setup(TestCase):
 
