@@ -132,7 +132,7 @@ class IAM:
                 return
 
     def groups(self):
-        return list(self.get_data('list_groups', 'Groups', True))
+        return self.get_data('list_groups', 'Groups', True)
 
     @catch
     def login_profile(self):
@@ -152,8 +152,8 @@ class IAM:
         if policy_name is None: return policy_name
         if account_id  is None: account_id = self.account_id()
         if policy_path is None or policy_path == '/':
-            return 'arn:aws:iam::{0}:policy/{1}'.format(account_id, policy_name)
-        return 'arn:aws:iam::{0}:policy{1}/{2}' .format(account_id, policy_path, policy_name)
+            return f'arn:aws:iam::{account_id}:policy/{policy_name}'
+        return f'arn:aws:iam::{account_id}:policy{policy_path}/{policy_name}'
 
     def policy_create_version(self, policy_name, policy_document, policy_path='/', account_id=None): # todo: add support for deleting previous versions
         policy_arn = self.policy_arn(policy_name, policy_path, account_id)
@@ -259,7 +259,7 @@ class IAM:
 
     @index_by
     def policies(self):
-        return list(self.get_data('list_policies', 'Policies', True))
+        return self.get_data('list_policies', 'Policies', True)
 
     def policies_delete(self, policies_names):
         for policy_name in policies_names:

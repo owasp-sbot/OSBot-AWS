@@ -2,18 +2,14 @@ import os
 from unittest import TestCase
 
 import pytest
-import unittest
 from osbot_utils.testing.Catch      import Catch
-from osbot_utils.utils.Misc import wait, list_set
+from osbot_utils.utils.Misc         import wait, list_set
 from osbot_aws.AWS_Config           import AWS_Config
 from osbot_aws.aws.iam.IAM          import IAM
 from osbot_aws.aws.iam.STS          import STS
-from osbot_aws.helpers.Test_Helper  import Test_Helper
 from osbot_utils.utils.Assert       import Assert
 from osbot_utils.utils.Dev          import pprint
 
-
-# todo: refactor this into the test class
 
 IAM_USER_NAME__OSBOT_AWS = 'OSBot-AWS-Dev__Only-IAM'
 TEST_USER_NAME           = 'test_user'
@@ -87,37 +83,26 @@ class Test_IAM(TestCase):
         assert caller_identity.get('Arn'          ) == f'arn:aws:iam::{self.account_id}:user/{IAM_USER_NAME__OSBOT_AWS}'
         assert caller_identity.get('UserId'       ) != self.access_key_id  # todo find place where I can get the user id (which is different from the access key id)
 
-
-
-@pytest.mark.skip('Wire up tests')
-class Test_IAM___TO_WIRE_UP(TestCase):
-
-    # ------ tests ------
-
-
-
-
-    @pytest.mark.skip('Fix test')
     def test_groups(self):
-        assert len(self.iam.groups()) > 5
+        groups = self.iam.groups()
+        for group in groups:
+            assert list_set(group) == ['Arn', 'CreateDate', 'GroupId', 'GroupName', 'Path']
 
-    def test_policies(self):
-        assert len(self.iam.policies())  > 500
-
+    # todo: move to Unit tests
     def test_policy_arn(self):
-        assert self.iam.policy_arn('aaa'          ) == 'arn:aws:iam::{0}:policy/aaa'    .format(account_id)
-        assert self.iam.policy_arn('aaa/bbb'      ) == 'arn:aws:iam::{0}:policy/aaa/bbb'.format(account_id)
-        assert self.iam.policy_arn('aa','/bb'     ) == 'arn:aws:iam::{0}:policy/bb/aa'  .format(account_id)
-        assert self.iam.policy_arn('aa','/bb','cc') == 'arn:aws:iam::cc:policy/bb/aa'
-        assert self.iam.policy_arn(None)      is None
+        assert self.iam.policy_arn(policy_name='aaa'                                    ) == f'arn:aws:iam::{self.account_id}:policy/aaa'
+        assert self.iam.policy_arn(policy_name='aaa/bbb'                                ) == f'arn:aws:iam::{self.account_id}:policy/aaa/bbb'
+        assert self.iam.policy_arn(policy_name='aa',policy_path='/bb'                   ) == f'arn:aws:iam::{self.account_id}:policy/bb/aa'
+        assert self.iam.policy_arn(policy_name='aa',policy_path='/bb',account_id='cc'   ) == f'arn:aws:iam::cc:policy/bb/aa'
+        assert self.iam.policy_arn(policy_name=None                                     )      is None
 
     def test_policy_create__policy_delete__policy_details(self):
         policy_name     = 'test_policy'
-        self.iam.policy_delete_by_name(policy_name)
         new_policy_document =  {    "Version": "2012-10-17",
                                     "Statement": [ { "Effect": "Allow",
                                                      "Action": "lambda:InvokeFunction",
                                                      "Resource": "arn:aws:lambda:*:*:function:*" }]}
+        self.iam.policy_delete_by_name(policy_name)
         result              = self.iam.policy_create(policy_name, new_policy_document)
         expected_policy_arn = self.iam.policy_arn(policy_name)
 
@@ -132,16 +117,35 @@ class Test_IAM___TO_WIRE_UP(TestCase):
 
         assert self.iam.policy_delete(policy_arn) is True
 
-
-    def test_policy_name_exists(self):
-        assert self.iam.policy_exists_by_name('aaa'                                        ) is False
-        assert self.iam.policy_exists_by_name('AWSBatchServiceRole'                        ) is False
-        assert self.iam.policy_exists_by_name('AWSBatchServiceRole','/service-role'        ) is False
-        assert self.iam.policy_exists_by_name('AWSBatchServiceRole', '/service-role', 'aws') is True
-
-
     def test_policy_info(self):
         assert self.iam.policy_info('AAAAAA') is None
+
+    def test_policy_name_exists(self):
+        assert self.iam.policy_exists_by_name(policy_name='aaa'                                                               ) is False
+        assert self.iam.policy_exists_by_name(policy_name='AWSBatchServiceRole'                                               ) is False
+        assert self.iam.policy_exists_by_name(policy_name='AWSBatchServiceRole', policy_path='/service-role'                  ) is False
+        assert self.iam.policy_exists_by_name(policy_name='AWSBatchServiceRole', policy_path='/service-role', account_id='aws') is True
+
+    
+    def test_policies(self):
+        for policy in self.iam.policies():
+            assert list_set(policy) == ['Arn', 'AttachmentCount', 'CreateDate', 'DefaultVersionId', 'IsAttachable', 'Path', 'PermissionsBoundaryUsageCount','PolicyId', 'PolicyName', 'UpdateDate']
+            break
+        #pprint(count)   # DC: last time I executed this there were 1183 polices
+
+@pytest.mark.skip('Wire up tests')
+class Test_IAM___TO_WIRE_UP(TestCase):
+
+    # ------ tests ------
+
+
+
+
+
+
+
+
+
 
     #def test_user_create(self):                # convered in setUpClass
     #    self.iam.user_create()
