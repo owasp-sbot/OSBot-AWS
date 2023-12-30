@@ -70,7 +70,7 @@ class Test_IAM(TestCase):
         assert self.test_role         == TEST_USER_ROLE
         assert self.test_role_arn     == f'arn:aws:iam::{self.account_id}:role/{self.test_role}'
 
-        
+
     def test_access_keys(self):
         access_keys = self.iam.access_keys(index_by='AccessKeyId')
         access_key  = access_keys[self.access_key_id]
@@ -80,6 +80,14 @@ class Test_IAM(TestCase):
         assert access_key.get('Status'     ) == 'Active'
         assert access_key.get('UserName'   ) == IAM_USER_NAME__OSBOT_AWS
 
+    def test_caller_identity(self):
+        caller_identity = self.iam.caller_identity()
+        assert list_set           (caller_identity) == ['Account', 'Arn', 'UserId']
+        assert caller_identity.get('Account'      ) == self.account_id
+        assert caller_identity.get('Arn'          ) == f'arn:aws:iam::{self.account_id}:user/{IAM_USER_NAME__OSBOT_AWS}'
+        assert caller_identity.get('UserId'       ) != self.access_key_id  # todo find place where I can get the user id (which is different from the access key id)
+
+
 
 @pytest.mark.skip('Wire up tests')
 class Test_IAM___TO_WIRE_UP(TestCase):
@@ -88,8 +96,6 @@ class Test_IAM___TO_WIRE_UP(TestCase):
 
 
 
-    def test_caller_identity(self):
-        assert set(self.iam.caller_identity()) == {'UserId', 'Account', 'Arn'}
 
     @pytest.mark.skip('Fix test')
     def test_groups(self):
