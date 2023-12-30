@@ -14,7 +14,7 @@ class STS:
     @cache_on_self
     def client(self):
         from osbot_aws.apis.Session import Session                      # recursive dependency
-        return Session().client('sts', check_credentials=False)
+        return Session().client('sts')
 
     def assume_role(self, role_arn, role_session_name='temp_session'):
         kwargs = { "RoleArn"        : role_arn,
@@ -46,7 +46,7 @@ class STS:
 
     def check_aws_session(self):
         try:
-            self.caller_identity()
+            caller_arn = self.caller_identity().get('Arn')
             return status_ok()
         except ClientError as client_error:
             exception = client_error.response.get('Error')

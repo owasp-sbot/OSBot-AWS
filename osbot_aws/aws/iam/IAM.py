@@ -36,7 +36,7 @@ class IAM:
 
     # main method
     #todo: refactor with better wait solution
-    def access_key__wait_until_key_is_working(self, access_key, wait_count=20, success_count=5):
+    def access_key__wait_until_key_is_working(self, access_key, wait_for=0.5 , wait_count=20, success_count=5):
         """
         Wait until the access key is working. When testing this there a number of cases where
         access_key__is_key_working would return False after a True one (which means that AWS was still not fully syncronised (see https://aws.amazon.com/iam/faqs/ and https://stackoverflow.com/questions/20156043/how-long-should-i-wait-after-applying-an-aws-iam-policy-before-it-is-valid)
@@ -45,13 +45,25 @@ class IAM:
         :param success_count:  if still seeing some false positives include the default value (set to 5)
         :return:
         """
-        for i in range(1,wait_count):
-            if self.access_key__is_key_working(access_key) is True:         # the get_caller_identity takes about 500ms to execute
-                success_count -= 1                                          # decrement success_count
-                if success_count == 0:                                      # only getting success_count matches we can reliable say that key is good
-                    print(f'waited {i} times before confirming key is working')
-                    return True
-        return False
+        if success_count < 1:                                                   # make sure this value is not below 1
+            success_count = 1
+        status    = False
+        key_is_ok = 0
+        with Duration() as duration:
+            for i in range(1,wait_count):
+                if self.access_key__is_key_working(access_key) is True:         # the get_caller_identity takes about 500ms to execute
+                    key_is_ok += 1                                              # increment key_is_ok
+                    if key_is_ok == success_count:                              # only after success_count matches, we can reliable say that key is good
+                        status = True
+                        break
+                    continue
+                wait(wait_for)
+        if status:
+            message = f'access key ok: during {duration.seconds()} seconds, confirmed {key_is_ok} times that the key is working'
+            return status_ok(message=message)
+        else:
+            message = f'access not working ok: after {duration.seconds()} seconds, was only able to confirm {key_is_ok} times that the key was working'
+            return status_error(message=message)
 
     def access_key__wait_until_key_is_not_working(self, access_key, wait_count=100, success_count=30):
         """
@@ -71,7 +83,7 @@ class IAM:
                     return True
         return False
 
-    def access_key__is_key_working(self, access_key):
+    def access_key__is_key_working(self, access_key):       # todo refactor to Sessions class
         aws_access_key_id     = access_key.get('AccessKeyId')
         aws_secret_access_key = access_key.get('SecretAccessKey')
         try:
@@ -351,7 +363,8 @@ class IAM:
     def user_access_key_create(self, wait_for_key_working=False):
         access_key = self.client().create_access_key(UserName=self.user_name).get('AccessKey')
         if wait_for_key_working:
-            if self.access_key__wait_until_key_is_working(access_key) is False:
+            result = self.access_key__wait_until_key_is_working(access_key)
+            if result.get('status') == 'ok':
                 return None
         return access_key
 
