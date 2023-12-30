@@ -73,14 +73,14 @@ class test_CloudTrail(Test_Helper):
 
         self.result = self.send_to_elk(records, 'eventID')
 
-    def send_to_elk(self, data,id_key):
-        index_id = 'gw-cloud-trail'
-        self.aws_secret_id = 'gw-elastic-server-1'
-        from gw_bot.elastic.Elastic_Search import Elastic_Search
-        self.elastic = Elastic_Search(index=index_id, aws_secret_id=self.aws_secret_id)
-        #self.elastic.create_index().create_index_pattern(time_field='eventTime')
-        #self.elastic.delete_index()
-        return self.elastic.add_bulk(data,id_key)
+    # def send_to_elk(self, data,id_key):
+    #     index_id = 'gw-cloud-trail'
+    #     self.aws_secret_id = 'gw-elastic-server-1'
+    #     from gw_bot.elastic.Elastic_Search import Elastic_Search
+    #     self.elastic = Elastic_Search(index=index_id, aws_secret_id=self.aws_secret_id)
+    #     #self.elastic.create_index().create_index_pattern(time_field='eventTime')
+    #     #self.elastic.delete_index()
+    #     return self.elastic.add_bulk(data,id_key)
 
 
     #

@@ -4,6 +4,7 @@ import  os
 import  tempfile
 from    io                                    import BytesIO
 from    gzip                                  import GzipFile
+from    boto3.s3.transfer                     import TransferConfig
 from    botocore.errorfactory                 import ClientError
 from    osbot_utils.decorators.lists.group_by import group_by
 from    osbot_utils.decorators.lists.index_by import index_by
@@ -11,6 +12,8 @@ from    osbot_utils.decorators.methods.cache  import cache
 
 from    osbot_aws.apis.Session                import Session
 from    osbot_utils.utils.Files               import Files
+from osbot_utils.utils.Zip import zip_folder
+
 
 # helper methods
 
@@ -24,10 +27,15 @@ def s3_file_download_to(s3_bucket, s3_key, target_file, use_cache = False):
 class S3:
     def __init__(self):
         self.tmp_file_folder = 's3_temp_files'
+        self.use_threads     = True
 
     @cache
-    def s3(self):                                               # todo refactor this method to be called client()
+    def client(self):
         return Session().client('s3')
+
+    @cache
+    def s3(self):                               # todo replace usages below with this method
+        return self.client()
 
     @cache
     def s3_resource(self):                                      # todo refactor this method to be called resource()
@@ -65,7 +73,7 @@ class S3:
     def bucket_arn(self,bucket):
         return 'arn:aws:s3:::{0}'.format(bucket)
 
-    def bucket_create(self, bucket,region):
+    def bucket_create(self, bucket, region):
         try:
             location=self.s3().create_bucket(Bucket=bucket,CreateBucketConfiguration={'LocationConstraint': region }).get('Location')
             return { 'status':'ok', 'data':location}
@@ -94,9 +102,12 @@ class S3:
             data.append(bucket['Name'])
         return sorted(data)
         #return sorted(list({ bucket['Name'] for bucket in self.s3().list_buckets().get('Buckets')}))
-        #
 
-    def _files_raw(self, bucket, prefix='', filter=''):
+    def dont_use_threads(self):
+        self.use_threads = False
+        return self
+
+    def files_raw(self, bucket, prefix='', filter=''):
         params = {'Bucket': bucket}
         if isinstance(prefix, str):                                            # if prefix is a string, filter on list_objects_v2
             params['Prefix'] = prefix
@@ -118,11 +129,14 @@ class S3:
                 break
 
     def find_files(self, bucket, prefix='', filter=''):
-        return list({ item['Key'] for item in self._files_raw(bucket, prefix, filter) })
+        return list({ item['Key'] for item in self.files_raw(bucket, prefix, filter) })
 
-    def file_contents(self, bucket, key):
-        obj = self.s3().get_object(Bucket=bucket, Key=key)                    # get object data from s3
-        return obj['Body'].read().decode('utf-8')                               # extract body and decode it
+    def file_bytes(self, bucket, key):
+        obj = self.s3().get_object(Bucket=bucket, Key=key)                      # get object data from s3
+        return obj['Body'].read()                                               # returns all bytes
+
+    def file_contents(self, bucket, key, encoding='utf-8'):
+        return self.file_bytes(bucket,key).decode(encoding)                      # extract body and decode it
 
     def file_contents_from_gzip(self, bucket, key):
         obj = self.s3().get_object(Bucket=bucket, Key=key)                    # get object data from s3
@@ -168,11 +182,12 @@ class S3:
         os.remove(tmp_path)                                         # delete tmp file
         return True
 
-    def file_create_from_string (self, file_contents, bucket, key):
+    def file_create_from_string (self, file_contents, bucket, key, use_threads=True):
         with tempfile.NamedTemporaryFile() as temp:                     # use tempfile api to create temp file
             temp.write(str.encode(file_contents))                       # write contents
             temp.flush()                                                # flush contents to make sure everything has been written
-            self.s3().upload_file(temp.name, bucket,key)              # upload file using s3 api
+
+            self.s3().upload_file(temp.name, bucket,key, Config=self.transfer_config())                # upload file using s3 api
             return True
 
     def file_delete(self, bucket, key):
@@ -210,6 +225,10 @@ class S3:
         self.file_upload_to_key(file, bucket, key)                                # upload file
         return key                                                              # return path to file uploaded (if succeeded)
 
+    def file_upload_from_bytes(self, file_body, bucket, key):
+        self.s3().put_object(Body=file_body, Bucket=bucket, Key=key)
+        return True
+
     def file_upload_to_key(self, file, bucket, key):
         self.s3().upload_file(file, bucket, key)                                # upload file
         return True                                                             # return true (if succeeded)
@@ -219,8 +238,29 @@ class S3:
         self.file_upload_to_key(file, bucket, key)
         return key
 
+    def folder_list(self, s3_bucket, parent_folder='', return_full_path=False):
+        folders = []
+        paginator = self.client().get_paginator('list_objects_v2')
+        if parent_folder.endswith('/') is False:
+            parent_folder += '/'
+
+        operation_parameters = {
+            'Bucket': s3_bucket    ,
+            'Prefix': parent_folder,
+            'Delimiter': '/'
+        }
+        for page in paginator.paginate(**operation_parameters):
+            for common_prefix in page.get('CommonPrefixes', []):
+                folder_path = common_prefix.get('Prefix')
+                if return_full_path:
+                    folders.append(folder_path)
+                else:
+                    folder_name = folder_path.replace(parent_folder, '').replace('/', '')
+                    folders.append(folder_name)
+        return folders
+
     def folder_upload (self, folder, s3_bucket, s3_key):
-        file = Files.zip_folder(folder)
+        file = zip_folder(folder)
         self.file_upload_to_key(file, s3_bucket, s3_key)
         os.remove(file)
         return self
@@ -261,3 +301,6 @@ class S3:
                             'Version'  : '2012-10-17' })
         return self.s3().put_bucket_policy(Bucket= s3_bucket, Policy=policy)
         #return policy
+
+    def transfer_config(self):
+        return TransferConfig(use_threads=self.use_threads)

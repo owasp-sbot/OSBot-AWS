@@ -26,7 +26,7 @@ class Firehose:
 
     @catch
     def add_processing_lambda(self, stream_name, lambda_name):
-        function_arn = Lambda(lambda_name).function_Arn()
+        function_arn = Lambda(lambda_name).function_arn()
         update_data =  { 'ProcessingConfiguration': {
                             'Enabled'   : True,
                             'Processors': [{ 'Type': 'Lambda',

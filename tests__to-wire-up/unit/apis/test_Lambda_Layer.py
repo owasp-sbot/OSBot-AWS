@@ -50,7 +50,7 @@ class test_Lambda_Layer(Test_Helper):
         with Temp_Folder_With_Lambda_File('file_in_layer') as temp_folder:
             params       = { 'layer_name'          : 'layer_created_via_s3' ,
                              'description'         : 'this is a test layer' ,
-                             'runtimes'            : ['python3.8']          }
+                             'runtimes'            : ['python3.11']          }
             lambda_layer = Lambda_Layer(**params)
             result       = lambda_layer.create_from_folder_via_s3(temp_folder.folder)     # calls create_from_s3
             self.assert_lambda_created_ok(params, result)

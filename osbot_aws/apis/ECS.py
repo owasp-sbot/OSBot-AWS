@@ -1,6 +1,7 @@
 from time import sleep
 
 from botocore.exceptions import ClientError
+from osbot_aws.AWS_Config import AWS_Config
 
 from osbot_utils.decorators.lists.group_by  import group_by
 from osbot_aws.apis.Cloud_Watch_Logs        import Cloud_Watch_Logs
@@ -19,8 +20,9 @@ ECS_WAITER_MAX_ATTEMPTS = 600           # default was 100 times
 class ECS:
 
     def __init__(self):
-        self.account_id  = self.sts().current_account_id()
-        self.region      = self.sts().current_region_name()
+        self.aws_config = AWS_Config()
+        self.account_id = self.aws_config.aws_session_account_id()
+        self.region     = self.aws_config.aws_session_region_name()
 
     @cache
     def client(self):

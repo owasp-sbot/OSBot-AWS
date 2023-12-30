@@ -181,7 +181,7 @@ class API_Gateway:
         aws_acct_id   = iam.account_id()
         aws_region    = iam.region()
         aws_lambda    = Lambda(lambda_name)
-        function_arn  = aws_lambda.function_Arn()#'gw_bot.lambdas.dev.hello_world'
+        function_arn  = aws_lambda.function_arn()#'gw_bot.lambdas.dev.hello_world'
         statement_id  = 'allow-api-gateway-invoke'
         action        = 'lambda:InvokeFunction'
         principal     = 'apigateway.amazonaws.com'

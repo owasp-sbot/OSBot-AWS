@@ -1,5 +1,6 @@
 import calendar
 import datetime
+import time
 
 from osbot_aws.apis.Boto_Helpers import Boto_Helpers
 from osbot_aws.apis.Session import Session
@@ -37,10 +38,10 @@ class Logs(Boto_Helpers):
                 result  = self.client().put_log_events(logGroupName=self.log_group_name,logStreamName=self.stream_name,logEvents=events, sequenceToken=sequence_token)
             else:
                 result  = self.client().put_log_events(logGroupName=self.log_group_name,logStreamName=self.stream_name,logEvents=events)
-            nextSequenceToken = result.get('nextSequenceToken')
+            next_sequence_token = result.get('nextSequenceToken')
             if result.get('rejectedLogEventsInfo') is not None:
-                return {'status': 'error', 'nextSequenceToken' : nextSequenceToken, 'data': result.get('rejectedLogEventsInfo')}
-            return {'status': 'ok', 'nextSequenceToken' : nextSequenceToken}
+                return {'status': 'error', 'nextSequenceToken' : next_sequence_token, 'data': result.get('rejectedLogEventsInfo')}
+            return {'status': 'ok', 'nextSequenceToken' : next_sequence_token}
         except Exception as error:
             return {'status': 'error', 'data': '{0}'.format(error)}
 
@@ -126,6 +127,9 @@ class Logs(Boto_Helpers):
     def groups_names(self):
         return list_set(self.groups(index_by='logGroupName'))
 
+    def name(self):
+        return self.log_group_name
+
     def stream_create(self):
         if self.stream_exists() is True: return False
         self.client().create_log_stream(logGroupName=self.log_group_name, logStreamName= self.stream_name)
@@ -144,8 +148,56 @@ class Logs(Boto_Helpers):
             return self.client().describe_log_streams(logGroupName=self.log_group_name).get('logStreams')
         return self.client().describe_log_streams(logGroupName=self.log_group_name, logStreamNamePrefix=self.stream_name).get('logStreams')
 
-    def messages(self):
+    def messages(self,limit=10000, hours=24, start_time=None, end_time=None, max_loop=25):
+
+        if start_time is None:
+            start_time = int((datetime.datetime.now() - datetime.timedelta(hours=hours)).timestamp() * 1000)
+
+        if end_time is None:
+            end_time = int(time.time() * 1000)
+
+        # kwargs = dict(  logGroupName  = self.log_group_name ,
+        #                 logStreamName = self.stream_name    ,
+        #                 limit         = limit               ,
+        #                 startTime     = start_time          ,
+        #                 endTime       = end_time            )
+        # response  = self.client().get_log_events(**kwargs)
+        # #events = self.invoke_using_paginator(self.client(), 'get_log_events', 'events', **kwargs)
+
+
+        params = {
+            "logGroupName": self.log_group_name ,
+            "logStreamName": self.stream_name   ,
+            "startFromHead": True               ,
+            "startTime"    : start_time         ,
+            "endTime"      : end_time           ,
+            "limit"        : limit              }
+
+        log_events = []
+        import logging
+        logger = logging.getLogger()
+        logger.setLevel(logging.INFO)
+        while max_loop > 0:
+            logger.info(f"Fetching log events with params: {params}")
+            response = self.client().get_log_events(**params)
+            events   = response["events"]
+            log_events.extend(events)
+            next_token = response.get("nextForwardToken")
+            logger.info(f"Got {len(events)} events with next_token: {next_token}")
+            #print(f'limit:{limit} len(log_events):{len(log_events)}')
+            if len(events) == 0:
+                break
+            if next_token == params.get("nextToken"):
+                break
+            if len (log_events) >= limit:
+                break
+            params['nextToken'] = next_token
+            max_loop -=1
+
         messages = []
-        for event in self.client().get_log_events(logGroupName=self.log_group_name, logStreamName=self.stream_name).get('events'):
+        for event in log_events:
             messages.append(event.get('message'))
         return messages
+
+    def __repr__(self):
+        return f"Logs: {self.log_group_name or ''} {self.stream_name or ''}"

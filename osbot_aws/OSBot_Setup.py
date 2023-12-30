@@ -6,20 +6,20 @@ from osbot_aws.helpers.Lambda_Package import Lambda_Package
 class OSBot_Setup:      # todo refactor out this code, most of this has been moved into aws_config and Deploy_Lambda
 
     def __init__(self, bot_name= None, profile_name = None, account_id=None, region_name=None, lambda_s3_bucket=None, lambda_role_name=None):
-        aws_config = AWS_Config()
-        if bot_name            : aws_config.set_bot_name                 (bot_name)
-        if profile_name        : aws_config.set_aws_session_profile_name(profile_name     )
-        if account_id          : aws_config.set_aws_session_account_id   (account_id      )
-        if region_name         : aws_config.set_aws_session_region_name  (region_name     )
-        if lambda_s3_bucket    : aws_config.set_lambda_s3_bucket         (lambda_s3_bucket)
-        if lambda_role_name    : aws_config.set_lambda_role_name         (lambda_role_name)
+        self.aws_config        = AWS_Config()
+        if bot_name            : self.aws_config.set_bot_name                 (bot_name)
+        if profile_name        : self.aws_config.set_aws_session_profile_name(profile_name     )
+        if account_id          : self.aws_config.set_aws_session_account_id   (account_id      )
+        if region_name         : self.aws_config.set_aws_session_region_name  (region_name     )
+        if lambda_s3_bucket    : self.aws_config.set_lambda_s3_bucket         (lambda_s3_bucket)
+        if lambda_role_name    : self.aws_config.set_lambda_role_name         (lambda_role_name)
 
-        self.bot_name          = aws_config.bot_name()
-        self.profile_name      = aws_config.aws_session_profile_name()
-        self.region_name       = aws_config.aws_session_region_name()
-        self.account_id        = aws_config.aws_session_account_id()
-        self.s3_bucket_lambdas = aws_config.lambda_s3_bucket()
-        self.lambda_role_name  = aws_config.lambda_role_name()
+        self.bot_name          = self.aws_config.bot_name()
+        self.profile_name      = self.aws_config.aws_session_profile_name()
+        self.region_name       = self.aws_config.aws_session_region_name()
+        self.account_id        = self.aws_config.aws_session_account_id()
+        self.s3_bucket_lambdas = self.aws_config.lambda_s3_bucket()
+        self.lambda_role_name  = self.aws_config.lambda_role_name()
         self.lambda_role_arn   = f"arn:aws:iam::{self.account_id}:role/{self.lambda_role_name}"
 
         self.s3                = S3()
