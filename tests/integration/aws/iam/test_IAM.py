@@ -1,9 +1,10 @@
+import os
 from unittest import TestCase
 
 import pytest
 import unittest
 from osbot_utils.testing.Catch      import Catch
-from osbot_utils.utils.Misc         import wait
+from osbot_utils.utils.Misc import wait, list_set
 from osbot_aws.AWS_Config           import AWS_Config
 from osbot_aws.aws.iam.IAM          import IAM
 from osbot_aws.aws.iam.STS          import STS
@@ -13,50 +14,71 @@ from osbot_utils.utils.Dev          import pprint
 
 
 # todo: refactor this into the test class
-account_id       = AWS_Config().aws_session_account_id()
-delete_created   = True
-test_user        = 'test_user'
-test_user_arn    = 'arn:aws:iam::{0}:user/test_user'.format(account_id)
-test_role        = 'test_role'
-test_role_arn    = 'arn:aws:iam::{0}:role/test_role'.format(account_id)
-policy_document  = {'Statement': [ { 'Action'   : 'sts:AssumeRole',
-                                     'Effect'   : 'Allow',
-                                     'Principal': { 'Service': 'codebuild.amazonaws.com'}}]}
+
+IAM_USER_NAME__OSBOT_AWS = 'OSBot-AWS-Dev__Only-IAM'
+TEST_USER_NAME           = 'test_user'
+TEST_USER_ROLE           = 'test_role'
 
 class Test_IAM(TestCase):
+    account_id      : str
+    aws_config      : AWS_Config
+    policy_document : str
+    test_user       : str
+    test_role       : str
 
 
     @classmethod
     def setUpClass(cls):
-        import warnings
-        warnings.filterwarnings("ignore", category=ResourceWarning, message="unclosed.*<ssl.SSLSocket.*>")
-
-        iam = IAM(user_name=test_user, role_name=test_role)
+        cls.aws_config       = AWS_Config()
+        cls.account_id       = cls.aws_config.aws_session_account_id()
+        cls.access_key_id    = cls.aws_config.aws_access_key_id()
+        cls.delete_created   = True
+        cls.test_user        = TEST_USER_NAME
+        cls.test_user_arn    = f'arn:aws:iam::{cls.account_id}:user/{cls.test_user}'
+        cls.test_role        = TEST_USER_ROLE
+        cls.test_role_arn    = f'arn:aws:iam::{cls.account_id}:role/{cls.test_role}'
+        cls.policy_document  = {'Statement': [ { 'Action'   : 'sts:AssumeRole',
+                                                 'Effect'   : 'Allow',
+                                                 'Principal': { 'Service': 'codebuild.amazonaws.com'}}]}
+        iam = IAM(user_name=cls.test_user, role_name=cls.test_role)
         if iam.user_exists() is False:
             iam.user_create()
         if iam.role_exists() is False:
-            iam.role_create(policy_document)
+            iam.role_create(cls.policy_document)
 
-    @classmethod
-    def tearDownClass(cls):
-        if delete_created:
-            iam = IAM(user_name=test_user,role_name=test_role)
-            iam.user_delete()
-            assert iam.user_exists() is False
-            iam.role_delete()
-            assert iam.role_exists() is False
-            assert iam.role_arn()    is None
+    # @classmethod
+    # def tearDownClass(cls):
+    #     if delete_created:
+    #         iam = IAM(user_name=test_user,role_name=test_role)
+    #         iam.user_delete()
+    #         assert iam.user_exists() is False
+    #         iam.role_delete()
+    #         assert iam.role_exists() is False
+    #         assert iam.role_arn()    is None
 
     def setUp(self):
         #logging.getLogger().addHandler(logging.StreamHandler())
-        import warnings
-        warnings.filterwarnings("ignore", category=ResourceWarning, message="unclosed.*<ssl.SSLSocket.*>")
-        self.iam = IAM(user_name=test_user,role_name=test_role )
+        self.iam = IAM(user_name=self.test_user,role_name=self.test_role )
 
-    def test_setup(self):
+    def test__setup(self):
+        assert self.account_id
+        assert self.access_key_id
         assert self.iam.user_exists() is True
         assert self.iam.role_exists() is True
+        assert self.test_user         == TEST_USER_NAME
+        assert self.test_user_arn     == f'arn:aws:iam::{self.account_id}:user/{self.test_user}'
+        assert self.test_role         == TEST_USER_ROLE
+        assert self.test_role_arn     == f'arn:aws:iam::{self.account_id}:role/{self.test_role}'
 
+        
+    def test_access_keys(self):
+        access_keys = self.iam.access_keys(index_by='AccessKeyId')
+        access_key  = access_keys[self.access_key_id]
+        assert len(access_keys) == 1
+        assert list_set(access_key.keys()) == ['AccessKeyId', 'CreateDate', 'Status', 'UserName']
+        assert access_key.get('AccessKeyId') == self.access_key_id
+        assert access_key.get('Status'     ) == 'Active'
+        assert access_key.get('UserName'   ) == IAM_USER_NAME__OSBOT_AWS
 
 
 @pytest.mark.skip('Wire up tests')
@@ -64,29 +86,7 @@ class Test_IAM___TO_WIRE_UP(TestCase):
 
     # ------ tests ------
 
-    @unittest.skip("Doesn't work in CodeBuild since there is only one configuration in there")
-    def test_account_id(self):
-        account_id_1 = self.iam.account_id('gs-detect-aws')             # todo: rewrite since account_id doesn't take this parameter any more
-        assert AWS_Config().aws_session_profile_name() == 'gs-detect-aws'
 
-        self.iam._account_id = None
-        self.iam._sts        = None
-
-        account_id_2 = self.iam.account_id('default')
-        assert AWS_Config().aws_session_profile_name() == 'default'
-        assert account_id_1 != account_id_2
-
-        self.iam._account_id = None
-        self.iam._sts = None
-
-        account_id_3 = self.iam.account_id()
-        assert AWS_Config().aws_session_profile_name() == 'default'
-        assert account_id_2 == account_id_3
-
-    @pytest.mark.skip('Fix test')
-    def test_access_keys(self):
-        assert len(self.iam.access_keys(index_by='AccessKeyId')) > 0
-        assert len(self.iam.access_keys(group_by='UserName'   )) > 0
 
     def test_caller_identity(self):
         assert set(self.iam.caller_identity()) == {'UserId', 'Account', 'Arn'}
