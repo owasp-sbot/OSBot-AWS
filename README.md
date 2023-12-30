@@ -1,7 +1,16 @@
 # OSBot-AWS
-AWS apis and commands for the OWASP Security Bot (OSBot)
+Large number of AWS apis and utils from the OWASP Security Bot (OSBot) which make
+the use of AWS's boto3 library easier and more intuitive.
 
 **Install**
+
+Current stable release is v1.0.0 and is available here 
+
+https://github.com/owasp-sbot/OSBot-AWS/releases/tag/v1.0.0
+
+### Install from PyPi
+
+There is a version in PyPi (which is not the latest version)
 
 `pip3 install osbot-aws`
 
