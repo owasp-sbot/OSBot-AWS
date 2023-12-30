@@ -25,7 +25,7 @@ runs:
       - name: Run pytest - Integration - ECS
         shell: bash
         run: |
-          coverage run --source=${{ inputs.package_name }} -m pytest -v -s --durations=0 tests/integration/ecs
+          coverage run --source=${{ inputs.package_name }} -m pytest -v -s --durations=0 tests/integration/aws/ecs
         env:
           COVERAGE_FILE        : .coverage.integration.ecs
           AWS_SECRET_ACCESS_KEY: ${{ inputs.AWS_SECRET_ACCESS_KEY }}
