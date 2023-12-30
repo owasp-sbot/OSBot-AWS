@@ -1,7 +1,9 @@
+import os
 from unittest import TestCase
 
 from osbot_utils.utils.Dev import pprint
 
+from osbot_aws.apis.STS import STS
 from osbot_aws.aws.ecs.ECS import ECS
 from osbot_aws.aws.ecs.ECS_Cluster import ECS_Cluster
 

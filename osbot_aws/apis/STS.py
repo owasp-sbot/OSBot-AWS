@@ -29,7 +29,11 @@ class STS:
         return self.client().meta.region_name
 
     def caller_identity(self):
-        return self.client().get_caller_identity()
+        try:
+            return self.client().get_caller_identity()
+        except ClientError as client_error:
+            print(f"[error][STS] - {client_error}")
+            return {}
 
     def caller_identity_account(self):
         return self.caller_identity().get('Account')
