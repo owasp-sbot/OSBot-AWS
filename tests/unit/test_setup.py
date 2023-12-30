@@ -42,4 +42,4 @@ class test_setup(TestCase):
         assert kwargs.get('description'     ) == 'OWASP Security Bot - AWS'
         assert kwargs.get('long_description') == setup.long_description
         assert kwargs.get('version'         ) == Version().value()
-        assert kwargs.get('packages'        ) == EXPECTED_PACKAGES
+        assert sorted(kwargs.get('packages' )) == sorted(EXPECTED_PACKAGES)
