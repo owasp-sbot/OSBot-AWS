@@ -14,20 +14,26 @@ CACHES_NAME__AWS_ROLES       = '_aws_cached_roles'
 
 class IAM_Assume_Role:
 
-    def __init__(self, role_name, policy_statement):
+    def __init__(self, role_name):
         self.role_name        = role_name
-        self.policy_statement = policy_statement
+        #self.policy_statement = policy_statement
         self.cached_role      = Local_Cache(role_name, CACHES_NAME__AWS_ROLES)
 
     @cache
     def iam(self) -> IAM:
         return IAM()
 
-    def create_role(self, policy):
-        return self.iam_role.create(policy)
+    @cache
+    def iam_role(self) -> IAM_Role:
+        return IAM_Role(role_name=self.role_name)
+
+    def create_role(self):
+        setup_data = self.setup_data()
+        return setup_data
+        #return self.iam_role().create(policy)
 
     def role_exists(self):
-        return self.iam_role.exists()
+        return self.iam_role().exists()
 
     def  current_user(self):
         return self.iam().caller_identity()
@@ -45,11 +51,17 @@ class IAM_Assume_Role:
     def path_cached_credentials(self):
         return path_combine(current_temp_folder(), FOLDER_NAME__CACHED_CREDENTIALS)
 
-    def setup(self):
+    def setup_data(self):
         if self.cached_role.cache_exists() is False:
-            caller_identity = STS().caller_identity()
-            #self.cached_role.create()
-            #self.cached_role.add('role_name'    , self.role_name)
-            #self.cached_role.add('assume_policy', self.role_name)
+            caller_identity  = STS().caller_identity()
+            current_user_arn = caller_identity.get('Arn')
+            assume_policy    = self.default_assume_policy(current_user_arn)
 
-        return self
+            data = dict(assume_policy      = assume_policy                 ,
+                        current_account_id = caller_identity.get('Account'),
+                        current_user_id    = caller_identity.get('UserId' ),
+                        current_user_arn   = current_user_arn              ,
+                        role_name          = self.role_name                ,
+                        role_exists        = self.role_exists()            )
+            self.cached_role.set_data(data)
+        return self.cached_role.data()

@@ -20,12 +20,14 @@ EXPECTED_PACKAGES = ['osbot_aws'                    ,
                      'osbot_aws.aws.iam'            ,
                      'osbot_aws.decorators'         ,
                      'osbot_aws.deploy'             ,
+                     'osbot_aws.exceptions'         ,
                      'osbot_aws.helpers'            ,
                      'osbot_aws.helpers.boto3'      ,
                      'osbot_aws.lambdas'            ,
                      'osbot_aws.lambdas.dev'        ,
                      'osbot_aws.lambdas.pocs'       ,
-                     'osbot_aws.lambdas.shell'      ]
+                     'osbot_aws.lambdas.shell'      ,
+                     'osbot_aws.utils'              ]
 
 class test_setup(TestCase):
 
