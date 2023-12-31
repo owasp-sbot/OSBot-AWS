@@ -30,8 +30,8 @@ class IAM_Role:
         self.iam.role_policy_attach(policy_arn=policy_arn)
         return policy_arn
 
-    def create(self, policy_document, skip_if_exists=True):
-        self.iam.role_create(policy_document=policy_document, skip_if_exists=skip_if_exists)
+    def create(self, assume_policy_document, skip_if_exists=True):
+        self.iam.role_create(assume_policy_document=assume_policy_document, skip_if_exists=skip_if_exists)
         return self.exists()
 
     def create_for__lambda(self):

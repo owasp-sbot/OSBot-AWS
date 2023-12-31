@@ -4,6 +4,7 @@ from osbot_utils.decorators.methods.cache_on_self   import cache_on_self
 from osbot_utils.decorators.lists.group_by          import group_by
 from osbot_utils.decorators.lists.index_by          import index_by
 from osbot_utils.decorators.methods.catch           import catch
+from osbot_utils.decorators.methods.remove_return_value import remove_return_value
 from osbot_utils.testing.Duration import Duration
 from osbot_utils.utils.Json                         import json_to_str
 from osbot_utils.utils.Misc import random_string, wait
@@ -15,6 +16,8 @@ from osbot_aws.aws.iam.STS                          import STS
 
 
 class IAM:
+
+    # todo: remove user_name and role_name from here
     def __init__(self, user_name=None, role_name=None):
         self.user_name   = user_name                        # todo: refactor this variable into the method's definition (to make it consistent with the other APIs)
         self.role_name   = role_name                        #       this will be a bit of a breaking change to code that uses this class for role management
@@ -118,10 +121,9 @@ class IAM:
     def region(self):
         return self.session().region_name
 
+    @remove_return_value('ResponseMetadata')
     def caller_identity(self):
-        data = self.sts().get_caller_identity()
-        del data['ResponseMetadata']
-        return data
+        return self.sts().get_caller_identity()
 
     def get_data(self, method, field_id, use_paginator, **kwargs):
         paginator = self.client().get_paginator(method)
@@ -285,15 +287,15 @@ class IAM:
         except:
             return None
 
-    def role_create(self, policy_document, skip_if_exists=True):
+    def role_create(self, assume_policy_document, skip_if_exists=True):
         if self.role_exists():
             if skip_if_exists:
                 return self.role_info()                     # todo: confirm that the values we get from self.role_info() are compatible with the values in .get('Role') (below)
             else:
                 self.role_delete()
-        if type(policy_document) is not str:
-            policy_document = json.dumps(policy_document)
-        return self.client().create_role(RoleName=self.role_name, AssumeRolePolicyDocument=policy_document).get('Role')
+        if type(assume_policy_document) is not str:
+            policy_document = json.dumps(assume_policy_document)
+        return self.client().create_role(RoleName=self.role_name, AssumeRolePolicyDocument=assume_policy_document).get('Role')
 
     def role_delete(self):
         if self.role_exists() is False:

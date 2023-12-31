@@ -7,6 +7,7 @@ from osbot_utils.decorators.methods.cache   import cache
 from osbot_aws.apis.Session                 import Session
 from osbot_utils.utils.Misc                 import list_get, wait
 
+from osbot_aws.aws.iam.IAM_Role import IAM_Role
 from osbot_aws.aws.iam.STS import STS
 
 # todo: find good solution to capture/manage these config values (See also values in EC2 class)
@@ -352,7 +353,7 @@ class ECS:
         if iam_role.exists() and skip_if_exists:
             return iam_role
 
-        if iam_role.create(policy_document=role_document, skip_if_exists=skip_if_exists):
+        if iam_role.create(assume_policy_document=role_document, skip_if_exists=skip_if_exists):
             iam_role.attach_policy(policy_name=policy_name, policy_document=policy_document)
             if policy_name in iam_role.iam.role_policies():
                 return iam_role

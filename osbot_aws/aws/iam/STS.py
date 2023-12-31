@@ -1,5 +1,6 @@
 import sys
 from botocore.exceptions                            import ClientError, NoCredentialsError
+from osbot_utils.decorators.methods.remove_return_value import remove_return_value
 from osbot_utils.utils.Status                       import status_ok, status_error, status_warning
 from osbot_utils.decorators.methods.cache_on_self   import cache_on_self
 from osbot_aws.AWS_Config                           import AWS_Config
@@ -28,6 +29,7 @@ class STS:
     def current_region_name(self):
         return self.client().meta.region_name
 
+    @remove_return_value('ResponseMetadata')
     def caller_identity(self):
         try:
             return self.client().get_caller_identity()
