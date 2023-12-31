@@ -294,7 +294,7 @@ class IAM:
             else:
                 self.role_delete()
         if type(assume_policy_document) is not str:
-            policy_document = json.dumps(assume_policy_document)
+            assume_policy_document = json.dumps(assume_policy_document)
         return self.client().create_role(RoleName=self.role_name, AssumeRolePolicyDocument=assume_policy_document).get('Role')
 
     def role_delete(self):
