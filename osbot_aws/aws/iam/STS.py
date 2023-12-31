@@ -16,9 +16,10 @@ class STS:
         from osbot_aws.apis.Session import Session                      # recursive dependency
         return Session().client('sts')
 
-    def assume_role(self, role_arn, role_session_name='temp_session'):
-        kwargs = { "RoleArn"        : role_arn,
-                   "RoleSessionName": role_session_name}
+    def assume_role(self, role_arn, role_session_name='temp_session', duration_seconds=900):
+        kwargs = { "DurationSeconds" : duration_seconds , # minumum 900 seconds (15 minutes) manximum 43200 seconds (15 hour)
+                    "RoleArn"        : role_arn         ,
+                   "RoleSessionName": role_session_name }
         return self.client().assume_role(**kwargs)
 
     def current_account_id(self):
