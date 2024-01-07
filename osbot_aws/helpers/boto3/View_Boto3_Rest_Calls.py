@@ -37,11 +37,11 @@ class View_Boto3_Rest_Calls:
             total_duration = round(self.total_duration.seconds(),2)
             print()
             print()
-            print(f"|-------------------------------------------------------|")
-            print(f"| BOTO3 REST calls (via BaseClient._make_api_call)      |")
-            print(f"|-------------------------------------------------------|")
-            print(f"| {'#':2} | {'Method':22} | {'Duration':7} | {'Return Value':10} |")
-            print(f"|-------------------------------------------------------|")
+            print(f"|-------------------------------------------------------------------------------------|")
+            print(f"| BOTO3 REST calls (via BaseClient._make_api_call)                                    |")
+            print(f"|-------------------------------------------------------------------------------------|")
+            print(f"| {'#':2} | {'Method':22} | {'Duration':7} | {'Return Value':42} |")
+            print(f"|-------------------------------------------------------------------------------------|")
             for call in self.hook_method.calls:
                 api_name     = call.get('args')[1]
                 return_value = call.get('return_value')
@@ -49,7 +49,7 @@ class View_Boto3_Rest_Calls:
                 index        = call.get('index')
                 del return_value['ResponseMetadata']
                 print(f"| {index:2} | {api_name:22} | {duration:5} ms | {return_value}     |")
-            print(f"|-------------------------------------------------------|")
+            print(f"|-------------------------------------------------------------------------------------|")
             print(f"| Total Duration: {total_duration:6} secs | Total calls: {len(self.hook_method.calls)} {' ':8} |")
-            print(f"|-------------------------------------------------------|")
+            print(f"|-------------------------------------------------------------------------------------|")
 

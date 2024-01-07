@@ -1,5 +1,7 @@
 import json
 import boto3
+from osbot_utils.utils.Objects import get_value
+
 from osbot_utils.decorators.methods.cache_on_self   import cache_on_self
 from osbot_utils.decorators.lists.group_by          import group_by
 from osbot_utils.decorators.lists.index_by          import index_by
@@ -268,7 +270,7 @@ class IAM:
             self.policy_delete(policy_name)
 
     def role_arn(self):
-        return Misc.get_value(self.role_info(), 'Arn')
+        return get_value(self.role_info(), 'Arn')
 
     def role_assume_policy(self):
         return self.role_info().get('AssumeRolePolicyDocument')

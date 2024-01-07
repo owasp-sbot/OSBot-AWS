@@ -24,36 +24,45 @@ class IAM_Assume_Role:
         return IAM()
 
     @cache
+    def sts(self) -> STS:
+        return STS()
+
+    @cache
     def iam_role(self) -> IAM_Role:
         return IAM_Role(role_name=self.role_name)
 
+    def assume_policy(self):
+        return self.setup_data().get('assume_policy')
+
     def create_role(self):
-        setup_data = self.setup_data()
-        return setup_data
+        #setup_data = self.setup_data()
+        if self.role_exists() is False:
+            assume_policy_document = self.assume_policy()
+            result = self.iam_role().create(assume_policy_document=assume_policy_document)
+            #pprint(result)
+
+        #return setup_data
         #return self.iam_role().create(policy)
 
     def role_exists(self):
-        return self.iam_role().exists()
-
-    def  current_user(self):
-        return self.iam().caller_identity()
+        return self.setup_data().get('role_exists', False)
 
     def default_assume_policy(self, principal):
         return {'Statement': [{'Action'    : 'sts:AssumeRole'   ,
                                'Effect'   : 'Allow'             ,
                                'Principal': principal           } ]}
-    @cache
-    def path_cached_roles(self):
-        path_folder = path_combine(current_temp_folder(), FOLDER_NAME__CACHED_ROLES)
-        create_folder(path_folder)
-        return path_folder
-
-    def path_cached_credentials(self):
-        return path_combine(current_temp_folder(), FOLDER_NAME__CACHED_CREDENTIALS)
+    # @cache
+    # def path_cached_roles(self):
+    #     path_folder = path_combine(current_temp_folder(), FOLDER_NAME__CACHED_ROLES)
+    #     create_folder(path_folder)
+    #     return path_folder
+    #
+    # def path_cached_credentials(self):
+    #     return path_combine(current_temp_folder(), FOLDER_NAME__CACHED_CREDENTIALS)
 
     def setup_data(self):
         if self.cached_role.cache_exists() is False:
-            caller_identity  = STS().caller_identity()
+            caller_identity  = self.sts().caller_identity()
             current_user_arn = caller_identity.get('Arn')
             assume_policy    = self.default_assume_policy(current_user_arn)
 
@@ -62,6 +71,6 @@ class IAM_Assume_Role:
                         current_user_id    = caller_identity.get('UserId' ),
                         current_user_arn   = current_user_arn              ,
                         role_name          = self.role_name                ,
-                        role_exists        = self.role_exists()            )
+                        role_exists        = self.iam_role().exists()      )
             self.cached_role.set_data(data)
         return self.cached_role.data()

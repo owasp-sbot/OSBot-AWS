@@ -3,7 +3,7 @@ from unittest import TestCase
 
 import pytest
 from osbot_utils.testing.Catch      import Catch
-from osbot_utils.utils.Misc import wait, list_set, obj_info
+from osbot_utils.utils.Misc import wait, list_set
 from osbot_aws.AWS_Config           import AWS_Config
 from osbot_aws.aws.iam.IAM          import IAM
 from osbot_aws.aws.iam.STS          import STS

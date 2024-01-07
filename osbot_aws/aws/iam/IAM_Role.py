@@ -1,4 +1,6 @@
 from osbot_utils.utils.Misc         import random_string
+from osbot_utils.utils.Status import status_error, status_ok
+
 from osbot_aws.AWS_Config           import AWS_Config
 from osbot_aws.aws.iam.IAM          import IAM
 from osbot_aws.aws.iam.IAM_Policy   import IAM_Policy
@@ -31,8 +33,16 @@ class IAM_Role:
         return policy_arn
 
     def create(self, assume_policy_document, skip_if_exists=True):
-        self.iam.role_create(assume_policy_document=assume_policy_document, skip_if_exists=skip_if_exists)
-        return self.exists()
+        try:
+            role_info = self.iam.role_create(assume_policy_document=assume_policy_document, skip_if_exists=skip_if_exists)
+            return status_ok(data    = role_info                                         ,
+                             message = f'user created (skip_if_exists: {skip_if_exists})')
+        except Exception as error:
+            return status_error(data    = dict(assume_policy_document=assume_policy_document)                         ,
+                                error   = error                                                                       ,
+                                message = f'error creating role with assume_policy_document: {assume_policy_document}')
+
+        #return self.exists()
 
     def create_for__lambda(self):
         result = self.create_for_service__assume_role('lambda.amazonaws.com')

@@ -1,53 +1,73 @@
+import inspect
+import os
 from unittest import TestCase
 
-import boto3
 import botocore
-import pytest
 
 from osbot_aws.AWS_Config import AWS_Config
-from osbot_aws.apis.STS import STS
+from osbot_aws.exceptions.Session_Client_Creation_Fail import Session_Client_Creation_Fail
+from osbot_utils.utils.Objects import obj_data
+
+from osbot_utils.utils.Files import pickle_save_to_file
+
+from osbot_utils.utils.Functions import method_params
+from osbot_utils.utils.trace.Trace_Call import trace_calls
 
 from osbot_aws.apis.Session import Session
-from osbot_aws.apis.test_helpers.Temp_IAM_User import Temp_IAM_User
-from osbot_aws.exceptions.Session_Client_Creation_Fail import Session_Client_Creation_Fail
-from osbot_aws.helpers.boto3.View_Boto3_Rest_Calls import View_Boto3_Rest_Calls, print_boto3_calls
-from osbot_utils.testing.Hook_Method import Hook_Method
-from osbot_utils.testing.Unit_Test import Unit_Test
+from osbot_aws.helpers.boto3.View_Boto3_Rest_Calls import print_boto3_calls
 from osbot_utils.utils.Dev import pprint
-from osbot_utils.utils.Misc import log_to_console, logger_set_level_debug, list_contains
-from osbot_utils.utils.Status import status_ok, logger
+from tests.integration.aws.iam.test_IAM import IAM_USER_NAME__OSBOT_AWS
+
+
+#from osbot_utils.utils.trace.
 
 
 class test_Session(TestCase):
 
     def setUp(self):
+        self.aws_config = AWS_Config()
         #STS().check_current_session_credentials()
         #log_to_console(level=20)
+
         self.session = Session()
         #boto3.set_stream_logger(level=10)
         #botocore.set_stream_logger(level=10)
 
+    def test___init__(self):
+        assert self.session.__default_kwargs__() == {'account_id': None, 'profile_name': None, 'region_name': None}
+        assert self.session.__kwargs__        () == {'account_id': os.getenv('AWS_ACCOUNT_ID'), 'profile_name': os.getenv('AWS_PROFILE_NAME'), 'region_name': os.getenv('AWS_DEFAULT_REGION')}
+        assert self.session.__locals__        () == { 'aws_config': self.session.aws_config, **self.session.__kwargs__() }
+        assert self.session.aws_config.__class__.__name__ == 'AWS_Config'
+
+    def test_boto_session(self):
+        boto_session = self.session.boto_session()
+        assert type(boto_session) == botocore.session.Session
+
+    #@print_boto3_calls
+    # @trace_calls(include=['*'], show_parent=True, show_duration=True,
+    #              duration_bigger_than=0.01,
+    #              locals=False)
     def test_botocore_session(self):
-        session = self.session.botocore_session()
-        #pprint(session.profile)
-        credentials = self.session.credentials()
-        # todo add asserts of credentials when compared with
-        # 'access_key',
-        # 'get_frozen_credentials',
-        # 'method',
-        # 'secret_key',
-        # 'token'
-        pprint(session)
+        assert method_params(self.session.botocore_session) == { 'args'  : [],
+                                                                 'kwargs': { 'aws_access_key_id'    : None,
+                                                                             'aws_secret_access_key': None,
+                                                                             'aws_session_token'    : None,
+                                                                             'botocore_session'     : None,
+                                                                             'profile_name'         : None,
+                                                                             'region_name'          : None}}
 
-    @print_boto3_calls
-    def test_credentials_ok__hook__BaseClient(self):
-        #with View_Boto_3_Rest_Calls():
-            self.session.credentials_ok()
-            self.session.session().client('s3').list_buckets()
-            self.session.credentials_ok()
-            self.session.credentials_ok()
-            self.session.session().client('s3').list_buckets()
+        botocore_session = self.session.botocore_session()
+        assert botocore_session.region_name == self.aws_config.aws_session_region_name()
 
+    def test_caller_identity(self):
+        caller_identity = self.session.caller_identity()
+        assert caller_identity.get('Account' ) == self.session.account_id
+        assert caller_identity.get('Arn'     ) == f'arn:aws:iam::{self.session.account_id}:user/{IAM_USER_NAME__OSBOT_AWS}'
+        assert caller_identity.get('UserId'  ).__class__.__name__ == 'str'
+
+    #@print_boto3_calls
+    def test_credentials_ok(self):
+        self.session.credentials_ok()
 
 
 

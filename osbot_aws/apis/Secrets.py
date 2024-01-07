@@ -1,5 +1,6 @@
 import json
 import pprint
+
 from osbot_utils.decorators.methods.cache_on_self   import cache_on_self
 from osbot_utils.decorators.lists.index_by          import index_by
 from osbot_utils.utils.Json                         import json_dumps
@@ -13,10 +14,6 @@ class Secrets:
         return f"<{self.__class__.__name__} {self.secret_id}>"
 
     @cache_on_self
-    def client(self):
-        return Session().client('secretsmanager')
-
-    @cache
     def client(self):
         return Session().client_secrets_manager()
 

@@ -3,6 +3,7 @@ from unittest import TestCase
 from osbot_utils.utils.Dev import pprint
 from osbot_utils.utils.Files import folder_exists, parent_folder, current_temp_folder, folder_name
 from osbot_utils.utils.Misc import list_set
+from osbot_utils.utils.Status import osbot_logger
 
 from osbot_aws.aws.iam.IAM_Assume_Role import IAM_Assume_Role
 
@@ -23,13 +24,14 @@ class test_IAM_Assume_Role(TestCase):
 
 
     def test_create_role(self):
+        print()
+        osbot_logger.add_console_logger()
         result = self.iam_assume_role.create_role()
-        assert result.get('role_exists') is False
+
+        pprint(osbot_logger.memory_handler_messages())
+        #assert result.get('role_exists'). is False
         #pprint(result)#
 
-    def test_current_user(self):
-        result = self.iam_assume_role.current_user()
-        #pprint(result)
 
     def test_role_exists(self):
         assert self.iam_assume_role.role_exists() is False
@@ -46,5 +48,5 @@ class test_IAM_Assume_Role(TestCase):
         assert list_set(setup_data) == [ 'assume_policy', 'current_account_id', 'current_user_arn',
                                          'current_user_id', 'role_exists', 'role_name']
         assert self.iam_assume_role.cached_role.cache_exists() is True
-        assert self.iam_assume_role.create_role().get('role_exists') is False
+        #assert self.iam_assume_role.create_role().get('role_exists') is False
         #pprint(self.iam_assume_role.create_role())

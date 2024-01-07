@@ -2,6 +2,7 @@ import  boto3
 from    boto3                   import Session
 from botocore.exceptions import ClientError
 from    botocore.session        import get_session
+from osbot_utils.base_classes.Kwargs_To_Self import Kwargs_To_Self
 from osbot_utils.decorators.methods.cache import cache
 from osbot_utils.decorators.methods.cache_on_self import cache_on_self
 from osbot_utils.utils.Status import status_ok, status_error
@@ -13,19 +14,23 @@ from osbot_aws.exceptions.Session_Client_Creation_Fail import Session_Client_Cre
 from osbot_aws.exceptions.Session_No_Credentials import Session_No_Credentials
 
 
-class Session:
+class Session(Kwargs_To_Self):
+    account_id      = None
+    profile_name    = None
+    region_name     = None
 
-    def __init__(self, account_id=None, profile_name=None, region_name=None):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
         self.aws_config   = AWS_Config()
-        self.account_id   = account_id   or self.aws_config.aws_session_account_id()
-        self.profile_name = profile_name or self.aws_config.aws_session_profile_name()
-        self.region_name  = region_name  or self.aws_config.aws_session_region_name()
+        self.account_id   = self.account_id   or self.aws_config.aws_session_account_id()
+        self.profile_name = self.profile_name or self.aws_config.aws_session_profile_name()
+        self.region_name  = self.region_name  or self.aws_config.aws_session_region_name()
 
-    def boto_session(self):
+    def boto_session(self) -> Session:
         return get_session()
 
     @cache
-    def botocore_session(self,  aws_access_key_id=None , aws_secret_access_key=None , aws_session_token= None, region_name= None, botocore_session=None, profile_name=None ):
+    def botocore_session(self, aws_access_key_id=None , aws_secret_access_key=None , aws_session_token= None, region_name= None, botocore_session=None, profile_name=None ):
         kwargs = {  "aws_access_key_id"     : aws_access_key_id     ,
                     "aws_secret_access_key" : aws_secret_access_key ,
                     "aws_session_token"     : aws_session_token     ,
@@ -34,11 +39,12 @@ class Session:
                     "profile_name"          : profile_name          }
         session = boto3.Session(**kwargs)
 
-        self.credentials(session)                                                       # confirm credentials were found
-        status_ok("[botocore_session] found credentials created base session object")   # todo: after refactoring is done, see if this is still needed
+        # todo, move this into a different workflow, since this was adding 300ms 500ms to every creation of an botocore_session object
+        #self.credentials(session)                                                       # confirm credentials were found
+        #status_ok("[botocore_session] found credentials created base session object")   # todo: after refactoring is done, see if this is still needed
 
-        self.caller_identity(session)                                                   # confirm credentials are least active (i.e. not expired)
-        status_ok("[botocore_session] credentials are valid and can be used")           # todo: after refactoring is done, see if this is still needed
+        #self.caller_identity(session)                                                   # confirm credentials are least active (i.e. not expired)
+        #status_ok("[botocore_session] credentials are valid and can be used")           # todo: after refactoring is done, see if this is still needed
         return session
 
     def credentials(self, session=None):
@@ -72,17 +78,8 @@ class Session:
             raise Session_Bad_Credentials(exception)
 
     @cache_on_self
-    def session(self, aws_access_key_id=None,
-                        aws_secret_access_key=None,
-                        aws_session_token=None,
-                        region_name=None,
-                        botocore_session=None,
-                        profile_name=None) -> boto3.Session:
-
-        #if self.profile_name in profiles:
-        #    return boto3.Session(profile_name=self.profile_name, region_name=self.region_name)
-        #else:
-            return boto3.Session()
+    def session(self) -> boto3.Session:
+        return boto3.Session()
 
     def session_default(self):
         return get_session()
@@ -142,6 +139,7 @@ class Session:
     # putting all these here in global location so that we limit the calls to authenticate
     # important when making lots of calls of multiple apis (like when running multiple tests)
     # todo find good way to add support for refreshing these references (for exemple to use a different region)
+    # todo: refactor this out of this session object
     @cache
     def client_secrets_manager(self):
         return self.client('secretsmanager')

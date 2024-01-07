@@ -2,6 +2,7 @@ from os import chmod
 
 import boto3
 from botocore.exceptions import ClientError
+from osbot_utils.utils.Lists import list_index_by, list_get
 
 from osbot_aws.AWS_Config import set_aws_region
 from osbot_utils.decorators.methods.cache_on_self import cache_on_self
@@ -13,7 +14,7 @@ from osbot_utils.decorators.lists.group_by import group_by
 from osbot_utils.decorators.lists.index_by import index_by
 from osbot_utils.decorators.methods.cache import cache
 from osbot_aws.apis.Session import Session
-from osbot_utils.utils.Misc import list_set, list_get, list_index_by
+from osbot_utils.utils.Misc import list_set
 from osbot_utils.utils.Status import status_warning, status_ok
 
 # todo: find good solution to capture/manage these config values
