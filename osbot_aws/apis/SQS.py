@@ -1,9 +1,11 @@
+from osbot_utils.utils.Lists import array_get
+
 from osbot_utils.decorators.lists.index_by import index_by
 from osbot_utils.decorators.methods.cache_on_self import cache_on_self
 
 from osbot_utils.utils.Json import json_loads, json_to_str
 
-from osbot_utils.utils.Misc import array_pop, array_get, list_set
+from osbot_utils.utils.Misc import list_set
 
 from osbot_utils.decorators.methods.catch import catch
 from osbot_utils.decorators.methods.cache import cache

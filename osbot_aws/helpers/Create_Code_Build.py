@@ -1,8 +1,6 @@
-from time import sleep
-
-from osbot_aws.apis.IAM import IAM
-
 from osbot_aws.apis.CodeBuild import CodeBuild
+from osbot_aws.aws.iam.IAM import IAM
+
 
 #todo: add Create_Code_Build tests from gs-docker-codebuild project
 class Create_Code_Build:

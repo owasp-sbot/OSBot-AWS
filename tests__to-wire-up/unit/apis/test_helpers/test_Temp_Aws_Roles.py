@@ -1,12 +1,9 @@
 import unittest
 from unittest import TestCase
 
-from osbot_utils.utils.Dev import Dev
-
 from osbot_aws.AWS_Config import AWS_Config
-
-from osbot_aws.apis.IAM import IAM
 from osbot_aws.apis.test_helpers.Temp_Aws_Roles import Temp_Aws_Roles
+from osbot_aws.aws.iam.IAM import IAM
 
 
 class test_Temp_Aws_Roles(TestCase):

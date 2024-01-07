@@ -1,6 +1,6 @@
 from functools import wraps
 
-from osbot_aws.apis.STS import STS
+from osbot_aws.aws.iam.STS import STS
 
 
 class aws_inject:

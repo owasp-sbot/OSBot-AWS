@@ -1,4 +1,4 @@
-from osbot_aws.apis.IAM import IAM
+from osbot_aws.aws.iam.IAM import IAM
 from osbot_utils.utils.Misc import random_string
 
 

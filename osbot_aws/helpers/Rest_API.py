@@ -1,7 +1,5 @@
+from osbot_aws.aws.iam.IAM import IAM
 from osbot_utils.utils.Http import GET
-
-from osbot_aws.apis.IAM import IAM
-
 from osbot_aws.apis.API_Gateway import API_Gateway
 
 

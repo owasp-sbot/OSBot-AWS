@@ -2,15 +2,16 @@ import unittest
 from time import sleep
 
 import pytest
+
+from osbot_aws.aws.iam.IAM import IAM
+from osbot_aws.aws.iam.IAM_Policy import IAM_Policy
 from osbot_utils.utils import Misc
 
 from osbot_aws.AWS_Config               import AWS_Config
 from osbot_aws.apis.S3                  import S3
 from osbot_aws.apis.Logs                import Logs
 from osbot_aws.helpers.SQS_Queue        import SQS_Queue
-from osbot_aws.helpers.IAM_Policy       import IAM_Policy
 from osbot_aws.helpers.Lambda_Package   import Lambda_Package
-from osbot_aws.apis.IAM                 import IAM
 from osbot_aws.apis.Lambda              import Lambda
 from unittest                           import TestCase
 
@@ -46,14 +47,14 @@ class test_Lambdas_Invoke(TestCase):
         queue_name  = 'unit_tests_temp_queue'                       # Queue(queue_name).create()
         lambda_name = 'osbot_aws.lambdas.dev.write_queue'
         message     = 'this is a message sent from an lambda function...'
-        queue       = Queue(queue_name)
+        queue       = SQS_Queue(queue_name)
         queue_url   = queue.url()
         payload     = {'queue_url': queue_url, 'message': message}
 
         lambda_obj  = Lambda_Package(lambda_name)
 
         assert lambda_obj.invoke(payload) == {'status': 'ok'}
-        assert Queue(queue_name).pull()   == message
+        assert SQS_Queue(queue_name).pull()   == message
 
         # def add_sqs_send_message_priv(role_arn):
         #     role = IAM(role_name='temp_role_for_lambda_invocation')
@@ -69,7 +70,7 @@ class test_Lambdas_Invoke(TestCase):
     @unittest.skip
     def _test_s3_bucket_to_sqs(self):
         s3 = S3()
-        queue        = Queue('unit_tests_temp_queue') #.create()
+        queue        = SQS_Queue('unit_tests_temp_queue') #.create()
         bucket_name  = 'bucket-42-temp'
         region       = 'eu-west-2'
         lambda_obj   = Lambda_Package('osbot_aws.lambdas.pocs.send_event_data_to_queue').update_with_root_folder()
@@ -119,8 +120,8 @@ class test_Lambdas_Invoke(TestCase):
     # todo: refactor methods to better locations
     @unittest.skip
     def _test_sqs_to_lamdba_to_sqs(self):
-        queue_1 = Queue('unit_tests_temp_queue__1').create()
-        queue_2 = Queue('unit_tests_temp_queue__2').create()
+        queue_1 = SQS_Queue('unit_tests_temp_queue__1').create()
+        queue_2 = SQS_Queue('unit_tests_temp_queue__2').create()
         lambda_obj = Lambda_Package('osbot_aws.lambdas.pocs.send_event_data_to_queue')   #.update_with_root_folder()
         payload = {'queue_url': queue_2.url(), 'message': 'test 123'}
 

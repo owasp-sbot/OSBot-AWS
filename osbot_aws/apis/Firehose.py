@@ -1,12 +1,11 @@
 import json
 
+from osbot_aws.aws.iam.IAM import IAM
 from osbot_utils.decorators.methods.cache import cache
 from osbot_utils.decorators.methods.cache_on_self import cache_on_self
 from osbot_utils.decorators.methods.catch import catch
 
 from osbot_aws.apis.Lambda import Lambda
-
-from osbot_aws.apis.IAM import IAM
 
 from osbot_aws.apis.Session import Session
 

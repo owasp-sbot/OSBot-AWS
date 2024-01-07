@@ -1,5 +1,5 @@
-from osbot_aws.apis.IAM import IAM
 from osbot_aws.apis.test_helpers.Temp_IAM_User import Temp_IAM_User
+from osbot_aws.aws.iam.IAM import IAM
 from osbot_utils.testing.Unit_Test import Unit_Test
 
 

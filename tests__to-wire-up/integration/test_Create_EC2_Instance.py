@@ -2,7 +2,7 @@ from unittest import TestCase
 
 import pytest
 
-from k8_kubernetes.kubernetes.Ssh import Ssh
+#from k8_kubernetes.kubernetes.Ssh import Ssh
 from osbot_aws.apis.test_helpers.Temp_VPC import Temp_VPC
 from osbot_aws.helpers.AMI import AMI
 from osbot_utils.utils.Misc import random_string, wait
@@ -101,13 +101,13 @@ class test_EC2_Create_Instance(TestCase):
 
         assert self.ec2.key_pair_delete(key_pair_id=key_pair_id) is True
 
-    def test_connect_to_ec2_instance(self):
-
-        path_to_key = '/var/folders/_j/frqs70d93l328f307rw2jx5h0000gn/T/tmp8_tl8q5l/osbot-test_ec2_with_ssh_supporteyvjpbqb.pem'
-        username    = 'ec2-user'
-        server_ip   = "3.251.63.86"
-        ssh_config = {"server": server_ip,
-                      "ssh_key": path_to_key,
-                      "user": username}
-        result = Ssh(ssh_config=ssh_config).ls('/')
-        pprint(result)
+    # def test_connect_to_ec2_instance(self):
+    #
+    #     path_to_key = '/var/folders/_j/frqs70d93l328f307rw2jx5h0000gn/T/tmp8_tl8q5l/osbot-test_ec2_with_ssh_supporteyvjpbqb.pem'
+    #     username    = 'ec2-user'
+    #     server_ip   = "3.251.63.86"
+    #     ssh_config = {"server": server_ip,
+    #                   "ssh_key": path_to_key,
+    #                   "user": username}
+    #     result = Ssh(ssh_config=ssh_config).ls('/')
+    #     pprint(result)

@@ -2,9 +2,7 @@ import json
 import unittest
 from unittest import TestCase
 
-import pytest
-
-from osbot_aws.apis.STS import STS
+from osbot_aws.aws.iam.STS import STS
 from osbot_utils.utils import Misc
 
 from osbot_aws.apis.Secrets import Secrets

@@ -4,16 +4,7 @@ from osbot_utils.decorators.methods.cache_on_self import cache_on_self
 from osbot_utils.utils.Misc import random_string
 
 from osbot_utils.utils.Json import json_dumps, json_loads
-
 from osbot_aws.apis.SQS import SQS
-from osbot_utils.decorators.methods.cache import cache
-from osbot_utils.decorators.methods.catch import catch
-
-from osbot_aws.apis.IAM import IAM
-
-from osbot_aws.apis.Lambda import Lambda
-from osbot_aws.apis.Session import Session
-from osbot_utils.utils import Misc
 
 class SQS_Queue:                                        # todo refactor main methods to SSM class
     def __init__(self, queue_name=None, queue_url=None, fifo_message_group_id=False):

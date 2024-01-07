@@ -1,9 +1,9 @@
 import os
 from unittest import TestCase
 
-import jwt
-from flask.cli import load_dotenv
-from osbot_utils.utils.Misc import list_set, obj_info, random_string
+from dotenv import load_dotenv
+
+from osbot_utils.utils.Misc import list_set, random_string
 
 from osbot_utils.utils.Dev import pprint
 

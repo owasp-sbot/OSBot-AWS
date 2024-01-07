@@ -1,18 +1,14 @@
 import importlib
 import sys
-from pprint import pprint
 from unittest import TestCase
 
-from osbot_aws.apis.STS import STS
-from osbot_utils.utils.Misc import wait
-
 from osbot_aws.AWS_Config import AWS_Config
-from osbot_aws.apis.IAM import IAM
+
 from osbot_aws.apis.Lambda import Lambda
 from osbot_aws.apis.test_helpers.Temp_Aws_Roles import Temp_Aws_Roles
 from osbot_aws.apis.test_helpers.Temp_Folder_With_Lambda_File import Temp_Folder_With_Lambda_File
+from osbot_aws.aws.iam.STS import STS
 from osbot_aws.deploy.Deploy_Lambda import Deploy_Lambda
-from osbot_aws.helpers.Test_Helper import Test_Helper
 from osbot_utils.utils.Files import folder_exists, file_create, path_combine, \
     folder_create, file_name, file_copy, file_delete
 

@@ -1,12 +1,14 @@
+# todo: refactor to osbot_dock since that is where the API_Docker and Docker_Image exist
 from osbot_aws.AWS_Config import AWS_Config
 from osbot_aws.apis.ECR import ECR
-from osbot_docker.apis.API_Docker import API_Docker
-from osbot_docker.apis.Docker_Image import Docker_Image
+
 from osbot_utils.utils.Files import path_combine
 
 class Create_Image_ECR:
 
     def __init__(self, image_name, path_images=None, image_tag='latest') -> object:
+        from osbot_docker.apis.API_Docker import API_Docker
+        from osbot_docker.apis.Docker_Image import Docker_Image
         self.api_docker      = API_Docker()
         self.ecr             = ECR()
         self.aws_config      = AWS_Config()

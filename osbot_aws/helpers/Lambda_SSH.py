@@ -1,4 +1,4 @@
-from osbot_aws.apis.STS import STS
+from osbot_aws.aws.iam.STS import STS
 from osbot_aws.deploy.Deploy_Lambda import Deploy_Lambda
 from osbot_utils.utils.Json import json_parse
 from osbot_utils.utils.Misc import split_lines
