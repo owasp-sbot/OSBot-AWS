@@ -26,7 +26,7 @@ runs:
       - name: Run pytest - Integration >>>> API
         shell: bash
         run: |
-          coverage run --source=${{ inputs.package_name }} -m pytest -v -s --durations=0 tests/integration/aws/api
+          coverage run --source=${{ inputs.package_name }} -m pytest -v -s --durations=0 tests/integration/api
         env:
           COVERAGE_FILE: .coverage.integration.api
           AWS_SECRET_ACCESS_KEY: ${{ inputs.AWS_SECRET_ACCESS_KEY }}
@@ -38,7 +38,7 @@ runs:
       - name: Run pytest - Integration >>>> _caches
         shell: bash
         run: |
-          coverage run --source=${{ inputs.package_name }} -m pytest -v -s --durations=0 tests/integration/aws/_caches
+          coverage run --source=${{ inputs.package_name }} -m pytest -v -s --durations=0 tests/integration/_caches
         env:
           COVERAGE_FILE: .coverage.integration._caches
           AWS_SECRET_ACCESS_KEY: ${{ inputs.AWS_SECRET_ACCESS_KEY }}
