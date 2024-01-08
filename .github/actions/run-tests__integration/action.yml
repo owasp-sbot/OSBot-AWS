@@ -22,8 +22,32 @@ inputs:
 runs:
     using: 'composite'
     steps:
+      # API
+      - name: Run pytest - Integration >>>> API
+        shell: bash
+        run: |
+          coverage run --source=${{ inputs.package_name }} -m pytest -v -s --durations=0 tests/integration/aws/api
+        env:
+          COVERAGE_FILE: .coverage.integration.api
+          AWS_SECRET_ACCESS_KEY: ${{ inputs.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: ${{ inputs.AWS_DEFAULT_REGION    }}
+          AWS_ACCOUNT_ID: ${{ inputs.AWS_ACCOUNT_ID        }}
+          AWS_ACCESS_KEY_ID: ${{ inputs.AWS_ACCESS_KEY_ID     }}
+
+      # _caches
+      - name: Run pytest - Integration >>>> _caches
+        shell: bash
+        run: |
+          coverage run --source=${{ inputs.package_name }} -m pytest -v -s --durations=0 tests/integration/aws/_caches
+        env:
+          COVERAGE_FILE: .coverage.integration._caches
+          AWS_SECRET_ACCESS_KEY: ${{ inputs.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: ${{ inputs.AWS_DEFAULT_REGION    }}
+          AWS_ACCOUNT_ID: ${{ inputs.AWS_ACCOUNT_ID        }}
+          AWS_ACCESS_KEY_ID: ${{ inputs.AWS_ACCESS_KEY_ID     }}
+
       # IAM
-      - name: Run pytest - Integration - IAM
+      - name: Run pytest - Integration >>>> IAM
         shell: bash
         run: |
           coverage run --source=${{ inputs.package_name }} -m pytest -v -s --durations=0 tests/integration/aws/iam
@@ -36,7 +60,7 @@ runs:
 
 
       # ECS
-      - name: Run pytest - Integration - ECS
+      - name: Run pytest - Integration >>>> ECS
         shell: bash
         run: |
           coverage run --source=${{ inputs.package_name }} -m pytest -v -s --durations=0 tests/integration/aws/ecs
