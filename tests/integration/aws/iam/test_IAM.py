@@ -271,20 +271,14 @@ class Test_IAM___TO_WIRE_UP(TestCase):
     # ------ tests ------
 
 
-
-
-
-
-
-
     def test_role_info(self):
-        role = self.iam.set_role_name(test_role).role_info()                # also tests the set_role_name function
+        role = self.iam().set_role_name(test_role).role_info()                # also tests the set_role_name function
         assert role.get('Arn'     ) == test_role_arn
         assert role.get('RoleName') == test_role
 
     @pytest.mark.skip('Fix test')
     def test_role_policies(self):
-        policies = self.iam.role_policies()
+        policies = self.iam().role_policies()
         assert len(set(policies)) == 0
 
         iam = IAM(role_name='AWSServiceRoleForAPIGateway')
