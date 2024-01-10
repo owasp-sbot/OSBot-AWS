@@ -1,4 +1,6 @@
 import json
+from functools import cache
+
 import boto3
 from osbot_utils.utils.Objects import get_value
 
@@ -25,19 +27,19 @@ class IAM:
         self.role_name   = role_name                        #       this will be a bit of a breaking change to code that uses this class for role management
 
     # helpers
-    @cache_on_self
+    @cache
     def client(self):                                          # rename to client
         return Session().client('iam')
 
-    @cache_on_self
+    @cache
     def resource(self):
         return Session().resource('iam')
 
-    @cache_on_self
+    @cache
     def session(self):
         return Session().session()
 
-    @cache_on_self
+    @cache
     def sts(self):
         return Session().client('sts')
 

@@ -5,22 +5,9 @@ from unittest import TestCase
 import botocore
 
 from osbot_aws.AWS_Config import AWS_Config
-from osbot_aws.exceptions.Session_Client_Creation_Fail import Session_Client_Creation_Fail
-from osbot_utils.utils.Objects import obj_data
-
-from osbot_utils.utils.Files import pickle_save_to_file
-
 from osbot_utils.utils.Functions import method_params
-from osbot_utils.utils.trace.Trace_Call import trace_calls
-
 from osbot_aws.apis.Session import Session
-from osbot_aws.helpers.boto3.View_Boto3_Rest_Calls import print_boto3_calls
-from osbot_utils.utils.Dev import pprint
 from tests.integration.aws.iam.test_IAM import IAM_USER_NAME__OSBOT_AWS
-
-
-#from osbot_utils.utils.trace.
-
 
 class test_Session(TestCase):
 

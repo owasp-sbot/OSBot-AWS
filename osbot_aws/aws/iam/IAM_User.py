@@ -1,6 +1,8 @@
+from functools import cache
+
 from osbot_utils.decorators.methods.remove_return_value import remove_return_value
 
-from osbot_utils.decorators.methods.cache_on_self import cache_on_self
+#from osbot_utils.decorators.methods.cache_on_self import cache_on_self
 
 from osbot_aws.aws.iam.IAM import IAM
 
@@ -8,11 +10,11 @@ class IAM_User:
     def __init__(self, user_name=None):
         self.user_name = user_name
 
-    @cache_on_self
+    @cache
     def iam(self):
         return IAM(user_name=self.user_name)
 
-    @cache_on_self
+    @cache
     def user(self):
         return self.iam().resource().User(name=self.user_name)
 
