@@ -41,7 +41,7 @@ class IAM:
 
     @cache
     def sts(self):
-        return Session().client('sts')
+        return STS()
 
 
     # main method
@@ -109,9 +109,9 @@ class IAM:
     def access_keys(self):
         return self.client().list_access_keys().get('AccessKeyMetadata')
 
-    @cache_on_self
+    @cache
     def account_id(self):
-        return STS().current_account_id()
+        return self.sts().current_account_id()
 
     def check_aws_security_tokens(self):
         try:
@@ -127,7 +127,7 @@ class IAM:
 
     @remove_return_value('ResponseMetadata')
     def caller_identity(self):
-        return self.sts().get_caller_identity()
+        return self.sts().caller_identity()
 
     def get_data(self, method, field_id, use_paginator, **kwargs):
         paginator = self.client().get_paginator(method)

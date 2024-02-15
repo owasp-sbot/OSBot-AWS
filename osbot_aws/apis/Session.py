@@ -2,6 +2,8 @@ import  boto3
 from    boto3                   import Session
 from botocore.exceptions import ClientError
 from    botocore.session        import get_session
+from osbot_utils.testing.Duration import Duration
+
 from osbot_utils.base_classes.Kwargs_To_Self import Kwargs_To_Self
 from osbot_utils.decorators.methods.cache import cache
 from osbot_utils.decorators.methods.cache_on_self import cache_on_self
@@ -94,7 +96,8 @@ class Session(Kwargs_To_Self):
 
     def client_boto3(self,service_name):                   # todo: refactor with resource_boto3
         try:
-            if self.profile_name in self.profiles():                                                  # seeing if this is a more efficient way to get the data
+
+            if self.profile_name and self.profile_name in self.profiles():                                                  # seeing if this is a more efficient way to get the data
                 session = boto3.Session(profile_name=self.profile_name, region_name=self.region_name)      # tried to pass this params but had side effects: , botocore_session=self.boto_session()
                 client  = session.client(service_name=service_name)
                 message = f"Created client_boto3 session using profile: {self.profile_name}"

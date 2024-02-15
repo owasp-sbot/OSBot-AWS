@@ -98,8 +98,10 @@ class S3:
 
     def buckets(self):
         data = []
-        for bucket in self.s3().list_buckets().get('Buckets'):
-            data.append(bucket['Name'])
+        buckets = self.s3().list_buckets()
+        if buckets:
+            for bucket in buckets.get('Buckets'):
+                data.append(bucket['Name'])
         return sorted(data)
         #return sorted(list({ bucket['Name'] for bucket in self.s3().list_buckets().get('Buckets')}))
 
