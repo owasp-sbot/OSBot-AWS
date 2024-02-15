@@ -1,63 +1,16 @@
-import boto3
-from   boto3    import resource
-from osbot_utils.utils import Misc
+from boto3 import resource
 
-from osbot_aws.apis.Session import Session
+from osbot_aws.aws.dynamo_db.Dynamo_DB import Dynamo_DB
+from osbot_utils.utils.Lists import array_pop
+from osbot_utils.utils.Objects import get_value
 
-
-class Dynamo:
-    def __init__(self):
-        self.resource   = resource('dynamodb')
-        self._dynamo    = None
-        self._streams   = None
-
-    # helpers
-
-    def dynamo(self):
-        if self._dynamo is None:
-            self._dynamo = Session().client('dynamodb')
-        return self._dynamo
-
-    def dynamo_streams(self):
-        if self._streams is None:
-            self._streams = Session().client('dynamodbstreams')
-        return self._streams
-    # main methods
-
-    def create(self, table_name, key, with_streams=False):
-        keySchema             = [ {'AttributeName'    : key        , 'KeyType'           : 'HASH' } ]
-        attributeDefinitions  = [ {'AttributeName'    : key        , 'AttributeType'     : 'S'    } ]
-        provisionedThroughput = { 'ReadCapacityUnits' : 5          , 'WriteCapacityUnits': 5      }
-        kwargs   = { 'TableName'            : table_name           ,
-                     'KeySchema'            : keySchema            ,
-                     'AttributeDefinitions' : attributeDefinitions ,
-                     'ProvisionedThroughput': provisionedThroughput }
-        if with_streams:
-            kwargs['StreamSpecification'] = {'StreamEnabled': True, 'StreamViewType': 'NEW_IMAGE' }
-        self.dynamo().create_table( **kwargs)
-
-        self.dynamo().get_waiter('table_exists') \
-            .wait(TableName=table_name, WaiterConfig={'Delay': 5, 'MaxAttempts': 10})
-        return self
-
-    def delete(self, table_name):
-        self.dynamo().delete_table(TableName = table_name)
-        self.dynamo().get_waiter('table_not_exists')      \
-                   .wait(TableName=table_name, WaiterConfig={'Delay': 10, 'MaxAttempts':10 })
-        return self
-
-    def list(self):
-        return self.dynamo().list_tables()['TableNames']
-
-    def streams(self):
-        return self.dynamo_streams().list_streams().get('Streams')
-
-class Dynamo_Table:
+# todo: see if we can remove this class once the new Dynamo_DB__Table is implemented
+class Dynamo_Table_Resource:
     def __init__(self,table_name, key):
         self.table_name = table_name
         self.key        = key
-        self.dynamo     = Dynamo()
-        self.resource   = self.dynamo.resource
+        self.dynamo     = Dynamo_DB()
+        self.resource   = resource('dynamodb')          # this has quite a lot of weird performance implications
         self.table      = self.resource.Table(self.table_name)
         self.chuck_size = 100
 
@@ -135,8 +88,8 @@ class Dynamo_Table:
 
     def stream_arn(self):
         streams   = self.dynamo.dynamo_streams().list_streams(TableName=self.table_name).get('Streams')
-        first_one = Misc.array_pop(streams,0)
-        return Misc.get_value(first_one,'StreamArn')
+        first_one = array_pop(streams,0)
+        return get_value(first_one,'StreamArn')
 
     def stream_info(self):
         stream_arn = self.stream_arn()

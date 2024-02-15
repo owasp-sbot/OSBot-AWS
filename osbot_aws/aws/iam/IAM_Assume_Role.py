@@ -37,20 +37,43 @@ class IAM_Assume_Role:
     def create_role(self):
         #setup_data = self.setup_data()
         if self.role_exists() is False:
+            self.setup_data()
             assume_policy_document = self.assume_policy()
-            result = self.iam_role().create(assume_policy_document=assume_policy_document)
-            #pprint(result)
+            result__role_create    = self.iam_role().create(assume_policy_document=assume_policy_document)
+            self.cached_role.set('result__role_create', result__role_create)
+            self.cached_role.set('role_exists', True                 )  # todo see how to check this would having to make another Boto3 call
 
-        #return setup_data
-        #return self.iam_role().create(policy)
+    def data(self):
+        return self.cached_role.data()
+
+    def delete_role(self):
+        self.iam_role().delete()
+        self.cached_role.set('role_exists', False)             # todo see how to check this would having to make another Boto3 call
+        return self
 
     def role_exists(self):
-        return self.setup_data().get('role_exists', False)
+        return self.cached_role.get('role_exists', False)
 
-    def default_assume_policy(self, principal):
-        return {'Statement': [{'Action'    : 'sts:AssumeRole'   ,
-                               'Effect'   : 'Allow'             ,
-                               'Principal': principal           } ]}
+    def default_assume_policy(self, user_arn=None, service_name=None, federated=None, canonical_user=None):
+        effect     = 'Allow'
+        action     = 'sts:AssumeRole'
+        statements = []
+        def add_statement(name, target):
+            if target:
+                statements.append({ 'Effect': effect, 'Principal': { name: target }, 'Action': action })
+
+        add_statement('AWS'          , user_arn      )
+        add_statement('Service'      , service_name  )
+        add_statement('Federated'    , federated     )
+        add_statement('CanonicalUser', canonical_user)
+
+        return { 'Version'  : '2012-10-17',
+                 'Statement': statements  }
+
+    def policies(self):
+        policies = self.data().get('policies')
+        return policies
+
     # @cache
     # def path_cached_roles(self):
     #     path_folder = path_combine(current_temp_folder(), FOLDER_NAME__CACHED_ROLES)
@@ -64,7 +87,7 @@ class IAM_Assume_Role:
         if self.cached_role.cache_exists() is False:
             caller_identity  = self.sts().caller_identity()
             current_user_arn = caller_identity.get('Arn')
-            assume_policy    = self.default_assume_policy(current_user_arn)
+            assume_policy    = self.default_assume_policy(user_arn=current_user_arn)
 
             data = dict(assume_policy      = assume_policy                 ,
                         current_account_id = caller_identity.get('Account'),
@@ -74,3 +97,8 @@ class IAM_Assume_Role:
                         role_exists        = self.iam_role().exists()      )
             self.cached_role.set_data(data)
         return self.cached_role.data()
+
+    def reset(self):
+        self.cached_role.cache_delete()
+        self.setup_data()
+        return self
