@@ -240,6 +240,68 @@ class S3:
         self.file_upload_to_key(file, bucket, key)
         return key
 
+    def folder_contents(self, s3_bucket, parent_folder='', return_full_path=False):
+        folders = []
+        files = []
+        paginator = self.client().get_paginator('list_objects_v2')
+        if not parent_folder.endswith('/'):
+            parent_folder += '/'
+
+        operation_parameters = {
+            'Bucket': s3_bucket,
+            'Delimiter': '/'
+        }
+        if parent_folder != '/':
+            operation_parameters['Prefix'] = parent_folder              # add support for also listing files in the root of the bucket
+
+        for page in paginator.paginate(**operation_parameters):
+            # Loop through and add files
+            for obj in page.get('Contents', []):
+                file_path = obj.get('Key')
+                if return_full_path:
+                    files.append(file_path)
+                else:
+                    file_name = file_path.replace(parent_folder, '')
+                    if file_name:  # Ensure we don't add the parent folder itself
+                        files.append(file_name)
+
+            # Loop through and add subfolders
+            for common_prefix in page.get('CommonPrefixes', []):
+                folder_path = common_prefix.get('Prefix')
+                if return_full_path:
+                    folders.append(folder_path)
+                else:
+                    folder_name = folder_path.replace(parent_folder, '').rstrip('/')
+                    folders.append(folder_name)
+
+        return {'folders': folders, 'files': files}
+
+
+    def folder_files(self, s3_bucket, parent_folder='', return_full_path=False):
+        files = []
+        paginator = self.client().get_paginator('list_objects_v2')
+        if not parent_folder.endswith('/'):
+            parent_folder += '/'
+
+        operation_parameters = {
+            'Bucket': s3_bucket,
+            'Delimiter': '/'
+        }
+        if parent_folder != '/':
+            operation_parameters['Prefix'] = parent_folder              # add support for also listing files in the root of the bucket
+
+        for page in paginator.paginate(**operation_parameters):
+            # Loop through the files in the specified folder
+            for obj in page.get('Contents', []):
+                file_path = obj.get('Key')
+                if return_full_path:
+                    files.append(file_path)
+                else:
+                    file_name = file_path.replace(parent_folder, '')
+                    files.append(file_name)
+
+        return files
+
     def folder_list(self, s3_bucket, parent_folder='', return_full_path=False):
         folders = []
         paginator = self.client().get_paginator('list_objects_v2')
@@ -248,9 +310,11 @@ class S3:
 
         operation_parameters = {
             'Bucket': s3_bucket    ,
-            'Prefix': parent_folder,
             'Delimiter': '/'
         }
+        if parent_folder != '/':
+            operation_parameters['Prefix'] = parent_folder              # add support for also listing files in the root of the bucket
+
         for page in paginator.paginate(**operation_parameters):
             for common_prefix in page.get('CommonPrefixes', []):
                 folder_path = common_prefix.get('Prefix')
