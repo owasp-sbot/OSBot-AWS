@@ -37,13 +37,18 @@ class test_IAM_Assume_Role(TestCase):
         self.iam_assume_role.delete_role()                                  # delete role
         assert self.iam_assume_role.role_exists()              is False     # check that cache doesn't exist
 
-        self.iam_assume_role.create_role()                                  # create role
+        self.iam_assume_role.create_role()                                  # create role        
 
         assert self.iam_assume_role.cached_role.cache_exists() is True     # check that cache doesn't exist
         assert self.iam_assume_role.role_exists()              is True     # check that cache doesn't exist
 
-        assert list_set(self.iam_assume_role.data()) == ['assume_policy','current_account_id','current_user_arn','current_user_id','policies', 'result__role_create','role_arn','role_exists', 'role_name']
+        assert list_set(self.iam_assume_role.data()) == ['assume_policy','current_account_id','current_user_arn','current_user_id','policies', 'result__credentials', 'result__role_create','role_arn','role_exists', 'role_name']
         assert self.iam_assume_role.role_exists() is True
+
+
+    def test_credentials(self):
+        credentials = self.iam_assume_role.credentials()
+        assert list_set(credentials) == ['AccessKeyId', 'SecretAccessKey', 'SessionToken']
 
     def test_credentials_raw(self):
         credentials = self.iam_assume_role.credentials_raw()
@@ -99,8 +104,9 @@ class test_IAM_Assume_Role(TestCase):
     def test_setup_data(self):
         self.iam_assume_role.reset()                                # deletes the cache
         setup_data = self.iam_assume_role.setup_data()
-        assert list_set(setup_data) == [ 'assume_policy', 'current_account_id', 'current_user_arn',
-                                         'current_user_id', 'policies', 'role_arn','role_exists', 'role_name']
+        assert list_set(setup_data) == [ 'assume_policy', 'current_account_id', 'current_user_arn','current_user_id','policies',
+                                         'result__credentials' , 'result__role_create',
+                                         'role_arn','role_exists', 'role_name']
         assert self.iam_assume_role.cached_role.cache_exists() is True
 
         #pprint(self.iam_assume_role.cached_role.data())

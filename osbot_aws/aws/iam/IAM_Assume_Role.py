@@ -1,3 +1,5 @@
+from botocore.exceptions import ClientError
+
 from osbot_utils.decorators.methods.cache import cache
 from osbot_utils.helpers.Local_Cache import Local_Cache
 from osbot_utils.utils.Dev import pprint
@@ -6,6 +8,7 @@ from osbot_utils.utils.Files import path_combine, current_temp_folder, create_fo
 from osbot_aws.aws.iam.IAM import IAM
 from osbot_aws.aws.iam.IAM_Role import IAM_Role
 from osbot_aws.aws.iam.STS import STS
+from osbot_utils.utils.Misc import wait_for
 
 CACHES_NAME__AWS_ROLES       = '_aws_cached_roles'
 
@@ -43,11 +46,30 @@ class IAM_Assume_Role:
             self.cached_role.set('result__role_create', result__role_create)
             self.cached_role.set('role_exists', True                 )  # todo see how to check this would having to make another Boto3 call
 
-    def credentials_raw(self, role_session_name=None):
+    def credentials(self):
+        credentials_raw = self.credentials_raw()
+        if credentials_raw:
+            credentials_data = credentials_raw.get('Credentials', {})
+            return { 'AccessKeyId'    : credentials_data.get('AccessKeyId'    ),
+                     'SecretAccessKey': credentials_data.get('SecretAccessKey'),
+                     'SessionToken'   : credentials_data.get('SessionToken'   )}
+        return {}
+
+    def credentials_raw(self, role_session_name=None,  retries=20, delay=0.2):
         credentials_raw = self.data().get('result__credentials')
         if credentials_raw is None:
-            credentials_raw = self.sts().assume_role(role_arn=self.role_arn(), role_session_name=role_session_name)
-            self.cached_role.set('result__credentials', credentials_raw)
+            for attempt in range(retries):
+                try:
+                    credentials_raw = self.sts().assume_role(role_arn=self.role_arn(), role_session_name=role_session_name)
+                    self.cached_role.set('result__credentials', credentials_raw)
+                    return credentials_raw
+                except ClientError as e:
+                    if e.response['Error']['Code'] == 'AccessDenied' and attempt < retries - 1:
+                        # todo: remove this print once we confirm that this is working ok
+                        print(">>>>>>>> in credentials_raw <<<<<< waiting for 0.2 seconds before retrying")
+                        wait_for(delay)
+                    else:
+                       raise
         return credentials_raw
 
     def data(self):
@@ -100,14 +122,16 @@ class IAM_Assume_Role:
 
             role_arn           = f"arn:aws:iam::{current_account_id}:role/{role_name}"
 
-            data = dict(assume_policy      = assume_policy                 ,
-                        current_account_id = current_account_id            ,
-                        current_user_id    = current_user_id               ,
-                        current_user_arn   = current_user_arn              ,
-                        policies           = []                            ,
-                        role_arn           = role_arn                      ,
-                        role_name          = role_name                     ,
-                        role_exists        = self.iam_role().exists()      )
+            data = dict(assume_policy       = assume_policy                 ,
+                        current_account_id  = current_account_id            ,
+                        current_user_id     = current_user_id               ,
+                        current_user_arn    = current_user_arn              ,
+                        policies            = []                            ,
+                        result__credentials = None                          ,
+                        result__role_create = None                          ,
+                        role_arn            = role_arn                      ,
+                        role_name           = role_name                     ,
+                        role_exists         = self.iam_role().exists()      )
             self.cached_role.set_data(data)
         return self.cached_role.data()
 
