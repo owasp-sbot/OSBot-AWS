@@ -1,8 +1,6 @@
 from unittest import TestCase
 import pytest
 
-from osbot_utils.utils.trace.Trace_Call import trace_calls
-
 from osbot_aws.AWS_Config                                   import AWS_Config
 from osbot_utils.utils.Misc                                 import random_password
 from osbot_aws.aws.iam.IAM_User                             import IAM_User

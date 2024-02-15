@@ -85,7 +85,7 @@ class View_Boto3_Rest_Calls(Kwargs_To_Self):
             _.set_title(print_data.get('title'))
             _.set_footer(print_data.get('footer'))
             _.add_data(rows_data)
-            _.set_order(['index', 'api_name', 'duration', 'args', 'kwargs', 'return_value'])
+            _.set_order('index', 'api_name', 'duration', 'args', 'kwargs', 'return_value')
             _.print()
 
 

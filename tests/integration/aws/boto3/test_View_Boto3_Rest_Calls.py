@@ -1,30 +1,9 @@
-from datetime import timedelta
 from unittest import TestCase
-from unittest.mock import patch, call
-
-import botocore
 from botocore.client import BaseClient
-from botocore.loaders import Loader
-from dotenv import load_dotenv
-
-from osbot_utils.helpers.Print_Table import Print_Table
-from osbot_utils.testing.Patch_Print import Patch_Print
-from osbot_utils.utils.Call_Stack import call_stack_current_frame, call_stack_frames_data
-from osbot_utils.utils.Misc import list_set
-
-from osbot_utils.utils.Files import pickle_save_to_file, pickle_load_from_file
-
-from osbot_utils.testing.Hook_Method import Hook_Method
-
-from osbot_utils.utils.trace.Trace_Call import Trace_Call
-
 from osbot_aws.aws.iam.IAM import IAM
-from osbot_utils.utils.Dev import pprint
-
+from osbot_utils.helpers.trace.Trace_Call import Trace_Call
 from osbot_utils.testing.Duration import Duration
-
 from osbot_aws.aws.boto3.View_Boto3_Rest_Calls import View_Boto3_Rest_Calls
-
 
 class test_View_Boto3_Rest_Calls(TestCase):
 
