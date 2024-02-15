@@ -1,10 +1,8 @@
-import  base64
 import  logging
 from    unittest                import TestCase
 from    osbot_utils.utils       import Png
-from    osbot_aws.OSBot_Setup   import OSBot_Setup
-from osbot_utils.utils.Dev import Dev, pprint
-from    osbot_aws.apis.IAM      import IAM
+from    osbot_utils.utils.Dev   import Dev, pprint
+
 
 
 class Test_Helper(TestCase):

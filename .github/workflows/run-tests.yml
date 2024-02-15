@@ -20,6 +20,16 @@ jobs:
         uses: ./.github/actions/run-tests__unit
         with:
           package_name          : ${{ secrets.PACKAGE_NAME          }}
+
+      # Tests - Integration
+      - name: Install Dependencies (for tests - Integration)
+        uses: ./.github/actions/install-dependencies__integration
+
+      - name: Run Tests - Integration
+        #if  : false
+        uses: ./.github/actions/run-tests__integration
+        with:
+          package_name          : ${{ secrets.PACKAGE_NAME          }}
           AWS_SECRET_ACCESS_KEY : ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_DEFAULT_REGION    : ${{ secrets.AWS_DEFAULT_REGION    }}
           AWS_ACCOUNT_ID        : ${{ secrets.AWS_ACCOUNT_ID        }}

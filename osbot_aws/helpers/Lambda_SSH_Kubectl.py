@@ -1,14 +1,6 @@
-from osbot_aws.apis.STS import STS
-from osbot_aws.deploy.Deploy_Lambda import Deploy_Lambda
 from osbot_utils.utils.Json import json_parse
 from osbot_utils.utils.Misc import split_lines
-
-from osbot_aws.apis.Lambda import Lambda
-from osbot_utils.utils.Files import file_name, file_contents
-
 from osbot_aws.helpers.Lambda_SSH import Lambda_SSH
-from osbot_aws.lambdas.server_ssh import run
-from osbot_aws.apis.Secrets import Secrets
 
 
 class Lambda_SSH_Kubectl(Lambda_SSH):

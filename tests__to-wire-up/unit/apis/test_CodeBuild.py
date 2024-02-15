@@ -2,11 +2,11 @@ import unittest
 from time import sleep
 from unittest                                   import TestCase
 
+from osbot_aws.aws.iam.IAM import IAM
 from osbot_utils.utils.Assert import Assert
 from osbot_utils.utils.Dev                      import Dev
 
 from osbot_aws.apis.CodeBuild import CodeBuild
-from osbot_aws.apis.IAM import IAM
 
 delete_on_setup    = False
 delete_on_teardown = False

@@ -1,5 +1,7 @@
 from unittest import TestCase
 
+from osbot_utils.utils.Lists import list_filter_starts_with, list_filter_contains
+
 from osbot_utils.decorators.methods.cache_on_self import cache_on_self
 
 from osbot_aws.apis.Cloud_Watch import Cloud_Watch
@@ -7,7 +9,7 @@ from osbot_aws.apis.Lambda import Lambda
 from osbot_aws.apis.Logs import Logs
 from osbot_utils.decorators.methods.cache import cache
 from osbot_utils.utils.Dev import pprint
-from osbot_utils.utils.Misc import list_set, list_filter, list_filter_starts_with, list_filter_contains
+from osbot_utils.utils.Misc import list_set
 
 
 # todo: also create class to check if after an full test execution there is anything left behind

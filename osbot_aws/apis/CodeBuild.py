@@ -1,9 +1,7 @@
 import  boto3
 from    time                                import sleep
-
-from    osbot_aws.apis.IAM                  import IAM
-
 from osbot_aws.apis.Session import Session
+from osbot_aws.aws.iam.IAM import IAM
 from osbot_utils.utils import Misc
 from osbot_utils.utils.Dev import Dev
 

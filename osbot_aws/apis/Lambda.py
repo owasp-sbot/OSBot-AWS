@@ -1,6 +1,8 @@
 import json
 
 import botocore
+from osbot_utils.utils.Lists import unique
+
 from osbot_utils.utils.Json import json_loads, json_parse
 
 from osbot_utils.decorators.lists.group_by import group_by
@@ -17,9 +19,8 @@ from osbot_utils.decorators.methods.remove_return_value import remove_return_val
 
 from osbot_aws.apis.Session import Session
 from osbot_aws.apis.S3 import S3
-from osbot_utils.utils.Misc import get_missing_fields, wait, random_string, base64_to_str, list_set, wait_for, unique, \
-    list_index_by
-from osbot_utils.utils.Status import status_ok, status_error, status_warning, status_message
+from osbot_utils.utils.Misc import wait, random_string, base64_to_str, list_set, wait_for
+from osbot_utils.utils.Status import status_ok, status_error, status_warning
 
 
 class Lambda:
@@ -339,7 +340,7 @@ class Lambda:
 
     @index_by
     def functions(self):
-        return self._call_method_with_paginator('list_functions', 'Functions')
+        return list(self._call_method_with_paginator('list_functions', 'Functions'))
 
     @index_by
     def functions_names(self):
@@ -481,7 +482,7 @@ class Lambda:
         if image_uri is None:
             if self.s3().file_not_exists(s3_bucket, s3_key):
                 return status_error(message=f'for function {name}, could not find provided s3 bucket and s3 key: {s3_bucket} {s3_key}')
-        return status_message(status='ok', message='validated ok  the lambda create_kwargs')
+        return status_ok(message='validated ok  the lambda create_kwargs')
 
     def wait_for_function_update_to_complete(self, max_attempts=40, wait_time=0.1):
         status = None

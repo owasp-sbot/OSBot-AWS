@@ -12,6 +12,7 @@ class test_Lambda_Shell(Test_Helper):
 
     def test_reset_lambda_shell_auth(self):
         self.lambda_shell.reset_lambda_shell_auth()
+
         assert len(self.lambda_shell.get_lambda_shell_auth().split('-')) == 5
 
     def test_get_lambda_shell_auth(self):
@@ -39,8 +40,8 @@ class test_Lambda_Shell(Test_Helper):
         payload = {'shell':  {'method_name': 'ping', 'auth_key': self.lambda_shell.get_lambda_shell_auth()} }
         assert lambda_run(payload) == 'pong'
 
-    def test_check_lambda_role_has_access_to_auth_key(self):
-        with Temp_Lambda() as temp_lambda:
-            pprint(temp_lambda.info())
-            pprint(temp_lambda.invoke())
+    # def test_check_lambda_role_has_access_to_auth_key(self):
+    #     with Temp_Lambda() as temp_lambda:
+    #         pprint(temp_lambda.info())
+    #         pprint(temp_lambda.invoke())
 

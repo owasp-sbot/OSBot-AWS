@@ -1,0 +1,21 @@
+name       : Install Dependencies (for tests - Integration)
+description: 'Install Dependencies (for tests - Integration)'
+
+runs:
+    using: 'composite'
+    steps:
+      - name: Install Python 3.x
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.x
+      - name: Cache pip dependencies (for tests - Unit)
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/tests/integration/requirements-integration.txt') }}
+          restore-keys: |
+              ${{ runner.os }}-pip-
+      - name: Install dependencies (for tests - Unit)
+        shell: bash
+        run: |          
+          pip install -r tests/integration/requirements-integration.txt

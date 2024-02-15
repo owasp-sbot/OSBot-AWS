@@ -1,6 +1,6 @@
 from osbot_aws.AWS_Config import AWS_Config
-from osbot_aws.apis.IAM         import IAM
-from osbot_aws.helpers.IAM_Role import IAM_Role
+from osbot_aws.aws.iam.IAM_Role import IAM_Role
+
 
 class Temp_Aws_Roles:
     def __init__(self):

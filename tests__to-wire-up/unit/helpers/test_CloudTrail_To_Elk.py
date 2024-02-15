@@ -1,9 +1,5 @@
 import json
-
 import pytest
-
-from osbot_aws.apis.IAM import IAM
-
 from osbot_aws.helpers.Test_Helper import Test_Helper
 from osbot_aws.apis.Cloud_Trail import Cloud_Trail
 
