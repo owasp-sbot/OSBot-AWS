@@ -42,8 +42,14 @@ class test_IAM_Assume_Role(TestCase):
         assert self.iam_assume_role.cached_role.cache_exists() is True     # check that cache doesn't exist
         assert self.iam_assume_role.role_exists()              is True     # check that cache doesn't exist
 
-        assert list_set(self.iam_assume_role.data()) == ['assume_policy','current_account_id','current_user_arn','current_user_id','result__role_create','role_exists','role_name']
+        assert list_set(self.iam_assume_role.data()) == ['assume_policy','current_account_id','current_user_arn','current_user_id','policies', 'result__role_create','role_arn','role_exists', 'role_name']
         assert self.iam_assume_role.role_exists() is True
+
+    def test_credentials_raw(self):
+        credentials = self.iam_assume_role.credentials_raw()
+        assert list_set(credentials) == ['AssumedRoleUser', 'Credentials']
+        assert list_set(credentials['AssumedRoleUser']) == ['Arn', 'AssumedRoleId']
+        assert list_set(credentials['Credentials'    ]) == ['AccessKeyId', 'Expiration', 'SecretAccessKey', 'SessionToken']
 
     def test_data(self):
         self.iam_assume_role.reset()
@@ -68,30 +74,33 @@ class test_IAM_Assume_Role(TestCase):
                                                           service_name='service',
                                                           federated='federated',
                                                           canonical_user='user') == {'Version': '2012-10-17','Statement': [{'Action': 'sts:AssumeRole',
-                                                                                                    'Effect': 'Allow',
-                                                                                                    'Principal': {'AWS': 'an_user_arn'}},
-                                                                                                   {'Action': 'sts:AssumeRole',
-                                                                                                    'Effect': 'Allow',
-                                                                                                    'Principal': {'Service': 'service'}},
-                                                                                                   {'Action': 'sts:AssumeRole',
-                                                                                                    'Effect': 'Allow',
-                                                                                                    'Principal': {'Federated': 'federated'}},
-                                                                                                   {'Action': 'sts:AssumeRole',
-                                                                                                    'Effect': 'Allow',
-                                                                                                    'Principal': {'CanonicalUser': 'user'}}]}
+                                                                                                                            'Effect': 'Allow',
+                                                                                                                            'Principal': {'AWS': 'an_user_arn'}},
+                                                                                                                           {'Action': 'sts:AssumeRole',
+                                                                                                                            'Effect': 'Allow',
+                                                                                                                            'Principal': {'Service': 'service'}},
+                                                                                                                           {'Action': 'sts:AssumeRole',
+                                                                                                                            'Effect': 'Allow',
+                                                                                                                            'Principal': {'Federated': 'federated'}},
+                                                                                                                           {'Action': 'sts:AssumeRole',
+                                                                                                                            'Effect': 'Allow',
+                                                                                                                            'Principal': {'CanonicalUser': 'user'}}]}
 
-    # def test_path_cached_roles(self):
-    #     path_folder = self.iam_assume_role.path_cached_roles()
-    #     assert folder_exists(path_folder) is True
-    #     assert parent_folder(path_folder) == current_temp_folder()
-    #     assert folder_name  (path_folder) == FOLDER_NAME__CACHED_ROLES
+    def test_policies(self):
+        policies = self.iam_assume_role.policies()
+        assert type(policies) == list
+
+    def test_role_arn(self):
+        data     = self.iam_assume_role.data()
+        role_arn = self.iam_assume_role.role_arn()
+        assert role_arn == f"arn:aws:iam::{data.get('current_account_id')}:role/{self.iam_assume_role.role_name}"
 
     #@print_boto3_calls()
     def test_setup_data(self):
-        #self.iam_assume_role.cached_role.cache_delete()
+        self.iam_assume_role.reset()                                # deletes the cache
         setup_data = self.iam_assume_role.setup_data()
         assert list_set(setup_data) == [ 'assume_policy', 'current_account_id', 'current_user_arn',
-                                         'current_user_id', 'role_exists', 'role_name']
+                                         'current_user_id', 'policies', 'role_arn','role_exists', 'role_name']
         assert self.iam_assume_role.cached_role.cache_exists() is True
 
         #pprint(self.iam_assume_role.cached_role.data())
