@@ -246,9 +246,11 @@ class S3:
 
         operation_parameters = {
             'Bucket': s3_bucket    ,
-            'Prefix': parent_folder,
             'Delimiter': '/'
         }
+        if parent_folder != '/':
+            operation_parameters['Prefix'] = parent_folder              # add support for also listing files in the root of the bucket
+
         for page in paginator.paginate(**operation_parameters):
             for common_prefix in page.get('CommonPrefixes', []):
                 folder_path = common_prefix.get('Prefix')
