@@ -135,8 +135,8 @@ class test_Check_Lambda_Deploy_Permissions(TestCase):
 
 
     def test_user_privs(self):
-        user_name       = 'AlekhAnejaUpwork'
-        access_key_id   = 'AKIA3NUU5XSYZRQYXMP2'
+        user_name       = 'bbbbbbb'
+        access_key_id   = 'aaaaaaaaa'
         iam_user        = IAM(user_name=user_name)
 
         assert iam_user.user_exists()
