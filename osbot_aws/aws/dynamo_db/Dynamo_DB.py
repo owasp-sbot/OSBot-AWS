@@ -8,12 +8,12 @@ class Dynamo_DB:
     def __init__(self):
         pass
         #self.resource   = resource('dynamodb')
-        self._dynamo    = None
-        self._streams   = None
+        # self._dynamo    = None
+        # self._streams   = None
 
     # helpers
     @cache
-    def dynamo(self):
+    def client(self):
         return Session().client('dynamodb')
 
     @cache
@@ -31,20 +31,21 @@ class Dynamo_DB:
                      'ProvisionedThroughput': provisionedThroughput }
         if with_streams:
             kwargs['StreamSpecification'] = {'StreamEnabled': True, 'StreamViewType': 'NEW_IMAGE' }
-        self.dynamo().create_table( **kwargs)
+        self.client().create_table(**kwargs)
 
-        self.dynamo().get_waiter('table_exists') \
+        self.client().get_waiter('table_exists') \
             .wait(TableName=table_name, WaiterConfig={'Delay': 5, 'MaxAttempts': 10})
         return self
 
     def delete(self, table_name):
-        self.dynamo().delete_table(TableName = table_name)
-        self.dynamo().get_waiter('table_not_exists')      \
+        self.client().delete_table(TableName = table_name)
+        self.client().get_waiter('table_not_exists')      \
                    .wait(TableName=table_name, WaiterConfig={'Delay': 10, 'MaxAttempts':10 })
         return self
 
     def list(self):
-        return self.dynamo().list_tables()['TableNames']
+        result = self.client().list_tables() or {}
+        return result.get('TableNames') or []
 
     def streams(self):
         return self.dynamo_streams().list_streams().get('Streams')

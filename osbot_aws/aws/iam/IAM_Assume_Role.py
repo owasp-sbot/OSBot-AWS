@@ -49,7 +49,7 @@ class IAM_Assume_Role:
 
     def add_policy(self, service, action, resource):
         if service and action and resource:
-            policy_name = f'inline_policy_for_{service}_{action}_{safe_str(resource)}'
+            policy_name = f'inline_policy_for_{safe_str(service)}_{safe_str(action)}_{safe_str(resource)}'
             policy_document = self.create_policy_document(service=service, action=action, resource=resource)
             return self.set_inline_policy(policy_name, policy_document)
         return False

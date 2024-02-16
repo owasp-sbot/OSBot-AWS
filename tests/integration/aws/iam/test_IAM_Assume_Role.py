@@ -99,6 +99,7 @@ class test_IAM_Assume_Role(TestCase):
 
     #@print_boto3_calls()
     def test_set_inline_policy(self):
+        self.iam_assume_role.credentials_reset()
         policy_name     = 'test_policy'
         policy_document = TEST_POLICY_DOCUMENT
         self.iam_assume_role.set_inline_policy(policy_name, policy_document)

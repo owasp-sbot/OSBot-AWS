@@ -5,7 +5,7 @@ from osbot_utils.utils.Lists import array_pop
 from osbot_utils.utils.Objects import get_value
 
 # todo: see if we can remove this class once the new Dynamo_DB__Table is implemented
-class Dynamo_Table_Resource:
+class Dynamo_Table__Resource:
     def __init__(self,table_name, key):
         self.table_name = table_name
         self.key        = key
@@ -56,7 +56,7 @@ class Dynamo_Table_Resource:
 
     def info(self):
         try:
-            return self.dynamo.dynamo().describe_table(TableName = self.table_name)
+            return self.dynamo.client().describe_table(TableName = self.table_name)
         except:
             return None
 
