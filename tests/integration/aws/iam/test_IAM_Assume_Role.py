@@ -1,7 +1,9 @@
 from unittest import TestCase
 
+import boto3
 import pytest
 
+from osbot_aws.apis.Cloud_Trail import Cloud_Trail
 from osbot_aws.aws.boto3.View_Boto3_Rest_Calls import print_boto3_calls
 from osbot_utils.utils.Dev import pprint
 from osbot_utils.utils.Files import folder_exists, parent_folder, current_temp_folder, folder_name
@@ -12,10 +14,10 @@ from osbot_utils.utils.Status import osbot_logger
 from osbot_aws.aws.iam.IAM_Assume_Role import IAM_Assume_Role
 
 TEMP_ROLE_NAME__ASSUME_ROLE = 'osbot_aws_temp_role__assume_role'
-TEST_POLICY_DOCUMENT = {"Version": "2012-10-17",
-                         "Statement": [ { "Effect"   : "Allow"        ,
-                                          "Action"  : "s3:ListBucket" ,
-                                          "Resource": "*"             }]}
+TEST_POLICY_DOCUMENT        = { "Version": "2012-10-17",
+                                "Statement": [ { "Effect"  : "Allow"               ,
+                                                 "Action"  : "s3:ListAllMyBuckets" ,
+                                                 "Resource": "*"                  }]}
 class test_IAM_Assume_Role(TestCase):
 
     def setUp(self):
@@ -23,11 +25,20 @@ class test_IAM_Assume_Role(TestCase):
 
     def test__init__(self):
         assert self.iam_assume_role.role_name        == TEMP_ROLE_NAME__ASSUME_ROLE
-        #assert self.iam_assume_role.policy_statement == TEST_POLICY_DOCUMENT
-        #assert self.iam_assume_role.cached_role.cache_exists() is False
+
+    def test_create_policy_document(self):
+        expect_policy_document = { "Version": "2012-10-17",
+                                   "Statement": [ { "Effect"  : "Allow"                   ,
+                                                    "Action"  : "cloudtrail:LookupEvents" ,
+                                                    "Resource": "*"                       }]}
+        effect   = "Allow"
+        service  = "cloudtrail"
+        action   = "LookupEvents"
+        resource = "*"
+        kwargs = dict(effect=effect, service=service, action=action, resource=resource)
+        assert self.iam_assume_role.create_policy_document(**kwargs) == expect_policy_document
 
 
-    #@pytest.mark.skip('fix test, current throwing error: error creating role with assume_policy_document')
     #@print_boto3_calls()
     def test_create_role(self):
         print()
@@ -37,7 +48,7 @@ class test_IAM_Assume_Role(TestCase):
         self.iam_assume_role.delete_role()                                  # delete role
         assert self.iam_assume_role.role_exists()              is False     # check that cache doesn't exist
 
-        self.iam_assume_role.create_role()                                  # create role        
+        self.iam_assume_role.create_role()                                  # create role
 
         assert self.iam_assume_role.cached_role.cache_exists() is True     # check that cache doesn't exist
         assert self.iam_assume_role.role_exists()              is True     # check that cache doesn't exist
@@ -93,7 +104,38 @@ class test_IAM_Assume_Role(TestCase):
 
     def test_policies(self):
         policies = self.iam_assume_role.policies()
-        assert type(policies) == list
+        assert type(policies) == dict
+
+    #@print_boto3_calls()
+    def test_set_inline_policy(self):
+        policy_name     = 'test_policy'
+        policy_document = TEST_POLICY_DOCUMENT
+        self.iam_assume_role.set_inline_policy(policy_name, policy_document)
+
+        assert TEST_POLICY_DOCUMENT == {"Version": "2012-10-17",
+                                        "Statement": [ { "Effect"   : "Allow"              ,
+                                                         "Action"  : "s3:ListAllMyBuckets" ,
+                                                         "Resource": "*"                   }]}
+
+        policies = self.iam_assume_role.policies()
+        assert policies[policy_name] == policy_document
+
+        s3_client             = self.iam_assume_role.boto3_client('s3')
+        sts_client            = self.iam_assume_role.boto3_client('sts')
+        user_identity         = sts_client.get_caller_identity()
+        role_data             = self.iam_assume_role.data()
+        current_account_id    = role_data.get('current_account_id')
+        result__credentials   = role_data.get('result__credentials')
+        assumed_role_user_arn = result__credentials.get('AssumedRoleUser').get('Arn')
+        assumed_role_user_id  = result__credentials.get('AssumedRoleUser').get('AssumedRoleId')
+
+        assert s3_client.meta.service_model.service_name  == 's3'
+        assert sts_client.meta.service_model.service_name == 'sts'
+        assert user_identity['Account']                   == current_account_id
+        assert user_identity['Arn'    ]                   == assumed_role_user_arn
+        assert user_identity['UserId' ]                   == assumed_role_user_id
+
+        assert len(s3_client.list_buckets()) > 0
 
     def test_role_arn(self):
         data     = self.iam_assume_role.data()
@@ -109,6 +151,35 @@ class test_IAM_Assume_Role(TestCase):
                                          'role_arn','role_exists', 'role_name']
         assert self.iam_assume_role.cached_role.cache_exists() is True
 
-        #pprint(self.iam_assume_role.cached_role.data())
-        #assert self.iam_assume_role.create_role().get('role_exists') is False
-        #pprint(self.iam_assume_role.create_role())
+
+class test_Cloud_Trail_Lookup(TestCase):
+
+    #@print_boto3_calls(config__print_return_value=True)
+    def test_get_cloud_trail_logs(self):
+        role_name            = "temp_role__for_cloud_trail_logs"
+
+        self.iam_assume_role = IAM_Assume_Role(role_name=role_name)
+        self.iam_assume_role.create_role(recreate=False)
+
+        client          = self.iam_assume_role.boto3_client(service_name='cloudtrail')
+        policy_name     = 'cloud_trail_logs_policy'
+        policy_document = self.iam_assume_role.create_policy_document( service='cloudtrail', action='LookupEvents', resource='*')
+
+        self.iam_assume_role.set_inline_policy(policy_name, policy_document)
+        self.iam_assume_role.add_policy(service='cloudtrail', action='LookupEvents', resource='*')
+
+        cloud_trail            = Cloud_Trail()
+        cloud_trail.cloudtrail = client
+        events = cloud_trail.events_in_last(50, page_size=1)
+        assert list_set(next(events)) == ['AccessKeyId', 'CloudTrailEvent', 'EventId', 'EventName', 'EventSource', 'EventTime', 'ReadOnly', 'Resources', 'Username']
+
+
+
+# todo create another example for dynamodb:ListTables
+
+# policy_statements = [{
+#         "Effect": "Allow",
+#         "Action": "dynamodb:ListTables",
+#         "Resource": "arn:aws:dynamodb:eu-west-2:{account_id}:table/*"}]
+# policy_document = { "Version": "2012-10-17",
+#                     "Statement": policy_statements}

@@ -16,6 +16,12 @@ from osbot_utils.utils.Objects import obj_data
 # todo: create unit tests specifically for this class
 # decorator
 
+# config__print_calls         : bool = True
+# config__print_call_stack    : bool = False
+# config__print_return_value  : bool = True
+# config__print_pformat_args  : bool = True
+# see above the multipe options that can be set via the decorator
+
 def print_boto3_calls(**decorator_kwargs):
     def decorator(function):
         @wraps(function)
@@ -71,7 +77,8 @@ class View_Boto3_Rest_Calls(Kwargs_To_Self):
             if return_value and 'ResponseMetadata' in return_value:
                 del return_value['ResponseMetadata']
             if exception:
-                #exception_data = obj_data(exception, name_width=100, value_width=1000)
+                # exception_data = obj_data(exception, name_width=100, value_width=1000)
+                # return_value_str = pformat(exception_data)
                 return_value_str = pformat(exception.args)
             else:
                 if self.config__print_return_value:

@@ -317,12 +317,14 @@ class IAM:
         return self.role_exists() is False
 
     def role_policies_detach_and_delete(self):
-        policies_arns = self.role_policies().values()
-        self.role_policies_detach(policies_arns)
+        attached_policies_arns = self.role_policies_attached().values()
+        self.role_policies_detach(attached_policies_arns)
         self.role_policies_delete()
         #self.policies_delete     (policies_arns)       # was a BUG, we shouldn't be deleting top level policies here
 
     def role_policy_add(self, policy_name, policy_document):
+        if type(policy_document) is not str:
+            policy_document = json_to_str(policy_document)
         return self.client().put_role_policy(RoleName=self.role_name,PolicyName=policy_name,PolicyDocument=policy_document)
 
     def role_policy_attach(self,policy_arn):
@@ -365,7 +367,7 @@ class IAM:
         return policies
 
     @index_by
-    def role_policies_inline(self):
+    def role_policies_inline(self, fetch_inline_policies=False):
         policies = {}
         if self.role_name:
             policies_inline = self.get_data('list_role_policies', 'PolicyNames', True, RoleName=self.role_name)
@@ -373,6 +375,14 @@ class IAM:
                 for item in policies_inline:
                     #policies[item.get('PolicyName')] = item.get('PolicyArn')
                     policies[item] = {'PolicyName': item}                           # list_role_policies only returns an arroy of names, not the actual policy
+        if fetch_inline_policies:
+            for policy_name in policies.keys():
+
+                policy_document = self.client().get_role_policy(RoleName=self.role_name, PolicyName=policy_name)
+                policies[policy_name] = policy_document.get('PolicyDocument')
+                print(f"Policy Name: {policy_name}")
+                print("Policy Document:", policy_document['PolicyDocument'])
+
         return policies
 
     def role_policies_statements(self, just_statements = False):
