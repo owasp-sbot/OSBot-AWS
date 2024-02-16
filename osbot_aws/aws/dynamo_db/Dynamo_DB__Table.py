@@ -44,3 +44,6 @@ class Dynamo_DB__Table(Kwargs_To_Self):
 
     def keys(self):
         return self.dynamo_db.documents_keys(table_name=self.table_name, key_name=self.key_name)
+
+    def status(self):
+        return self.dynamo_db.table_status(table_name=self.table_name)

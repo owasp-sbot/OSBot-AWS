@@ -85,3 +85,5 @@ class test_Dynamo_DB__Table(TestCase):
                           'TableSizeBytes'           : 0                                                                     ,
                           'TableStatus'              : 'ACTIVE'                                                              }
 
+    def test_status(self):
+        assert self.table.status() == {'data': 'ACTIVE', 'status': 'ok'}

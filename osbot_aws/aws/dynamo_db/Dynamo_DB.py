@@ -48,6 +48,46 @@ class Dynamo_DB:
             return {k: deserializer.deserialize(v) for k, v in item.items()}
         return {}
 
+    @remove_return_value('ResponseMetadata')
+    def document_update(self, table_name, key_name, key_value, update_data):
+        # Initialize TypeSerializer to convert Python types to DynamoDB types
+        serializer = TypeSerializer()
+
+        # Construct the key for the item to update
+        key = {key_name: {'S': key_value}}
+
+        # Initialize the update expression components
+        update_expression = "SET "
+        expression_attribute_values = {}
+        expression_attribute_names = {}
+
+        for attribute_name, new_value in update_data.items():
+            # Serialize the value to DynamoDB format
+            dynamodb_value = serializer.serialize(new_value)
+
+            # Create placeholders for attribute names and values
+            attr_placeholder = f"#{attribute_name.replace('-', '_')}"
+            val_placeholder = f":val_{attribute_name.replace('-', '_')}"
+
+            # Add to the update expression, attribute names, and values
+            update_expression += f"{attr_placeholder} = {val_placeholder}, "
+            expression_attribute_names[attr_placeholder] = attribute_name
+            expression_attribute_values[val_placeholder] = dynamodb_value
+
+        # Remove the trailing comma and space from the update expression
+        update_expression = update_expression.rstrip(', ')
+
+        # Perform the update operation
+        response = self.client().update_item(
+            TableName=table_name,
+            Key=key,
+            UpdateExpression=update_expression,
+            ExpressionAttributeNames=expression_attribute_names,
+            ExpressionAttributeValues=expression_attribute_values,
+            ReturnValues="UPDATED_NEW"
+        )
+        return response
+
     def document_serialise(self, document):
         serializer = TypeSerializer()
         return {k: serializer.serialize(v) for k, v in document.items()}
