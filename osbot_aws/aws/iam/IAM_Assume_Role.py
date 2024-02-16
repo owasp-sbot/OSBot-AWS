@@ -223,3 +223,16 @@ class IAM_Assume_Role:
         self.cached_role.cache_delete()
         self.setup_data()
         return self
+
+    def wait_for_valid_execution(self, service_name, method_name, retries=20, delay=0.2):
+        for attempt in range(retries):
+            try:
+                target_client = self.boto3_client(service_name)
+                target_method = getattr(target_client, method_name)
+                return target_method()
+            except Exception as e:
+                print()
+                print(">>>>>>>> in wait_for_valid_execution <<<<<< waiting for 0.2 seconds before retrying")
+                print(f"        error:{e}")
+            wait_for(delay)
+            self.credentials_reset()                # reset credentials before trying again

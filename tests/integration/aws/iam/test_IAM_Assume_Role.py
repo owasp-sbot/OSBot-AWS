@@ -1,6 +1,8 @@
 from unittest import TestCase
 
 from osbot_aws.apis.Cloud_Trail import Cloud_Trail
+from osbot_aws.aws.boto3.View_Boto3_Rest_Calls import print_boto3_calls
+from osbot_utils.utils.Dev import pprint
 from osbot_utils.utils.Misc import list_set, wait_for
 from osbot_aws.aws.iam.IAM_Assume_Role import IAM_Assume_Role
 
@@ -99,7 +101,6 @@ class test_IAM_Assume_Role(TestCase):
 
     #@print_boto3_calls()
     def test_set_inline_policy(self):
-        self.iam_assume_role.credentials_reset()
         policy_name     = 'test_policy'
         policy_document = TEST_POLICY_DOCUMENT
         self.iam_assume_role.set_inline_policy(policy_name, policy_document)
@@ -111,6 +112,11 @@ class test_IAM_Assume_Role(TestCase):
 
         policies = self.iam_assume_role.policies()
         assert policies[policy_name] == policy_document
+
+        result = self.iam_assume_role.wait_for_valid_execution('s3', 'list_buckets')
+        assert len(result.get('Buckets')) > 0
+
+
 
         s3_client             = self.iam_assume_role.boto3_client('s3')
         sts_client            = self.iam_assume_role.boto3_client('sts')
@@ -127,7 +133,7 @@ class test_IAM_Assume_Role(TestCase):
         assert user_identity['Arn'    ]                   == assumed_role_user_arn
         assert user_identity['UserId' ]                   == assumed_role_user_id
 
-        assert len(s3_client.list_buckets()) > 0
+        assert len(s3_client.list_buckets().get('Buckets')) > 0
 
     def test_role_arn(self):
         data     = self.iam_assume_role.data()
