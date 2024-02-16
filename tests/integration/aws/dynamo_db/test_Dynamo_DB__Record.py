@@ -3,6 +3,7 @@ from unittest import TestCase
 from osbot_aws.aws.dynamo_db.Dynamo_DB__Record import Dynamo_DB__Record, Dynamo_DB__Record__Metadata
 from osbot_aws.aws.dynamo_db.Dynamo_DB__Table import Dynamo_DB__Table
 from osbot_utils.utils.Dev import pprint
+from osbot_utils.utils.Misc import str_to_bytes
 from tests.integration.aws.dynamo_db.TestCase__Temp_Dynamo_DB_Table import TestCase__Temp_Dynamo_DB_Table
 from tests.integration.aws.dynamo_db.test_Dynamo_DB import Dynamo_DB__with_temp_role
 
@@ -34,3 +35,20 @@ class test_Dynamo_DB__Record(TestCase__Temp_Dynamo_DB_Table):
             assert result.get('status') == 'ok'
             assert document             == _.document(key_value).get('data')
             self.table.clear_table()
+
+    def test_compress_binary_data(self):
+        data = 'hello world' * 10
+        self.db_record.set_binary_data__from_str(data)
+        assert self.db_record.data_binary == str_to_bytes(data)
+        self.db_record.compress_binary_data()
+        assert self.db_record.data_binary != str_to_bytes(data)
+        self.db_record.uncompress_binary_data()
+        assert self.db_record.data_binary == str_to_bytes(data)
+
+    def test_set_bynary_data__from_dict(self):
+        data_as_dict = {'a': 1, 'b': 2}
+        assert self.db_record.set_binary_data__from_dict(data_as_dict).data_binary == b'{"a": 1, "b": 2}'
+
+    def test_set_bynary_data__from_str(self):
+        data_as_str = 'hello world'
+        assert self.db_record.set_binary_data__from_str(data_as_str).data_binary == b'hello world'
