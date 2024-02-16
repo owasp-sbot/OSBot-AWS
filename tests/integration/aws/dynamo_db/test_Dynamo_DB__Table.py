@@ -9,25 +9,21 @@ from osbot_aws.aws.dynamo_db.Dynamo_DB__Table import Dynamo_DB__Table
 from osbot_aws.aws.iam.IAM_Assume_Role import IAM_Assume_Role
 from osbot_utils.utils.Dev import pprint
 from osbot_utils.utils.Misc import list_set, is_guid
+from tests.integration.aws.dynamo_db.TestCase__Temp_Dynamo_DB_Table import TestCase__Temp_Dynamo_DB_Table
 from tests.integration.aws.dynamo_db.test_Dynamo_DB import Dynamo_DB__with_temp_role
 
+TEST_TABLE_NAME = 'temp_table__test_Dynamo_DB__Table'
 
-class test_Dynamo_DB__Table(TestCase):
-    table          : Dynamo_DB__Table
-    key_name       : str = 'el-key'
-    table_name     : str = 'temp_table__test_Dynamo_DB__Table'
-    remove_on_exit : bool = True
+class test_Dynamo_DB__Table(TestCase__Temp_Dynamo_DB_Table):
 
     @classmethod
     def setUpClass(cls):
-        cls.table           = Dynamo_DB__Table(table_name=cls.table_name, key_name=cls.key_name)
-        cls.table.dynamo_db = Dynamo_DB__with_temp_role()
-        cls.table.create_table()
+        cls.table_name     = TEST_TABLE_NAME
+        cls.remove_on_exit = True
+        super().setUpClass()
 
-    @classmethod
-    def tearDownClass(cls):
-        if cls.remove_on_exit:
-            cls.table.delete_table()
+    def test__init__(self):
+        assert self.table.table_name == TEST_TABLE_NAME
 
     def test_add_document(self):
         with self.table as _:
