@@ -118,11 +118,11 @@ class Dynamo_DB:
             return []
 
 
-    def table_create(self, table_name, key, with_streams=False):
+    def table_create(self, table_name, key_name, with_streams=False):
         if self.table_exists(table_name):
             return False
-        keySchema             = [ {'AttributeName'    : key        , 'KeyType'           : 'HASH' } ]
-        attributeDefinitions  = [ {'AttributeName'    : key        , 'AttributeType'     : 'S'    } ]
+        keySchema             = [{'AttributeName'    : key_name        , 'KeyType'           : 'HASH'}]
+        attributeDefinitions  = [{'AttributeName'    : key_name        , 'AttributeType'     : 'S'}]
         provisionedThroughput = { 'ReadCapacityUnits' : 5          , 'WriteCapacityUnits': 5      }
         kwargs   = { 'TableName'            : table_name           ,
                      'KeySchema'            : keySchema            ,

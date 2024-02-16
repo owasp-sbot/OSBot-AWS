@@ -46,7 +46,7 @@ class test_Dynamo_DB(TestCase):
         cls.dynamo_db = Dynamo_DB__with_temp_role()
         cls.table_name = 'temp-table'
         cls.table_key = 'an_key'
-        cls.dynamo_db.table_create(table_name=cls.table_name, key=cls.table_key)        # usually takes about 5 seconds to create
+        cls.dynamo_db.table_create(table_name=cls.table_name, key_name=cls.table_key)        # usually takes about 5 seconds to create
 
 
     @classmethod
