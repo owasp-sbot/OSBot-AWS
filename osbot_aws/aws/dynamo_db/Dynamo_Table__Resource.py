@@ -87,20 +87,20 @@ class Dynamo_Table__Resource:
         return keys
 
     def stream_arn(self):
-        streams   = self.dynamo.dynamo_streams().list_streams(TableName=self.table_name).get('Streams')
+        streams   = self.dynamo.client__dynamo_streams().list_streams(TableName=self.table_name).get('Streams')
         first_one = array_pop(streams,0)
         return get_value(first_one,'StreamArn')
 
     def stream_info(self):
         stream_arn = self.stream_arn()
         if stream_arn:
-            return self.dynamo.dynamo_streams().describe_stream(StreamArn=stream_arn).get('StreamDescription')
+            return self.dynamo.client__dynamo_streams().describe_stream(StreamArn=stream_arn).get('StreamDescription')
 
     def stream_get_data_latest(self):
         stream_info    = self.stream_info()
         shard_id       = stream_info.get('Shards').pop(0).get('ShardId')
-        shard_iterator = self.dynamo.dynamo_streams().get_shard_iterator(StreamArn=self.stream_arn(), ShardId=shard_id, ShardIteratorType='LATEST').get('ShardIterator')
-        return           self.dynamo.dynamo_streams().get_records(ShardIterator=shard_iterator)
+        shard_iterator = self.dynamo.client__dynamo_streams().get_shard_iterator(StreamArn=self.stream_arn(), ShardId=shard_id, ShardIteratorType='LATEST').get('ShardIterator')
+        return           self.dynamo.client__dynamo_streams().get_records(ShardIterator=shard_iterator)
 
         #shard_iterator = get_shard_iterator
 
