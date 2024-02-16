@@ -3,10 +3,12 @@ from unittest import TestCase
 
 from dotenv import load_dotenv
 
+from osbot_aws.AWS_Config import AWS_Config
 from osbot_aws.aws.dynamo_db.Dynamo_DB import Dynamo_DB
 from osbot_aws.aws.dynamo_db.Dynamo_DB__Table import Dynamo_DB__Table
 from osbot_aws.aws.iam.IAM_Assume_Role import IAM_Assume_Role
-from osbot_utils.utils.Misc import list_set
+from osbot_utils.utils.Dev import pprint
+from osbot_utils.utils.Misc import list_set, is_guid
 from tests.integration.aws.dynamo_db.test_Dynamo_DB import Dynamo_DB__with_temp_role
 
 
@@ -20,15 +22,66 @@ class test_Dynamo_DB__Table(TestCase):
     def setUpClass(cls):
         cls.table           = Dynamo_DB__Table(table_name=cls.table_name, key_name=cls.key_name)
         cls.table.dynamo_db = Dynamo_DB__with_temp_role()
-        cls.table.create()
+        cls.table.create_table()
 
     @classmethod
     def tearDownClass(cls):
         if cls.remove_on_exit:
-            cls.table.delete()
+            cls.table.delete_table()
+
+    def test_add_document(self):
+        with self.table as _:
+            result = _.add_document({'answer': 42})
+            status = result.get('status')
+            data   = result.get('data')
+            assert list_set(result) == ['data', 'status']
+            assert list_set(data  ) == ['document', 'document_as_item', 'key_value']
+            assert status == 'ok'
+            document         = data.get('document')
+            document_as_item = data.get('document_as_item')
+            document_key     = data.get('key_value')
+            assert is_guid(document_key) is True
+            assert document_key        == document_as_item.get('el-key').get('S')
+            assert document            == {'answer':42, 'el-key': document_key}
+            assert document_as_item    == {'answer': {'N': '42'}, 'el-key': {'S': document_key}}
+
+            assert _.delete_document(document_key) == {'data': True, 'status': 'ok'}
+
+    def test_clear_table(self):
+        with self.table as _:
+            assert _.clear_table() == {'data': {'delete_result': [], 'deleted_keys': []}, 'status': 'ok'}
+            document_key = _.add_document({}).get('data').get('key_value')
+            assert _.clear_table() == {'data'  : {'delete_result': [{'UnprocessedItems': {}}],
+                                                   'deleted_keys': [document_key]           },
+                                       'status': 'ok'}
 
     def test_exists(self):
-        assert self.table.exists() is True
+        assert self.table.exists() == {'data': True, 'status': 'ok'}
 
     def test_info(self):
-        assert list_set(self.table.info()) == ['AttributeDefinitions', 'CreationDateTime', 'DeletionProtectionEnabled', 'ItemCount', 'KeySchema', 'ProvisionedThroughput', 'TableArn', 'TableId', 'TableName', 'TableSizeBytes', 'TableStatus']
+        aws_config  = AWS_Config()
+        account_id  = aws_config.account_id()
+        region_name = aws_config.region_name()
+        result      =  self.table.info()
+        data        = result.get('data'  )
+        status      = result.get('status')
+        table_id    = data.get('TableId')
+        del data['CreationDateTime']
+
+        assert list_set(result)  == ['data', 'status']
+        assert list_set(data)    == ['AttributeDefinitions', 'DeletionProtectionEnabled', 'ItemCount', 'KeySchema', 'ProvisionedThroughput', 'TableArn', 'TableId', 'TableName', 'TableSizeBytes', 'TableStatus']
+        assert is_guid(table_id) is True
+
+        assert data == {  'AttributeDefinitions'     : [{'AttributeName': self.key_name, 'AttributeType': 'S'}]              ,
+                          'DeletionProtectionEnabled': False                                                                 ,
+                          'ItemCount'                : 0                                                                     ,
+                          'KeySchema'                : [{'AttributeName': self.key_name, 'KeyType': 'HASH'}]                 ,
+                          'ProvisionedThroughput'    : { 'NumberOfDecreasesToday': 0 ,
+                                                         'ReadCapacityUnits'     : 5 ,
+                                                         'WriteCapacityUnits'    : 5 }                                       ,
+                          'TableArn'                 : f'arn:aws:dynamodb:{region_name}:{account_id}:table/{self.table_name}',
+                          'TableId'                  : table_id                                                              ,
+                          'TableName'                : self.table_name                                                       ,
+                          'TableSizeBytes'           : 0                                                                     ,
+                          'TableStatus'              : 'ACTIVE'                                                              }
+

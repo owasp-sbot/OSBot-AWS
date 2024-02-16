@@ -69,8 +69,8 @@ class test_Dynamo_DB(TestCase):
             assert _.documents_all(table_name=self.table_name) == []
             document_1 = { self.table_key: 'key-1', 'answer-1': Decimal(42) ,'var-1': 'goes-here'}
             document_2 = { self.table_key: 'key-2', 'answer-1': Decimal(43), 'var-2': 'and-here'}
-            _.document_add(table_name=self.table_name, document=document_1)
-            _.document_add(table_name=self.table_name, document=document_2)
+            _.document_add(table_name=self.table_name, key_name=self.table_key, document=document_1)
+            _.document_add(table_name=self.table_name, key_name=self.table_key, document=document_2)
             all_items = _.documents_all(table_name=self.table_name)
             assert all_items == [document_2, document_1]
 

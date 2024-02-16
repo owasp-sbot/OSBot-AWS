@@ -2,17 +2,13 @@ from functools import cache
 
 from   boto3    import resource
 from boto3.dynamodb.types import TypeDeserializer, TypeSerializer
+from osbot_utils.utils.Status import status_ok
 
 from osbot_aws.apis.Session import Session
 from osbot_utils.decorators.methods.remove_return_value import remove_return_value
 
 
 class Dynamo_DB:
-    def __init__(self):
-        pass
-        #self.resource   = resource('dynamodb')
-        # self._dynamo    = None
-        # self._streams   = None
 
     def __enter__(self                           ): return self
     def __exit__ (self, exc_type, exc_val, exc_tb): pass
@@ -34,11 +30,12 @@ class Dynamo_DB:
         item   = result.get('Item')
         return self.document_deserialise(item)
 
-    def document_add(self, table_name, document):
+    def document_add(self, table_name, key_name, document):
         document_as_item = self.document_serialise(document)
-
+        key_value        = document.get(key_name)
         self.client().put_item(TableName=table_name, Item=document_as_item)
-        return self
+        return dict(document=document, document_as_item=document_as_item, key_value=key_value)
+
 
     def document_delete(self, table_name, key_name, key_value):
         key = { key_name: {'S': key_value} }
@@ -56,51 +53,46 @@ class Dynamo_DB:
         return {k: serializer.serialize(v) for k, v in document.items()}
 
     def documents_add(self, table_name, documents):
-        try:
-            chunks = [documents[x:x + 25] for x in range(0, len(documents), 25)]        # Split the items list into chunks of 25 (DynamoDB batch write limit)
-            responses = []
+        chunks = [documents[x:x + 25] for x in range(0, len(documents), 25)]        # Split the items list into chunks of 25 (DynamoDB batch write limit)
+        responses = []
 
-            for chunk in chunks:
-                request_items = { table_name: [ {'PutRequest': {'Item': self.document_serialise(document)}}
-                                                  for document in chunk ] }
-                response = self.client().batch_write_item(RequestItems=request_items)
-                del response['ResponseMetadata']
-                responses.append(response)
-            return responses        # Contains unprocessed items
-        except Exception as e:
-            print(f"An error occurred: {str(e)}")
-            return None
+        for chunk in chunks:
+            request_items = { table_name: [ {'PutRequest': {'Item': self.document_serialise(document)}}
+                                              for document in chunk ] }
+            response = self.client().batch_write_item(RequestItems=request_items)
+            del response['ResponseMetadata']
+            responses.append(response)
+        return responses        # Contains unprocessed items
 
     def documents_all(self, table_name):
         """
         Retrieves all items from the DynamoDB table.
         :return: A list of dictionaries, each representing an item in the table.
         """
-        try:
-            response = self.client().scan(TableName=table_name)
-            items    = response.get('Items', [])
-            return [self.document_deserialise(item) for item in items]
-        except Exception as e:
-            print(f"An error occurred: {str(e)}")
-            return []
+        response = self.client().scan(TableName=table_name)
+        items    = response.get('Items', [])
+        return [self.document_deserialise(item) for item in items]
+
 
     def documents_delete(self, table_name, key_name, key_values):
-        try:
-            keys = [{key_name: {'S': key_value}} for key_value in key_values]
 
-            chunks = [keys[x:x+25] for x in range(0, len(keys), 25)]        # Split the keys list into chunks of 25 (DynamoDB batch write limit)
-            responses = []
+        keys = [{key_name: {'S': key_value}} for key_value in key_values]
 
-            for chunk in chunks:
-                request_items = { table_name: [{'DeleteRequest': {'Key': key}} for key in chunk ] }
-                response = self.client().batch_write_item(RequestItems=request_items)
-                del response['ResponseMetadata']
-                responses.append(response)
+        chunks = [keys[x:x+25] for x in range(0, len(keys), 25)]        # Split the keys list into chunks of 25 (DynamoDB batch write limit)
+        responses = []
 
-            return responses
-        except Exception as e:
-            print(f"An error occurred: {str(e)}")
-            return None
+        for chunk in chunks:
+            request_items = { table_name: [{'DeleteRequest': {'Key': key}} for key in chunk ] }
+            response = self.client().batch_write_item(RequestItems=request_items)
+            del response['ResponseMetadata']
+            responses.append(response)
+
+        return responses
+
+    def documents_delete_all(self, table_name, key_name):
+        all_keys      = self.documents_keys  (table_name=table_name, key_name=key_name)
+        delete_result = self.documents_delete(table_name=table_name, key_name=key_name, key_values=all_keys)
+        return dict(deleted_keys=all_keys, delete_result=delete_result)
 
     def documents_keys(self, table_name, key_name):
         """
@@ -109,13 +101,13 @@ class Dynamo_DB:
         :param key_name: The name of the primary key attribute.
         :return: A list of key values for all items in the table.
         """
-        try:
-            response = self.client().scan(TableName=table_name, ProjectionExpression=key_name)
-            items    = response.get('Items', [])
-            return [item[key_name]['S'] for item in items]
-        except Exception as e:
-            print(f"An error occurred: {str(e)}")
-            return []
+        #response = self.client().scan(TableName=table_name, ProjectionExpression=key_name)
+        #items    = response.get('Items', [])
+        response = self.client().scan(TableName                = table_name      , # target table
+                                      ProjectionExpression     = '#k'            , # Use a placeholder in the expression
+                                      ExpressionAttributeNames = {'#k': key_name}) # Define the placeholder
+        items = response.get('Items', [])
+        return [item[key_name]['S'] for item in items]
 
 
     def table_create(self, table_name, key_name, with_streams=False):
