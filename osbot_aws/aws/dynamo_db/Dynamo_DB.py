@@ -40,6 +40,21 @@ class Dynamo_DB:
         self.client().put_item(TableName=table_name, Item=document_as_item)
         return self
 
+    def document_delete(self, table_name, key_name, key_value):
+        key = { key_name: {'S': key_value} }
+        self.client().delete_item( TableName=table_name, Key=key )
+        return True
+
+    def document_deserialise(self, item):
+        if item:
+            deserializer = TypeDeserializer()
+            return {k: deserializer.deserialize(v) for k, v in item.items()}
+        return {}
+
+    def document_serialise(self, document):
+        serializer = TypeSerializer()
+        return {k: serializer.serialize(v) for k, v in document.items()}
+
     def documents_add(self, table_name, documents):
         try:
             chunks = [documents[x:x + 25] for x in range(0, len(documents), 25)]        # Split the items list into chunks of 25 (DynamoDB batch write limit)
@@ -86,20 +101,22 @@ class Dynamo_DB:
         except Exception as e:
             print(f"An error occurred: {str(e)}")
             return None
-    def document_delete(self, table_name, key_name, key_value):
-        key = { key_name: {'S': key_value} }
-        self.client().delete_item( TableName=table_name, Key=key )
-        return True
 
-    def document_deserialise(self, item):
-        if item:
-            deserializer = TypeDeserializer()
-            return {k: deserializer.deserialize(v) for k, v in item.items()}
-        return {}
+    def documents_keys(self, table_name, key_name):
+        """
+        Retrieves only the key attributes for all items in the DynamoDB table.
+        :param table_name: Name of the DynamoDB table.
+        :param key_name: The name of the primary key attribute.
+        :return: A list of key values for all items in the table.
+        """
+        try:
+            response = self.client().scan(TableName=table_name, ProjectionExpression=key_name)
+            items    = response.get('Items', [])
+            return [item[key_name]['S'] for item in items]
+        except Exception as e:
+            print(f"An error occurred: {str(e)}")
+            return []
 
-    def document_serialise(self, document):
-        serializer = TypeSerializer()
-        return {k: serializer.serialize(v) for k, v in document.items()}
 
     def table_create(self, table_name, key, with_streams=False):
         if self.table_exists(table_name):
@@ -116,7 +133,7 @@ class Dynamo_DB:
         self.client().create_table(**kwargs)
 
         self.client().get_waiter('table_exists') \
-            .wait(TableName=table_name, WaiterConfig={'Delay': 5, 'MaxAttempts': 10})
+            .wait(TableName=table_name, WaiterConfig={'Delay': 1, 'MaxAttempts': 50})
         return True
 
     def table_delete(self, table_name, wait_for_deletion=True):
@@ -125,7 +142,7 @@ class Dynamo_DB:
         self.client().delete_table(TableName = table_name)
         if wait_for_deletion:
             self.client().get_waiter('table_not_exists')      \
-                       .wait(TableName=table_name, WaiterConfig={'Delay': 10, 'MaxAttempts':10 })
+                       .wait(TableName=table_name, WaiterConfig={'Delay': 5, 'MaxAttempts':20 })
         return True
 
     def table_exists(self, table_name):
@@ -136,6 +153,9 @@ class Dynamo_DB:
             return self.client().describe_table(TableName=table_name).get('Table')
         except:
             return {}
+
+    def table_status(self, table_name):
+        return self.table_info(table_name).get('TableStatus')
 
     def tables(self):
         result = self.client().list_tables() or {}

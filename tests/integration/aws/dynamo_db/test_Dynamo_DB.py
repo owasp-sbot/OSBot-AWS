@@ -12,6 +12,7 @@ from osbot_aws.aws.boto3.View_Boto3_Rest_Calls import print_boto3_calls
 from osbot_aws.aws.dynamo_db.Dynamo_DB import Dynamo_DB
 from osbot_aws.aws.dynamo_db.Dynamo_Table__Resource import Dynamo_Table__Resource
 from osbot_aws.aws.iam.IAM_Assume_Role import IAM_Assume_Role
+from osbot_utils.testing.Duration import Duration
 from osbot_utils.utils.Dev import pprint
 from osbot_utils.utils.Misc import list_set
 from osbot_utils.utils.Objects import type_full_name
@@ -45,7 +46,7 @@ class test_Dynamo_DB(TestCase):
         cls.dynamo_db = Dynamo_DB__with_temp_role()
         cls.table_name = 'temp-table'
         cls.table_key = 'an_key'
-        cls.dynamo_db.table_create(table_name=cls.table_name, key=cls.table_key)
+        cls.dynamo_db.table_create(table_name=cls.table_name, key=cls.table_key)        # usually takes about 5 seconds to create
 
 
     @classmethod
@@ -76,6 +77,8 @@ class test_Dynamo_DB(TestCase):
             assert _.document(table_name=self.table_name, key_name=self.table_key, key_value='key-1') == document_1
             assert _.document(table_name=self.table_name, key_name=self.table_key, key_value='key-2') == document_2
 
+            assert _.documents_keys(table_name=self.table_name, key_name=self.table_key) == ['key-2', 'key-1']
+
             _.document_delete(table_name=self.table_name, key_name=self.table_key, key_value='key-1')
             _.document_delete(table_name=self.table_name, key_name=self.table_key, key_value='key-2')
             assert _.documents_all(table_name=self.table_name) == []
@@ -95,12 +98,9 @@ class test_Dynamo_DB(TestCase):
             assert responses_del == [{'UnprocessedItems': {}}]
             assert _.documents_all(table_name=self.table_name) == []
 
-
-
-
-
     def test_documents_all(self):
         assert self.dynamo_db.documents_all(table_name=self.table_name) == []
+
 
     def test_dynamo_streams(self):
         assert type_full_name(self.dynamo_db.client__dynamo_streams()) == 'botocore.client.DynamoDBStreams'
@@ -113,102 +113,14 @@ class test_Dynamo_DB(TestCase):
         table_info = self.dynamo_db.table_info(table_name=self.table_name)
         assert list_set(table_info) == ['AttributeDefinitions', 'CreationDateTime', 'DeletionProtectionEnabled', 'ItemCount', 'KeySchema', 'ProvisionedThroughput', 'TableArn', 'TableId', 'TableName', 'TableSizeBytes', 'TableStatus']
 
+    def test_table_status(self):
+        assert self.dynamo_db.table_status(table_name=self.table_name) == 'ACTIVE'
 
     #@print_boto3_calls()
     def test_tables(self):
         tables = self.dynamo_db.tables()
         assert type(tables) == list
         assert self.table_name in tables
-
-
-#todo: wire up back the tests below
-
-
-
-@unittest.skip('to wire up once the IAM privages are in place')
-class test_Dynamo(unittest.TestCase):
-
-    @classmethod
-    def setUpClass(cls):
-        dynamo = Dynamo_DB()
-        table_name = 'temp-table'
-        table_key = 'an_field'
-        table = Dynamo_Table__Resource(table_name, table_key)
-
-        if table.exists() is False:
-            dynamo.create(table_name, 'an_field')
-            assert table.exists() is True
-            assert table.info()['Table']['TableName'] == table_name
-
-        assert 'temp-table' in dynamo.list()
-
-    @classmethod
-    def tearDownClass(cls):
-        dynamo = Dynamo_DB()
-        table_name = 'temp-table'
-        table_key = 'an_field'
-        table = Dynamo_Table__Resource(table_name, table_key)
-
-        if table.exists():
-            dynamo.delete(table_name)
-            assert table.exists() is False
-            assert table.info()   is None
-
-    def setUp(self):
-        self.table_name =  'temp-table'
-        self.table_key  = 'an_field'
-        self.table = Dynamo_Table__Resource(self.table_name, self.table_key)
-
-    def test_add(self):
-        self.table.add({ self.table_key : 'key-1', 'answer-1': 42 })
-        self.table.add({ self.table_key : 'key-2', 'answer-2': -1  })
-
-    def test_add_delete_batch(self):
-        assert self.table.keys() == ['key-2', 'key-1']
-        items = [{ self.table_key: 'key-3', 'answer-1': 42 },
-                 { self.table_key: 'key-4', 'answer-1': 42 }]
-        self.table.add_batch(items)
-        keys = self.table.keys(use_cache=False)
-        assert len(keys) == 4
-        assert 'key-3'   in  keys
-
-        items = [ { self.table_key: 'key-3'},
-                  { self.table_key: 'key-4' }]
-        self.table.delete_batch(items)
-
-        keys = self.table.keys()
-        assert len(keys) == 4
-
-    def test_delete(self):
-        self.table.add({self.table_key: 'key-5', 'answer-1': 42})
-        assert self.table.get('key-5') == {self.table_key: 'key-5', 'answer-1': 42}
-
-        self.table.delete('key-5')
-        assert self.table.get('key-5') == None
-
-    def test_keys(self):
-        result = self.table.keys()
-        assert result == ['key-2', 'key-1']
-
-    def test_info(self):
-        result = self.table.info()
-        assert result['Table']['AttributeDefinitions'] == [{'AttributeName': 'an_field', 'AttributeType': 'S'}]
-        assert result['Table']['TableName'           ] == self.table_name
-
-    def test_get(self):
-        result = self.table.get('key-1')
-        assert result == {'answer-1': 42, 'an_field': 'key-1'}
-
-    def test_get_batch(self):
-        self.table.chuck_size = 1
-        keys = self.table.keys()
-        results = self.table.get_batch(keys)
-
-        assert next(results) == [{'answer-2': -1, 'an_field': 'key-2'}]
-        assert next(results) == [{'answer-1': 42, 'an_field': 'key-1'}]
-
-    def test_status(self):
-        assert self.table.status() == 'ACTIVE'
 
 
 # @unittest.skip('this is not working as expected (namely the `test_streams` part)')
