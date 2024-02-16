@@ -1,9 +1,11 @@
 import uuid
 
 from osbot_aws.aws.dynamo_db.Dynamo_DB import Dynamo_DB
+from osbot_aws.aws.dynamo_db.Dynamo_DB__Record import Dynamo_DB__Record
 from osbot_utils.base_classes.Kwargs_To_Self import Kwargs_To_Self
 from osbot_utils.decorators.methods.capture_status import capture_status, apply_capture_status
 from osbot_utils.utils.Dev import pprint
+from osbot_utils.utils.Misc import timestamp_utc_now
 
 
 @apply_capture_status
@@ -21,6 +23,18 @@ class Dynamo_DB__Table(Kwargs_To_Self):
             document[self.key_name] = str(uuid.uuid4())     # If key is present, generate a random UUID as the key
         return self.dynamo_db.document_add(table_name=self.table_name, key_name=self.key_name, document=document)
 
+    def add_record(self, record : Dynamo_DB__Record):
+        metadata = record.metadata
+        metadata.timestamp_created = timestamp_utc_now()
+        document = dict(data        = record.data,
+                        data_binary = record.data_binary,
+                        metadata    = record.metadata.__locals__())
+
+        add_result = self.add_document(document)
+        if add_result.get('status') == 'ok':
+            return add_result.get('data')
+        raise Exception(f'Error adding record: {add_result}')
+
     def create_table(self):
         return self.dynamo_db.table_create(table_name=self.table_name, key_name=self.key_name)
 
@@ -32,6 +46,9 @@ class Dynamo_DB__Table(Kwargs_To_Self):
 
     def delete_table(self):
         return self.dynamo_db.table_delete(table_name=self.table_name)
+
+    def document(self, key_value):
+        return self.dynamo_db.document(table_name=self.table_name, key_name=self.key_name, key_value=key_value)
 
     def documents(self):
         return self.dynamo_db.documents_all(table_name=self.table_name)
