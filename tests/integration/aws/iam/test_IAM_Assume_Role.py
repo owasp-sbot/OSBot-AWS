@@ -1,16 +1,7 @@
 from unittest import TestCase
 
-import boto3
-import pytest
-
 from osbot_aws.apis.Cloud_Trail import Cloud_Trail
-from osbot_aws.aws.boto3.View_Boto3_Rest_Calls import print_boto3_calls
-from osbot_utils.utils.Dev import pprint
-from osbot_utils.utils.Files import folder_exists, parent_folder, current_temp_folder, folder_name
-from osbot_utils.utils.Misc import list_set
-from osbot_utils.utils.Objects import obj_info
-from osbot_utils.utils.Status import osbot_logger
-
+from osbot_utils.utils.Misc import list_set, wait_for
 from osbot_aws.aws.iam.IAM_Assume_Role import IAM_Assume_Role
 
 TEMP_ROLE_NAME__ASSUME_ROLE = 'osbot_aws_temp_role__assume_role'
@@ -53,7 +44,7 @@ class test_IAM_Assume_Role(TestCase):
         assert self.iam_assume_role.cached_role.cache_exists() is True     # check that cache doesn't exist
         assert self.iam_assume_role.role_exists()              is True     # check that cache doesn't exist
 
-        assert list_set(self.iam_assume_role.data()) == ['assume_policy','current_account_id','current_user_arn','current_user_id','policies', 'result__credentials', 'result__role_create','role_arn','role_exists', 'role_name']
+        assert list_set(self.iam_assume_role.data()) == ['assume_policy','current_account_id','current_user_arn','current_user_id','policies', 'policies_to_add', 'result__credentials', 'result__role_create','role_arn','role_exists', 'role_name']
         assert self.iam_assume_role.role_exists() is True
 
 
@@ -147,7 +138,7 @@ class test_IAM_Assume_Role(TestCase):
         self.iam_assume_role.reset()                                # deletes the cache
         setup_data = self.iam_assume_role.setup_data()
         assert list_set(setup_data) == [ 'assume_policy', 'current_account_id', 'current_user_arn','current_user_id','policies',
-                                         'result__credentials' , 'result__role_create',
+                                         'policies_to_add', 'result__credentials' , 'result__role_create',
                                          'role_arn','role_exists', 'role_name']
         assert self.iam_assume_role.cached_role.cache_exists() is True
 
@@ -159,7 +150,7 @@ class test_Cloud_Trail_Lookup(TestCase):
         role_name            = "temp_role__for_cloud_trail_logs"
 
         self.iam_assume_role = IAM_Assume_Role(role_name=role_name)
-        self.iam_assume_role.create_role(recreate=False)
+        self.iam_assume_role.create_role(recreate=True)
 
         client          = self.iam_assume_role.boto3_client(service_name='cloudtrail')
         policy_name     = 'cloud_trail_logs_policy'
@@ -174,12 +165,62 @@ class test_Cloud_Trail_Lookup(TestCase):
         assert list_set(next(events)) == ['AccessKeyId', 'CloudTrailEvent', 'EventId', 'EventName', 'EventSource', 'EventTime', 'ReadOnly', 'Resources', 'Username']
 
 
+class test_DynamoDB__List_Tables(TestCase):
 
-# todo create another example for dynamodb:ListTables
+    def setUp(self):
+        self.role_name = "temp_role__for_dynamo_db_access"
 
-# policy_statements = [{
-#         "Effect": "Allow",
-#         "Action": "dynamodb:ListTables",
-#         "Resource": "arn:aws:dynamodb:eu-west-2:{account_id}:table/*"}]
-# policy_document = { "Version": "2012-10-17",
-#                     "Statement": policy_statements}
+    #@print_boto3_calls(config__print_return_value=False)
+    def test_1_get_dynamo_db_tables(self):
+
+        policies_to_add = [dict(service="dynamodb", action="ListTables", resource="*")]
+        iam_assume_role = IAM_Assume_Role(role_name=self.role_name, policies_to_add=policies_to_add)
+        with iam_assume_role as _:
+            _.create_role(recreate=True)
+            client_dynamodb = _.boto3_client(service_name='dynamodb', region_name = 'eu-west-2')
+            table_names     = client_dynamodb.list_tables().get('TableNames')
+            assert len(table_names) > 1
+
+    # #  todo: document better this bug: research more the interesting error that is happening when we quickly create and delete a role (the credentials work for a couple seconds and then stop working)
+    # #  note: this test is commented out, but all passed ok when executed locally
+    # #        the problem seems to happen when we do _.create_role(recreate=True) which creates and deletes a role very fast
+    # def test_2_bug_race_condition_in_delete_and_create_role(self):
+    #     iam_assume_role = IAM_Assume_Role(role_name=self.role_name)
+    #     max_count = 10
+    #     with pytest.raises(ClientError) as exc_info_1:
+    #         with iam_assume_role as _:
+    #             for i in range(max_count):
+    #                 client_dynamodb = _.boto3_client(service_name='dynamodb', region_name='eu-west-2')
+    #                 assert len(client_dynamodb.list_tables().get('TableNames')) > 0
+    #                 wait_for(1)
+    #                 print(f'ok after {i} seconds')
+    #     print(f'failed after {i} seconds')
+    #     assert ("An error occurred (AccessDeniedException)" in str(exc_info_1.value)) or ("UnrecognizedClientException"                            in str(exc_info_1.value))
+    #     assert ("dynamodb:ListTables"                       in str(exc_info_1.value)) or ("The security token included in the request is invalid"  in str(exc_info_1.value))
+    #     assert i != max_count
+    #
+    #     with pytest.raises(ClientError) as exc_info_2:
+    #         with iam_assume_role as _:
+    #             client_dynamodb_2 = _.boto3_client(service_name='dynamodb', region_name='eu-west-2')
+    #             client_dynamodb_2.list_tables().get('TableNames')
+    #     print(f'failed again on next request')
+    #     assert ("An error occurred (AccessDeniedException)" in str(exc_info_2.value)) or ("UnrecognizedClientException"                            in str(exc_info_2.value))
+    #     assert ("dynamodb:ListTables"                       in str(exc_info_2.value)) or ("The security token included in the request is invalid"  in str(exc_info_2.value))
+    #
+    #     # todo: find out for some reason this wasn't working, but the code is the same as test_3_bug_race_condition_in_delete_and_create_role
+    #     #       maybe something to do with cached creds in current test?
+    #     # wait_for(3)
+    #     # iam_assume_role_2 = IAM_Assume_Role(role_name=self.role_name)
+    #     # with iam_assume_role_2 as _:
+    #     #     _.credentials_reset()
+    #     #     client_dynamodb_3 = _.boto3_client(service_name='dynamodb', region_name='eu-west-2')
+    #     #     client_dynamodb_3.list_tables().get('TableNames')
+    #     # print('ok after reseting credentials')
+    #
+    # def test_3_bug_race_condition_in_delete_and_create_role(self):
+    #     iam_assume_role = IAM_Assume_Role(role_name=self.role_name)
+    #     with iam_assume_role as _:
+    #         _.credentials_reset()
+    #         client_dynamodb_3 = _.boto3_client(service_name='dynamodb', region_name='eu-west-2')
+    #         client_dynamodb_3.list_tables().get('TableNames')
+    #     print('ok after reseting credentials')

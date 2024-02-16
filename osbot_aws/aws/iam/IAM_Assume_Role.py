@@ -12,6 +12,7 @@ from osbot_aws.aws.iam.IAM import IAM
 from osbot_aws.aws.iam.IAM_Role import IAM_Role
 from osbot_aws.aws.iam.STS import STS
 from osbot_utils.utils.Misc import wait_for
+from osbot_utils.utils.Str import safe_str
 
 CACHES_NAME__AWS_ROLES       = '_aws_cached_roles'
 
@@ -20,10 +21,16 @@ CACHES_NAME__AWS_ROLES       = '_aws_cached_roles'
 
 class IAM_Assume_Role:
 
-    def __init__(self, role_name):
+    def __init__(self, role_name, policies_to_add=None):
+        self.policies_to_add  = policies_to_add or []
         self.role_name        = role_name
-        #self.policy_statement = policy_statement
         self.cached_role      = Local_Cache(role_name, CACHES_NAME__AWS_ROLES)
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        pass
 
     @cache
     def iam(self) -> IAM:
@@ -41,16 +48,22 @@ class IAM_Assume_Role:
         return IAM_Role(role_name=self.role_name)
 
     def add_policy(self, service, action, resource):
-        pass
+        if service and action and resource:
+            policy_name = f'inline_policy_for_{service}_{action}_{safe_str(resource)}'
+            policy_document = self.create_policy_document(service=service, action=action, resource=resource)
+            return self.set_inline_policy(policy_name, policy_document)
+        return False
     def assume_policy(self):
         return self.setup_data().get('assume_policy')
 
-    def boto3_client(self, service_name='iam'):
+    def boto3_client(self, service_name='iam', region_name=None):
         credentials = self.credentials()
         kwargs = dict(service_name          = service_name                  ,
                       aws_access_key_id     = credentials['AccessKeyId'    ],
                       aws_secret_access_key = credentials['SecretAccessKey'],
                       aws_session_token     = credentials['SessionToken'   ])
+        if region_name:
+            kwargs['region_name'] = region_name
         return boto3.client(**kwargs)
 
     def create_credentials(self):
@@ -63,17 +76,22 @@ class IAM_Assume_Role:
                                "Action"  : f"{service}:{action}",
                                "Resource": resource             }]}
 
+    def create_policies(self):
+        for policy_to_add in self.policies_to_add:
+            self.add_policy(**policy_to_add)
+
     def create_role(self, recreate=False):
         if recreate:
             self.reset()
             self.delete_role()
-        #setup_data = self.setup_data()
+
         if self.role_exists() is False:
             self.setup_data()
             assume_policy_document = self.assume_policy()
             result__role_create    = self.iam_role().create(assume_policy_document=assume_policy_document)
             self.cached_role.set('result__role_create', result__role_create)
             self.cached_role.set('role_exists', True                 )  # todo see how to check this would having to make another Boto3 call
+            self.create_policies()
             self.create_credentials()
 
     def credentials(self, reset=False):
@@ -183,6 +201,7 @@ class IAM_Assume_Role:
             assume_policy      = self.default_assume_policy(user_arn=current_user_arn)
             current_account_id = caller_identity.get('Account')
             current_user_id    = caller_identity.get('UserId' )
+            policies_to_add    = self.policies_to_add
 
             role_arn           = f"arn:aws:iam::{current_account_id}:role/{role_name}"
 
@@ -191,6 +210,7 @@ class IAM_Assume_Role:
                         current_user_id     = current_user_id               ,
                         current_user_arn    = current_user_arn              ,
                         policies            = None                          ,           # setting these vars to None will trigger the reload on the first time they are used
+                        policies_to_add     = policies_to_add               ,
                         result__credentials = None                          ,
                         result__role_create = None                          ,
                         role_arn            = role_arn                      ,

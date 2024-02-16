@@ -16,6 +16,7 @@ from osbot_utils.utils.Objects import obj_data
 # todo: create unit tests specifically for this class
 # decorator
 
+# todo refactor ctor of print_boto3_calls to make these options available (and easier to use)
 # config__print_calls         : bool = True
 # config__print_call_stack    : bool = False
 # config__print_return_value  : bool = True
