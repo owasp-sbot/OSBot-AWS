@@ -40,7 +40,7 @@ class test_Dynamo_DB(TestCase):
     dynamo_db       : Dynamo_DB
     table_name      : str
     table_key       : str
-    remove_on_exit  : bool = True
+    remove_on_exit  : bool = False
 
     @classmethod
     def setUpClass(cls) -> None:
@@ -182,7 +182,7 @@ class test_Dynamo_DB(TestCase):
     def test_table_info(self):
         assert self.dynamo_db.table_info(table_name='AAAA-Not-Exists') == {}
         table_info = self.dynamo_db.table_info(table_name=self.table_name)
-        assert list_set(table_info) == ['AttributeDefinitions', 'CreationDateTime', 'DeletionProtectionEnabled', 'ItemCount', 'KeySchema', 'ProvisionedThroughput', 'TableArn', 'TableId', 'TableName', 'TableSizeBytes', 'TableStatus']
+        assert list_set(table_info) == ['AttributeDefinitions', 'BillingModeSummary', 'CreationDateTime', 'DeletionProtectionEnabled', 'ItemCount', 'KeySchema', 'ProvisionedThroughput', 'TableArn', 'TableId', 'TableName', 'TableSizeBytes', 'TableStatus']
 
     def test_table_status(self):
         assert self.dynamo_db.table_status(table_name=self.table_name) == 'ACTIVE'

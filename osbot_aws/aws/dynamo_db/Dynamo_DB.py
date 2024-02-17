@@ -155,11 +155,12 @@ class Dynamo_DB:
             return False
         keySchema             = [{'AttributeName'    : key_name        , 'KeyType'           : 'HASH'}]
         attributeDefinitions  = [{'AttributeName'    : key_name        , 'AttributeType'     : 'S'}]
-        provisionedThroughput = { 'ReadCapacityUnits' : 5          , 'WriteCapacityUnits': 5      }
+        #provisionedThroughput = { 'ReadCapacityUnits' : 5          , 'WriteCapacityUnits': 5      }
         kwargs   = { 'TableName'            : table_name           ,
                      'KeySchema'            : keySchema            ,
                      'AttributeDefinitions' : attributeDefinitions ,
-                     'ProvisionedThroughput': provisionedThroughput }
+                     'BillingMode'          : 'PAY_PER_REQUEST'    }
+                     #'ProvisionedThroughput': provisionedThroughput }      # todo: add support for handling provisioned throughput
         if with_streams:
             kwargs['StreamSpecification'] = {'StreamEnabled': True, 'StreamViewType': 'NEW_IMAGE' }
         self.client().create_table(**kwargs)

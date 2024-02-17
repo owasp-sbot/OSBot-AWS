@@ -9,7 +9,7 @@ class TestCase__Temp_Dynamo_DB_Table(TestCase):
     table          : Dynamo_DB__Table
     key_name       : str = 'el-key'
     table_name     : str = 'temp_table__TestCase__Temp_Dynamo_DB_Table'
-    remove_on_exit : bool = True
+    remove_on_exit : bool = False
 
     @classmethod
     def setUpClass(cls):

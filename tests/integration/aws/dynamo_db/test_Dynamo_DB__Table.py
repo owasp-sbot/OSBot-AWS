@@ -19,7 +19,7 @@ class test_Dynamo_DB__Table(TestCase__Temp_Dynamo_DB_Table):
     @classmethod
     def setUpClass(cls):
         cls.table_name     = TEST_TABLE_NAME
-        cls.remove_on_exit = True
+        cls.remove_on_exit = False
         super().setUpClass()
 
     def test__init__(self):
@@ -63,18 +63,21 @@ class test_Dynamo_DB__Table(TestCase__Temp_Dynamo_DB_Table):
         status      = result.get('status')
         table_id    = data.get('TableId')
         del data['CreationDateTime']
+        del data['BillingModeSummary']['LastUpdateToPayPerRequestDateTime']
 
         assert list_set(result)  == ['data', 'status']
-        assert list_set(data)    == ['AttributeDefinitions', 'DeletionProtectionEnabled', 'ItemCount', 'KeySchema', 'ProvisionedThroughput', 'TableArn', 'TableId', 'TableName', 'TableSizeBytes', 'TableStatus']
+        assert list_set(data)    == ['AttributeDefinitions', 'BillingModeSummary', 'DeletionProtectionEnabled', 'ItemCount', 'KeySchema', 'ProvisionedThroughput', 'TableArn', 'TableId', 'TableName', 'TableSizeBytes', 'TableStatus']
         assert is_guid(table_id) is True
 
         assert data == {  'AttributeDefinitions'     : [{'AttributeName': self.key_name, 'AttributeType': 'S'}]              ,
+                           'BillingModeSummary'      : {'BillingMode': 'PAY_PER_REQUEST'},
+
                           'DeletionProtectionEnabled': False                                                                 ,
                           'ItemCount'                : 0                                                                     ,
                           'KeySchema'                : [{'AttributeName': self.key_name, 'KeyType': 'HASH'}]                 ,
                           'ProvisionedThroughput'    : { 'NumberOfDecreasesToday': 0 ,
-                                                         'ReadCapacityUnits'     : 5 ,
-                                                         'WriteCapacityUnits'    : 5 }                                       ,
+                                                         'ReadCapacityUnits'     : 0 ,
+                                                         'WriteCapacityUnits'    : 0 }                                       ,
                           'TableArn'                 : f'arn:aws:dynamodb:{region_name}:{account_id}:table/{self.table_name}',
                           'TableId'                  : table_id                                                              ,
                           'TableName'                : self.table_name                                                       ,
