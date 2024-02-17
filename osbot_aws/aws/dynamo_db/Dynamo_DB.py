@@ -132,7 +132,12 @@ class Dynamo_DB:
     def documents_delete_all(self, table_name, key_name):
         all_keys      = self.documents_keys  (table_name=table_name, key_name=key_name)
         delete_result = self.documents_delete(table_name=table_name, key_name=key_name, key_values=all_keys)
-        return dict(deleted_keys=all_keys, delete_result=delete_result)
+        delete_status = True
+        for response in delete_result:
+            if response.get('UnprocessedItems'):
+                delete_status = False
+                break
+        return dict(deleted_keys=all_keys, delete_result=delete_result, delete_status=delete_status)
 
     def documents_keys(self, table_name, key_name):
         """

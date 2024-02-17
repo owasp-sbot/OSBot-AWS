@@ -17,13 +17,18 @@ from osbot_utils.utils.Objects import obj_data
 # decorator
 
 # todo refactor ctor of print_boto3_calls to make these options available (and easier to use)
+# config__print_args          : bool = True
 # config__print_calls         : bool = True
 # config__print_call_stack    : bool = False
 # config__print_return_value  : bool = True
 # config__print_pformat_args  : bool = True
 # see above the multipe options that can be set via the decorator
 
-def print_boto3_calls(**decorator_kwargs):
+def print_boto3_calls(show=True, show_args=True, show_calls= False, show_return=True, **decorator_kwargs):
+    decorator_kwargs['config__print_args'        ] = show_args
+    decorator_kwargs['config__print_call_stack'  ] = show_calls
+    decorator_kwargs['config__print_calls'       ] = show
+    decorator_kwargs['config__print_return_value'] = show_return
     def decorator(function):
         @wraps(function)
         def wrapper(*args, **kwargs):
@@ -34,6 +39,7 @@ def print_boto3_calls(**decorator_kwargs):
 
 
 class View_Boto3_Rest_Calls(Kwargs_To_Self):
+    config__print_args          : bool = True
     config__print_calls         : bool = True
     config__print_call_stack    : bool = False
     config__print_return_value  : bool = True                       # todo: add better support for this (for example not showing the column if this is False)
@@ -87,6 +93,8 @@ class View_Boto3_Rest_Calls(Kwargs_To_Self):
                 else:
                     return_value_str = '(hidden)'
 
+            if self.config__print_args is False:
+                args = '(hidden)'
             if self.config__print_pformat_args:
                 args= pformat(args)
 
