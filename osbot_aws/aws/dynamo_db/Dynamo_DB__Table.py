@@ -26,10 +26,7 @@ class Dynamo_DB__Table(Kwargs_To_Self):
     def add_record(self, record : Dynamo_DB__Record):
         metadata = record.metadata
         metadata.timestamp_created = timestamp_utc_now()
-        document = dict(data        = record.data,
-                        data_binary = record.data_binary,
-                        metadata    = record.metadata.__locals__())
-
+        document   = record.serialize_to_dict()
         add_result = self.add_document(document)
         if add_result.get('status') == 'ok':
             return add_result.get('data')

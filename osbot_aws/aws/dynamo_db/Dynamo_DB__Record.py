@@ -41,3 +41,4 @@ class Dynamo_DB__Record(Kwargs_To_Self):
     def set_binary_data__from_str(self, data_as_str):
         self.data_binary = str_to_bytes(data_as_str)
         return self
+

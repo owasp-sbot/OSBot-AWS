@@ -1,9 +1,11 @@
 from unittest import TestCase
 
+from osbot_aws.aws.boto3.View_Boto3_Rest_Calls import print_boto3_calls
 from osbot_aws.aws.dynamo_db.Dynamo_DB__Record import Dynamo_DB__Record, Dynamo_DB__Record__Metadata
 from osbot_aws.aws.dynamo_db.Dynamo_DB__Table import Dynamo_DB__Table
 from osbot_utils.utils.Dev import pprint
 from osbot_utils.utils.Misc import str_to_bytes
+from osbot_utils.utils.Objects import obj_info
 from tests.integration.aws.dynamo_db.TestCase__Temp_Dynamo_DB_Table import TestCase__Temp_Dynamo_DB_Table
 from tests.integration.aws.dynamo_db.test_Dynamo_DB import Dynamo_DB__with_temp_role
 
@@ -27,6 +29,7 @@ class test_Dynamo_DB__Record(TestCase__Temp_Dynamo_DB_Table):
         assert self.db_record.__locals__()   == expected_locals
         assert self.table.exists()           == {'data': True, 'status': 'ok'}
 
+    #@print_boto3_calls()
     def test_add_record(self):
         with self.table as _:
             result    = _.add_record(self.db_record)
@@ -34,6 +37,8 @@ class test_Dynamo_DB__Record(TestCase__Temp_Dynamo_DB_Table):
             document  = result.get('data').get('document')
             assert result.get('status') == 'ok'
             assert document             == _.document(key_value).get('data')
+            new_record = Dynamo_DB__Record().deserialize_from_dict(document)
+            assert new_record.serialize_to_dict() == document
             self.table.clear_table()
 
     def test_compress_binary_data(self):
@@ -52,3 +57,19 @@ class test_Dynamo_DB__Record(TestCase__Temp_Dynamo_DB_Table):
     def test_set_bynary_data__from_str(self):
         data_as_str = 'hello world'
         assert self.db_record.set_binary_data__from_str(data_as_str).data_binary == b'hello world'
+
+
+    def test_serialize_to_dict(self):
+        self.db_record.metadata.created_by = 'unit test'
+        self.db_record.data = {'anwser': 42}
+        json_data = self.db_record.serialize_to_dict()
+        assert json_data == { 'data': {'anwser': 42},
+                              'data_binary': b'',
+                              'key_value': '',
+                              'metadata': { 'created_by': 'unit test',
+                                            'timestamp_created': 0,
+                                            'timestamp_updated': 0,
+                                            'updated_by': ''}}
+
+        new_obj = Dynamo_DB__Record().deserialize_from_dict(json_data)
+        assert self.db_record.serialize_to_dict() ==  new_obj.serialize_to_dict()
