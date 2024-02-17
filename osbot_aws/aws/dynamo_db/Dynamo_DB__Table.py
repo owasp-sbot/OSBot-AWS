@@ -23,6 +23,12 @@ class Dynamo_DB__Table(Kwargs_To_Self):
             document[self.key_name] = str(uuid.uuid4())     # If key is present, generate a random UUID as the key
         return self.dynamo_db.document_add(table_name=self.table_name, key_name=self.key_name, document=document)
 
+    def add_documents(self, documents):
+        for document in documents:
+            if self.key_name not in document:
+                document[self.key_name] = str(uuid.uuid4())
+        return self.dynamo_db.documents_add(table_name=self.table_name, documents=documents)
+
     def add_record(self, record : Dynamo_DB__Record):
         metadata = record.metadata
         metadata.timestamp_created = timestamp_utc_now()
