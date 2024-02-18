@@ -12,6 +12,7 @@ from osbot_utils.utils.Misc import timestamp_utc_now
 class Dynamo_DB__Table(Kwargs_To_Self):
     dynamo_db  : Dynamo_DB
     key_name   : str
+    key_type   : str = 'S'
     table_name : str
 
 
@@ -63,7 +64,7 @@ class Dynamo_DB__Table(Kwargs_To_Self):
         return self.dynamo_db.table_info(table_name=self.table_name)
 
     def keys(self):
-        return self.dynamo_db.documents_keys(table_name=self.table_name, key_name=self.key_name)
+        return self.dynamo_db.documents_keys(table_name=self.table_name, key_name=self.key_name, key_type=self.key_type)
 
     def query(self, **kwargs):
         return self.dynamo_db.client().query(**kwargs)          # todo: refactor this to add values that we know here (like TableName)

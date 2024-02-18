@@ -140,7 +140,7 @@ class Dynamo_DB:
                 break
         return dict(deleted_keys=all_keys, delete_result=delete_result, delete_status=delete_status)
 
-    def documents_keys(self, table_name, key_name):
+    def documents_keys(self, table_name, key_name, key_type='S'):
         """
         Retrieves only the key attributes for all items in the DynamoDB table.
         :param table_name: Name of the DynamoDB table.
@@ -153,7 +153,7 @@ class Dynamo_DB:
                                       ProjectionExpression     = '#k'            , # Use a placeholder in the expression
                                       ExpressionAttributeNames = {'#k': key_name}) # Define the placeholder
         items = response.get('Items', [])
-        return [item[key_name]['S'] for item in items]
+        return [item[key_name][key_type] for item in items]
 
 
     def table_create(self, table_name, key_name, with_streams=False):
