@@ -1,3 +1,4 @@
+import uuid
 from functools import cache
 
 from   boto3    import resource
@@ -201,3 +202,6 @@ class Dynamo_DB:
 
     def streams(self):
         return self.client__dynamo_streams().list_streams().get('Streams')
+
+    def random_id(self):
+        return str(uuid.uuid4())
