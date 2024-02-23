@@ -12,6 +12,7 @@ from osbot_utils.utils.Misc import timestamp_utc_now
 class Dynamo_DB__Table(Kwargs_To_Self):
     dynamo_db  : Dynamo_DB
     key_name   : str
+    key_type   : str = 'S'
     table_name : str
 
 
@@ -20,7 +21,7 @@ class Dynamo_DB__Table(Kwargs_To_Self):
 
     def add_document(self, document):
         if self.key_name not in document:
-            document[self.key_name] = str(uuid.uuid4())     # If key is present, generate a random UUID as the key
+            document[self.key_name] = self.dynamo_db.random_id()     # If key is present, generate a random UUID as the key
         return self.dynamo_db.document_add(table_name=self.table_name, key_name=self.key_name, document=document)
 
     def add_documents(self, documents):
@@ -63,7 +64,10 @@ class Dynamo_DB__Table(Kwargs_To_Self):
         return self.dynamo_db.table_info(table_name=self.table_name)
 
     def keys(self):
-        return self.dynamo_db.documents_keys(table_name=self.table_name, key_name=self.key_name)
+        return self.dynamo_db.documents_keys(table_name=self.table_name, key_name=self.key_name, key_type=self.key_type)
+
+    def query(self, **kwargs):
+        return self.dynamo_db.client().query(**kwargs)          # todo: refactor this to add values that we know here (like TableName)
 
     def status(self):
         return self.dynamo_db.table_status(table_name=self.table_name)

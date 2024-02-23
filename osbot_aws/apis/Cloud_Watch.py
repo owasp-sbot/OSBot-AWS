@@ -47,8 +47,7 @@ class Cloud_Watch():
             dashboard = {"arn"    : dashboard_data.get('DashboardArn' ),
                          "widgets": (json_parse(dashboard_data.get('DashboardBody')).get('widgets')),
                          "name"   : dashboard_data.get('DashboardName') }
-            from osbot_utils.utils.Dev import pprint
-            #pprint(dashboard_data)
+
             return dashboard
         except Exception:          # can't use botocore.errorfactory.ResourceNotFound because that is not exposed
             return {}
