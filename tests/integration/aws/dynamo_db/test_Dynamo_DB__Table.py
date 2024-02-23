@@ -45,10 +45,11 @@ class test_Dynamo_DB__Table(TestCase__Temp_Dynamo_DB_Table):
 
     def test_clear_table(self):
         with self.table as _:
-            assert _.clear_table() == {'data': {'delete_result': [], 'deleted_keys': []}, 'status': 'ok'}
+            assert _.clear_table() == {'data': {'delete_result': [], 'deleted_keys': [],'delete_status': True}, 'status': 'ok'}
             document_key = _.add_document({}).get('data').get('key_value')
             assert _.clear_table() == {'data'  : {'delete_result': [{'UnprocessedItems': {}}],
-                                                   'deleted_keys': [document_key]           },
+                                                  'deleted_keys' : [document_key]           ,
+                                                  'delete_status': True                     },
                                        'status': 'ok'}
 
     def test_exists(self):

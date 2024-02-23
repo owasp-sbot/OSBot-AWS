@@ -31,8 +31,8 @@ class Dynamo_DB__with_temp_role(Dynamo_DB):
         role_name       = 'osbot__temp_role_for__test_Dynamo_DB'
         policies_to_add = [dict(service=service, action=action, resource=resource)]
         iam_assume_role = IAM_Assume_Role(role_name=role_name, policies_to_add=policies_to_add)
-        iam_assume_role.create_role()
-        #iam_assume_role.credentials_reset()
+        iam_assume_role.create_role(recreate=False)
+        iam_assume_role.credentials_reset()
         return iam_assume_role.boto3_client(service_name=service)
 
 
@@ -171,7 +171,7 @@ class test_Dynamo_DB(TestCase):
         assert self.dynamo_db.documents_all(table_name=self.table_name) == []
 
     def test_documents_delete_all(self):
-        assert self.dynamo_db.documents_delete_all(table_name=self.table_name, key_name=self.table_key) == {'delete_result': [], 'deleted_keys': []}
+        assert self.dynamo_db.documents_delete_all(table_name=self.table_name, key_name=self.table_key) == {'delete_result': [], 'delete_status': True, 'deleted_keys': []}
 
     def test_dynamo_streams(self):
         assert type_full_name(self.dynamo_db.client__dynamo_streams()) == 'botocore.client.DynamoDBStreams'
