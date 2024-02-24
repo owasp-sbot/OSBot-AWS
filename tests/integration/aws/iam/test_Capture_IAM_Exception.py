@@ -18,10 +18,10 @@ class test_Capture_IAM_Exception(TestCase):
             Dynamo_DB().tables()
         assert _.permission_required == { 'account_id'  : self.account_id           ,
                                           'action'      : 'ListTables'              ,
-                                          'event'       : 'exception triggered'     ,
+                                          'event'       : 'IAM exception triggered' ,
                                           'service'     : 'dynamodb'                ,
                                           'status'      : 'ok'                      ,
                                           'user'        : IAM_USER_NAME__OSBOT_AWS  }
         with Capture_IAM_Exception() as _:
             pass
-        assert _.permission_required == {'event': 'no exception triggered', 'status': 'error'}
+        assert _.permission_required == {'event': 'no IAM exception triggered', 'status': 'error'}
