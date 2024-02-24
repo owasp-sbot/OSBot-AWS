@@ -10,8 +10,16 @@ from osbot_utils.utils.Dev import pprint
 def capture_iam_exception(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
-        with Capture_IAM_Exception():
-            return func(*args, **kwargs)
+        return_value = None
+        with Capture_IAM_Exception() as _:
+            return_value = func(*args, **kwargs)
+        if _.permission_required.get('status')=='ok':
+            print()
+            pprint('****** IAM PERMISSION REQUIRED ******')
+            del _.permission_required['status']                         # this value can be consuming
+            pprint(_.permission_required)
+        return return_value
+
     return wrapper
 
 class Capture_IAM_Exception(Kwargs_To_Self):
@@ -21,7 +29,7 @@ class Capture_IAM_Exception(Kwargs_To_Self):
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        self.permission_required = { 'event'     : 'no exception triggered' ,
+        self.permission_required = { 'event'     : 'no IAM exception triggered' ,
                                      'status'    : 'error'                  }
         # pprint(exc_type)
         # if exc_type is ClientError:
@@ -37,12 +45,12 @@ class Capture_IAM_Exception(Kwargs_To_Self):
                     account_id, user = user_arn_match.groups()
                     service, action = required_permission_match.groups()
 
-                    self.permission_required = { 'event'     : 'exception triggered' ,
-                                                 'status'    : 'ok'                  ,
-                                                 'service'   : service               ,
-                                                 'action'    : action                ,
-                                                 'account_id': account_id            ,
-                                                 'user'      : user                  }
+                    self.permission_required = { 'event'     : 'IAM exception triggered' ,
+                                                 'status'    : 'ok'                      ,
+                                                 'service'   : service                   ,
+                                                 'action'    : action                    ,
+                                                 'account_id': account_id                ,
+                                                 'user'      : user                      }
 
                     # print("\n***** IAM Exception Caught *****")
                     # pprint(self.permission_required )

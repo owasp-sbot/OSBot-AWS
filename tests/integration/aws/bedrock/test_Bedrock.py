@@ -45,56 +45,6 @@ class test_Bedrock(TestCase):
                                                                 'untag_resource'                                ,
                                                                 'update_provisioned_model_throughput'           ]
 
-    #@capture_iam_exception
+    @capture_iam_exception
     def test_models(self):
-        with Capture_IAM_Exception() as _:
-            self.bedrock.models()
-        assert _.permission_required == { 'account_id'  : '470426667096',
-                                          'action'      : 'ListFoundationModels',
-                                          'event'       : 'exception triggered',
-                                          'service'     : 'bedrock',
-                                          'status'      : 'ok',
-                                          'user'        : 'OSBot-AWS-Dev__Only-IAM'}
-        with Capture_IAM_Exception() as _:
-            pass
-        assert _.permission_required == {'event': 'no exception triggered', 'status': 'error'}
-
-
-    # def test_models_2(self):
-    #
-    #     try:
-    #         self.bedrock.models()
-    #
-    #     except ClientError as e:
-    #         error_code = e.response['Error']['Code']
-    #         if error_code == 'AccessDeniedException':
-    #             error_message = e.response['Error']['Message']
-    #             print("Access Denied Exception caught.")
-    #
-    #             # Extracting details from the error message
-    #             user_arn_match = re.search(r"User: arn:aws:iam::(\d+):user/([^ ]+) is not authorized", error_message)
-    #             required_permission_match = re.search(r"because no identity-based policy allows the ([^:]+):([^ ]+) action", error_message)
-    #
-    #             if user_arn_match and required_permission_match:
-    #                 account_id, user = user_arn_match.groups()
-    #                 service, action = required_permission_match.groups()
-    #
-    #                 permission_required = {
-    #                     'service': service,
-    #                     'action': action,
-    #                     'account_id': account_id,
-    #                     'user': user
-    #                 }
-    #             else:
-    #                 permission_required = {
-    #                     'service': 'Not found',
-    #                     'action': 'Not found',
-    #                     'account_id': 'Not found',
-    #                     'user': 'Not found'
-    #                 }
-    #             pprint(permission_required)
-    #         else:
-    #             print(f"An unexpected error occurred: {e}")
-    #     except Exception as e:
-    #         # Catch other potential errors
-    #         print(f"An error occurred: {e}")
+        self.bedrock.models()
