@@ -1,10 +1,7 @@
 import re
-from functools import wraps
-
-from botocore.exceptions import ClientError
-
+from functools                               import wraps
 from osbot_utils.base_classes.Kwargs_To_Self import Kwargs_To_Self
-from osbot_utils.utils.Dev import pprint
+from osbot_utils.utils.Dev                   import pprint
 
 
 def capture_iam_exception(func):
@@ -52,9 +49,5 @@ class Capture_IAM_Exception(Kwargs_To_Self):
                                                  'account_id': account_id                ,
                                                  'user'      : user                      }
 
-                    # print("\n***** IAM Exception Caught *****")
-                    # pprint(self.permission_required )
                 return True
-        # print("\n***** IAM Exception Caught *****")
-        # pprint(self.permission_required)
         return False

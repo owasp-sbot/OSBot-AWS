@@ -6,6 +6,8 @@ from botocore.exceptions import ClientError
 from dotenv import load_dotenv
 
 from osbot_aws.aws.bedrock.Bedrock import Bedrock
+from osbot_aws.aws.bedrock.models.anthropic.Anthropic__Claude_Instant_V1 import Anthropic__Claude_Instant_V1
+from osbot_aws.aws.boto3.Capture_Boto3_Error import capture_boto3_error
 from osbot_aws.aws.iam.Capture_IAM_Exception import capture_iam_exception, Capture_IAM_Exception
 from osbot_aws.aws.iam.IAM_Assume_Role import IAM_Assume_Role
 from osbot_utils.decorators.methods.cache_on_self import cache_on_self
@@ -79,16 +81,20 @@ class test_Bedrock(TestCase):
         assert runtime.meta.region_name                     == 'us-east-1'
         assert list_set(runtime.meta.method_to_api_mapping) == ['invoke_model', 'invoke_model_with_response_stream']
 
-    #@capture_iam_exception
+    @capture_boto3_error
     def test_model_invoke(self):
-        model_id    = 'anthropic.claude-instant-v1'
-        prompt_data = "What is the capital of France?"
-
-        result = self.bedrock.model_invoke(model_id, prompt_data)
-        assert result == { 'completion'   : ' The capital of France is Paris.',
+        prompt    = "What is the capital of France?"
+        response  = ' The capital of France is Paris.'
+        model     = Anthropic__Claude_Instant_V1(prompt=prompt)
+        model_id  = model.model_id
+        body      = model.body()
+        result    = self.bedrock.model_invoke(model_id, body)
+        assert result == { 'completion'   : response                          ,
                            'stop'         : '\n\nHuman:'                      ,
                            'stop_reason'  : 'stop_sequence'                   }
 
+        # model_id    = 'cohere.command-light-text-v14'
+        # model_id    = 'meta.llama2-13b-chat-v1'
 
     #@capture_iam_exception
     def test_models(self):

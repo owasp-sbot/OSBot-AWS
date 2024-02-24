@@ -22,13 +22,12 @@ class Bedrock(Kwargs_To_Self):
         session = Session(region_name=self.region_name)
         return session.client('bedrock')
 
-    def model_invoke(self, model_id, prompt_data):
-        data        = {"prompt": "Human:" + prompt_data + "\nAssistant:", "max_tokens_to_sample": 700}
-        body        = json_dumps(data)
+    def model_invoke(self, model_id, body):
+        body_as_str = json_dumps(body)
         accept      = 'application/json'
         contentType = 'application/json'
 
-        response = self.runtime().invoke_model(body=body, modelId=model_id, accept=accept, contentType=contentType)
+        response = self.runtime().invoke_model(body=body_as_str, modelId=model_id, accept=accept, contentType=contentType)
         response_body = json_loads(response.get('body').read())
         return response_body
 
