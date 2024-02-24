@@ -17,10 +17,9 @@ from osbot_utils.utils.Objects import type_full_name, obj_info
 
 class Bedrock__with_temp_role(Bedrock):
 
-    @cache_on_self
-    def client(self):
+    def iam_assume_role(self, service):
         load_dotenv()
-        service         = "bedrock"
+        #service         = "bedrock"
         action          = "*"
         resource        = "*"
         role_name       = 'osbot__temp_role_for__test_Bedrock'
@@ -28,7 +27,17 @@ class Bedrock__with_temp_role(Bedrock):
         iam_assume_role = IAM_Assume_Role(role_name=role_name, policies_to_add=policies_to_add)
         iam_assume_role.create_role(recreate=False)
         #iam_assume_role.credentials_reset()
-        return iam_assume_role.boto3_client(service_name=service, region_name=self.region_name)
+        return iam_assume_role
+
+    @cache_on_self
+    def client(self):
+        service = "bedrock"
+        return self.iam_assume_role(service).boto3_client(service_name=service, region_name=self.region_name)
+
+    @cache_on_self
+    def runtime(self):
+        service = "bedrock-runtime"
+        return self.iam_assume_role(service).boto3_client(service_name=service, region_name=self.region_name)
 
 class test_Bedrock(TestCase):
 
@@ -63,6 +72,23 @@ class test_Bedrock(TestCase):
                                                                 'tag_resource'                                  ,
                                                                 'untag_resource'                                ,
                                                                 'update_provisioned_model_throughput'           ]
+
+    def test_runtime(self):
+        runtime = self.bedrock.runtime()
+        assert type_full_name(runtime)                      == 'botocore.client.BedrockRuntime'
+        assert runtime.meta.region_name                     == 'us-east-1'
+        assert list_set(runtime.meta.method_to_api_mapping) == ['invoke_model', 'invoke_model_with_response_stream']
+
+    #@capture_iam_exception
+    def test_model_invoke(self):
+        model_id    = 'anthropic.claude-instant-v1'
+        prompt_data = "What is the capital of France?"
+
+        result = self.bedrock.model_invoke(model_id, prompt_data)
+        assert result == { 'completion'   : ' The capital of France is Paris.',
+                           'stop'         : '\n\nHuman:'                      ,
+                           'stop_reason'  : 'stop_sequence'                   }
+
 
     #@capture_iam_exception
     def test_models(self):

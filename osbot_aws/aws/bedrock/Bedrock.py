@@ -8,6 +8,7 @@ from osbot_utils.decorators.lists.group_by import group_by
 from osbot_utils.decorators.lists.index_by import index_by
 from osbot_utils.decorators.methods.cache_on_self import cache_on_self
 from osbot_utils.utils.Dev import pprint
+from osbot_utils.utils.Json import json_dumps, json_loads
 
 
 class Bedrock(Kwargs_To_Self):
@@ -20,6 +21,16 @@ class Bedrock(Kwargs_To_Self):
     def client(self):
         session = Session(region_name=self.region_name)
         return session.client('bedrock')
+
+    def model_invoke(self, model_id, prompt_data):
+        data        = {"prompt": "Human:" + prompt_data + "\nAssistant:", "max_tokens_to_sample": 700}
+        body        = json_dumps(data)
+        accept      = 'application/json'
+        contentType = 'application/json'
+
+        response = self.runtime().invoke_model(body=body, modelId=model_id, accept=accept, contentType=contentType)
+        response_body = json_loads(response.get('body').read())
+        return response_body
 
     @index_by
     @group_by
@@ -41,6 +52,9 @@ class Bedrock(Kwargs_To_Self):
                 providers = models   [provider] = models   .get(provider, {})
                 outputs   = providers[output  ] = providers.get(output  , {})
                 outputs[model_id] = model
-            # pprint(model)
-            # break
         return models
+
+    @cache_on_self
+    def runtime(self):
+        session = Session(region_name=self.region_name)
+        return session.client('bedrock-runtime')
