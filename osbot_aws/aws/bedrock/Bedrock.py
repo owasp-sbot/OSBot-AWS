@@ -41,17 +41,20 @@ class Bedrock(Kwargs_To_Self):
     def models_active(self):
         models = {}
         for model in self.models():
-            model_id = model.get("modelId")
-            provider = model.get("providerName")
-            output   = model.get('outputModalities').pop()   # note: assuming that there is only one output per model
-            assert len(model_id.split( ".")) == 2
-
-            status   = model.get('modelLifecycle').get('status')
-            if status == 'ACTIVE':
-                providers = models   [provider] = models   .get(provider, {})
-                outputs   = providers[output  ] = providers.get(output  , {})
-                outputs[model_id] = model
+            model_id   = model.get("modelId"                )
+            provider   = model.get("providerName"           )
+            for output in model.get('outputModalities'       ):
+                for throughput in model.get('inferenceTypesSupported'):
+                    status   = model.get('modelLifecycle').get('status')
+                    if status == 'ACTIVE':
+                        throughputs = models      [throughput] = models     .get(throughput, {})
+                        providers   = throughputs [provider  ] = throughputs.get(provider  , {})
+                        outputs     = providers   [output    ] = providers  .get(output    , {})
+                        outputs[model_id] = model
         return models
+
+    def models__by_id(self):
+        return self.models(index_by='modelId')
 
     @cache_on_self
     def runtime(self):

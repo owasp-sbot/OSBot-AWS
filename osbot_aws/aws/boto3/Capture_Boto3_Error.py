@@ -1,44 +1,49 @@
 import re
 import botocore
-from botocore.exceptions import ClientError
+from botocore.exceptions import ClientError, ParamValidationError
 from functools import wraps
 from osbot_utils.utils.Dev import pprint
-from osbot_utils.utils.Objects import obj_info
-
 
 class Capture_Boto3_Error:
-    error_details: dict
+    def __init__(self):
+        self.error_details = {}
 
     def __enter__(self):
-        # Initialize or reset error details
-        self.error_details = None
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        # Check if an exception occurred
-        if exc_val:
-            # If it's a Boto3 ClientError, process it
-            #if isinstance(exc_val, botocore.exceptions.ClientError):
-            if isinstance(exc_val, ClientError):
-                error_code = exc_val.response['Error']['Code']
-                error_message = exc_val.response['Error']['Message']
-
-                # Handle specific error types here, e.g., ValidationException
-                if error_code == 'ValidationException':
-                    self.error_details = {
-                        'error_code': error_code,
-                        'error_message': error_message,
-                        'details': self.extract_validation_details(error_message)
-                    }
-                else:
-                    self.error_details = {
-                        'error_code': error_code,
-                        'error_message': error_message
-                    }
-                # Return True to prevent the exception from propagating
+        if exc_val:                                                              # Check if an exception occurred
+            if isinstance(exc_val, ClientError):                                # If it's a Boto3 ClientError, process it
+                self.process_client_error(exc_val)
                 return True
-        # Return False to allow any exceptions not handled here to propagate
-        return False
+            elif isinstance(exc_val, ParamValidationError):                     # If it's a Boto3 ParamValidationError, process it
+                self.process_param_validation_error(exc_val)
+                return True
+        return False  # Return False to allow any exceptions not handled here to propagate
+
+    def process_client_error(self, exc_val):
+        error_code = exc_val.response['Error']['Code']
+        error_message = exc_val.response['Error']['Message']
+
+        if error_code == 'ValidationException':
+            self.error_details = {
+                'error_code': error_code,
+                'error_message': error_message,
+                'details': self.extract_validation_details(error_message)
+            }
+        else:
+            self.error_details = {
+                'error_code': error_code,
+                'error_message': error_message
+            }
+
+    def process_param_validation_error(self, exc_val):
+        # Here you can parse exc_val's report attribute if needed
+        error_message = str(exc_val)
+        self.error_details = {
+            'error_code': 'ParamValidationError',
+            'error_message': error_message
+        }
 
     @staticmethod
     def extract_validation_details(error_message):
@@ -54,8 +59,10 @@ def capture_boto3_error(func):
     def wrapper(*args, **kwargs):
         return_value = None
         with Capture_Boto3_Error() as error_capture:
-            return_value = func(*args, **kwargs)
-
+            try:
+                return_value = func(*args, **kwargs)
+            except Exception as e:
+                raise e
         if error_capture.error_details:
             print()
             pprint('****** BOTO3 ERROR DETECTED ******')
