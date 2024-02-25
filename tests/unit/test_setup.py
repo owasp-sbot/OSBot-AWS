@@ -11,23 +11,27 @@ from unittest.mock                  import patch
 from osbot_utils.utils.Files        import parent_folder
 from osbot_aws.utils.Version        import Version
 
-EXPECTED_PACKAGES = ['osbot_aws'                    ,
-                     'osbot_aws.apis'               ,
-                     'osbot_aws.apis.shell'         ,
-                     'osbot_aws.apis.test_helpers'  ,
-                     'osbot_aws.aws'                ,
-                     'osbot_aws.aws.boto3'          ,
-                     'osbot_aws.aws.ecs'            ,
-                     'osbot_aws.aws.iam'            ,
-                     'osbot_aws.decorators'         ,
-                     'osbot_aws.deploy'             ,
-                     'osbot_aws.exceptions'         ,
-                     'osbot_aws.helpers'            ,
-                     'osbot_aws.lambdas'            ,
-                     'osbot_aws.lambdas.dev'        ,
-                     'osbot_aws.lambdas.pocs'       ,
-                     'osbot_aws.lambdas.shell'      ,
-                     'osbot_aws.utils'              ]
+EXPECTED_PACKAGES = ['osbot_aws'                          ,
+                     'osbot_aws.apis'                     ,
+                     'osbot_aws.apis.shell'               ,
+                     'osbot_aws.apis.test_helpers'        ,
+                     'osbot_aws.aws'                      ,
+                     'osbot_aws.aws.bedrock'              ,
+                     'osbot_aws.aws.bedrock.models'       ,
+                     'osbot_aws.aws.bedrock.models.amazon',
+                     'osbot_aws.aws.boto3'                ,
+                     'osbot_aws.aws.dynamo_db'            ,
+                     'osbot_aws.aws.ecs'                  ,
+                     'osbot_aws.aws.iam'                  ,
+                     'osbot_aws.decorators'               ,
+                     'osbot_aws.deploy'                   ,
+                     'osbot_aws.exceptions'               ,
+                     'osbot_aws.helpers'                  ,
+                     'osbot_aws.lambdas'                  ,
+                     'osbot_aws.lambdas.dev'              ,
+                     'osbot_aws.lambdas.pocs'             ,
+                     'osbot_aws.lambdas.shell'            ,
+                     'osbot_aws.utils'                    ]
 
 class test_setup(TestCase):
 

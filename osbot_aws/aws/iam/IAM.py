@@ -292,31 +292,39 @@ class IAM:
             return None
 
     def role_create(self, assume_policy_document, skip_if_exists=True):
-        if self.role_exists():
+        role_info = self.role_info()
+        if role_info:
             if skip_if_exists:
-                return self.role_info()                     # todo: confirm that the values we get from self.role_info() are compatible with the values in .get('Role') (below)
+                return role_info                     # todo: confirm that the values we get from self.role_info() are compatible with the values in .get('Role') (below)
             else:
-                self.role_delete()
+                self.role_delete(check_exists=False)
         if type(assume_policy_document) is not str:
             assume_policy_document = json.dumps(assume_policy_document)
-        return self.client().create_role(RoleName=self.role_name, AssumeRolePolicyDocument=assume_policy_document).get('Role')
+        result = self.client().create_role(RoleName=self.role_name, AssumeRolePolicyDocument=assume_policy_document)
+        if result:
+            return result.get('Role')
 
-    def role_delete(self):
-        if self.role_exists() is False:
+    def role_delete(self, check_exists=True):
+        if check_exists and self.role_exists() is False:
             return False                                            # make sure it exists
         self.role_policies_detach_and_delete()                      # delete all associated policies
-        self.client().delete_role(RoleName=self.role_name)
-        return self.role_exists() is False
+        result = self.client().delete_role(RoleName=self.role_name)
+        if result:
+            return result.get('ResponseMetadata',{}).get('HTTPStatusCode') == 200
+        return False
 
     def role_not_exists(self):
         return self.role_exists() is False
 
     def role_policies_detach_and_delete(self):
-        policies_arns = self.role_policies().values()
-        self.role_policies_detach(policies_arns)
-        self.policies_delete     (policies_arns)
+        attached_policies_arns = self.role_policies_attached().values()
+        self.role_policies_detach(attached_policies_arns)
+        self.role_policies_delete()
+        #self.policies_delete     (policies_arns)       # was a BUG, we shouldn't be deleting top level policies here
 
     def role_policy_add(self, policy_name, policy_document):
+        if type(policy_document) is not str:
+            policy_document = json_to_str(policy_document)
         return self.client().put_role_policy(RoleName=self.role_name,PolicyName=policy_name,PolicyDocument=policy_document)
 
     def role_policy_attach(self,policy_arn):
@@ -330,20 +338,51 @@ class IAM:
             self.role_policy_detach(policy_arn)
         return self
 
+    def role_policies_delete(self):
+        inline_policies = self.client().list_role_policies(RoleName=self.role_name)
+        for policy_name in inline_policies['PolicyNames']:
+            self.client().delete_role_policy(RoleName=self.role_name, PolicyName=policy_name)
+        return self
+
+
     def role_policies_attach(self, policies_arn):
         for policy_arn in policies_arn:
             self.role_policy_attach(policy_arn)
         return self
 
-    @catch
     @index_by
-    def role_policies(self):                # todo add support for inline policies (a number of methods will need refactoring
+    def role_policies(self):
+        policies_attached = self.role_policies_attached()
+        policies_inline   = self.role_policies_inline  ()
+        return {**policies_attached, **policies_inline}
+
+    @index_by
+    def role_policies_attached(self):
         policies = {}
         if self.role_name:
-            for item in self.get_data('list_attached_role_policies', 'AttachedPolicies', True, RoleName=self.role_name):
-                policies[item.get('PolicyName')] = item.get('PolicyArn')
-            #for policy_name in self.get_data('list_role_policies', 'PolicyNames', True, RoleName=self.role_name):
-            #    policies[policy_name] = ''
+            policies_attached = self.get_data('list_attached_role_policies', 'AttachedPolicies', True, RoleName=self.role_name)
+            if policies_attached:
+                for item in policies_attached:
+                    policies[item.get('PolicyName')] = item.get('PolicyArn')
+        return policies
+
+    @index_by
+    def role_policies_inline(self, fetch_inline_policies=False):
+        policies = {}
+        if self.role_name:
+            policies_inline = self.get_data('list_role_policies', 'PolicyNames', True, RoleName=self.role_name)
+            if policies_inline:
+                for item in policies_inline:
+                    #policies[item.get('PolicyName')] = item.get('PolicyArn')
+                    policies[item] = {'PolicyName': item}                           # list_role_policies only returns an arroy of names, not the actual policy
+        if fetch_inline_policies:
+            for policy_name in policies.keys():
+
+                policy_document = self.client().get_role_policy(RoleName=self.role_name, PolicyName=policy_name)
+                policies[policy_name] = policy_document.get('PolicyDocument')
+                print(f"Policy Name: {policy_name}")
+                print("Policy Document:", policy_document['PolicyDocument'])
+
         return policies
 
     def role_policies_statements(self, just_statements = False):

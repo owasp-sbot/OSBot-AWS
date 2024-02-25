@@ -10,24 +10,44 @@ from osbot_utils.base_classes.Kwargs_To_Self import Kwargs_To_Self
 
 from osbot_utils.testing.Duration import Duration
 from osbot_utils.testing.Hook_Method import Hook_Method
+from osbot_utils.utils.Objects import obj_data
+
 
 # todo: create unit tests specifically for this class
 # decorator
-def print_boto3_calls(function):
-    @wraps(function)
-    def wrapper(*args, **kwargs):
-        with View_Boto3_Rest_Calls():
-            return function(*args, **kwargs)
-    return wrapper
+
+# todo refactor ctor of print_boto3_calls to make these options available (and easier to use)
+# config__print_args          : bool = True
+# config__print_calls         : bool = True
+# config__print_call_stack    : bool = False
+# config__print_return_value  : bool = True
+# config__print_pformat_args  : bool = True
+# see above the multipe options that can be set via the decorator
+
+def print_boto3_calls(show=True, show_args=True, show_calls= False, show_return=True, **decorator_kwargs):
+    decorator_kwargs['config__print_args'        ] = show_args
+    decorator_kwargs['config__print_call_stack'  ] = show_calls
+    decorator_kwargs['config__print_calls'       ] = show
+    decorator_kwargs['config__print_return_value'] = show_return
+    def decorator(function):
+        @wraps(function)
+        def wrapper(*args, **kwargs):
+            with View_Boto3_Rest_Calls(**decorator_kwargs):         # Pass decorator_kwargs to the View_Boto3_Rest_Calls class
+                return function(*args, **kwargs)
+        return wrapper
+    return decorator
 
 
 class View_Boto3_Rest_Calls(Kwargs_To_Self):
-    config__print_calls : bool        = True
-    print_call_stack    : bool        = True
-    target_module                     = BaseClient
-    target_method       : str         = "_make_api_call"
-    hook_method                       = None
-    total_duration      : Duration
+    config__print_args          : bool = True
+    config__print_calls         : bool = True
+    config__print_call_stack    : bool = False
+    config__print_return_value  : bool = True                       # todo: add better support for this (for example not showing the column if this is False)
+    config__print_pformat_args  : bool = True
+    target_module                      = BaseClient
+    target_method               : str  = "_make_api_call"
+    hook_method                        = None
+    total_duration              : Duration
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -57,19 +77,35 @@ class View_Boto3_Rest_Calls(Kwargs_To_Self):
             args         = call.get('args'  )[2:]
             call_stack   = call.get('call_stack')
             kwargs       = call.get('kwargs')           # see if this is relevant to any calls
-            return_value = pformat(call.get('return_value'))
             duration     = call.get('duration')
+            exception    = call.get('exception')
             index        = call.get('index')
-            if hasattr(return_value, 'ResponseMetadata'):
+            return_value = call.get('return_value')
+            if return_value and 'ResponseMetadata' in return_value:
                 del return_value['ResponseMetadata']
-            row_data = dict(api_name     = api_name     ,
-                            args         = args         ,
-                            index        = index        ,
-                            kwargs       = kwargs       ,
-                            duration     = duration     ,
-                            return_value = return_value )
+            if exception:
+                # exception_data = obj_data(exception, name_width=100, value_width=1000)
+                # return_value_str = pformat(exception_data)
+                return_value_str = pformat(exception.args)
+            else:
+                if self.config__print_return_value:
+                    return_value_str = pformat(return_value)
+                else:
+                    return_value_str = '(hidden)'
+
+            if self.config__print_args is False:
+                args = '(hidden)'
+            if self.config__print_pformat_args:
+                args= pformat(args)
+
+            row_data = dict(api_name     = api_name         ,
+                            args         = args             ,
+                            index        = index            ,
+                            kwargs       = kwargs           ,
+                            duration     = duration         ,
+                            return_value = return_value_str )
             rows_data.append(row_data)
-            if self.print_call_stack:
+            if self.config__print_call_stack:               # todo: this needs improvement since at the momment the call stacks are show at the top of the console logs
                 call_stack.print()
 
         return { 'headers'      : headers       ,
@@ -81,11 +117,15 @@ class View_Boto3_Rest_Calls(Kwargs_To_Self):
     def print_calls(self):
         print_data = self.print_data()
         rows_data  = print_data.get('rows_data')
+        if rows_data:
+            order = ['index', 'api_name', 'duration', 'args', 'kwargs', 'return_value']
+        else:
+            order = []
         with Print_Table() as _:
             _.set_title(print_data.get('title'))
             _.set_footer(print_data.get('footer'))
             _.add_data(rows_data)
-            _.set_order('index', 'api_name', 'duration', 'args', 'kwargs', 'return_value')
+            _.set_order(*order)
             _.print()
 
 

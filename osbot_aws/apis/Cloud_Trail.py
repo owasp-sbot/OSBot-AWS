@@ -36,21 +36,21 @@ class Cloud_Trail(Boto_Helpers):                # todo write tests for this clas
         }
         return self.cloudtrail.lookup_events(**kwargs).get('Events')
 
-    def events_all(self, start_time, end_time, lookup_attributes=None):
+    def events_all(self, start_time, end_time, lookup_attributes=None, page_size=None):
         kwargs = {  'api'             : self.cloudtrail         ,
                     'method'          : 'lookup_events'         ,
                     'field_id'        : 'Events'                ,
                     'LookupAttributes': lookup_attributes or [] ,
                     'StartTime'       : start_time              ,
                     'EndTime'         : end_time                }
-
+        if page_size:
+            kwargs['MaxResults'] = page_size
         return Boto_Helpers.invoke_using_paginator(**kwargs)
-        #return Boto_Helpers.invoke_using_paginator(self.cloudtrail,'lookup_events','Events', LookupAttributes=lookup_attributes or [], StartTime=start_time,EndTime=end_time)
 
-    def events_in_last(self,minutes, lookup_attributes=None):
+    def events_in_last(self,minutes, lookup_attributes=None, page_size=None):
         end_time   = self.date_now()
         start_time = self.date_minutes_ago(minutes)
-        return self.events_all(start_time, end_time, lookup_attributes=lookup_attributes)
+        return self.events_all(start_time, end_time, lookup_attributes=lookup_attributes, page_size=page_size)
 
     @index_by
     @group_by

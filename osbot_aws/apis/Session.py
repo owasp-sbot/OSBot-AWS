@@ -16,7 +16,7 @@ from osbot_aws.exceptions.Session_Client_Creation_Fail import Session_Client_Cre
 from osbot_aws.exceptions.Session_No_Credentials import Session_No_Credentials
 
 
-class Session(Kwargs_To_Self):
+class Session(Kwargs_To_Self):                  # todo: refactor to AWS_Session so it doesn't clash with boto3.Session object
     account_id      = None
     profile_name    = None
     region_name     = None

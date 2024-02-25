@@ -221,10 +221,6 @@ class Test_IAM(TestCase):
     #     #                         aws_session_token=aws_session_token)
     #     # pprint(session)
     #
-    # # def test_credentials(self):
-    # #     credentials = { 'AccessKeyId': 'ASIAW3B45JBMKDA4E7QM',
-    # #                     'SecretAccessKey': 'qLNpyPxMCYjYCqvewPG1GSLG6JMXmScy7Fy0/U0Y',
-    # #                      'SessionToken': 'FwoGZXIvYXdzEIL//////////wEaDGtzs9/I6W9L1Sma5yKwAe2AMw5l11L2YCcMIvrBLGCGmnTIvQSem0MntKiijZCazlsd5/B39cZVYHi7ofOzJ/3DV5K3UHHDga4UPWKGmThMU7gtiDwj6jqR06x3ux7flQgLpQFOS3leALHttxDP03d17djJXuedZdk0nnQZNtxjGogWhjgiwhwhA95mb5ctKYMYdF/n2tArpQH2yFmuh5dqORf5bV0PT6KN4t/xxYmluj8eoNoDnNkZCNtJSTrFKN7pwqwGMi1yWi5splHxCeKvg3+5vrqM+3nQ9oqGJYI1HuQuDNeQEzmKJwcDhzkTV3nGA8Y='}
     #
     #     aws_access_key_id = credentials.get('AccessKeyId')
     #     aws_secret_access_key = credentials.get('SecretAccessKey')

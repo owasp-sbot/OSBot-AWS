@@ -1,6 +1,7 @@
 import sys
 from botocore.exceptions                            import ClientError, NoCredentialsError
 from osbot_utils.decorators.methods.remove_return_value import remove_return_value
+from osbot_utils.utils.Misc import random_string
 from osbot_utils.utils.Status                       import status_ok, status_error, status_warning
 from osbot_utils.decorators.methods.cache_on_self   import cache_on_self
 from osbot_aws.AWS_Config                           import AWS_Config
@@ -17,10 +18,12 @@ class STS:
         from osbot_aws.apis.Session import Session                      # recursive dependency
         return Session().client('sts')
 
-    def assume_role(self, role_arn, role_session_name='temp_session', duration_seconds=900):
+    @remove_return_value('ResponseMetadata')
+    def assume_role(self, role_arn, role_session_name=None, duration_seconds=900):
+        role_session_name = role_session_name or random_string(prefix='osbot_sts_session_')
         kwargs = { "DurationSeconds" : duration_seconds , # minumum 900 seconds (15 minutes) manximum 43200 seconds (15 hour)
                     "RoleArn"        : role_arn         ,
-                   "RoleSessionName": role_session_name }
+                    "RoleSessionName": role_session_name or ''}
         return self.client().assume_role(**kwargs)
 
     def current_account_id(self):
