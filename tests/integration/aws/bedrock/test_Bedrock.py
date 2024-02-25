@@ -1,13 +1,15 @@
 from unittest                                                            import TestCase
 from osbot_aws.aws.bedrock.Bedrock__with_temp_role                       import Bedrock__with_temp_role
 from osbot_aws.aws.bedrock.models.anthropic.Anthropic__Claude_Instant_V1 import Anthropic__Claude_Instant_V1
+from osbot_aws.aws.boto3.View_Boto3_Rest_Calls import print_boto3_calls
 from osbot_utils.utils.Dev import pprint
 from osbot_utils.utils.Lists                                             import list_contains_list
 from osbot_utils.utils.Misc                                              import list_set
 from osbot_utils.utils.Objects                                           import type_full_name
+from tests.integration.aws.bedrock.TestCase__Bedrock import TestCase__Bedrock
 
 
-class test_Bedrock(TestCase):
+class test_Bedrock(TestCase__Bedrock):
 
     def setUp(self):
         self.region_name = 'us-east-1'
@@ -95,7 +97,9 @@ class test_Bedrock(TestCase):
         models_stability_ai        = models.get('Stability AI')
         models_stability_ai__image = models.get('Stability AI').get("IMAGE")
 
-        bug__in_amazon__embedding = 'amazon.titan-embed-image-v1:0'
+        bug_in__amazon__embedding = 'amazon.titan-embed-image-v1:0'
+        bug_in__anthropic__text   = 'anthropic.claude-v2:1'
+        bug_in__amazon__image     = 'amazon.titan-image-generator-v1:0'
 
         assert list_set(models                    ) == ['AI21 Labs', 'Amazon', 'Anthropic', 'Cohere', 'Meta', 'Stability AI']
         assert list_set(models_a1_labs            ) == ['TEXT'                         ]
@@ -105,57 +109,65 @@ class test_Bedrock(TestCase):
         assert list_set(models_meta               ) == ['TEXT'                         ]
         assert list_set(models_stability_ai       ) == ['IMAGE'                        ]
 
-        assert list_set(models_a1_labs__text      ) == ['ai21.j2-grande-instruct'         , 'ai21.j2-jumbo-instruct'            , 'ai21.j2-mid'                  , 'ai21.j2-mid-v1'                , 'ai21.j2-ultra'                  , 'ai21.j2-ultra-v1'                                                                       ]
-        assert list_set(models_amazon__embedding  ) == ['amazon.titan-embed-g1-text-02'   , 'amazon.titan-embed-image-v1'       , bug__in_amazon__embedding      , 'amazon.titan-embed-text-v1'   ,                                                                                          ]
-        return
-        assert list_set(models_amazon__image      ) == ['amazon.titan-image-generator-v1' , 'amazon.titan-image-generator-v1:0'                                                                                                                                                                                                  ]
-        assert list_set(models_amazon__text       ) == ['amazon.titan-text-express-v1'    , 'amazon.titan-text-express-v1:0:8k' , 'amazon.titan-text-lite-v1'    , 'amazon.titan-text-lite-v1:0:4k', 'amazon.titan-tg1-large'                                                                                                    ]
-        assert list_set(models_anthropic__text    ) == ['anthropic.claude-instant-v1'     , 'anthropic.claude-instant-v1:2:100k', 'anthropic.claude-v2'          , 'anthropic.claude-v2:0:100k'    , 'anthropic.claude-v2:0:18k'      , 'anthropic.claude-v2:1'       , 'anthropic.claude-v2:1:18k', 'anthropic.claude-v2:1:200k']
-        assert list_set(models_cohere___text      ) == ['cohere.command-light-text-v14'   , 'cohere.command-light-text-v14:7:4k', 'cohere.command-text-v14'      , 'cohere.command-text-v14:7:4k'                                                                                                                                ]
-        assert list_set(models_cohere___embedding ) == ['cohere.embed-english-v3'         , 'cohere.embed-multilingual-v3'                                                                                                                                                                                                       ]
-        assert list_set(models_meta__text         ) == ['meta.llama2-13b-chat-v1'         , 'meta.llama2-13b-chat-v1:0:4k'      , 'meta.llama2-13b-v1'           , 'meta.llama2-13b-v1:0:4k'       , 'meta.llama2-70b-chat-v1'        , 'meta.llama2-70b-chat-v1:0:4k', 'meta.llama2-70b-v1'       , 'meta.llama2-70b-v1:0:4k'   ]
-        assert list_set(models_stability_ai__image) == ['stability.stable-diffusion-xl-v1', 'stability.stable-diffusion-xl-v1:0'                                                                                                                                                                                                 ]
+        assert list_set(models_a1_labs__text      ) == ['ai21.j2-grande-instruct'         , 'ai21.j2-jumbo-instruct'      , 'ai21.j2-mid'              , 'ai21.j2-mid-v1'            , 'ai21.j2-ultra', 'ai21.j2-ultra-v1']
+        assert list_set(models_amazon__embedding  ) == ['amazon.titan-embed-g1-text-02'   , 'amazon.titan-embed-image-v1' , bug_in__amazon__embedding  , 'amazon.titan-embed-text-v1',                                    ]
+        assert list_set(models_amazon__image      ) == ['amazon.titan-image-generator-v1' , bug_in__amazon__image                                                                                                         ]
+        assert list_set(models_amazon__text       ) == ['amazon.titan-text-express-v1'    , 'amazon.titan-text-lite-v1'   ,  'amazon.titan-tg1-large'                                                                     ]
+        assert list_set(models_anthropic__text    ) == ['anthropic.claude-instant-v1'     , 'anthropic.claude-v2'         , bug_in__anthropic__text                                                                       ]
+        assert list_set(models_cohere___text      ) == ['cohere.command-light-text-v14'   , 'cohere.command-text-v14'     ,                                                                                               ]
+        assert list_set(models_cohere___embedding ) == ['cohere.embed-english-v3'         , 'cohere.embed-multilingual-v3'                                                                                                ]
+        assert list_set(models_meta__text         ) == ['meta.llama2-13b-chat-v1'         ,  'meta.llama2-70b-chat-v1'                                                                                                    ]
+        assert list_set(models_stability_ai__image) == ['stability.stable-diffusion-xl-v1'                                                                                                                                ]
 
-    # todo: implement test below to test the provisioned methods
-    # def test_models_active__provisioned(self):
-    #     active_models = self.bedrock.models_active()
-    #     assert list_set(active_models) == ['ON_DEMAND', 'PROVISIONED']
-    #
-    #
-    #     models                     = active_models.get('ON_DEMAND')
-    #     models_a1_labs             = models.get('AI21 Labs'   )
-    #     models_a1_labs__text       = models.get('AI21 Labs'   ).get('TEXT')
-    #     models_amazon              = models.get('Amazon'      )
-    #     models_amazon__embedding   = models.get('Amazon'      ).get('EMBEDDING')
-    #     models_amazon__image       = models.get('Amazon'      ).get('IMAGE'    )
-    #     models_amazon__text        = models.get('Amazon'      ).get('TEXT')
-    #     models_anthropic           = models.get('Anthropic'   )
-    #     models_anthropic__text     = models.get('Anthropic'   ).get('TEXT')
-    #     models_cohere              = models.get('Cohere'      )
-    #     models_cohere___text       = models.get('Cohere'      ).get('TEXT')
-    #     models_cohere___embedding  = models.get('Cohere'      ).get('EMBEDDING')
-    #     models_meta                = models.get('Meta'        )
-    #     models_meta__text          = models.get('Meta'        ).get('TEXT')
-    #     models_stability_ai        = models.get('Stability AI')
-    #     models_stability_ai__image = models.get('Stability AI').get("IMAGE")
-    #
-    #
-    #     assert list_set(models                    ) == ['AI21 Labs', 'Amazon', 'Anthropic', 'Cohere', 'Meta', 'Stability AI']
-    #     assert list_set(models_a1_labs            ) == ['TEXT'                         ]
-    #     assert list_set(models_amazon             ) == ['EMBEDDING', 'IMAGE', 'TEXT'   ]
-    #     assert list_set(models_anthropic          ) == ['TEXT'                         ]
-    #     assert list_set(models_cohere             ) == ['EMBEDDING', 'TEXT'            ]
-    #     assert list_set(models_meta               ) == ['TEXT'                         ]
-    #     assert list_set(models_stability_ai       ) == ['IMAGE'                        ]
-    #     return
-    #     assert list_set(models_a1_labs__text      ) == ['ai21.j2-grande-instruct'         , 'ai21.j2-jumbo-instruct'            , 'ai21.j2-mid'                  , 'ai21.j2-mid-v1'                , 'ai21.j2-ultra'                  , 'ai21.j2-ultra-v1'                                                                       ]
-    #     assert list_set(models_amazon__embedding  ) == ['amazon.titan-embed-g1-text-02'   , 'amazon.titan-embed-image-v1'       , 'amazon.titan-embed-image-v1:0', 'amazon.titan-embed-text-v1'    , 'amazon.titan-embed-text-v1:2:8k'                                                                                           ]
-    #     assert list_set(models_amazon__image      ) == ['amazon.titan-image-generator-v1' , 'amazon.titan-image-generator-v1:0'                                                                                                                                                                                                  ]
-    #     assert list_set(models_amazon__text       ) == ['amazon.titan-text-express-v1'    , 'amazon.titan-text-express-v1:0:8k' , 'amazon.titan-text-lite-v1'    , 'amazon.titan-text-lite-v1:0:4k', 'amazon.titan-tg1-large'                                                                                                    ]
-    #     assert list_set(models_anthropic__text    ) == ['anthropic.claude-instant-v1'     , 'anthropic.claude-instant-v1:2:100k', 'anthropic.claude-v2'          , 'anthropic.claude-v2:0:100k'    , 'anthropic.claude-v2:0:18k'      , 'anthropic.claude-v2:1'       , 'anthropic.claude-v2:1:18k', 'anthropic.claude-v2:1:200k']
-    #     assert list_set(models_cohere___text      ) == ['cohere.command-light-text-v14'   , 'cohere.command-light-text-v14:7:4k', 'cohere.command-text-v14'      , 'cohere.command-text-v14:7:4k'                                                                                                                                ]
-    #     assert list_set(models_cohere___embedding ) == ['cohere.embed-english-v3'         , 'cohere.embed-multilingual-v3'                                                                                                                                                                                                       ]
-    #     assert list_set(models_meta__text         ) == ['meta.llama2-13b-chat-v1'         , 'meta.llama2-13b-chat-v1:0:4k'      , 'meta.llama2-13b-v1'           , 'meta.llama2-13b-v1:0:4k'       , 'meta.llama2-70b-chat-v1'        , 'meta.llama2-70b-chat-v1:0:4k', 'meta.llama2-70b-v1'       , 'meta.llama2-70b-v1:0:4k'   ]
-    #     assert list_set(models_stability_ai__image) == ['stability.stable-diffusion-xl-v1', 'stability.stable-diffusion-xl-v1:0'                                                                                                                                                                                                 ]
-    #
-    #
+
+    def test_models_active__provisioned(self):
+        active_models = self.bedrock.models_active()
+        assert list_set(active_models) == ['ON_DEMAND', 'PROVISIONED']
+
+        models                     = active_models.get('PROVISIONED')
+        models_amazon              = models.get('Amazon'      )
+        models_amazon__embedding   = models.get('Amazon'      ).get('EMBEDDING')
+        models_amazon__image       = models.get('Amazon'      ).get('IMAGE'    )
+        models_amazon__text        = models.get('Amazon'      ).get('TEXT')
+        models_anthropic           = models.get('Anthropic'   )
+        models_anthropic__text     = models.get('Anthropic'   ).get('TEXT')
+        models_cohere              = models.get('Cohere'      )
+        models_cohere___text       = models.get('Cohere'      ).get('TEXT')
+        models_meta                = models.get('Meta'        )
+        models_meta__text          = models.get('Meta'        ).get('TEXT')
+        models_stability_ai        = models.get('Stability AI')
+        models_stability_ai__image = models.get('Stability AI').get("IMAGE")
+
+        assert list_set(models                    ) == ['Amazon', 'Anthropic', 'Cohere', 'Meta', 'Stability AI']
+        assert list_set(models_amazon             ) == ['EMBEDDING', 'IMAGE', 'TEXT'   ]
+        assert list_set(models_anthropic          ) == ['TEXT'                         ]
+        assert list_set(models_cohere             ) == [ 'TEXT'                        ]
+        assert list_set(models_meta               ) == ['TEXT'                         ]
+        assert list_set(models_stability_ai       ) == ['IMAGE'                        ]
+
+        bug_missing__in_anthropic__text = 'anthropic.claude-v2:1'           # BUG
+
+        assert list_set(models_amazon__embedding  ) == [ 'amazon.titan-embed-image-v1:0'     , 'amazon.titan-embed-text-v1:2:8k'                                                                                               ]
+        assert list_set(models_amazon__image      ) == [ 'amazon.titan-image-generator-v1:0'                                                                                                                                   ]
+        assert list_set(models_amazon__text       ) == [ 'amazon.titan-text-express-v1:0:8k'  , 'amazon.titan-text-lite-v1:0:4k'                                                                                               ]
+        assert list_set(models_anthropic__text    ) == [ 'anthropic.claude-instant-v1:2:100k' , 'anthropic.claude-v2:0:100k'    , 'anthropic.claude-v2:0:18k'       , 'anthropic.claude-v2:1:18k', 'anthropic.claude-v2:1:200k']
+        assert list_set(models_cohere___text      ) == [ 'cohere.command-light-text-v14:7:4k' , 'cohere.command-text-v14:7:4k'                                                                                                 ]
+        assert list_set(models_meta__text         ) == [ 'meta.llama2-13b-chat-v1:0:4k'                                                                                                                                        ]
+        assert list_set(models_stability_ai__image) == [ 'stability.stable-diffusion-xl-v1:0'                                                                                                                                  ]
+
+        # Note models with 'inferenceTypesSupported': [],
+        #    - meta.llama2-13b-v1
+        #    - meta.llama2-13b-v1:0:4k
+        #    - meta.llama2-70b-chat-v1:0:4k
+        #    - meta.llama2-70b-v1
+        #    - meta.llama2-70b-v1:0:4k
+
+
+    def test_models_by_throughput(self):
+        on_demand_models   = self.bedrock.models_by_throughput__on_demand()
+        provisioned_models =  self.bedrock.models_by_throughput__provisioned()
+        assert len(on_demand_models  ) == 25
+        assert len(provisioned_models) == 14
+
+
+
