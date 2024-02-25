@@ -1,21 +1,12 @@
-import re
-from functools import cache
-from unittest import TestCase
-
-from botocore.exceptions import ClientError
-from dotenv import load_dotenv
-
-from osbot_aws.aws.bedrock.Bedrock import Bedrock
+from unittest                                                            import TestCase
+from dotenv                                                              import load_dotenv
+from osbot_aws.aws.bedrock.Bedrock                                       import Bedrock
 from osbot_aws.aws.bedrock.models.anthropic.Anthropic__Claude_Instant_V1 import Anthropic__Claude_Instant_V1
-from osbot_aws.aws.boto3.Capture_Boto3_Error import capture_boto3_error
-from osbot_aws.aws.iam.Capture_IAM_Exception import capture_iam_exception, Capture_IAM_Exception
-from osbot_aws.aws.iam.IAM_Assume_Role import IAM_Assume_Role
-from osbot_utils.decorators.methods.cache_on_self import cache_on_self
-from osbot_utils.testing.Patch_Print import Patch_Print
-from osbot_utils.utils.Dev import pprint
-from osbot_utils.utils.Lists import list_contains_list
-from osbot_utils.utils.Misc import list_set
-from osbot_utils.utils.Objects import type_full_name, obj_info
+from osbot_aws.aws.iam.IAM_Assume_Role                                   import IAM_Assume_Role
+from osbot_utils.decorators.methods.cache_on_self                        import cache_on_self
+from osbot_utils.utils.Lists                                             import list_contains_list
+from osbot_utils.utils.Misc                                              import list_set
+from osbot_utils.utils.Objects                                           import type_full_name
 
 class Bedrock__with_temp_role(Bedrock):
 
@@ -81,7 +72,7 @@ class test_Bedrock(TestCase):
         assert runtime.meta.region_name                     == 'us-east-1'
         assert list_set(runtime.meta.method_to_api_mapping) == ['invoke_model', 'invoke_model_with_response_stream']
 
-    @capture_boto3_error
+    #@capture_boto3_error
     def test_model_invoke(self):
         prompt    = "What is the capital of France?"
         response  = ' The capital of France is Paris.'
