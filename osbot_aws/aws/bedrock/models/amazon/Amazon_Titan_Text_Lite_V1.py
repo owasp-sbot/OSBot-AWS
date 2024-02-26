@@ -2,6 +2,6 @@ from osbot_aws.aws.bedrock.models.amazon.Amazon_Titan__Text import Amazon_Titan_
 
 # for details on this model see https://docs.aws.amazon.com/bedrock/latest/userguide/model-parameters-titan-text.html
 
-class Amazon_Titan_Text_Express_V1(Amazon_Titan__Text):
+class Amazon_Titan_Text_Lite_V1(Amazon_Titan__Text):
     # config vars
-    model_id     : str = 'amazon.titan-text-express-v1'
+    model_id     : str = 'amazon.titan-text-lite-v1'

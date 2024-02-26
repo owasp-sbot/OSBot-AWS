@@ -37,15 +37,6 @@ class test_Amazon_Titan_Text_Express_V1(TestCase__Bedrock):
         response  = self.bedrock.model_invoke(model_id, body)
         assert response == expected_response
 
-    # def test_model_query(self):
-    #     model_id ='amazon.titan-embed-image-v1:0'
-    #     models = self.bedrock.models__by_id()
-    #     model = models.get(model_id)
-    #     pprint(model)
-    #     return
-    #     active_models = self.bedrock.models_active()
-    #     model = active_models.get('ON_DEMAND').get('Amazon').get('TEXT').get(model_id)
-    #     pprint(model)
 
     # see https://www.linkedin.com/feed/update/urn:li:activity:7167345154469658624/ for more details
     def test_bug_in_model_mapping(self):
