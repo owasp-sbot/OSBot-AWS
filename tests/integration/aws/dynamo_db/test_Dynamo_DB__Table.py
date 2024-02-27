@@ -1,16 +1,7 @@
-from functools import cache
-from unittest import TestCase
-
-from dotenv import load_dotenv
-
 from osbot_aws.AWS_Config import AWS_Config
-from osbot_aws.aws.dynamo_db.Dynamo_DB import Dynamo_DB
-from osbot_aws.aws.dynamo_db.Dynamo_DB__Table import Dynamo_DB__Table
-from osbot_aws.aws.iam.IAM_Assume_Role import IAM_Assume_Role
-from osbot_utils.utils.Dev import pprint
 from osbot_utils.utils.Misc import list_set, is_guid
 from tests.integration.aws.dynamo_db.TestCase__Temp_Dynamo_DB_Table import TestCase__Temp_Dynamo_DB_Table
-from tests.integration.aws.dynamo_db.test_Dynamo_DB import Dynamo_DB__with_temp_role
+
 
 TEST_TABLE_NAME = 'temp_table__test_Dynamo_DB__Table'
 

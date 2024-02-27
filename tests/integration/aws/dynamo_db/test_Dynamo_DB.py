@@ -11,30 +11,13 @@ from dotenv import load_dotenv
 
 from osbot_aws.aws.boto3.View_Boto3_Rest_Calls import print_boto3_calls
 from osbot_aws.aws.dynamo_db.Dynamo_DB import Dynamo_DB
+from osbot_aws.aws.dynamo_db.Dynamo_DB__with_temp_role import Dynamo_DB__with_temp_role
 from osbot_aws.aws.dynamo_db.Dynamo_Table__Resource import Dynamo_Table__Resource
 from osbot_aws.aws.iam.IAM_Assume_Role import IAM_Assume_Role
 from osbot_utils.testing.Duration import Duration
 from osbot_utils.utils.Dev import pprint
 from osbot_utils.utils.Misc import list_set, random_string
 from osbot_utils.utils.Objects import type_full_name
-
-
-class Dynamo_DB__with_temp_role(Dynamo_DB):
-
-    #@print_boto3_calls()
-    @cache
-    def client(self):
-        load_dotenv()
-        service         = "dynamodb"
-        action          = "*"
-        resource        = "*"
-        role_name       = 'osbot__temp_role_for__test_Dynamo_DB'
-        policies_to_add = [dict(service=service, action=action, resource=resource)]
-        iam_assume_role = IAM_Assume_Role(role_name=role_name, policies_to_add=policies_to_add)
-        iam_assume_role.create_role(recreate=False)
-        iam_assume_role.credentials_reset()
-        return iam_assume_role.boto3_client(service_name=service)
-
 
 class test_Dynamo_DB(TestCase):
     dynamo_db       : Dynamo_DB
