@@ -1,12 +1,9 @@
-from unittest                                                            import TestCase
 from osbot_aws.aws.bedrock.Bedrock__with_temp_role                       import Bedrock__with_temp_role
 from osbot_aws.aws.bedrock.models.anthropic.Anthropic__Claude_Instant_V1 import Anthropic__Claude_Instant_V1
-from osbot_aws.aws.boto3.View_Boto3_Rest_Calls import print_boto3_calls
-from osbot_utils.utils.Dev import pprint
 from osbot_utils.utils.Lists                                             import list_contains_list
 from osbot_utils.utils.Misc                                              import list_set
 from osbot_utils.utils.Objects                                           import type_full_name
-from tests.integration.aws.bedrock.TestCase__Bedrock import TestCase__Bedrock
+from osbot_aws.testing.TestCase__Bedrock import TestCase__Bedrock
 
 
 class test_Bedrock(TestCase__Bedrock):

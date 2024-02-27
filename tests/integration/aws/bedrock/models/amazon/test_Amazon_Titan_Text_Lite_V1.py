@@ -1,7 +1,5 @@
-from unittest import TestCase
-
 from osbot_aws.aws.bedrock.models.amazon.Amazon_Titan_Text_Lite_V1 import Amazon_Titan_Text_Lite_V1
-from tests.integration.aws.bedrock.TestCase__Bedrock import TestCase__Bedrock
+from osbot_aws.testing.TestCase__Bedrock import TestCase__Bedrock
 
 
 class test_Amazon_Titan_Text_Lite_V1(TestCase__Bedrock):

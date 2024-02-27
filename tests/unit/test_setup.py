@@ -31,6 +31,7 @@ EXPECTED_PACKAGES = ['osbot_aws'                          ,
                      'osbot_aws.lambdas.dev'              ,
                      'osbot_aws.lambdas.pocs'             ,
                      'osbot_aws.lambdas.shell'            ,
+                     'osbot_aws.testing'                  ,
                      'osbot_aws.utils'                    ]
 
 class test_setup(TestCase):

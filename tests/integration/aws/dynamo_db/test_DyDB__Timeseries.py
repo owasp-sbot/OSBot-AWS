@@ -4,7 +4,7 @@ from osbot_aws.AWS_Config import AWS_Config
 from osbot_aws.aws.dynamo_db.DyDB__Timeseries import DyDB__Timeseries
 from osbot_utils.utils.Dev import pprint
 from osbot_utils.utils.Misc import timestamp_utc_now, random_int, list_set, is_int, is_guid, wait_for
-from tests.integration.aws.dynamo_db.TestCase__Dynamo_DB import TestCase__Dynamo_DB
+from osbot_aws.testing.TestCase__Dynamo_DB import TestCase__Dynamo_DB
 
 
 class test_DyDB__Timeseries(TestCase__Dynamo_DB):
@@ -70,12 +70,13 @@ class test_DyDB__Timeseries(TestCase__Dynamo_DB):
         document_data     = document   .get('data'            )
         dy_id             = document   .get('dy_id'           )
 
+        assert result.get('dy_id')        == dy_id
         assert document_data              == data
         assert status                     == 'ok'
         assert is_int(timestamp          ) is True
         assert is_guid(dy_id             ) is True
         assert list_set(data             ) == ['and_another', 'another_key', 'answer'                         ]
-        assert list_set(result           ) == ['data'       , 'status'                                        ]
+        assert list_set(result           ) == ['data'       , 'dy_id', 'status'                               ]
         assert list_set(result_data      ) == ['document'   , 'document_as_item','key_value'                  ]
         assert list_set(document         ) == ['data'       , 'dy_id'           , 'partition_key', 'timestamp']
         assert list_set(document_as_item ) == ['data'       , 'dy_id'           , 'partition_key', 'timestamp']
