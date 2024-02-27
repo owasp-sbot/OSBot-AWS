@@ -17,12 +17,15 @@ class DyDB__Timeseries(Dynamo_DB__Table):
 
     def add_document(self, data, partition=None):
         #partition = data.get('data').get('env', self.partition_key_value)
-        document = { self.primary_key         : self.dynamo_db.random_id()            ,
-                     self.key_name            : timestamp_utc_now()                   ,
-                     self.partition_key_name  : partition or self.partition_key_value ,
-                     self.data_field_name     : data                                  }
+        primary_key = self.dynamo_db.random_id()
+        document    = { self.primary_key         : primary_key                           ,
+                        self.key_name            : timestamp_utc_now()                   ,
+                        self.partition_key_name  : partition or self.partition_key_value ,
+                        self.data_field_name     : data                                  }
 
-        return super().add_document(document)
+        result = super().add_document(document)
+        result[self.primary_key] = primary_key
+        return result
 
     def all_ids(self):
         response = self.dynamo_db.client().scan(TableName            = self.table_name ,
@@ -128,21 +131,22 @@ class DyDB__Timeseries(Dynamo_DB__Table):
         return items
 
 
-    def query_by_env_and_var(self, query_var, query_value, env=None):  # todo: refactor and see if we can use query instead of scan since we are using the primary key
-        if env == 'None':
-            env = None
+    def query_by_env_and_var(self, query_var, query_value, partition=None):  # todo: refactor and see if we can use query instead of scan since we are using the primary key
+        if partition == 'None':
+            partition = None
         table_name  = self.table_name
-        env_value   = env or self.partition_key_value
+        partition_value   = partition or self.partition_key_value
 
 
-        filter_expression = f'#data.#data.#env=:env_value AND #data.#data.#query_var = :query_value'
+        #filter_expression = f'#data.#data.#env=:env_value AND #data.#data.#query_var = :query_value'
+        # filter_expression = f'#data.#data.#env=:env_value AND #data.#data.#query_var = :query_value'
 
         expression_attribute_names = { "#query_var": query_var ,
                                        '#data'     : 'data'    ,
                                        '#env'      : 'env'     }
 
 
-        expression_attribute_values = { ':env_value'  : {'S': env_value  },
+        expression_attribute_values = { ':env_value'  : {'S': partition_value  },
                                         ':query_value': {'S': query_value}}
 
         result = self.dynamo_db.client().scan(TableName=table_name,
