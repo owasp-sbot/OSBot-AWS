@@ -77,6 +77,9 @@ class DyDB__Timeseries(Dynamo_DB__Table):
             .wait(TableName=table_name, WaiterConfig={'Delay': 1, 'MaxAttempts': 50})
         return True
 
+    def delete_document(self, key_value):
+        return self.dynamo_db.document_delete(table_name=self.table_name, key_name=self.primary_key, key_value=key_value)
+
     def documents(self, partition=None):
         return self.query_by_partition(partition or self.partition_key_value)
 
@@ -131,30 +134,31 @@ class DyDB__Timeseries(Dynamo_DB__Table):
         return items
 
 
-    def query_by_env_and_var(self, query_var, query_value, partition=None):  # todo: refactor and see if we can use query instead of scan since we are using the primary key
-        if partition == 'None':
-            partition = None
+    def query_by_primary_key(self, key_value, partition=None):  # todo: refactor and see if we can use query instead of scan since we are using the primary key
+        if partition == 'None':                                 # handle this conner case when something along the line converts the value to None
+            partition = None                                    # todo: check this data flows, since this shouldn't really be handled here, since we should support the case of a partition of value 'None'
         table_name  = self.table_name
         partition_value   = partition or self.partition_key_value
 
+        filter_expression = f'#partition_name=:partition_value AND #primary_key_name = :primary_key_value'
 
-        #filter_expression = f'#data.#data.#env=:env_value AND #data.#data.#query_var = :query_value'
-        # filter_expression = f'#data.#data.#env=:env_value AND #data.#data.#query_var = :query_value'
-
-        expression_attribute_names = { "#query_var": query_var ,
-                                       '#data'     : 'data'    ,
-                                       '#env'      : 'env'     }
+        expression_attribute_names = { "#primary_key_name"  : self.primary_key        ,
+                                       '#partition_name'    : self.partition_key_name }
 
 
-        expression_attribute_values = { ':env_value'  : {'S': partition_value  },
-                                        ':query_value': {'S': query_value}}
+        expression_attribute_values = { ':partition_value'  : {'S': partition_value  },
+                                        ':primary_key_value': {'S': key_value        }}
 
         result = self.dynamo_db.client().scan(TableName=table_name,
                                               FilterExpression=filter_expression,
                                               ExpressionAttributeNames=expression_attribute_names,
                                               ExpressionAttributeValues=expression_attribute_values)
-        items = []
-        for raw_item in result.get('Items', []):
-            item = self.dynamo_db.document_deserialise(raw_item)
-            items.append(item)
-        return items
+
+        items = result.get('Items', [])
+        return self.dynamo_db.document_deserialise(items[0]) if items else {}
+
+        # items = []
+        # for raw_item in result.get('Items', []):
+        #     item = self.dynamo_db.document_deserialise(raw_item)
+        #     items.append(item)
+        # return items
