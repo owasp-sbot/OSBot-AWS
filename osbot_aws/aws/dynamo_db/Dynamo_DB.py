@@ -8,6 +8,7 @@ from osbot_utils.utils.Status import status_ok
 from osbot_aws.apis.Session import Session
 from osbot_utils.decorators.methods.remove_return_value import remove_return_value
 
+DEFAULT_DOCUMENTS_MAX_ITEMS_TO_FETCH = 2000
 
 class Dynamo_DB:
 
@@ -105,15 +106,45 @@ class Dynamo_DB:
             responses.append(response)
         return responses        # Contains unprocessed items
 
-    def documents_all(self, table_name):
+    def documents_all(self, table_name, limit=100):
         """
-        Retrieves all items from the DynamoDB table.
+        Retrieves all items from the DynamoDB table with pagination and optional limit.
+        :param table_name: Name of the DynamoDB table.
+        :param limit: Maximum number of items to retrieve in a single scan operation.
         :return: A list of dictionaries, each representing an item in the table.
         """
-        response = self.client().scan(TableName=table_name)
-        items    = response.get('Items', [])
+        #todo: figure out why this is only returning 64 records at the time
+        items = []
+        last_evaluated_key = None
+
+        while True:
+            scan_kwargs = {
+                'TableName': table_name,
+                'Limit'    : limit      # Specify the limit here
+            }
+            if last_evaluated_key:
+                scan_kwargs['ExclusiveStartKey'] = last_evaluated_key
+
+            response = self.client().scan(**scan_kwargs)
+            items.extend(response.get('Items', []))
+            last_evaluated_key = response.get('LastEvaluatedKey')
+
+            if not last_evaluated_key:
+                break
+            if len(items) > DEFAULT_DOCUMENTS_MAX_ITEMS_TO_FETCH:
+                break
+            #print('--', len(items), 'items')
+
         return [self.document_deserialise(item) for item in items]
 
+    # todo:  figure out why code below returns only 64
+    # def documents_count(self, table_name):
+    #     """
+    #     Counts the number of items in the DynamoDB table.
+    #     :return: The total count of items in the table.
+    #     """
+    #     response = self.client().scan(TableName=table_name, Select='COUNT')
+    #     return response.get('Count', 0)
 
     def documents_delete(self, table_name, key_name, key_values):
 
