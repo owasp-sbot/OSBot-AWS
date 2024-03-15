@@ -5,30 +5,29 @@ from osbot_aws.testing.TestCase__Bedrock import TestCase__Bedrock
 from unittest.mock import patch
 import functools
 
+from osbot_utils.utils.Dev import pprint
+from osbot_utils.utils.Objects import obj_info
+
 # Cache for storing responses
 bedrock_response_cache = {}
-
 
 def cache_bedrock_response(func):
     @functools.wraps(func)
     def wrapper_cache(*args, **kwargs):
         self = args[0]  # The instance of the test class
-        cache_key = (self.model.model_id, self.model.input_text)
 
-        if cache_key in bedrock_response_cache:
-            print("Using cached response for:", cache_key)
-            return bedrock_response_cache[cache_key]
-
-        # Save the original 'model_invoke' method
         original_method = self.bedrock.model_invoke
 
-        # Define a side_effect function that calls the original method
-        # and caches its response
         def side_effect(*args, **kwargs):
-            # Use the original method to get the response
+            cache_key = (self.model.model_id, self.model.input_text)
+            if cache_key in bedrock_response_cache:
+                print("Using cached response for:", cache_key)
+                return bedrock_response_cache[cache_key]
+
             response = original_method(*args, **kwargs)
-            # Cache the response
-            bedrock_response_cache[cache_key] = response
+
+            bedrock_response_cache[cache_key] = response            # cache the response here
+            print(bedrock_response_cache)
             return response
 
         # Patch the 'model_invoke' method with our side_effect
@@ -54,7 +53,7 @@ class test_Amazon_Titan_Text_Lite_V1(TestCase__Bedrock):
         assert self.model.__locals__() == expected_vars
 
     #@cache_bedrock_response
-    @print_boto3_calls()
+    #@print_boto3_calls()
     def test_model_invoke(self):
         prompt = "Hello"
         expected_response  = { 'inputTextTokenCount': 3,
@@ -67,4 +66,5 @@ class test_Amazon_Titan_Text_Lite_V1(TestCase__Bedrock):
         response  = self.bedrock.model_invoke(model_id, body)
         assert response == expected_response
 
-        #response = self.bedrock.model_invoke(model_id, body)
+        response = self.bedrock.model_invoke(model_id, body)
+        pprint(response)

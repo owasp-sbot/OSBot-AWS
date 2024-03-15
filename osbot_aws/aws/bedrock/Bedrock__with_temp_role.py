@@ -1,11 +1,18 @@
 from dotenv import load_dotenv
 
+from osbot_aws.aws.bedrock.Bedock__Cache import Bedrock__Cache
 from osbot_aws.aws.bedrock.Bedrock import Bedrock
 from osbot_aws.aws.iam.IAM_Assume_Role import IAM_Assume_Role
 from osbot_utils.decorators.methods.cache_on_self import cache_on_self
+from osbot_utils.utils.Dev import pprint
+from osbot_utils.utils.Json import json_md5
 
 
 class Bedrock__with_temp_role(Bedrock):
+
+    def __init__(self,*args,**kwargs):
+        super().__init__(*args,**kwargs)
+        self.bedrock_cache = Bedrock__Cache()
 
     def iam_assume_role(self, service):
         load_dotenv()
@@ -26,6 +33,9 @@ class Bedrock__with_temp_role(Bedrock):
     def client(self):
         service = "bedrock"
         return self.iam_assume_role(service).boto3_client(service_name=service, region_name=self.region_name)
+
+    def model_invoke(self, model_id, body):
+        return self.bedrock_cache.model_invoke(super(), model_id, body)
 
     @cache_on_self
     def runtime(self):
