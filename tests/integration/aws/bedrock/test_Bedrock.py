@@ -70,7 +70,7 @@ class test_Bedrock(TestCase__Bedrock):
         for model  in models:
             assert list_contains_list(list_set(model), expected_attributes)
             assert list_set(model.get('modelLifecycle')) == ['status']
-        assert len(models) == 45
+        assert len(models) == 48
 
     def test_models_active__on_demand(self):
         active_models = self.bedrock.models_active()
@@ -91,29 +91,35 @@ class test_Bedrock(TestCase__Bedrock):
         models_cohere___embedding  = models.get('Cohere'      ).get('EMBEDDING')
         models_meta                = models.get('Meta'        )
         models_meta__text          = models.get('Meta'        ).get('TEXT')
+        models_mistral_ai          = models.get('Mistral AI'  )
+        models_mistral_ai__text    = models.get('Mistral AI'  ).get('TEXT')
         models_stability_ai        = models.get('Stability AI')
         models_stability_ai__image = models.get('Stability AI').get("IMAGE")
 
-        bug_in__amazon__embedding = 'amazon.titan-embed-image-v1:0'
-        bug_in__anthropic__text   = 'anthropic.claude-v2:1'
-        bug_in__amazon__image     = 'amazon.titan-image-generator-v1:0'
+        # bug_in__amazon__embedding = 'amazon.titan-embed-image-v1:0'
+        bug_in__anthropic__text   = 'anthropic.claude-v2:1'             # todo: check if this is still a bug, or if AWS now supports ':' in the model name, see my comment at https://www.linkedin.com/feed/update/urn:li:ugcPost:7167505852424265728?commentUrn=urn%3Ali%3Acomment%3A%28ugcPost%3A7167505852424265728%2C7174444739725828096%29&dashCommentUrn=urn%3Ali%3Afsd_comment%3A%287174444739725828096%2Curn%3Ali%3AugcPost%3A7167505852424265728%29
+        #bug_in__amazon__image     = 'amazon.titan-image-generator-v1:0'
+        bugs_in_anthropic_claude_3 = ['anthropic.claude-3-haiku-20240307-v1:0', 'anthropic.claude-3-sonnet-20240229-v1:0']
+        bugs_in_mistral_ai         = ['mistral.mistral-7b-instruct-v0:2', 'mistral.mixtral-8x7b-instruct-v0:1']
 
-        assert list_set(models                    ) == ['AI21 Labs', 'Amazon', 'Anthropic', 'Cohere', 'Meta', 'Stability AI']
+        assert list_set(models                    ) == ['AI21 Labs', 'Amazon', 'Anthropic', 'Cohere', 'Meta', 'Mistral AI', 'Stability AI']
         assert list_set(models_a1_labs            ) == ['TEXT'                         ]
         assert list_set(models_amazon             ) == ['EMBEDDING', 'IMAGE', 'TEXT'   ]
         assert list_set(models_anthropic          ) == ['TEXT'                         ]
         assert list_set(models_cohere             ) == ['EMBEDDING', 'TEXT'            ]
         assert list_set(models_meta               ) == ['TEXT'                         ]
+        assert list_set(models_mistral_ai         ) == ['TEXT'                         ]
         assert list_set(models_stability_ai       ) == ['IMAGE'                        ]
 
         assert list_set(models_a1_labs__text      ) == ['ai21.j2-grande-instruct'         , 'ai21.j2-jumbo-instruct'      , 'ai21.j2-mid'              , 'ai21.j2-mid-v1'            , 'ai21.j2-ultra', 'ai21.j2-ultra-v1']
-        assert list_set(models_amazon__embedding  ) == ['amazon.titan-embed-g1-text-02'   , 'amazon.titan-embed-image-v1' , bug_in__amazon__embedding  , 'amazon.titan-embed-text-v1',                                    ]
-        assert list_set(models_amazon__image      ) == ['amazon.titan-image-generator-v1' , bug_in__amazon__image                                                                                                         ]
+        assert list_set(models_amazon__embedding  ) == ['amazon.titan-embed-g1-text-02'   , 'amazon.titan-embed-image-v1' , 'amazon.titan-embed-text-v1',                                                                 ]
+        assert list_set(models_amazon__image      ) == ['amazon.titan-image-generator-v1'                                                                                                                                 ]
         assert list_set(models_amazon__text       ) == ['amazon.titan-text-express-v1'    , 'amazon.titan-text-lite-v1'   ,  'amazon.titan-tg1-large'                                                                     ]
-        assert list_set(models_anthropic__text    ) == ['anthropic.claude-instant-v1'     , 'anthropic.claude-v2'         , bug_in__anthropic__text                                                                       ]
+        assert list_set(models_anthropic__text    ) == [*bugs_in_anthropic_claude_3       , 'anthropic.claude-instant-v1' , 'anthropic.claude-v2'         , bug_in__anthropic__text                                                                       ]
         assert list_set(models_cohere___text      ) == ['cohere.command-light-text-v14'   , 'cohere.command-text-v14'     ,                                                                                               ]
         assert list_set(models_cohere___embedding ) == ['cohere.embed-english-v3'         , 'cohere.embed-multilingual-v3'                                                                                                ]
         assert list_set(models_meta__text         ) == ['meta.llama2-13b-chat-v1'         ,  'meta.llama2-70b-chat-v1'                                                                                                    ]
+        assert list_set(models_mistral_ai__text   ) == bugs_in_mistral_ai                           # todo: check if this is still a bug
         assert list_set(models_stability_ai__image) == ['stability.stable-diffusion-xl-v1'                                                                                                                                ]
 
 
@@ -163,7 +169,7 @@ class test_Bedrock(TestCase__Bedrock):
     def test_models_by_throughput(self):
         on_demand_models   = self.bedrock.models_by_throughput__on_demand()
         provisioned_models =  self.bedrock.models_by_throughput__provisioned()
-        assert len(on_demand_models  ) == 25
+        assert len(on_demand_models  ) == 27
         assert len(provisioned_models) == 14
 
 

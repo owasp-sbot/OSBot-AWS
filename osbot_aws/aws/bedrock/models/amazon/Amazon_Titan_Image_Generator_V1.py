@@ -1,4 +1,6 @@
 from osbot_utils.base_classes.Kwargs_To_Self import Kwargs_To_Self
+from osbot_utils.utils.Dev import pprint
+from osbot_utils.utils.Png import save_png_base64_to_file
 
 
 class Amazon_Titan_Image_Generator_V1(Kwargs_To_Self):
@@ -21,3 +23,9 @@ class Amazon_Titan_Image_Generator_V1(Kwargs_To_Self):
                                            "width"         : self.width           ,
                                            "cfgScale"      : self.cfg_scale       ,
                                            "seed"          : self.seed            }}
+
+    def save_png_data(self, png_data, target_file=None):
+        if target_file is None:
+            target_file = "/tmp/bedrock_image.png"
+        saved_file = save_png_base64_to_file(png_data, target_file)
+        pprint(saved_file)
