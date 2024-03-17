@@ -1,6 +1,7 @@
 from decimal import Decimal
 import pytest
 from osbot_aws.AWS_Config import AWS_Config
+from osbot_aws.aws.boto3.View_Boto3_Rest_Calls import print_boto3_calls
 from osbot_aws.aws.dynamo_db.DyDB__Timeseries import DyDB__Timeseries
 from osbot_utils.utils.Dev import pprint
 from osbot_utils.utils.Misc import timestamp_utc_now, random_int, list_set, is_int, is_guid, wait_for
@@ -13,6 +14,7 @@ class test_DyDB__Timeseries(TestCase__Dynamo_DB):
     partition       : str              = 'OSBOT_TEST'
 
     @classmethod
+    #@print_boto3_calls()
     def setUpClass(cls):
         super().setUpClass()
         cls.dydb_timeseries = DyDB__Timeseries()

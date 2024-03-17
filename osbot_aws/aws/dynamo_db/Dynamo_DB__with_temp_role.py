@@ -25,5 +25,5 @@ class Dynamo_DB__with_temp_role(Dynamo_DB):
         policies_to_add = [dict(service=service, action=action, resource=resource)]
         iam_assume_role = IAM_Assume_Role(role_name=role_name, policies_to_add=policies_to_add)
         iam_assume_role.create_role(recreate=role_recreate)
-        iam_assume_role.credentials_reset()
+        #iam_assume_role.credentials_reset()
         return iam_assume_role.boto3_client(service_name=service)
