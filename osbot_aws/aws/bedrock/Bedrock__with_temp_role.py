@@ -1,6 +1,6 @@
 from dotenv import load_dotenv
 
-from osbot_aws.aws.bedrock.Bedock__Cache import Bedrock__Cache
+from osbot_aws.aws.bedrock.Bedrock__Cache import Bedrock__Cache
 from osbot_aws.aws.bedrock.Bedrock import Bedrock
 from osbot_aws.aws.iam.IAM_Assume_Role import IAM_Assume_Role
 from osbot_utils.decorators.methods.cache_on_self import cache_on_self
