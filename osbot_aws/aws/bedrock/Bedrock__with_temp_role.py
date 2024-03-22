@@ -1,17 +1,15 @@
 from dotenv import load_dotenv
 
-from osbot_aws.aws.bedrock.Bedrock__Cache import Bedrock__Cache
+from osbot_aws.aws.bedrock.cache.Bedrock__Cache import Bedrock__Cache
 from osbot_aws.aws.bedrock.Bedrock import Bedrock
 from osbot_aws.aws.iam.IAM_Assume_Role import IAM_Assume_Role
 from osbot_utils.decorators.methods.cache_on_self import cache_on_self
-from osbot_utils.utils.Dev import pprint
-from osbot_utils.utils.Json import json_md5
 
 
 class Bedrock__with_temp_role(Bedrock):
 
-    def __init__(self,*args,**kwargs):
-        super().__init__(*args,**kwargs)
+    def __init__(self,**kwargs):
+        super().__init__(**kwargs)
         self.bedrock_cache = Bedrock__Cache()
 
     def iam_assume_role(self, service):
