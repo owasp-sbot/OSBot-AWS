@@ -8,7 +8,11 @@ from osbot_utils.utils.Misc import str_sha256
 
 class Bedrock__Cache(Kwargs_To_Self):
     enabled        : bool            = True
-    sqlite_bedrock : Sqlite__Bedrock
+    sqlite_bedrock : Sqlite__Bedrock = None
+
+    def __init__(self, db_path=None):
+        super().__init__()
+        self.sqlite_bedrock = Sqlite__Bedrock(db_path=db_path)
 
     def cache_add(self, request_data, response_data, request_type : Sqlite__Bedrock__Row__Type):
         new_row = self.cache_table().new_row_obj()

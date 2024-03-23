@@ -8,9 +8,8 @@ SQLITE_TABLE__BEDROCK_REQUESTS = 'bedrock_requests'
 
 class Sqlite__Bedrock(Sqlite__Database):
 
-    def __init__(self):
-        db_path = self.path_sqlite_bedrock()
-        super().__init__(db_path=db_path)
+    def __init__(self, db_path=None):
+        super().__init__(db_path=db_path or self.path_sqlite_bedrock())
         self.setup()
 
     def path_sqlite_bedrock(self):
