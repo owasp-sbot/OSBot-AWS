@@ -1,5 +1,12 @@
+from osbot_aws.aws.bedrock.cache.Bedrock__Cache import Bedrock__Cache
+from osbot_aws.aws.bedrock.cache.Sqlite__Bedrock import PATH_FILE__SQLITE_BEDROCK
 from osbot_aws.aws.bedrock.models.amazon.Amazon_Titan_Tg1_Large import Amazon_Titan_Tg1_Large
+from osbot_aws.aws.boto3.View_Boto3_Rest_Calls import print_boto3_calls
 from osbot_aws.testing.TestCase__Bedrock import TestCase__Bedrock
+from osbot_utils.helpers.trace.Trace_Call import trace_calls
+from osbot_utils.utils.Dev import pprint
+from osbot_utils.utils.Json import json_parse
+from osbot_utils.utils.Misc import list_set
 
 
 class test_Amazon_Titan_Tg1_Large(TestCase__Bedrock):
@@ -28,3 +35,22 @@ class test_Amazon_Titan_Tg1_Large(TestCase__Bedrock):
         body      = self.model.body()
         response  = self.bedrock.model_invoke(model_id, body)
         assert response == expected_response
+
+    #@print_boto3_calls
+    #@trace_calls(ignore=[], include=['osbot_'], contains=[])
+    def test__check_bedrock_behaviour(self):
+        bedrock_cache: Bedrock__Cache
+        bedrock_cache   = self.bedrock.bedrock_cache
+        cache_table     = bedrock_cache.cache_table()
+        prompt          = 'hello'
+        model_id        = self.model_id
+        body            = self.model.body(prompt)
+        request_data    = bedrock_cache.cache_request_data(model_id, body)
+        direct_response = self.bedrock.model_invoke(model_id, body)
+        cache_entry     = bedrock_cache.cache_entry(request_data)
+        assert list_set(direct_response) == ['inputTextTokenCount', 'results']
+        assert direct_response           == json_parse(cache_entry.get('response_data'))         # confirm data we received matched the data in the cache
+        assert cache_table.database.db_path == PATH_FILE__SQLITE_BEDROCK                         # confirm we have the default one
+
+
+

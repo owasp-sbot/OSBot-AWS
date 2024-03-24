@@ -100,6 +100,7 @@ class test_IAM_Assume_Role(TestCase):
         assert type(policies) == dict
 
     #@print_boto3_calls()
+    # note: this can take quite a while, sometimes 7 or 10 seconds
     def test_set_inline_policy(self):
         policy_name     = 'test_policy'
         policy_document = TEST_POLICY_DOCUMENT
