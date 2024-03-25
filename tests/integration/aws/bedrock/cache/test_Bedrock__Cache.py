@@ -87,6 +87,8 @@ class test_Bedrock__Cache(TestCase):
         assert new_cache_entry == expected_new_cache_entry
         new_cache_obj = self.bedrock_cache.cache_table().new_row_obj(new_cache_entry)
         assert new_cache_obj.__locals__() == expected_new_cache_obj
+        assert self.bedrock_cache.cache_entries() ==[]
+
 
 
     def test_model_invoke(self):
@@ -138,6 +140,10 @@ class test_Bedrock__Cache(TestCase):
         assert response_5 == response_1                                                                 # where we now get previous value (since that is the one that was cached
         assert response_5 != response_4                                                                 # and doesn't match the changed value
         assert bedrock.model_invoke.call_count == 3                                                     # confirm that there was NOT another call to the bedrock.model_invoke method
+        assert len(self.bedrock_cache.cache_entries()) ==1                                              # confirm we have on entry in the cache
+        assert self.bedrock_cache.delete_where_request_data(request_data) is True                       # confirm it was deleted ok
+        assert self.bedrock_cache.delete_where_request_data(request_data) is False                      # trying to delete an entry that doesn't exist shouldn't work
+        assert self.bedrock_cache.cache_entries() == []                                                 # confirm the cache file is empty again
 
 
     def test_models(self):
