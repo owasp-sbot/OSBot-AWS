@@ -8,8 +8,8 @@ from osbot_aws.aws.bedrock.cache.Sqlite__Bedrock__Row import Sqlite__Bedrock__Ro
 from osbot_utils.helpers.sqlite.Sqlite__Cursor import Sqlite__Cursor
 from osbot_utils.utils.Dev import pprint
 from osbot_utils.utils.Files import temp_file, file_not_exists, file_delete, file_exists
-from osbot_utils.utils.Json import json_dump, json_dumps
-from osbot_utils.utils.Misc import random_string, str_sha256, list_set
+from osbot_utils.utils.Json import json_dump, json_dumps, json_loads
+from osbot_utils.utils.Misc import random_string, str_sha256, list_set, random_text
 
 
 class test_Bedrock__Cache(TestCase):
@@ -27,6 +27,19 @@ class test_Bedrock__Cache(TestCase):
         cls.bedrock_cache.sqlite_bedrock.delete()
         assert file_not_exists(cls.temp_db_path) is True
 
+    def tearDown(self):
+        self.bedrock_cache.cache_table().clear()
+
+    def add_test_requests(self, count=10):
+        for i in range(count):
+            bedrock       = Mock()
+            model_id      = random_text('random_model')
+            body          = {'the': random_text('random_request')}
+            response_data = {'the': random_text('random_response')}
+            kwargs        = dict(bedrock=bedrock, model_id=model_id, body=body)
+
+            bedrock.model_invoke.return_value = response_data
+            self.bedrock_cache.model_invoke(**kwargs)
 
 
     # @trace_calls(ignore         = []    , include        = ['osbot_'], contains=[]                 ,
@@ -161,6 +174,33 @@ class test_Bedrock__Cache(TestCase):
 
         assert models == response_data
         assert self.bedrock_cache.cache_entries() ==[expected_cache_entry]
+
+    def test_requests_data__all(self):
+        count = 2
+        self.add_test_requests(count)
+
+        with self.bedrock_cache as _:
+            for requests_data in _.requests_data__all():
+                assert list_set(requests_data) == ['_hash', 'body', 'model']
+            assert _.cache_table().size() == count
+
+    def test_requests_data__by_model_id(self):
+        count = 2
+        self.add_test_requests(count)
+        with self.bedrock_cache as _:
+            requests_data_by_model_id = _.requests_data__by_model_id()
+            model_ids = list_set(requests_data_by_model_id)
+            assert len(model_ids) == count
+            model_id = model_ids.pop()
+            requests_data = requests_data_by_model_id.get(model_id)
+            request_data  = requests_data[0]
+            assert len(requests_data) ==1
+            assert list_set(request_data) == ['_hash', 'body', 'model']
+            request_hash = request_data.get('_hash')
+            rows_via_hash = _.rows_where__request_hash(request_hash)
+            assert len(rows_via_hash) == 1
+            assert json_loads(rows_via_hash[0].get('request_data')).get('model') == model_id
+
 
     def test_setup(self):
         with self.bedrock_cache.sqlite_bedrock as _:

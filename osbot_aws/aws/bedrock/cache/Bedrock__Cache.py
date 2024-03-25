@@ -1,8 +1,8 @@
-from osbot_aws.aws.bedrock.cache.Sqlite__Bedrock import Sqlite__Bedrock
-from osbot_utils.base_classes.Kwargs_To_Self      import Kwargs_To_Self
-from osbot_utils.utils.Dev                        import pprint
-from osbot_utils.utils.Json import json_dumps, json_loads
-from osbot_utils.utils.Misc import str_sha256
+from osbot_aws.aws.bedrock.cache.Sqlite__Bedrock    import Sqlite__Bedrock
+from osbot_utils.base_classes.Kwargs_To_Self        import Kwargs_To_Self
+from osbot_utils.utils.Json                         import json_dumps, json_loads
+from osbot_utils.utils.Lists                        import list_group_by
+from osbot_utils.utils.Misc                         import str_sha256
 
 
 class Bedrock__Cache(Kwargs_To_Self):
@@ -51,6 +51,8 @@ class Bedrock__Cache(Kwargs_To_Self):
         new_row_obj = self.cache_table().new_row_obj(new_row_data)
         return new_row_obj
 
+
+
     def delete_where_request_data(self, request_data):                                      # todo: check if it is ok to use the request_data as a query target, or if we should use the request_hash variable
         if type(request_data) is dict:                                                      # if we get an request_data obj
             request_data = json_dumps(request_data)                                         # convert it to the json dump
@@ -60,11 +62,40 @@ class Bedrock__Cache(Kwargs_To_Self):
                 return len(self.rows_where__request_data(request_data)) == 0                # confirm it was deleted
         return False                                                                        # if anthing was not right, return False
 
+    def disable(self):
+        self.enabled = False
+        return self
+
+    def requests_data__all(self):
+        requests_data = []
+        for row in self.cache_table().rows():
+            request_data     = row.get('request_data')
+            request_hash     = row.get('request_hash')
+            request_data_obj = json_loads(request_data)
+            request_data_obj['_hash'] = request_hash
+            requests_data.append(request_data_obj)
+        return requests_data
+
+    def requests_data__by_model_id(self):
+        values        = self.requests_data__all()
+        group_by      = 'model'
+        requests_data = list_group_by(values=values, group_by=group_by)
+        if 'None' in requests_data:                         # if there are other entries in the cache
+            del requests_data['None']                       # don't include them
+        return requests_data
+
+    def requests_data__with_model_id(self, model_id):
+        return self.requests_data__by_model_id().get(model_id, [])
+
+
     def rows_where(self, **kwargs):
         return self.cache_table().select_rows_where(**kwargs)
 
     def rows_where__request_data(self, request_data):
         return self.rows_where(request_data=request_data)
+
+    def rows_where__request_hash(self, request_hash):
+        return self.rows_where(request_hash=request_hash)
 
     # CACHED methods
 
