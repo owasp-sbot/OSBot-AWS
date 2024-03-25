@@ -181,7 +181,7 @@ class test_Bedrock__Cache(TestCase):
 
         with self.bedrock_cache as _:
             for requests_data in _.requests_data__all():
-                assert list_set(requests_data) == ['_hash', 'body', 'model']
+                assert list_set(requests_data) == ['_hash', '_id', 'body', 'model']
             assert _.cache_table().size() == count
 
     def test_requests_data__by_model_id(self):
@@ -195,7 +195,7 @@ class test_Bedrock__Cache(TestCase):
             requests_data = requests_data_by_model_id.get(model_id)
             request_data  = requests_data[0]
             assert len(requests_data) ==1
-            assert list_set(request_data) == ['_hash', 'body', 'model']
+            assert list_set(request_data) == ['_hash', '_id', 'body', 'model']
             request_hash = request_data.get('_hash')
             rows_via_hash = _.rows_where__request_hash(request_hash)
             assert len(rows_via_hash) == 1

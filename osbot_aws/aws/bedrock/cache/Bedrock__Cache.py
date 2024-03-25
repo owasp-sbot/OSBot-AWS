@@ -66,12 +66,22 @@ class Bedrock__Cache(Kwargs_To_Self):
         self.enabled = False
         return self
 
+    def response_data_for__request_hash(self, request_hash):
+        rows = self.rows_where__request_hash(request_hash)
+        if len(rows) > 0:
+            row = rows[0]
+            response_data     = row.get('response_data')
+            response_data_obj = json_loads(response_data)
+            return response_data_obj
+        return {}
     def requests_data__all(self):
         requests_data = []
         for row in self.cache_table().rows():
+            req_id           = row.get('id')
             request_data     = row.get('request_data')
             request_hash     = row.get('request_hash')
             request_data_obj = json_loads(request_data)
+            request_data_obj['_id'  ] = req_id
             request_data_obj['_hash'] = request_hash
             requests_data.append(request_data_obj)
         return requests_data
