@@ -51,6 +51,8 @@ class Bedrock__Cache(Kwargs_To_Self):
         new_row_obj = self.cache_table().new_row_obj(new_row_data)
         return new_row_obj
 
+    # CACHED methods
+
     def model_invoke(self, bedrock, model_id, body):
         if self.enabled is False:
             return bedrock.model_invoke(model_id, body)
@@ -64,4 +66,16 @@ class Bedrock__Cache(Kwargs_To_Self):
         self.cache_add(request_data=request_data, response_data=response_data)
         return response_data
 
+    def models(self, bedrock):
+        if self.enabled is False:
+            return bedrock.models()
+        request_data = dict(method='models')
+        cache_entry  = self.cache_entry(request_data)
+        if cache_entry:
+            response_data_json = cache_entry.get('response_data')
+            if response_data_json:
+                return json_loads(response_data_json)
+        response_data = bedrock.models()
+        self.cache_add(request_data=request_data, response_data=response_data)
+        return response_data
 

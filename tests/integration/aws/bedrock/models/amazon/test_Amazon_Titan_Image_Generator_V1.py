@@ -15,6 +15,7 @@ class test_Amazon_Titan_Image_Generator_V1(TestCase__Bedrock):
         self.model = Amazon_Titan_Image_Generator_V1()
 
     def test_model_invoke(self):
+        #self.bedrock.bedrock_cache.enabled = False
         #prompt = "A photograph of a cup of coffee from the side, with a dog drinking that coffee"
         prompt = "a big X"
         self.model.text = prompt                                            # set the prompt text

@@ -1,5 +1,6 @@
 from osbot_aws.aws.bedrock.Bedrock__with_temp_role                       import Bedrock__with_temp_role
 from osbot_aws.aws.bedrock.models.anthropic.Anthropic__Claude_Instant_V1 import Anthropic__Claude_Instant_V1
+from osbot_aws.aws.boto3.View_Boto3_Rest_Calls import print_boto3_calls
 from osbot_utils.utils.Lists                                             import list_contains_list
 from osbot_utils.utils.Misc                                              import list_set
 from osbot_utils.utils.Objects                                           import type_full_name
@@ -11,6 +12,7 @@ class test_Bedrock(TestCase__Bedrock):
     def setUp(self):
         self.region_name = 'us-east-1'
         self.bedrock     = Bedrock__with_temp_role(region_name=self.region_name)
+        self.bedrock.bedrock_cache.enabled = True
 
     def test___init__(self):
         assert type_full_name(self.bedrock        ) == 'osbot_aws.aws.bedrock.Bedrock__with_temp_role.Bedrock__with_temp_role'
@@ -62,6 +64,7 @@ class test_Bedrock(TestCase__Bedrock):
         # model_id    = 'meta.llama2-13b-chat-v1'
 
     #@capture_iam_exception
+    #@print_boto3_calls()
     def test_models(self):
         expected_attributes = ['customizationsSupported', 'inferenceTypesSupported', 'inputModalities', 'modelArn',
                                'modelId', 'modelLifecycle', 'modelName', 'outputModalities',

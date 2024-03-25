@@ -140,6 +140,22 @@ class test_Bedrock__Cache(TestCase):
         assert bedrock.model_invoke.call_count == 3                                                     # confirm that there was NOT another call to the bedrock.model_invoke method
 
 
+    def test_models(self):
+        request_data         = {'method': 'models'}
+        response_data        = [0,1,2,3]
+        new_cache_entry      = self.bedrock_cache.create_new_cache_data(request_data, response_data)
+        expected_cache_entry = { **new_cache_entry,
+                                 'cache_hits': 0,
+                                 'id'        : 1,
+                                 'latest'    : 0,
+                                 'timestamp' : 0}
+        bedrock = Mock()
+        bedrock.models.return_value = response_data
+        models                      = self.bedrock_cache.models(bedrock)
+
+        assert models == response_data
+        assert self.bedrock_cache.cache_entries() ==[expected_cache_entry]
+
     def test_setup(self):
         with self.bedrock_cache.sqlite_bedrock as _:
             assert _.db_path != PATH_FILE__SQLITE_BEDROCK

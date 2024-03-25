@@ -32,10 +32,16 @@ class Bedrock__with_temp_role(Bedrock):
         service = "bedrock"
         return self.iam_assume_role(service).boto3_client(service_name=service, region_name=self.region_name)
 
-    def model_invoke(self, model_id, body):
-        return self.bedrock_cache.model_invoke(super(), model_id, body)
-
     @cache_on_self
     def runtime(self):
         service = "bedrock-runtime"
         return self.iam_assume_role(service).boto3_client(service_name=service, region_name=self.region_name)
+
+
+    # cached methods
+    def model_invoke(self, model_id, body):
+        return self.bedrock_cache.model_invoke(super(), model_id, body)
+
+    def models(self):
+        return self.bedrock_cache.models(super())
+
