@@ -89,9 +89,12 @@ class Bedrock__Cache(Kwargs_To_Self):
             req_id           = row.get('id')
             request_data     = row.get('request_data')
             request_hash     = row.get('request_hash')
+            request_comments = row.get('comments')
             request_data_obj = json_loads(request_data)
-            request_data_obj['_id'  ] = req_id
-            request_data_obj['_hash'] = request_hash
+            request_data_obj['_id'      ] = req_id
+            request_data_obj['_hash'    ] = request_hash
+            request_data_obj['_comments'] = request_comments
+
             requests_data.append(request_data_obj)
         return requests_data
 

@@ -10,9 +10,10 @@ class Bedrock_Cache__Html_Table(Bedrock_Cache__Html):
 
     def __init__(self):
         super().__init__()
-        self.title         = 'AWS Bedrock Cached Data'
-        self.sub_title     = 'all entries'
-        self.table_headers = ['model', 'prompt', 'response', 'task_type', 'timestamp', 'cache_hits']
+        self.title            = 'AWS Bedrock Cached Data'
+        self.sub_title        = 'all entries'
+        self.table_headers    = ['model', 'task_type', 'prompt', 'response', 'comments', 'timestamp']
+        self.debug_mode       = True
 
     def create_table(self, headers, rows):
         tag__table      = Tag__Base(tag_name='table', tag_classes=["table", "table-striped", "table-bordered", "table-hover"])
@@ -41,10 +42,13 @@ class Bedrock_Cache__Html_Table(Bedrock_Cache__Html):
 
 
     def table_rows(self):
+        # if self.debug_mode:
+        #     self.table_headers.append('request_body')
+
         rows    = []
         #pprint(self.table.fields_names__cached())
         for row in self.table.rows():
-            cache_hits        = row.get('cache_hits')
+            comments          = row.get('comments' )
             timestamp         = row.get('timestamp')
             response_data_str = row.get('response_data')
             response_data     = json_loads(response_data_str)
@@ -63,14 +67,16 @@ class Bedrock_Cache__Html_Table(Bedrock_Cache__Html):
             else:
                 timestamp_str = 'NA'
 
-            #pprint(request_body_str)
-            item = dict(model        = model          ,
+            item = dict(model        = model                                                 ,
                         prompt       = f'<pre>{word_wrap(prompt  .strip(), 40)}</pre>',
                         response     = f'<pre>{word_wrap(response.strip(), 40)}</pre>',
-                        task_type    = task_type      ,
-                        timestamp    = timestamp_str  ,
-                        cache_hits   = str(cache_hits))
+                        task_type    = task_type                                             ,
+                        timestamp    = timestamp_str                                         ,
+                        comments     = comments                                              )
                         #request_body = f'<pre>{word_wrap(request_body_str, 40)}</pre>')
+            # todo: find better way to do this, where we don't see the image base64 string on the html page
+            # if self.debug_mode:
+            #     item['request_body'] = f'<pre>{word_wrap(request_body_str, 40)}</pre>'
             rows.append(item)
             #pprint(list_set(row))
 
@@ -78,12 +84,19 @@ class Bedrock_Cache__Html_Table(Bedrock_Cache__Html):
 
     def extract_prompt_from_request_data(self, model, request_body):
         if model=='amazon.titan-image-generator-v1':
-            text_to_image_params = request_body.get('textToImageParams')
-            text          = text_to_image_params.get('text'            )
-            negative_text = text_to_image_params.get('negativeText'  )
-            if negative_text:
-                return f'{text}   \n\nnegative_text: {negative_text}'
-            return text
+            task_type = request_body.get('taskType')
+            text_params = {}
+            if task_type == 'TEXT_IMAGE':
+                text_params = request_body.get('textToImageParams'   , {})
+            elif task_type == 'IMAGE_VARIATION':
+                text_params = request_body.get('imageVariationParams', {})
+            if text_params:
+                text          = text_params.get('text'            , '')
+                negative_text = text_params.get('negativeText'    , '')
+                if negative_text:
+                    return f'{text}   \n\nnegative_text: {negative_text}'
+                return text
+            return f'in amazon.titan-image-generator-v1 , unsupported task_type: {task_type}'
         if model in ['amazon.titan-text-lite-v1', 'amazon.titan-tg1-large']:
             return request_body.get('inputText')
         if model == 'anthropic.claude-instant-v1':

@@ -20,11 +20,21 @@ class Bedrock_Cache__Html_With_Images(Bedrock_Cache__Html):
         div_images = []
 
         for request_data in self.cache.requests_data__with_model_id(model_id):
-            request_hash        = request_data.get('_hash')
-            request_id          = request_data.get('_id')
-            #model               = request_data.get('model')
-
-            image_params        = request_data.get('body').get('textToImageParams')
+            request_hash        = request_data.get('_hash'    )
+            request_id          = request_data.get('_id'      )
+            request_comments    = request_data.get('_comments')
+            request_body        = request_data.get('body'     )
+            task_type           = request_body.get('taskType' )
+            if task_type == 'TEXT_IMAGE':
+                image_params        = request_body.get('textToImageParams', {})
+            elif task_type == 'IMAGE_VARIATION':
+                image_params = request_body.get('imageVariationParams', {})
+            elif task_type == 'INPAINTING':
+                image_params = request_body.get('inPaintingParams', {})
+            elif task_type == 'OUTPAINTING':
+                image_params = request_body.get('outPaintingParams', {})
+            else:
+                image_params = {}
             image_text          = image_params.get('text')
             image_negative_text = image_params.get('negativeText', "")
             response_data       = self.cache.response_data_for__request_hash(request_hash)
@@ -32,16 +42,21 @@ class Bedrock_Cache__Html_With_Images(Bedrock_Cache__Html):
             image_base64        = images[0]
 
             div_image = Tag__Div(tag_classes = ['col', 'col-md-3', 'text-center'])
-            div_badge          = Tag__Div(tag_classes=['badge','bg-primary'], inner_html = f"Cache item #{request_id}")
+            div_badge          = Tag__Div(tag_classes=['badge','bg-primary'], inner_html = f"{task_type} #{request_id}")
             hr                 = Tag__HR()
-            div_text_title     = Tag__Div(tag_classes=['var_name'], inner_html="Text:")
-            div_text_value     = Tag__Div(inner_html=f"<strong>{image_text}</strong>")
-            div_negative_title = Tag__Div(tag_classes=['var_name'], inner_html="Negative Text:")
-            div_negative_value = Tag__Div(inner_html=f"<strong>{image_negative_text}</strong>")
-
+            div_text_title     = Tag__Div(tag_classes=['var_name'], inner_html="Text:"          )
+            div_text_value     = Tag__Div(inner_html=f"<strong>{image_text}</strong>"           )
+            div_negative_title = Tag__Div(tag_classes=['var_name'], inner_html="Negative Text:" )
+            div_negative_value = Tag__Div(inner_html=f"<strong>{image_negative_text}</strong>"  )
+            div_comments_title = Tag__Div(tag_classes=['var_name'      ], inner_html="Comments:"      )
+            div_comments_value = Tag__Div(tag_classes=['comments_value'], inner_html=request_comments  )
             img                = Tag__Base(tag_name="img", tag_classes=['base64-image','img-fluid'])
             img.attributes['src'] = f"data:image/jpeg;base64,{image_base64}"
-            div_image.append(div_badge, hr, img, div_text_title, div_text_value, div_negative_title, div_negative_value)
+            div_image.append(div_badge, hr,
+                             img,
+                             div_text_title   , div_text_value     ,
+                             div_negative_title, div_negative_value,
+                             div_comments_title, div_comments_value)
             div_images.append(div_image)
 
         self.row_elements = div_images

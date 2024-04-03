@@ -17,4 +17,5 @@ class Sqlite__Bedrock__Row(Kwargs_To_Self):
     cache_hits    : int
     timestamp     : int
     latest        : bool
+    comments      : str
     #record_type   : str  = Sqlite__Bedrock__Row__Type.UNDEFINED     # todo: see if this is really needed

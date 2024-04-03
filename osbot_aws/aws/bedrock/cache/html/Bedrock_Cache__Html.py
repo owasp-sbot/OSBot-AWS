@@ -32,13 +32,14 @@ class Bedrock_Cache__Html:
                              hr,
                              div_row)
 
-        css_data             = { ".base64-image" : { "width"         : "200px"           ,
-                                                     "height"        : "auto"            ,
-                                                     "margin-bottom" : "1rem"            },
-                                 ".col"          : { "border"        : "2px solid #C0C0FF",
-                                                     "padding"       : "10px"            },
-                                 ".bg-dark"      : { "font-size"     : "15px"            },
-                                 ".var_name"     : {"font-size"      : "12px"            }}
+        css_data             = { ".base64-image"  : { "width"         : "200px"           ,
+                                                      "height"        : "auto"            ,
+                                                      "margin-bottom" : "1rem"            },
+                                 ".col"           : { "border"        : "2px solid #C0C0FF",
+                                                      "padding"       : "10px"            },
+                                 ".bg-dark"       : { "font-size"     : "15px"            },
+                                 ".var_name"      : {"font-size"      : "12px"            },
+                                 ".comments_value": {"font-size"      : "12px"            }}
 
 
         head_style     = Tag__Base(tag_name='style')
