@@ -2,6 +2,9 @@ import pytest
 
 from osbot_aws.aws.bedrock.models.amazon.Amazon_Titan_Image_Generator_V1 import Amazon_Titan_Image_Generator_V1
 from osbot_aws.aws.boto3.Capture_Boto3_Error import capture_boto3_error
+from osbot_utils.helpers.html.Tag__Div import Tag__Div
+from osbot_utils.helpers.html.Tag__H import Tag__H
+from osbot_utils.helpers.html.Tag__HR import Tag__HR
 from osbot_utils.utils.Dev import pprint
 from osbot_utils.utils.Files import file_create
 from osbot_utils.utils.Json import json_load
@@ -100,10 +103,19 @@ class test_Amazon_Titan_Image_Generator_V1(TestCase__Bedrock):
                                   </div>"""
             images_html_code += image_html_code
 
-        # images_code = ""
-        # for image_base64 in images_base64:
-        #
-        #     images_code += image_code
+        div_container = Tag__Div(tag_classes=['container-fluid','my-5'])
+        h_title       = Tag__H(1, 'AWS Bedrock Cached images')
+        hr            = Tag__HR()
+        div_subtitle  = Tag__Div(tag_classes=['badge', 'bg-dark'], inner_html='for amazon.titan-image-generator-v1')
+        div_row       = Tag__Div(tag_classes=['row'], inner_html=images_html_code)
+
+        div_container.append(h_title,
+                             div_subtitle,
+                             hr,
+                             div_row)
+        # print()
+        # print(div_container.render())
+
         html_code = """
 <!DOCTYPE html>
 <html>
@@ -125,19 +137,7 @@ class test_Amazon_Titan_Image_Generator_V1(TestCase__Bedrock):
     </style>
 </head>
 <body>
-    <div class="container-fluid my-5">    
-        <h1>AWS Bedrock Cached images</h1>    
-    <div class="badge bg-dark">
-        for amazon.titan-image-generator-v1
-    </div>
-    <hr/>
-    
-    
-        <div class="row">
-            """ + images_html_code +  """
-        </div>
-    </div>
-</div>
+    """+ div_container.render() + """        
 </body>
 </html>
 """
