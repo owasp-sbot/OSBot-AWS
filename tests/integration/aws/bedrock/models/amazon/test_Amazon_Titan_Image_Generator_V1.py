@@ -123,20 +123,21 @@ class test_Amazon_Titan_Image_Generator_V1(TestCase__Bedrock):
                              div_subtitle,
                              hr,
                              div_row)
-        css_style = """
-                    .base64-image { width: 200px; 
-                                    height: auto;
-                                    margin-bottom: 1rem; }
-                    .col          { border: 2px solid #C0C0FF;
-                                    padding:10px }
-                    .bg-dark { font-size:15px }
-                    .var_name { font-size:12px }"""
 
-        #link_bootstrap = Tag__Link(href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css", rel="stylesheet")
-        head_style     = Tag__Base(tag_name='style', inner_html = css_style)
+        css_data             = { ".base64-image" : { "width"         : "200px"           ,
+                                                     "height"        : "auto"            ,
+                                                     "margin-bottom" : "1rem"            },
+                                 ".col"          : { "border"        : "2px solid #C0C0FF",
+                                                     "padding"       : "10px"            },
+                                 ".bg-dark"      : { "font-size"     : "15px"            },
+                                 ".var_name"     : {"font-size"      : "12px"            }}
+
+
+        head_style     = Tag__Base(tag_name='style')
         head_tag       = Tag__Head(elements= [head_style])
         head_tag.title = text_title
         head_tag.add_css_bootstrap()
+        head_tag.style.set_css(css_data)
         html_tag       = Tag__Html(head=head_tag)
         html_tag.body.append(div_container )
 
