@@ -26,6 +26,7 @@ class test_Amazon_Titan_Text_Lite_V1(TestCase__Bedrock):
     #@cache_bedrock_response
     #@print_boto3_calls()
     def test_model_invoke(self):
+        #self.cache.force_request = True
         prompt = "Hello"
         expected_response  = { 'inputTextTokenCount': 3,
                                'results'            : [ { 'completionReason': 'FINISH'                           ,

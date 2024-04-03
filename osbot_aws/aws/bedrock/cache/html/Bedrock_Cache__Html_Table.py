@@ -3,7 +3,7 @@ from osbot_utils.helpers.html.Tag__Base import Tag__Base
 from osbot_utils.helpers.html.Tag__H import Tag__H
 from osbot_utils.utils.Dev import pprint
 from osbot_utils.utils.Json import json_loads, json_dumps
-from osbot_utils.utils.Misc import list_set, word_wrap
+from osbot_utils.utils.Misc import list_set, word_wrap, timestamp_to_str_date
 
 
 class Bedrock_Cache__Html_Table(Bedrock_Cache__Html):
@@ -58,13 +58,17 @@ class Bedrock_Cache__Html_Table(Bedrock_Cache__Html):
             task_type         = request_body.get('taskType')
             prompt            = self.extract_prompt_from_request_data(model, request_body)
             response          = self.extract_response_from_response_data(model, response_data)
+            if timestamp:
+                timestamp_str = timestamp_to_str_date(timestamp)
+            else:
+                timestamp_str = 'NA'
 
             #pprint(request_body_str)
             item = dict(model        = model          ,
                         prompt       = f'<pre>{word_wrap(prompt  .strip(), 40)}</pre>',
                         response     = f'<pre>{word_wrap(response.strip(), 40)}</pre>',
                         task_type    = task_type      ,
-                        timestamp    = str(timestamp) ,
+                        timestamp    = timestamp_str  ,
                         cache_hits   = str(cache_hits))
                         #request_body = f'<pre>{word_wrap(request_body_str, 40)}</pre>')
             rows.append(item)

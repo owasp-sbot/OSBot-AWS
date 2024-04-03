@@ -21,6 +21,7 @@ class test_Bedrock__Cache(TestCase):
     def setUpClass(cls):
         cls.temp_db_path  = temp_file(extension='sqlite')
         cls.bedrock_cache = Bedrock__Cache(db_path = cls.temp_db_path)          # the db_path to the tmp file path
+        cls.bedrock_cache.add_timestamp = False                                 # disabling timestamp since it complicates the test data verification below
         assert file_exists(cls.temp_db_path) is True
 
     @classmethod
@@ -93,7 +94,8 @@ class test_Bedrock__Cache(TestCase):
         expected_new_cache_entry = {'request_data' : json_dumps(request_data)                                           ,
                                    'request_hash' : '1b16c63a54a704c20df7c449d04acb56f8c8d44a48e1d43bee20359536edcd71' ,
                                    'response_data': json_dumps(response_data)                                          ,
-                                   'response_hash': '69e330ec7bf6334aa41ecaf56797fa86345d3cf85da4c622821aa42d4bee1799' }
+                                   'response_hash': '69e330ec7bf6334aa41ecaf56797fa86345d3cf85da4c622821aa42d4bee1799' ,
+                                   'timestamp'    :  0                                                                 }
         expected_new_cache_obj   = { **expected_new_cache_entry,
                                      'cache_hits': 0        ,
                                      'latest'    : False    ,

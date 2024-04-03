@@ -4,11 +4,13 @@ from osbot_aws.aws.bedrock.cache.Sqlite__Bedrock    import Sqlite__Bedrock
 from osbot_utils.base_classes.Kwargs_To_Self        import Kwargs_To_Self
 from osbot_utils.utils.Json                         import json_dumps, json_loads
 from osbot_utils.utils.Lists                        import list_group_by
-from osbot_utils.utils.Misc                         import str_sha256
+from osbot_utils.utils.Misc                         import str_sha256, timestamp_utc_now
 
 
 class Bedrock__Cache(Kwargs_To_Self):
+    add_timestamp  : bool            = True
     enabled        : bool            = True
+    force_request  : bool            = False                        # todo find a better name, and fix BUG where we should be taking into account the latest mapping (so that we only have one 'latest' result)
     sqlite_bedrock : Sqlite__Bedrock = None
 
     def __init__(self, db_path=None):
@@ -44,17 +46,20 @@ class Bedrock__Cache(Kwargs_To_Self):
         request_data_hash  = str_sha256(request_data_json)
         response_data_json = json_dumps(response_data)
         response_data_hash = str_sha256(response_data_json)
+        if self.add_timestamp:
+            timestamp = timestamp_utc_now()
+        else:
+            timestamp = 0
         return dict(request_data  = request_data_json   ,
                     request_hash  = request_data_hash   ,
                     response_data = response_data_json  ,
-                    response_hash = response_data_hash  )
+                    response_hash = response_data_hash  ,
+                    timestamp     = timestamp           )
 
     def create_new_cache_obj(self, request_data, response_data):
         new_row_data = self.create_new_cache_data(request_data, response_data)
         new_row_obj = self.cache_table().new_row_obj(new_row_data)
         return new_row_obj
-
-
 
     def delete_where_request_data(self, request_data):                                      # todo: check if it is ok to use the request_data as a query target, or if we should use the request_hash variable
         if type(request_data) is dict:                                                      # if we get an request_data obj
@@ -77,6 +82,7 @@ class Bedrock__Cache(Kwargs_To_Self):
             response_data_obj = json_loads(response_data)
             return response_data_obj
         return {}
+
     def requests_data__all(self):
         requests_data = []
         for row in self.cache_table().rows():
@@ -117,10 +123,11 @@ class Bedrock__Cache(Kwargs_To_Self):
             return bedrock.model_invoke(model_id, body)
         request_data  = self.cache_request_data(model_id, body)
         cache_entry   = self.cache_entry(request_data)
-        if cache_entry:
-            response_data_json = cache_entry.get('response_data')
-            if response_data_json:
-                return json_loads(response_data_json)
+        if self.force_request is False:
+            if cache_entry:
+                response_data_json = cache_entry.get('response_data')
+                if response_data_json:
+                    return json_loads(response_data_json)
         response_data = bedrock.model_invoke(model_id, body)
         self.cache_add(request_data=request_data, response_data=response_data)
         return response_data
@@ -130,10 +137,11 @@ class Bedrock__Cache(Kwargs_To_Self):
             return bedrock.models()
         request_data = dict(method='models')
         cache_entry  = self.cache_entry(request_data)
-        if cache_entry:
-            response_data_json = cache_entry.get('response_data')
-            if response_data_json:
-                return json_loads(response_data_json)
+        if self.force_request is False:
+            if cache_entry:
+                response_data_json = cache_entry.get('response_data')
+                if response_data_json:
+                    return json_loads(response_data_json)
         response_data = bedrock.models()
         self.cache_add(request_data=request_data, response_data=response_data)
         return response_data
