@@ -61,6 +61,7 @@ class test_Bedrock__Cache(TestCase):
         response_data_json   = json_dump(response_data)
         response_data_sha256 = str_sha256(response_data_json)
         expected_new_row     = { 'cache_hits'     : 0                    ,
+                                 'comments'       : ''                   ,
                                  'latest'         : False                ,
                                  'request_data'   : request_data_json    ,
                                  'request_hash'   : request_data_sha256  ,
@@ -92,11 +93,12 @@ class test_Bedrock__Cache(TestCase):
         request_data             = self.bedrock_cache.cache_request_data(model_id, body)
         new_cache_entry          = self.bedrock_cache.create_new_cache_data(request_data, response_data)
         expected_new_cache_entry = {'request_data' : json_dumps(request_data)                                           ,
-                                   'request_hash' : '1b16c63a54a704c20df7c449d04acb56f8c8d44a48e1d43bee20359536edcd71' ,
-                                   'response_data': json_dumps(response_data)                                          ,
-                                   'response_hash': '69e330ec7bf6334aa41ecaf56797fa86345d3cf85da4c622821aa42d4bee1799' ,
-                                   'timestamp'    :  0                                                                 }
+                                    'request_hash' : '1b16c63a54a704c20df7c449d04acb56f8c8d44a48e1d43bee20359536edcd71' ,
+                                    'response_data': json_dumps(response_data)                                          ,
+                                    'response_hash': '69e330ec7bf6334aa41ecaf56797fa86345d3cf85da4c622821aa42d4bee1799' ,
+                                    'timestamp'    :  0                                                                 }
         expected_new_cache_obj   = { **expected_new_cache_entry,
+                                     'comments': '',
                                      'cache_hits': 0        ,
                                      'latest'    : False    ,
                                      'timestamp' : 0        }
@@ -167,10 +169,11 @@ class test_Bedrock__Cache(TestCase):
         response_data        = [0,1,2,3]
         new_cache_entry      = self.bedrock_cache.create_new_cache_data(request_data, response_data)
         expected_cache_entry = { **new_cache_entry,
-                                 'cache_hits': 0,
-                                 'id'        : 1,
-                                 'latest'    : 0,
-                                 'timestamp' : 0}
+                                 'comments'  : '',
+                                 'cache_hits': 0 ,
+                                 'id'        : 1 ,
+                                 'latest'    : 0 ,
+                                 'timestamp' : 0 }
         bedrock = Mock()
         bedrock.models.return_value = response_data
         models                      = self.bedrock_cache.models(bedrock)
@@ -184,7 +187,7 @@ class test_Bedrock__Cache(TestCase):
 
         with self.bedrock_cache as _:
             for requests_data in _.requests_data__all():
-                assert list_set(requests_data) == ['_hash', '_id', 'body', 'model']
+                assert list_set(requests_data) == ['_comments','_hash', '_id', 'body', 'model']
             assert _.cache_table().size() == count
 
     def test_requests_data__by_model_id(self):
@@ -198,7 +201,7 @@ class test_Bedrock__Cache(TestCase):
             requests_data = requests_data_by_model_id.get(model_id)
             request_data  = requests_data[0]
             assert len(requests_data) ==1
-            assert list_set(request_data) == ['_hash', '_id', 'body', 'model']
+            assert list_set(request_data) == ['_comments', '_hash', '_id', 'body', 'model']
             request_hash = request_data.get('_hash')
             rows_via_hash = _.rows_where__request_hash(request_hash)
             assert len(rows_via_hash) == 1
@@ -217,6 +220,7 @@ class test_Bedrock__Cache(TestCase):
             assert _.exists() is True
             assert _.row_schema is Sqlite__Bedrock__Row
             assert _.schema__by_name_type() == { 'cache_hits'   : 'INTEGER' ,
+                                                 'comments'     : 'TEXT'    ,
                                                  'id'           : 'INTEGER' ,
                                                  'latest'       : 'BOOLEAN' ,
                                                  'request_data' : 'TEXT'    ,

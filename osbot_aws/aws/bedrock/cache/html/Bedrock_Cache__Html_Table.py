@@ -99,7 +99,7 @@ class Bedrock_Cache__Html_Table(Bedrock_Cache__Html):
             return f'in amazon.titan-image-generator-v1 , unsupported task_type: {task_type}'
         if model in ['amazon.titan-text-lite-v1', 'amazon.titan-tg1-large']:
             return request_body.get('inputText')
-        if model == 'anthropic.claude-instant-v1':
+        if model in ['anthropic.claude-instant-v1','anthropic.claude-v2', 'anthropic.claude-v2:1']:
             return request_body.get('prompt')
         if model is None:
             return 'NA'
@@ -120,7 +120,7 @@ class Bedrock_Cache__Html_Table(Bedrock_Cache__Html):
                 return output_text
             return f'error: response_data should only have one result and it had {len(results)}'
 
-        if model == 'anthropic.claude-instant-v1':
+        if model in ['anthropic.claude-instant-v1','anthropic.claude-v2', 'anthropic.claude-v2:1']:
             return response_data.get('completion')
 
         return f'unsupported model: {model}'

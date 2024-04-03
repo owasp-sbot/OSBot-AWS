@@ -38,5 +38,5 @@ class test_Amazon_Titan_Text_Lite_V1(TestCase__Bedrock):
         response  = self.bedrock.model_invoke(model_id, body)
         assert response == expected_response
 
-        response = self.bedrock.model_invoke(model_id, body)
+        #response = self.bedrock.model_invoke(model_id, body)
         #pprint(response)
