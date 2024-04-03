@@ -2,9 +2,13 @@ import pytest
 
 from osbot_aws.aws.bedrock.models.amazon.Amazon_Titan_Image_Generator_V1 import Amazon_Titan_Image_Generator_V1
 from osbot_aws.aws.boto3.Capture_Boto3_Error import capture_boto3_error
+from osbot_utils.helpers.html.Tag__Base import Tag__Base
 from osbot_utils.helpers.html.Tag__Div import Tag__Div
 from osbot_utils.helpers.html.Tag__H import Tag__H
 from osbot_utils.helpers.html.Tag__HR import Tag__HR
+from osbot_utils.helpers.html.Tag__Head import Tag__Head
+from osbot_utils.helpers.html.Tag__Html import Tag__Html
+from osbot_utils.helpers.html.Tag__Link import Tag__Link
 from osbot_utils.utils.Dev import pprint
 from osbot_utils.utils.Files import file_create
 from osbot_utils.utils.Json import json_load
@@ -48,7 +52,7 @@ class test_Amazon_Titan_Image_Generator_V1(TestCase__Bedrock):
                           "negative_text": "blue" ,
                           "comment"      : "This didn't work since I was trying to remove the blue background"}]
 
-        prompt_to_use = 1
+        prompt_to_use = 5
         self.model.text          = test_prompts[prompt_to_use].get('prompt')         # set the prompt text
         self.model.negative_text = test_prompts[prompt_to_use].get('negative_text')  # set the negative text
         model_id                 = self.model.model_id                               # get the model_id (in this case 'amazon.titan-image-generator-v1')
@@ -79,7 +83,9 @@ class test_Amazon_Titan_Image_Generator_V1(TestCase__Bedrock):
     #@pytest.mark.skip(reason="not implemented")
     def test__see_images_in_cache(self):
 
-        images_html_code = ''
+        div_test_image = Tag__Div()
+        div_images = [div_test_image]
+
         for request_data in self.cache.requests_data__with_model_id(self.model.model_id):
             request_hash        = request_data.get('_hash')
             request_id          = request_data.get('_id')
@@ -91,7 +97,7 @@ class test_Amazon_Titan_Image_Generator_V1(TestCase__Bedrock):
             response_data = self.cache.response_data_for__request_hash(request_hash)
             images        = response_data.get('images')
             image_base64  = images[0]
-            image_html_code = f"""<div class="col col-md-3 text-center">
+            image_html_code = f"""<div class="">
                                     <div class="badge bg-primary">Cache item #{request_id}</div>
                                     <hr/>                                    
                                     <img class="base64-image img-fluid" src="data:image/jpeg;base64,{image_base64}">
@@ -101,45 +107,38 @@ class test_Amazon_Titan_Image_Generator_V1(TestCase__Bedrock):
                                     <div class="var_name">Negative Text</div> 
                                     <div><strong>{image_negative_text}</strong></div>
                                   </div>"""
-            images_html_code += image_html_code
+            div_image = Tag__Div(inner_html  = image_html_code                   ,
+                                 tag_classes = ['col', 'col-md-3', 'text-center'])
+            div_images.append(div_image)
 
+        self.create_temp_html_file_with_images(div_images)
+
+
+    def create_temp_html_file_with_images(self, div_images):
+        text_title    = 'AWS Bedrock Cached images'
         div_container = Tag__Div(tag_classes=['container-fluid','my-5'])
-        h_title       = Tag__H(1, 'AWS Bedrock Cached images')
+        h_title       = Tag__H(1, text_title)
         hr            = Tag__HR()
         div_subtitle  = Tag__Div(tag_classes=['badge', 'bg-dark'], inner_html='for amazon.titan-image-generator-v1')
-        div_row       = Tag__Div(tag_classes=['row'], inner_html=images_html_code)
-
+        div_row       = Tag__Div(tag_classes=['row'], elements=div_images)
         div_container.append(h_title,
                              div_subtitle,
                              hr,
                              div_row)
-        # print()
-        # print(div_container.render())
+        css_style = """
+                    .base64-image { width: 200px; 
+                                    height: auto;
+                                    margin-bottom: 1rem; }
+                    .col          { border: 2px solid #C0C0FF;
+                                    padding:10px }
+                    .bg-dark { font-size:15px }
+                    .var_name { font-size:12px }"""
+        link_bootstrap = Tag__Link(href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css", rel="stylesheet")
 
-        html_code = """
-<!DOCTYPE html>
-<html>
-<head>
-    <title>AWS Bedrock Cached Images</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">    
-     <style>
-        .base64-image {
-            width: 200px; /* Example width, adjust as needed */
-            height: auto;
-            margin-bottom: 1rem; /* Bootstrap spacing */
-        }
-        .col {
-            border: 2px solid #C0C0FF;
-            padding:10px
-        }
-        .bg-dark { font-size:15px }
-        .var_name { font-size:12px }        
-    </style>
-</head>
-<body>
-    """+ div_container.render() + """        
-</body>
-</html>
-"""
-        tmp_html_file = '/tmp/tmp-bedrock-images.html'
-        file_create(tmp_html_file, html_code)
+        head_style     = Tag__Base(tag_name='style', inner_html = css_style)
+        head_tag       = Tag__Head(elements= [head_style, link_bootstrap])
+        head_tag.title = text_title
+        html_tag       = Tag__Html(head=head_tag)
+        html_tag.body.append(div_container )
+
+        html_tag.save('/tmp/tmp-bedrock-images.html')
