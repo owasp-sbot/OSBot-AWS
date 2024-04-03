@@ -2,8 +2,9 @@ import sqlite3
 from unittest import TestCase
 from unittest.mock import Mock
 
+from osbot_aws.aws.bedrock.Bedrock import Bedrock
 from osbot_aws.aws.bedrock.cache.Bedrock__Cache import Bedrock__Cache
-from osbot_aws.aws.bedrock.cache.Sqlite__Bedrock import PATH_FILE__SQLITE_BEDROCK
+from osbot_aws.aws.bedrock.cache.Sqlite__Bedrock import Sqlite__Bedrock
 from osbot_aws.aws.bedrock.cache.Sqlite__Bedrock__Row import Sqlite__Bedrock__Row
 from osbot_utils.helpers.sqlite.Sqlite__Cursor import Sqlite__Cursor
 from osbot_utils.utils.Dev import pprint
@@ -204,7 +205,7 @@ class test_Bedrock__Cache(TestCase):
 
     def test_setup(self):
         with self.bedrock_cache.sqlite_bedrock as _:
-            assert _.db_path != PATH_FILE__SQLITE_BEDROCK
+            assert _.db_path != Sqlite__Bedrock().path_sqlite_bedrock()
             assert _.db_path == self.temp_db_path
 
         with self.bedrock_cache.cache_table() as _:

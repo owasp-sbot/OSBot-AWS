@@ -1,3 +1,5 @@
+from dotenv import load_dotenv
+
 from osbot_aws.aws.bedrock.cache.Sqlite__Bedrock    import Sqlite__Bedrock
 from osbot_utils.base_classes.Kwargs_To_Self        import Kwargs_To_Self
 from osbot_utils.utils.Json                         import json_dumps, json_loads
@@ -10,6 +12,7 @@ class Bedrock__Cache(Kwargs_To_Self):
     sqlite_bedrock : Sqlite__Bedrock = None
 
     def __init__(self, db_path=None):
+        load_dotenv()
         super().__init__()
         self.sqlite_bedrock = Sqlite__Bedrock(db_path=db_path)
 

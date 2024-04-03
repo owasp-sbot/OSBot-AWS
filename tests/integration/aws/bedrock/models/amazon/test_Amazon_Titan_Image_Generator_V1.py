@@ -43,7 +43,7 @@ class test_Amazon_Titan_Image_Generator_V1(TestCase__Bedrock):
                           "negative_text": "blue" ,
                           "comment"      : "This didn't work since I was trying to remove the blue background"}]
 
-        prompt_to_use = 5
+        prompt_to_use = 1
         self.model.text          = test_prompts[prompt_to_use].get('prompt')         # set the prompt text
         self.model.negative_text = test_prompts[prompt_to_use].get('negative_text')  # set the negative text
         model_id                 = self.model.model_id                               # get the model_id (in this case 'amazon.titan-image-generator-v1')
@@ -141,4 +141,3 @@ class test_Amazon_Titan_Image_Generator_V1(TestCase__Bedrock):
 """
         tmp_html_file = '/tmp/tmp-bedrock-images.html'
         file_create(tmp_html_file, html_code)
-        #pprint(self.cache.rows_where(model_id='amazon.titan-image-generator-v1'))
