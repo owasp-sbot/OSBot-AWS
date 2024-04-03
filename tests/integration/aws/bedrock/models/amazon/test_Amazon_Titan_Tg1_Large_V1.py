@@ -1,17 +1,19 @@
+import pytest
+
 from osbot_aws.aws.bedrock.cache.Bedrock__Cache import Bedrock__Cache
 from osbot_aws.aws.bedrock.cache.Sqlite__Bedrock import Sqlite__Bedrock
 from osbot_aws.aws.bedrock.models.amazon.Amazon_Titan_Tg1_Large import Amazon_Titan_Tg1_Large
 from osbot_aws.aws.boto3.View_Boto3_Rest_Calls import print_boto3_calls
 from osbot_aws.testing.TestCase__Bedrock import TestCase__Bedrock
-from osbot_utils.helpers.trace.Trace_Call import trace_calls
-from osbot_utils.utils.Dev import pprint
 from osbot_utils.utils.Json import json_parse
-from osbot_utils.utils.Misc import list_set
+from osbot_utils.utils.Misc import list_set, in_github_action
 
 
 class test_Amazon_Titan_Tg1_Large(TestCase__Bedrock):
 
     def setUp(self):
+        if in_github_action():                                  # disabling Bedrock tests in GitHub actions since they are not 100% deterministic
+            pytest.skip()
         self.model    = Amazon_Titan_Tg1_Large()
         self.model_id = 'amazon.titan-tg1-large'
 

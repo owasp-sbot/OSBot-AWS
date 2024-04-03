@@ -5,7 +5,7 @@ from osbot_aws.aws.boto3.Capture_Boto3_Error import capture_boto3_error
 from osbot_utils.utils.Dev import pprint
 from osbot_utils.utils.Files import file_create
 from osbot_utils.utils.Json import json_load
-from osbot_utils.utils.Misc import list_set
+from osbot_utils.utils.Misc import list_set, in_github_action
 from osbot_aws.testing.TestCase__Bedrock import TestCase__Bedrock
 from osbot_utils.utils.Png import save_png_base64_to_file
 
@@ -14,6 +14,8 @@ from osbot_utils.utils.Png import save_png_base64_to_file
 class test_Amazon_Titan_Image_Generator_V1(TestCase__Bedrock):
 
     def setUp(self):
+        if in_github_action():                                  # disabling Bedrock tests in GitHub actions since they are not 100% deterministic
+            pytest.skip()
         self.model    = Amazon_Titan_Image_Generator_V1()
         self.png_data = None
 
