@@ -1,23 +1,10 @@
 import pytest
 
 from osbot_aws.aws.bedrock.models.amazon.Amazon_Titan_Image_Generator_V1 import Amazon_Titan_Image_Generator_V1
-from osbot_aws.aws.boto3.Capture_Boto3_Error import capture_boto3_error
-from osbot_utils.helpers.html.Tag__Base import Tag__Base
-from osbot_utils.helpers.html.Tag__Div import Tag__Div
-from osbot_utils.helpers.html.Tag__H import Tag__H
-from osbot_utils.helpers.html.Tag__HR import Tag__HR
-from osbot_utils.helpers.html.Tag__Head import Tag__Head
-from osbot_utils.helpers.html.Tag__Html import Tag__Html
-from osbot_utils.helpers.html.Tag__Link import Tag__Link
-from osbot_utils.utils.Dev import pprint
-from osbot_utils.utils.Files import file_create
-from osbot_utils.utils.Json import json_load
 from osbot_utils.utils.Misc import list_set, in_github_action
 from osbot_aws.testing.TestCase__Bedrock import TestCase__Bedrock
-from osbot_utils.utils.Png import save_png_base64_to_file
 
 
-#@pytest.mark.skip('skipping bedrock test for: Amazon_Titan_Image_Generator_V1')
 class test_Amazon_Titan_Image_Generator_V1(TestCase__Bedrock):
 
     def setUp(self):
@@ -33,6 +20,7 @@ class test_Amazon_Titan_Image_Generator_V1(TestCase__Bedrock):
 
 
     def test_model_invoke__TEXT_IMAGE(self):
+        prompt_to_use = 5
         test_prompts =  [{"prompt"       : "A photograph of a cup of coffee from the side, with a dog drinking that coffee",
                           "negative_text": "" ,
                           "comment"      : "shows picture of dog drinking that coffee with the cup of coffee on top of a table"},
@@ -52,7 +40,7 @@ class test_Amazon_Titan_Image_Generator_V1(TestCase__Bedrock):
                           "negative_text": "blue" ,
                           "comment"      : "This didn't work since I was trying to remove the blue background"}]
 
-        prompt_to_use = 5
+
         self.model.text          = test_prompts[prompt_to_use].get('prompt')         # set the prompt text
         self.model.negative_text = test_prompts[prompt_to_use].get('negative_text')  # set the negative text
         model_id                 = self.model.model_id                               # get the model_id (in this case 'amazon.titan-image-generator-v1')
@@ -80,65 +68,3 @@ class test_Amazon_Titan_Image_Generator_V1(TestCase__Bedrock):
         assert error is None
         assert len(self.png_data) > 30000        # was first 513424 then 520564
 
-    def test__see_images_in_cache(self):
-        div_test_image = Tag__Div()
-        div_images = []
-
-        for request_data in self.cache.requests_data__with_model_id(self.model.model_id):
-            request_hash        = request_data.get('_hash')
-            request_id          = request_data.get('_id')
-            model               = request_data.get('model')
-
-            image_params        = request_data.get('body').get('textToImageParams')
-            image_text          = image_params.get('text')
-            image_negative_text = image_params.get('negativeText', "")
-            response_data       = self.cache.response_data_for__request_hash(request_hash)
-            images              = response_data.get('images')
-            image_base64        = images[0]
-
-            div_image = Tag__Div(tag_classes = ['col', 'col-md-3', 'text-center'])
-            div_badge          = Tag__Div(tag_classes=['badge','bg-primary'], inner_html ="Cache item #0")
-            hr                 = Tag__HR()
-            div_text_title     = Tag__Div(tag_classes=['var_name'], inner_html="Text:")
-            div_text_value     = Tag__Div(inner_html=f"<strong>{image_text}</strong>")
-            div_negative_title = Tag__Div(tag_classes=['var_name'], inner_html="Negative Text:")
-            div_negative_value = Tag__Div(inner_html=f"<strong>{image_negative_text}</strong>")
-
-            img                = Tag__Base(tag_name="img", tag_classes=['base64-image','img-fluid'])
-            img.attributes['src'] = f"data:image/jpeg;base64,{image_base64}"
-            div_image.append(div_badge, hr, img, div_text_title, div_text_value, div_negative_title, div_negative_value)
-            div_images.append(div_image)
-
-        self.create_temp_html_file_with_images(div_images)
-
-
-    def create_temp_html_file_with_images(self, div_images):
-        text_title    = 'AWS Bedrock Cached images'
-        div_container = Tag__Div(tag_classes=['container-fluid','my-5'])
-        h_title       = Tag__H(1, text_title)
-        hr            = Tag__HR()
-        div_subtitle  = Tag__Div(tag_classes=['badge', 'bg-dark'], inner_html='for amazon.titan-image-generator-v1')
-        div_row       = Tag__Div(tag_classes=['row'], elements=div_images)
-        div_container.append(h_title,
-                             div_subtitle,
-                             hr,
-                             div_row)
-
-        css_data             = { ".base64-image" : { "width"         : "200px"           ,
-                                                     "height"        : "auto"            ,
-                                                     "margin-bottom" : "1rem"            },
-                                 ".col"          : { "border"        : "2px solid #C0C0FF",
-                                                     "padding"       : "10px"            },
-                                 ".bg-dark"      : { "font-size"     : "15px"            },
-                                 ".var_name"     : {"font-size"      : "12px"            }}
-
-
-        head_style     = Tag__Base(tag_name='style')
-        head_tag       = Tag__Head(elements= [head_style])
-        head_tag.title = text_title
-        head_tag.add_css_bootstrap()
-        head_tag.style.set_css(css_data)
-        html_tag       = Tag__Html(head=head_tag)
-        html_tag.body.append(div_container )
-
-        html_tag.save('/tmp/tmp-bedrock-images.html')
