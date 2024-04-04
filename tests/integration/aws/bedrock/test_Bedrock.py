@@ -1,6 +1,15 @@
+import json
+
+import pytest
+
 from osbot_aws.aws.bedrock.Bedrock__with_temp_role                       import Bedrock__with_temp_role
+from osbot_aws.aws.bedrock.models.amazon.Amazon_Titan_Text_Lite_V1 import Amazon_Titan_Text_Lite_V1
+from osbot_aws.aws.bedrock.models.amazon.Amazon_Titan_Tg1_Large import Amazon_Titan_Tg1_Large
 from osbot_aws.aws.bedrock.models.anthropic.Anthropic__Claude_Instant_V1 import Anthropic__Claude_Instant_V1
+from osbot_aws.aws.bedrock.models.anthropic.Anthropic__Claude_V2_0 import Anthropic__Claude_V2_0
 from osbot_aws.aws.boto3.View_Boto3_Rest_Calls import print_boto3_calls
+from osbot_utils.utils.Dev import pprint
+from osbot_utils.utils.Json import json_dumps
 from osbot_utils.utils.Lists                                             import list_contains_list
 from osbot_utils.utils.Misc                                              import list_set
 from osbot_utils.utils.Objects                                           import type_full_name
@@ -9,10 +18,10 @@ from osbot_aws.testing.TestCase__Bedrock import TestCase__Bedrock
 
 class test_Bedrock(TestCase__Bedrock):
 
-    def setUp(self):
-        self.region_name = 'us-east-1'
-        self.bedrock     = Bedrock__with_temp_role(region_name=self.region_name)
-        self.bedrock.bedrock_cache.enabled = True
+    # def setUp(self):
+    #     self.region_name = 'us-east-1'
+    #     self.bedrock     = Bedrock__with_temp_role(region_name=self.region_name)
+    #     self.bedrock.bedrock_cache.enabled = True
 
     def test___init__(self):
         assert type_full_name(self.bedrock        ) == 'osbot_aws.aws.bedrock.Bedrock__with_temp_role.Bedrock__with_temp_role'
@@ -42,11 +51,29 @@ class test_Bedrock(TestCase__Bedrock):
                                                                 'untag_resource'                                ,
                                                                 'update_provisioned_model_throughput'           ]
 
-    def test_runtime(self):
-        runtime = self.bedrock.runtime()
-        assert type_full_name(runtime)                      == 'botocore.client.BedrockRuntime'
-        assert runtime.meta.region_name                     == 'us-east-1'
-        assert list_set(runtime.meta.method_to_api_mapping) == ['invoke_model', 'invoke_model_with_response_stream']
+
+
+    def test_model(self):
+        missing_mappings = ['amazon.titan-image-generator-v1:0',                    # this feels like a bug in AWS mappings
+                            'amazon.titan-image-generator-v1',                      # since why should these particular models not have this option
+                            'amazon.titan-embed-g1-text-02',
+                            'amazon.titan-embed-image-v1:0',
+                            'amazon.titan-embed-image-v1',
+                            'stability.stable-diffusion-xl',
+                            'stability.stable-diffusion-xl-v0',
+                            'stability.stable-diffusion-xl-v1:0',
+                            'stability.stable-diffusion-xl-v1']
+        models = self.bedrock.models()
+        for model in models:
+            model_id = model.get('modelId')
+            model = self.bedrock.model(model_id=model_id)
+            model_keys = list_set(model)                                # for some reason, some models don't have this
+            if 'responseStreamingSupported' not in model_keys:
+                model_keys.append('responseStreamingSupported')
+                assert model_id in missing_mappings                     # confirm it is one of the ones that we have seen before
+            assert model_keys == [ 'customizationsSupported', 'inferenceTypesSupported', 'inputModalities',
+                                    'modelArn', 'modelId', 'modelLifecycle',
+                                    'modelName', 'outputModalities', 'providerName', 'responseStreamingSupported']
 
     #@capture_boto3_error
     def test_model_invoke(self):
@@ -60,6 +87,62 @@ class test_Bedrock(TestCase__Bedrock):
                            'stop'         : '\n\nHuman:'                      ,
                            'stop_reason'  : 'stop_sequence'                   }
 
+    @pytest.mark.skip(reason="not finished")
+    def test_model_invoke_stream(self):
+
+        self.cache.disable()
+
+        #prompt = '\n\nHuman: write an essay for living on mars in 10 words\n\nAssistant:'
+        prompt = 'write an essay for living on mars in 10 words'
+        model_id = 'anthropic.claude-v2'
+
+        model = Anthropic__Claude_V2_0(prompt=prompt)
+        body  = model.body()
+
+        for chunk in self.bedrock.model_invoke_stream(model_id=model_id, body=body):
+            pprint(chunk)
+        return
+        body = json_dumps(body)
+        #result = self.bedrock.model_invoke(model_id, body)
+        #pprint(result)
+
+
+        #model_id =  'amazon.titan-text-lite-v1'
+        #model_info = self.bedrock.model(model_id)
+        #pprint(model_info)
+        # if model_id == 'anthropic.claude-v2':
+        #     body = json.dumps({
+        #         'prompt': prompt,
+        #         'max_tokens_to_sample': 4000
+        #     })
+        # else:
+        #     #amazon_titan = Amazon_Titan_Tg1_Large()
+        #     amazon_titan = Amazon_Titan_Text_Lite_V1()
+        #     body = json_dumps(amazon_titan.body(prompt))
+
+            # body = json.dumps({
+            #     'inputText': prompt
+            # })
+
+
+        response = runtime.invoke_model_with_response_stream(
+            modelId=model_id,
+            body=body
+        )
+
+
+        stream = response.get('body')
+
+        if stream:
+            for event in stream:
+                pprint(event)
+                continue
+                chunk = event.get('chunk')
+                if chunk:
+                    data = json.loads(chunk.get('bytes').decode())
+                    pprint(data)
+                    #print(data.get('completion'))
+                    #print(data.get('outputText'))
         # model_id    = 'cohere.command-light-text-v14'
         # model_id    = 'meta.llama2-13b-chat-v1'
 
@@ -176,6 +259,13 @@ class test_Bedrock(TestCase__Bedrock):
         provisioned_models =  self.bedrock.models_by_throughput__provisioned()
         assert len(on_demand_models  ) == 28
         assert len(provisioned_models) == 20
+
+
+    def test_runtime(self):
+        runtime = self.bedrock.runtime()
+        assert type_full_name(runtime)                      == 'botocore.client.BedrockRuntime'
+        assert runtime.meta.region_name                     == 'us-east-1'
+        assert list_set(runtime.meta.method_to_api_mapping) == ['invoke_model', 'invoke_model_with_response_stream']
 
 
 

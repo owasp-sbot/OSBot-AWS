@@ -2,6 +2,8 @@ from dotenv import load_dotenv
 
 from osbot_aws.aws.bedrock.cache.Sqlite__Bedrock    import Sqlite__Bedrock
 from osbot_utils.base_classes.Kwargs_To_Self        import Kwargs_To_Self
+from osbot_utils.decorators.lists.group_by import group_by
+from osbot_utils.decorators.lists.index_by import index_by
 from osbot_utils.utils.Json                         import json_dumps, json_loads
 from osbot_utils.utils.Lists                        import list_group_by
 from osbot_utils.utils.Misc                         import str_sha256, timestamp_utc_now
@@ -121,21 +123,33 @@ class Bedrock__Cache(Kwargs_To_Self):
 
     # CACHED methods
 
-    def model_invoke(self, bedrock, model_id, body):
+    def invoke_with_cache(self, target,**kwargs):
         if self.enabled is False:
-            return bedrock.model_invoke(model_id, body)
-        request_data  = self.cache_request_data(model_id, body)
+            #return bedrock.model_invoke(model_id, body)
+            return target(**kwargs)
+        request_data  = self.cache_request_data(**kwargs)
         cache_entry   = self.cache_entry(request_data)
         if self.force_request is False:
             if cache_entry:
                 response_data_json = cache_entry.get('response_data')
                 if response_data_json:
                     return json_loads(response_data_json)
-        response_data = bedrock.model_invoke(model_id, body)
+        #response_data = bedrock.model_invoke(model_id, body)
+        response_data = target(**kwargs)
         self.cache_add(request_data=request_data, response_data=response_data)
         return response_data
 
-    def models(self, bedrock):
+    def model_invoke(self, bedrock, model_id, body):
+        kwargs = {'model_id': model_id, 'body': body}
+        return self.invoke_with_cache(bedrock.model_invoke, **kwargs)
+
+
+    def model_invoke_stream(self,bedrock, model_id, body):
+        return ['will', 'be' , 'here']
+
+    @index_by
+    @group_by
+    def models(self, bedrock):                          # todo refactor out the caching login with this and model_invoke methods
         if self.enabled is False:
             return bedrock.models()
         request_data = dict(method='models')

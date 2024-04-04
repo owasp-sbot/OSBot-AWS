@@ -3,6 +3,8 @@ from dotenv import load_dotenv
 from osbot_aws.aws.bedrock.cache.Bedrock__Cache import Bedrock__Cache
 from osbot_aws.aws.bedrock.Bedrock import Bedrock
 from osbot_aws.aws.iam.IAM_Assume_Role import IAM_Assume_Role
+from osbot_utils.decorators.lists.group_by import group_by
+from osbot_utils.decorators.lists.index_by import index_by
 from osbot_utils.decorators.methods.cache_on_self import cache_on_self
 
 
@@ -42,6 +44,11 @@ class Bedrock__with_temp_role(Bedrock):
     def model_invoke(self, model_id, body):
         return self.bedrock_cache.model_invoke(super(), model_id, body)
 
-    def models(self):
-        return self.bedrock_cache.models(super())
+    def model_invoke_stream(self,model_id, body):
+        return self.bedrock_cache.model_invoke_stream(super(), model_id, body)
+
+    @index_by
+    @group_by
+    def models(self, **kwargs):
+        return self.bedrock_cache.models(super(), **kwargs)
 

@@ -22,6 +22,9 @@ class Bedrock(Kwargs_To_Self):
         session = Session(region_name=self.region_name)
         return session.client('bedrock')
 
+    def model(self, model_id):
+        return self.models__by_id().get(model_id)
+
     def model_invoke(self, model_id, body):
         body_as_str = json_dumps(body)
         accept      = 'application/json'
@@ -30,6 +33,21 @@ class Bedrock(Kwargs_To_Self):
         response = self.runtime().invoke_model(body=body_as_str, modelId=model_id, accept=accept, contentType=contentType)
         response_body = json_loads(response.get('body').read())
         return response_body
+
+    def model_invoke_stream(self, model_id, body):
+        body_as_str = json_dumps(body)
+        accept      = 'application/json'
+        contentType = 'application/json'
+
+        response = self.runtime().invoke_model_with_response_stream(body=body_as_str, modelId=model_id, accept=accept, contentType=contentType)
+
+        stream   = response.get('body')
+        if stream:
+            for event in stream:
+                chunk = event.get('chunk')
+                if chunk:
+                    data = json_loads(chunk.get('bytes').decode())
+                    yield data
 
     @index_by
     @group_by
@@ -54,6 +72,7 @@ class Bedrock(Kwargs_To_Self):
                         outputs[model_id] = model
         return models
 
+    @cache_on_self
     def models__by_id(self):
         return self.models(index_by='modelId')
 

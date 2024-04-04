@@ -4,7 +4,7 @@ from osbot_aws.aws.bedrock.models.amazon.Amazon_Titan_Text_Express_V1 import Ama
 from osbot_aws.testing.TestCase__Bedrock import TestCase__Bedrock
 from osbot_utils.utils.Misc import in_github_action
 
-
+# todo: now that we have a cache, re-enable this test
 @pytest.mark.skip('skipping bedrock test for: amazon.titan-text-express-v1')
 class test_Amazon_Titan_Text_Express_V1(TestCase__Bedrock):
 
