@@ -123,11 +123,11 @@ class Bedrock__Cache(Kwargs_To_Self):
 
     # CACHED methods
 
-    def invoke_with_cache(self, target,**kwargs):
+    def invoke_with_cache(self, target,invoke_kwargs, cache_key_kwargs):
         if self.enabled is False:
             #return bedrock.model_invoke(model_id, body)
-            return target(**kwargs)
-        request_data  = self.cache_request_data(**kwargs)
+            return target(**invoke_kwargs)
+        request_data  = self.cache_request_data(**cache_key_kwargs)
         cache_entry   = self.cache_entry(request_data)
         if self.force_request is False:
             if cache_entry:
@@ -135,16 +135,20 @@ class Bedrock__Cache(Kwargs_To_Self):
                 if response_data_json:
                     return json_loads(response_data_json)
         #response_data = bedrock.model_invoke(model_id, body)
-        response_data = target(**kwargs)
+        response_data = target(**invoke_kwargs)
         self.cache_add(request_data=request_data, response_data=response_data)
         return response_data
 
     def model_invoke(self, bedrock, model_id, body):
-        kwargs = {'model_id': model_id, 'body': body}
-        return self.invoke_with_cache(bedrock.model_invoke, **kwargs)
+        invoke_kwargs    = {'model_id': model_id, 'body': body}
+        cache_key_kwargs = invoke_kwargs
+        return self.invoke_with_cache(bedrock.model_invoke, invoke_kwargs, cache_key_kwargs)
 
 
     def model_invoke_stream(self,bedrock, model_id, body):
+        def capture_chunks():
+            pass
+
         return ['will', 'be' , 'here']
 
     @index_by

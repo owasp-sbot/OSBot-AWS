@@ -132,7 +132,7 @@ class test_Bedrock__Cache(TestCase):
         assert self.bedrock_cache.cache_entries()      == [expected_cache_entry]                        # confirm the cache has the values we expect
 
         bedrock.model_invoke.assert_called_once()                                                       # confirm the invocation to the bedrock.model_invoke was only done once
-        bedrock.model_invoke.assert_called_once_with(model_id, body)                                    #         and it had the expected params
+        bedrock.model_invoke.assert_called_once_with(model_id=model_id, body=body)                                    #         and it had the expected params
 
         response_2 = self.bedrock_cache.model_invoke(**kwargs)                                          # make another call
         assert response_2 == response_1                                                                 # conform response is the same as the previous request
