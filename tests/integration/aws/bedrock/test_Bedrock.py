@@ -87,12 +87,11 @@ class test_Bedrock(TestCase__Bedrock):
                            'stop'         : '\n\nHuman:'                      ,
                            'stop_reason'  : 'stop_sequence'                   }
 
-    @pytest.mark.skip(reason="not finished")
+    #@pytest.mark.skip(reason="not finished")
     def test_model_invoke_stream(self):
 
-        self.cache.disable()
+        #self.cache.disable()
 
-        #prompt = '\n\nHuman: write an essay for living on mars in 10 words\n\nAssistant:'
         prompt = 'write an essay for living on mars in 10 words'
         model_id = 'anthropic.claude-v2'
 
@@ -100,9 +99,9 @@ class test_Bedrock(TestCase__Bedrock):
         body  = model.body()
 
         for chunk in self.bedrock.model_invoke_stream(model_id=model_id, body=body):
-            pprint(chunk)
-        return
-        body = json_dumps(body)
+            assert 'completion' in  chunk
+
+        #body = json_dumps(body)
         #result = self.bedrock.model_invoke(model_id, body)
         #pprint(result)
 
@@ -125,26 +124,26 @@ class test_Bedrock(TestCase__Bedrock):
             # })
 
 
-        response = runtime.invoke_model_with_response_stream(
-            modelId=model_id,
-            body=body
-        )
-
-
-        stream = response.get('body')
-
-        if stream:
-            for event in stream:
-                pprint(event)
-                continue
-                chunk = event.get('chunk')
-                if chunk:
-                    data = json.loads(chunk.get('bytes').decode())
-                    pprint(data)
-                    #print(data.get('completion'))
-                    #print(data.get('outputText'))
-        # model_id    = 'cohere.command-light-text-v14'
-        # model_id    = 'meta.llama2-13b-chat-v1'
+        # response = runtime.invoke_model_with_response_stream(
+        #     modelId=model_id,
+        #     body=body
+        # )
+        #
+        #
+        # stream = response.get('body')
+        #
+        # if stream:
+        #     for event in stream:
+        #         pprint(event)
+        #         continue
+        #         chunk = event.get('chunk')
+        #         if chunk:
+        #             data = json.loads(chunk.get('bytes').decode())
+        #             pprint(data)
+        #             #print(data.get('completion'))
+        #             #print(data.get('outputText'))
+        # # model_id    = 'cohere.command-light-text-v14'
+        # # model_id    = 'meta.llama2-13b-chat-v1'
 
     #@capture_iam_exception
     #@print_boto3_calls()

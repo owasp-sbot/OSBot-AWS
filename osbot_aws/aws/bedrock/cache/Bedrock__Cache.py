@@ -146,9 +146,17 @@ class Bedrock__Cache(Kwargs_To_Self):
 
     def model_invoke_stream(self,bedrock, model_id, body):
         def capture_chunks():
-            pass
+            response = bedrock.model_invoke_stream(model_id, body)
+            chunks   = []
+            for chunk in response:
+                chunks.append(chunk)
+            return chunks
 
-        return ['will', 'be' , 'here']
+        target           = capture_chunks
+        target_kwargs    = {}
+        request_data     = dict(model_id=model_id, body=body, mode='invoke_stream')
+        return self.invoke_with_cache(target, target_kwargs, request_data)
+
 
     @index_by
     @group_by
