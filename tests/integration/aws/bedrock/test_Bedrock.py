@@ -93,57 +93,25 @@ class test_Bedrock(TestCase__Bedrock):
         #self.cache.disable()
 
         prompt = 'write an essay for living on mars in 10 words'
-        model_id = 'anthropic.claude-v2'
 
-        model = Anthropic__Claude_V2_0(prompt=prompt)
-        body  = model.body()
-
-        for chunk in self.bedrock.model_invoke_stream(model_id=model_id, body=body):
-            assert 'completion' in  chunk
-
-        #body = json_dumps(body)
-        #result = self.bedrock.model_invoke(model_id, body)
-        #pprint(result)
+        def test_model(model, body, chunk_field):
+            model_id = model.model_id
+            for chunk in self.bedrock.model_invoke_stream(model_id=model_id, body=body):
+                assert chunk_field in chunk
 
 
-        #model_id =  'amazon.titan-text-lite-v1'
-        #model_info = self.bedrock.model(model_id)
-        #pprint(model_info)
-        # if model_id == 'anthropic.claude-v2':
-        #     body = json.dumps({
-        #         'prompt': prompt,
-        #         'max_tokens_to_sample': 4000
-        #     })
-        # else:
-        #     #amazon_titan = Amazon_Titan_Tg1_Large()
-        #     amazon_titan = Amazon_Titan_Text_Lite_V1()
-        #     body = json_dumps(amazon_titan.body(prompt))
 
-            # body = json.dumps({
-            #     'inputText': prompt
-            # })
+        target_model = Anthropic__Claude_V2_0(prompt=prompt)
+        model_body   = target_model.body()
+        test_model(target_model, model_body, 'completion')
 
+        target_model = Amazon_Titan_Text_Lite_V1()
+        model_body   = target_model.body(prompt=prompt)
+        test_model(target_model, model_body, 'outputText')
 
-        # response = runtime.invoke_model_with_response_stream(
-        #     modelId=model_id,
-        #     body=body
-        # )
-        #
-        #
-        # stream = response.get('body')
-        #
-        # if stream:
-        #     for event in stream:
-        #         pprint(event)
-        #         continue
-        #         chunk = event.get('chunk')
-        #         if chunk:
-        #             data = json.loads(chunk.get('bytes').decode())
-        #             pprint(data)
-        #             #print(data.get('completion'))
-        #             #print(data.get('outputText'))
-        # # model_id    = 'cohere.command-light-text-v14'
-        # # model_id    = 'meta.llama2-13b-chat-v1'
+        target_model = Amazon_Titan_Tg1_Large()
+        model_body   = target_model.body(prompt=prompt)
+        test_model(target_model, model_body, 'outputText')
 
     #@capture_iam_exception
     #@print_boto3_calls()
