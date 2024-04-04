@@ -16,19 +16,19 @@ class Bedrock_Cache__Html_Table(Bedrock_Cache__Html):
         self.debug_mode       = True
 
     def create_table(self, headers, rows):
-        tag__table      = Tag__Base(tag_name='table', tag_classes=["table", "table-striped", "table-bordered", "table-hover"])
+        tag__table      = Tag__Base(tag_name='table', tag_classes=["table", "table-striped", "table-bordered", "table-hover",'table-dark'])
         tag__thead      = Tag__Base(tag_name='thead')
         tag__tbody      = Tag__Base(tag_name='tbody')
 
         tag__tr__header = Tag__Base(tag_name='tr')
 
-        for header in self.table_headers:
+        for header in headers:
             tag__td = Tag__Base(tag_name='td', inner_html=header)
             tag__tr__header.append(tag__td)
 
         for row in rows:
             tag__tr = Tag__Base(tag_name='tr')
-            for header in self.table_headers:
+            for header in headers:
                 td_value =  row.get(header)
                 tag__td = Tag__Base(tag_name='td', inner_html=td_value)
                 tag__tr.append(tag__td)
@@ -59,14 +59,16 @@ class Bedrock_Cache__Html_Table(Bedrock_Cache__Html):
                 continue
             request_body_str  = json_dumps(request_body)
             model             = request_data.get('model'  )
-            task_type         = request_body.get('taskType')
-            prompt            = self.extract_prompt_from_request_data(model, request_body)
+            task_type         = self.extract_task_type_from_request_body(model, request_body)
+            prompt            = self.extract_prompt_from_request_data   (model, request_body)
             response          = self.extract_response_from_response_data(model, response_data)
             if timestamp:
                 timestamp_str = timestamp_to_str_date(timestamp)
             else:
                 timestamp_str = 'NA'
-
+            if response is None:
+                self.extract_response_from_response_data(model, response_data)
+                pass
             item = dict(model        = model                                                 ,
                         prompt       = f'<pre>{word_wrap(prompt  .strip(), 40)}</pre>',
                         response     = f'<pre>{word_wrap(response.strip(), 40)}</pre>',
@@ -81,6 +83,20 @@ class Bedrock_Cache__Html_Table(Bedrock_Cache__Html):
             #pprint(list_set(row))
 
         return rows
+
+    def extract_task_type_from_request_body(self, model, request_body):
+        if 'taskType' in request_body:
+            return request_body.get('taskType')
+        if model in ['amazon.titan-tg1-large', 'amazon.titan-text-lite-v1']:
+            return 'amazon text model'
+        if model in ['anthropic.claude-instant-v1','anthropic.claude-v2', 'anthropic.claude-v2:1',
+                     "anthropic.claude-3-haiku-20240307-v1:0","anthropic.claude-3-sonnet-20240229-v1:0"]:
+            if "prompt" in request_body:
+                return "claude text completion"
+            if "messages" in request_body:
+                return "claude messages"
+        pprint(model, request_body)
+        return 'NA'
 
     def extract_prompt_from_request_data(self, model, request_body):
         if model=='amazon.titan-image-generator-v1':
@@ -98,9 +114,15 @@ class Bedrock_Cache__Html_Table(Bedrock_Cache__Html):
                 return text
             return f'in amazon.titan-image-generator-v1 , unsupported task_type: {task_type}'
         if model in ['amazon.titan-text-lite-v1', 'amazon.titan-tg1-large']:
-            return request_body.get('inputText')
-        if model in ['anthropic.claude-instant-v1','anthropic.claude-v2', 'anthropic.claude-v2:1']:
-            return request_body.get('prompt')
+            return request_body.get('inputText', '')
+        if model in ['anthropic.claude-instant-v1','anthropic.claude-v2', 'anthropic.claude-v2:1',
+                     "anthropic.claude-3-haiku-20240307-v1:0","anthropic.claude-3-sonnet-20240229-v1:0"]:
+            if "prompt" in request_body:
+                return request_body.get('prompt', '')
+            if "messages" in request_body:
+                messages = request_body.get('messages')
+                system   = request_body.get('system')
+                return f'{messages} \n\nsystem: {system}'
         if model is None:
             return 'NA'
         return f'unsupported model: {model}'
@@ -120,8 +142,15 @@ class Bedrock_Cache__Html_Table(Bedrock_Cache__Html):
                 return output_text
             return f'error: response_data should only have one result and it had {len(results)}'
 
-        if model in ['anthropic.claude-instant-v1','anthropic.claude-v2', 'anthropic.claude-v2:1']:
-            return response_data.get('completion')
+        if model in ['anthropic.claude-instant-v1','anthropic.claude-v2', 'anthropic.claude-v2:1',
+                     "anthropic.claude-3-haiku-20240307-v1:0", "anthropic.claude-3-sonnet-20240229-v1:0"]:
+            if "completion" in response_data:
+                return response_data.get('completion')
+            if "content"  in response_data:
+                return f"{response_data.get('content')}"
+
+        # if model in ["anthropic.claude-3-haiku-20240307-v1:0", "anthropic.claude-3-sonnet-20240229-v1:0"]:
+        #     return f"{response_data.get('content')}"
 
         return f'unsupported model: {model}'
 
