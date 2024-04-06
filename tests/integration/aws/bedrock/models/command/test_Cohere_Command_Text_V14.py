@@ -1,4 +1,4 @@
-from osbot_aws.aws.bedrock.models.cohere.Cohere_Command_Text_V14 import Cohere_Command_Text_V14
+from osbot_aws.aws.bedrock.models.command.Cohere_Command_Text_V14 import Cohere_Command_Text_V14
 from osbot_aws.aws.boto3.Capture_Boto3_Error import capture_boto3_error
 from osbot_aws.testing.TestCase__Bedrock import TestCase__Bedrock
 from osbot_utils.utils.Dev import pprint

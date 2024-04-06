@@ -1,6 +1,6 @@
 import pytest
 
-from osbot_aws.aws.bedrock.models.amazon.Amazon_Titan_Text_Express_V1 import Amazon_Titan_Text_Express_V1
+from osbot_aws.aws.bedrock.models.titan.Amazon_Titan_Text_Express_V1 import Amazon_Titan_Text_Express_V1
 from osbot_aws.testing.TestCase__Bedrock import TestCase__Bedrock
 from osbot_utils.utils.Misc import in_github_action
 

@@ -1,19 +1,20 @@
 from unittest import TestCase
 
-from osbot_aws.aws.bedrock.models.anthropic.Anthropic__Claude_Instant_V1 import Anthropic__Claude_Instant_V1
+from osbot_aws.aws.bedrock.models.claude.Anthropic__Claude_Instant_V1 import Anthropic__Claude_Instant_V1
+from osbot_aws.aws.bedrock.models.claude.Anthropic__Claude_V2_0 import Anthropic__Claude_V2_0
 from osbot_aws.testing.TestCase__Bedrock import TestCase__Bedrock
 from osbot_utils.utils.Dev import pprint
 from osbot_utils.utils.Misc import list_set
 
 
-class test_Anthropic__Claude_Instant_V1(TestCase__Bedrock):
+class test_Anthropic__Claude_V2_0(TestCase__Bedrock):
 
     def setUp(self) -> None:
-        self.model = Anthropic__Claude_Instant_V1()
+        self.model = Anthropic__Claude_V2_0()
 
     def test__init__(self):
         expected_vars = { 'max_tokens_to_sample': 1024                              ,
-                          'model_id'            : 'anthropic.claude-instant-v1'     ,
+                          'model_id'            : 'anthropic.claude-v2'     ,
                           'prompt'              : ''                                ,
                           'prompt_format'       : '\n\nHuman:{prompt}\n\nAssistant:',
                           'stop_sequences'      : []                                ,
@@ -24,7 +25,6 @@ class test_Anthropic__Claude_Instant_V1(TestCase__Bedrock):
 
     def test_model_invoke(self):
         #self.cache.disable()
-        #self.cache.force_request = True
         prompts        = ['hello',
                           'what is your model?',
                           'what is 40 + 2']
@@ -44,6 +44,6 @@ class test_Anthropic__Claude_Instant_V1(TestCase__Bedrock):
 
         response  = self.bedrock.model_invoke(model_id, body)
 
-
+        #pprint(response)
         assert body               == expected_body
         assert list_set(response) == list_set(expected_response)

@@ -1,4 +1,4 @@
-from osbot_aws.aws.bedrock.models.cohere.Cohere_Command import Cohere_Command
+from osbot_aws.aws.bedrock.models.command.Cohere_Command import Cohere_Command
 
 
 class Cohere_Command_Text_V14(Cohere_Command):

@@ -1,4 +1,4 @@
-from osbot_aws.aws.bedrock.models.anthropic.Anthropic__Claude_Messages_API import Anthropic__Claude_Messages_API
+from osbot_aws.aws.bedrock.models.claude.Anthropic__Claude_Messages_API import Anthropic__Claude_Messages_API
 from osbot_aws.aws.boto3.Capture_Boto3_Error import capture_boto3_error
 from osbot_aws.testing.TestCase__Bedrock import TestCase__Bedrock
 from osbot_utils.utils.Dev import pprint

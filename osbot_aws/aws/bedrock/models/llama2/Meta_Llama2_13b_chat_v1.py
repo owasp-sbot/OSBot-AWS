@@ -1,4 +1,4 @@
-from osbot_aws.aws.bedrock.models.meta.Meta_Llama2 import Meta_Llama2
+from osbot_aws.aws.bedrock.models.llama2.Meta_Llama2 import Meta_Llama2
 
 
 class Meta_Llama2_13B_Chat_V1(Meta_Llama2):

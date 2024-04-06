@@ -1,8 +1,6 @@
-from osbot_aws.aws.bedrock.models.ai21.AI21_Labs_Jurassic_2_Mid import AI21_Labs_Jurassic_2_Mid
 from osbot_aws.aws.bedrock.models.mistral.Mistral_AI_7b_Instruct_v0_2 import Mistral_AI_7b_Instruct_v0_2
 from osbot_aws.aws.boto3.Capture_Boto3_Error import capture_boto3_error
 from osbot_aws.testing.TestCase__Bedrock import TestCase__Bedrock
-from osbot_utils.utils.Dev import pprint
 from osbot_utils.utils.Misc import list_set
 
 class test_Mistral_AI_7b_Instruct_v0_2(TestCase__Bedrock):
@@ -38,19 +36,6 @@ class test_Mistral_AI_7b_Instruct_v0_2(TestCase__Bedrock):
         self.model.prompt = prompt
         model_id  = self.model.model_id
         body      = self.model.body()
-
-        #prompt = """<s>[INST] In Bash, how do I list all text files in the current directory
-        #          (excluding subdirectories) that have been modified in the last month? [/INST]"""
-
-        # body = {
-        #     "prompt": prompt,
-        #     "max_tokens": 400,
-        #     "temperature": 0.7,
-        #     "top_p": 0.7,
-        #     "top_k": 50
-        # }
-        #
-        # pprint(body)
 
         response  = self.bedrock.model_invoke(model_id, body)
 
