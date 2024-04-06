@@ -25,7 +25,7 @@ class test_AI21_Labs_Jurassic_2_Ultra(TestCase__Bedrock):
         prompts           = ['hello',
                              'what is your model?',
                              'what is 40 + 2']
-        current_prompt    = 2
+        current_prompt    = 0
         prompt            = prompts[current_prompt]
         self.model.prompt = prompt
         model_id  = self.model.model_id
