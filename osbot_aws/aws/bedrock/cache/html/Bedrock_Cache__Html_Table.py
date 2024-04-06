@@ -14,6 +14,7 @@ class Bedrock_Cache__Html_Table(Bedrock_Cache__Html):
         self.sub_title        = 'all entries'
         self.table_headers    = ['model', 'task_type', 'prompt', 'response', 'comments', 'timestamp']
         self.debug_mode       = True
+        self.target_file      = '/tmp/tmp-bedrock-table.html'
 
     def create_table(self, headers, rows):
         tag__table      = Tag__Base(tag_name='table', tag_classes=["table", "table-striped", "table-bordered", "table-hover",'table-dark'])
@@ -58,7 +59,7 @@ class Bedrock_Cache__Html_Table(Bedrock_Cache__Html):
             if not request_body:
                 continue
             request_body_str  = json_dumps(request_body)
-            model             = request_data.get('model'  )
+            model             = request_data.get('model'  ) or request_data.get('model_id'  )       #todo
             task_type         = self.extract_task_type_from_request_body(model, request_body)
             prompt            = self.extract_prompt_from_request_data   (model, request_body)
             response          = self.extract_response_from_response_data(model, response_data)
@@ -135,6 +136,11 @@ class Bedrock_Cache__Html_Table(Bedrock_Cache__Html):
                 return f'{len(image):,} - image size'
             return f'error: response_data should only have one image and it had {len(images)}'
         if model in ['amazon.titan-text-lite-v1', 'amazon.titan-tg1-large']:
+            if type(response_data) is list:
+                output_text = ""
+                for chunk in response_data:
+                    output_text += chunk.get('outputText')
+                return output_text
             results = response_data.get('results')
             if len(results) ==1:
                 result = results[0]
@@ -148,6 +154,11 @@ class Bedrock_Cache__Html_Table(Bedrock_Cache__Html):
                 return response_data.get('completion')
             if "content"  in response_data:
                 return f"{response_data.get('content')}"
+            if type(response_data) is list:
+                completions = ""
+                for chunk in response_data:
+                    completions += chunk.get('completion')
+                return completions
 
         # if model in ["anthropic.claude-3-haiku-20240307-v1:0", "anthropic.claude-3-sonnet-20240229-v1:0"]:
         #     return f"{response_data.get('content')}"
