@@ -36,6 +36,6 @@ class test_Meta_Llama2_13B_Chat_V1(TestCase__Bedrock):
 
         response  = self.bedrock.model_invoke(model_id, body)
 
-        pprint(response)
+        #pprint(response)
 
         assert list_set(response) == ['generation', 'generation_token_count', 'prompt_token_count', 'stop_reason']

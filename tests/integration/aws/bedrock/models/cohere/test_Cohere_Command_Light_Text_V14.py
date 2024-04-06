@@ -18,7 +18,7 @@ class test_Cohere_Command_Light_Text_V14(TestCase__Bedrock):
                             'num_generations'   : 1                              ,
                             'p'                 : 1.0                            ,
                             'prompt'            : ''                             ,
-                            'return_likelihoods': 'GENERATION'                   ,
+                            'return_likelihoods': 'NONE'                         ,
                             'stop_sequences'    : []                             ,
                             'stream'            : False                          ,
                             'temperature'       : 0.0                            ,

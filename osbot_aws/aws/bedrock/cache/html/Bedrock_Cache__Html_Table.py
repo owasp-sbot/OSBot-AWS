@@ -96,7 +96,7 @@ class Bedrock_Cache__Html_Table(Bedrock_Cache__Html):
                 return "claude text completion"
             if "messages" in request_body:
                 return "claude messages"
-        pprint(model, request_body)
+        #pprint(model, request_body)
         return 'NA'
 
     def extract_prompt_from_request_data(self, model, request_body):
