@@ -18,7 +18,7 @@ class test_Stability_Stable_Diffusion_XL_V0(TestCase__Bedrock):
 
     def tearDown(self):
         if self.png_data:
-            target_file = '/tmp/titan_image.png'
+            target_file = '/tmp/stable_diffusion_image.png'
             self.model.save_png_data(png_data=self.png_data, target_file=target_file)
 
     def test__init__(self):

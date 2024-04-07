@@ -2,6 +2,8 @@ import pytest
 
 from osbot_aws.aws.bedrock.models.diffusion.Stability_Stable_Diffusion_XL_V0 import Stability_Stable_Diffusion_XL_V0
 from osbot_aws.aws.bedrock.models.diffusion.Stability_Stable_Diffusion_XL_V1 import Stability_Stable_Diffusion_XL_V1
+from osbot_aws.aws.bedrock.models.diffusion.Stability_Stable_Diffusion_XL_V1__Text_To_Image import \
+    Stability_Stable_Diffusion_XL_V1__Text_To_Image
 from osbot_aws.aws.bedrock.models.mistral.Mistral_AI_7b_Instruct_v0_2 import Mistral_AI_7b_Instruct_v0_2
 from osbot_aws.aws.boto3.Capture_Boto3_Error import capture_boto3_error
 from osbot_aws.testing.TestCase__Bedrock import TestCase__Bedrock
@@ -9,31 +11,32 @@ from osbot_utils.utils.Dev import pprint
 from osbot_utils.utils.Misc import list_set, in_github_action
 
 
-class test_Stability_Stable_Diffusion_XL_V0(TestCase__Bedrock):
+class test_Stability_Stable_Diffusion_XL_V1__Text_To_Image(TestCase__Bedrock):
 
     def setUp(self) -> None:
         if in_github_action():                                  # disabling Bedrock tests in GitHub actions since they are not 100% deterministic
             pytest.skip()
-        self.model = Stability_Stable_Diffusion_XL_V1()
+        self.model = Stability_Stable_Diffusion_XL_V1__Text_To_Image()
         self.png_data = None
 
     def tearDown(self):
         if self.png_data:
-            target_file = '/tmp/titan_image.png'
+            target_file = '/tmp/stable_diffusion_image.png'
             self.model.save_png_data(png_data=self.png_data, target_file=target_file)
 
     def test__init__(self):
-        expected_vars = {   'cfg_scale': 7,
-                            'clip_guidance_preset': 'NONE',
-                            'extras': {},
-                            'height': 512,
+        expected_vars = {   'cfg_scale'     : 10,
+                            'height'        : 512,
                             'model_id'       : 'stability.stable-diffusion-xl-v1'  ,
-                            'samples': 1,
-                            'seed': 42,
-                            'steps': 50,
-                            'style_preset'  : '',
+                            'samples'       : 1,
+                            'seed'          : 42,
+                            'steps'         : 50,
                             'text_prompts'  : [],
-                            'width': 512       }
+                            'width'         : 512
+                            #'clip_guidance_preset': 'NONE',
+                            #'extras'        : {},
+                            #'style_preset'  : '',
+                            }
         assert self.model.__locals__() == expected_vars
 
     @capture_boto3_error
@@ -52,7 +55,17 @@ class test_Stability_Stable_Diffusion_XL_V0(TestCase__Bedrock):
         model_id  = self.model.model_id
         body      = self.model.body()
 
-        #pprint(body)
+        pprint(body)
+        return
+        # { 'cfg_scale': 10,
+        #   'height': 512,
+        #   'samples': 1,
+        #   'seed': 42,
+        #   'steps': 50,
+        #   'text_prompts': [ { 'text': 'Renaissance-style portrait of an astronaut in '
+        #                               'space, detailed starry background, reflective '
+        #                               'helmet.'}],
+        #   'width': 512}
         response  = self.bedrock.model_invoke(model_id, body)
 
         #pprint(response)
