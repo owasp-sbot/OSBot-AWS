@@ -1,5 +1,6 @@
 from osbot_aws.aws.bedrock.models.diffusion.Stability_Stable_Diffusion import Stability_Stable_Diffusion
 from osbot_utils.base_classes.Kwargs_To_Self import Kwargs_To_Self
+from osbot_utils.utils.Misc import list_set
 from osbot_utils.utils.Png import save_png_base64_to_file
 
 
@@ -22,5 +23,20 @@ class Stability_Stable_Diffusion_XL_V1(Stability_Stable_Diffusion):
                     #style_preset            = self.style_preset        ,
                     #extras                  = self.extras
                     )
+
+    def invoke(self, bedrock, prompts):
+        self.set_text_prompts(prompts)
+        response  = bedrock.model_invoke(self.model_id, self.body())
+        if response:
+            artifacts = response.get('artifacts')
+            if list_set(response) == ['artifacts', 'result']:
+                if len(artifacts) == 1:
+                    artifact = artifacts[0]
+                    return artifact.get('base64')
+
+    def comments(self, cache):
+        model_id = self.model_id
+        body = self.body()
+        return cache.cache_entry_comments(model_id=model_id, body=body)
 
 

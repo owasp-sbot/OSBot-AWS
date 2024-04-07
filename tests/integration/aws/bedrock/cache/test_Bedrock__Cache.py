@@ -86,6 +86,27 @@ class test_Bedrock__Cache(TestCase):
             assert _.rows() == []                                                       # confirm we are back to having an empty table
             assert self.bedrock_cache.cache_entry(request_data) == {}                   # confirm entry is not available anymore
 
+    def test_cache_entry_comments(self):
+        with self.bedrock_cache as _:
+            assert _.cache_entries() == []
+            model_id      = 'an_model'
+            body          = {'answer': 42}
+            new_comment   = random_string(prefix='new_comment')
+            request_data  = {'model': model_id, 'body': body}
+            response_data = {'in': 'response'}
+            _.cache_add(request_data, response_data)
+            assert len(_.cache_entries()) ==1
+            cache_entry = _.cache_entries()[0]
+            assert request_data == json_loads(cache_entry.get('request_data'))
+            assert response_data == json_loads(cache_entry.get('response_data'))
+            assert _.cache_entry_for_request_params(model_id=model_id, body=body) == cache_entry
+            assert _.cache_entry_comments       (model_id, body) == ''
+            assert _.cache_entry_comments_update(model_id, body, new_comment).get('status') == 'ok'
+            assert _.cache_entry_comments       (model_id, body) == new_comment
+            assert _.cache_table__clear().get('status') == 'ok'
+            assert _.cache_entries()                    == []
+
+        #cache_entry_comments
     def test_create_new_cache_entry(self):
         model_id                 = 'aaaa'
         body                     = {'the': 'request data'}

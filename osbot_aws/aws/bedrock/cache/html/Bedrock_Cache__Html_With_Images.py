@@ -69,7 +69,8 @@ class Bedrock_Cache__Html_With_Images(Bedrock_Cache__Html):
     def create__stable_diffusion(self):
 
         div_images = []
-        model_id = 'stability.stable-diffusion-xl-v0'
+        #model_id = 'stability.stable-diffusion-xl-v0'
+        model_id = 'stability.stable-diffusion-xl-v1'
         self.sub_title = f'for {model_id}'
 
         for request_data in self.cache.requests_data__with_model_id(model_id):

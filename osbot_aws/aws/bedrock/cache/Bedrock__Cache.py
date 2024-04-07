@@ -4,15 +4,18 @@ from osbot_aws.aws.bedrock.cache.Sqlite__Bedrock    import Sqlite__Bedrock
 from osbot_utils.base_classes.Kwargs_To_Self        import Kwargs_To_Self
 from osbot_utils.decorators.lists.group_by import group_by
 from osbot_utils.decorators.lists.index_by import index_by
+from osbot_utils.utils.Dev import pprint
 from osbot_utils.utils.Json                         import json_dumps, json_loads
 from osbot_utils.utils.Lists                        import list_group_by
 from osbot_utils.utils.Misc                         import str_sha256, timestamp_utc_now
+from osbot_utils.utils.Str import str_dedent
 
 
 class Bedrock__Cache(Kwargs_To_Self):
     add_timestamp  : bool            = True
     enabled        : bool            = True
     update_mode    : bool            = False
+    cache_only_mode: bool            = False
     sqlite_bedrock : Sqlite__Bedrock = None
 
     def __init__(self, db_path=None):
@@ -40,9 +43,27 @@ class Bedrock__Cache(Kwargs_To_Self):
             return data[0]
         return {}
 
+    def cache_entry_comments(self, model_id, body):
+        cache_entry = self.cache_entry_for_request_params(model_id=model_id, body=body)
+        return cache_entry.get('comments')
+
+    def cache_entry_comments_update(self, model_id, body, new_comments):
+        cache_entry      = self.cache_entry_for_request_params(model_id=model_id, body=body)
+        request_hash     = cache_entry.get('request_hash')
+        update_fields    = dict(comments=new_comments)
+        query_conditions = dict(request_hash=request_hash)
+        result           = self.cache_table().row_update(update_fields, query_conditions)
+        return result
+
+    def cache_entry_for_request_params(self, **target_kwargs):
+        request_data = self.cache_request_data(**target_kwargs)
+        return self.cache_entry(request_data)
+
     def cache_table(self):
         return self.sqlite_bedrock.table_requests()
 
+    def cache_table__clear(self):
+        return self.cache_table().clear()
     def cache_request_data(self, model_id, body):
         request_data = dict(model        = model_id     ,
                             body         = body         )
@@ -68,6 +89,28 @@ class Bedrock__Cache(Kwargs_To_Self):
         new_row_obj = self.cache_table().new_row_obj(new_row_data)
         return new_row_obj
 
+    def comments(self, model):
+        model_id = model.model_id
+        body     = model.body()
+        return self.cache_entry_comments(model_id, body)
+
+    def comments_print(self, model):
+        model_id = model.model_id
+        body     = model.body()
+        print()
+        print()
+        print(str_dedent(f"""
+                ----------------------------
+                comment on model: {model_id} "
+                with prompt     : {model.text_prompts}
+                
+                {self.cache_entry_comments(model_id, body)}"""))
+
+    def comments_set(self, model, new_comments):
+        model_id = model.model_id
+        body     = model.body()
+        return self.cache_entry_comments_update(model_id=model_id, body=body, new_comments=new_comments)
+
     def delete_where_request_data(self, request_data):                                      # todo: check if it is ok to use the request_data as a query target, or if we should use the request_hash variable
         if type(request_data) is dict:                                                      # if we get an request_data obj
             request_data = json_dumps(request_data)                                         # convert it to the json dump
@@ -79,6 +122,10 @@ class Bedrock__Cache(Kwargs_To_Self):
 
     def disable(self):
         self.enabled = False
+        return self
+
+    def only_from_cache(self, value=True):
+        self.cache_only_mode = value
         return self
 
     def response_data_for__request_hash(self, request_hash):
@@ -133,21 +180,23 @@ class Bedrock__Cache(Kwargs_To_Self):
 
     def invoke_with_cache(self, target,target_kwargs, request_data=None):
         if self.enabled is False:
+            if self.cache_only_mode:
+                return None
             return target(**target_kwargs)
         if request_data is None:
             request_data  = self.cache_request_data(**target_kwargs)
         cache_entry   = self.cache_entry(request_data)
         if cache_entry:
             if self.update_mode is True:
-                result = self.cache_delete(request_data)
-                cache_entry = self.cache_entry(request_data)
+                self.cache_delete(request_data)
             else:
                 response_data_json = cache_entry.get('response_data')
                 if response_data_json:
                     return json_loads(response_data_json)
-        response_data = target(**target_kwargs)
-        self.cache_add(request_data=request_data, response_data=response_data)
-        return response_data
+        if self.cache_only_mode is False:
+            response_data = target(**target_kwargs)
+            self.cache_add(request_data=request_data, response_data=response_data)
+            return response_data
 
     def model_invoke(self, bedrock, model_id, body):
         target           = bedrock.model_invoke

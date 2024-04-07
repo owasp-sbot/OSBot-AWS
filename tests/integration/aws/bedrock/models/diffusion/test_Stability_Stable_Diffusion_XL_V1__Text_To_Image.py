@@ -46,31 +46,12 @@ class test_Stability_Stable_Diffusion_XL_V1__Text_To_Image(TestCase__Bedrock):
         prompts           = ['hello'                     ,                  # generates misc pics
                              'dog wearing black glasses' ,
                              'Renaissance-style portrait of an astronaut in space, detailed starry background, reflective helmet.',
-                             'Abstract painting representing the sound of jazz music, using vibrant colors and erratic shapes'
+                             'Abstract painting representing the sound of jazz music, using vibrant colors and erratic shapes' ,
+                             'a sausage dog in a air balloon '
                              ]
-        current_prompt    = 2
+        current_prompt    = 1
         prompt            = prompts[current_prompt]
+        self.png_data     = self.model.invoke(self.bedrock, prompt)
+        #self.cache.comments_print(self.model)
+        #self.cache.comments_set(self.model, "ok, but put the balloon on the back of the dog")
 
-        self.model.set_text_prompts(prompt)
-        model_id  = self.model.model_id
-        body      = self.model.body()
-
-        pprint(body)
-        return
-        # { 'cfg_scale': 10,
-        #   'height': 512,
-        #   'samples': 1,
-        #   'seed': 42,
-        #   'steps': 50,
-        #   'text_prompts': [ { 'text': 'Renaissance-style portrait of an astronaut in '
-        #                               'space, detailed starry background, reflective '
-        #                               'helmet.'}],
-        #   'width': 512}
-        response  = self.bedrock.model_invoke(model_id, body)
-
-        #pprint(response)
-        artifacts = response.get('artifacts')
-        assert list_set(response) == ['artifacts', 'result']
-        assert len(artifacts) == 1
-        self.png_data = artifacts[0].get('base64')
-        #pprint(f'got image with size {len(self.png_data)}')
