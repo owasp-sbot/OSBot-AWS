@@ -42,8 +42,6 @@ class Bedrock_Cache__Html:
                                  ".var_name"      : {"font-size"      : "12px"            },
                                  ".comments_value": {"font-size"      : "12px"            }}
 
-        #css_data['td'] = {'background-color' : 'black'}
-
         head_style     = Tag__Base(tag_name='style')
         head_tag       = Tag__Head(elements= [head_style])
         head_tag.title = self.title

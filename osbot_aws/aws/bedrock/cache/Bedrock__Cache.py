@@ -12,7 +12,7 @@ from osbot_utils.utils.Misc                         import str_sha256, timestamp
 class Bedrock__Cache(Kwargs_To_Self):
     add_timestamp  : bool            = True
     enabled        : bool            = True
-    force_request  : bool            = False                        # todo find a better name, and fix BUG where we should be taking into account the latest mapping (so that we only have one 'latest' result)
+    update_mode    : bool            = False
     sqlite_bedrock : Sqlite__Bedrock = None
 
     def __init__(self, db_path=None):
@@ -23,6 +23,11 @@ class Bedrock__Cache(Kwargs_To_Self):
     def cache_add(self, request_data, response_data):
         new_row_obj = self.create_new_cache_obj(request_data, response_data)
         return self.cache_table().row_add_and_commit(new_row_obj)
+
+    def cache_delete(self, request_data):
+        request_data        = json_dumps(request_data)
+        request_data_sha256 = str_sha256(request_data)
+        return self.cache_table().rows_delete_where(request_hash=request_data_sha256)
 
     def cache_entries(self):
         return self.cache_table().rows()
@@ -121,6 +126,9 @@ class Bedrock__Cache(Kwargs_To_Self):
     def rows_where__request_hash(self, request_hash):
         return self.rows_where(request_hash=request_hash)
 
+    def update(self, value=True):
+        self.update_mode = value
+        return self
     # CACHED methods
 
     def invoke_with_cache(self, target,target_kwargs, request_data=None):
@@ -129,8 +137,11 @@ class Bedrock__Cache(Kwargs_To_Self):
         if request_data is None:
             request_data  = self.cache_request_data(**target_kwargs)
         cache_entry   = self.cache_entry(request_data)
-        if self.force_request is False:
-            if cache_entry:
+        if cache_entry:
+            if self.update_mode is True:
+                result = self.cache_delete(request_data)
+                cache_entry = self.cache_entry(request_data)
+            else:
                 response_data_json = cache_entry.get('response_data')
                 if response_data_json:
                     return json_loads(response_data_json)
