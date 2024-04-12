@@ -6,10 +6,13 @@ from osbot_aws.aws.bedrock.Bedrock import Bedrock
 from osbot_aws.aws.bedrock.cache.Bedrock__Cache import Bedrock__Cache
 from osbot_aws.aws.bedrock.cache.Sqlite__Bedrock import Sqlite__Bedrock
 from osbot_aws.aws.bedrock.cache.Sqlite__Bedrock__Row import Sqlite__Bedrock__Row
+from osbot_utils.base_classes.Kwargs_To_Self import Kwargs_To_Self
 from osbot_utils.helpers.sqlite.Sqlite__Cursor import Sqlite__Cursor
+from osbot_utils.testing.Stdout import Stdout
 from osbot_utils.utils.Dev import pprint
-from osbot_utils.utils.Files import temp_file, file_not_exists, file_delete, file_exists
-from osbot_utils.utils.Json import json_dump, json_dumps, json_loads
+from osbot_utils.utils.Files import temp_file, file_not_exists, file_delete, file_exists, parent_folder, \
+    current_temp_folder
+from osbot_utils.utils.Json import json_dump, json_dumps, json_loads, to_json_str, from_json_str
 from osbot_utils.utils.Misc import random_string, str_sha256, list_set, random_text
 
 
@@ -19,10 +22,11 @@ class test_Bedrock__Cache(TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.temp_db_path  = temp_file(extension='sqlite')
-        cls.bedrock_cache = Bedrock__Cache(db_path = cls.temp_db_path)          # the db_path to the tmp file path
-        cls.bedrock_cache.add_timestamp = False                                 # disabling timestamp since it complicates the test data verification below
-        assert file_exists(cls.temp_db_path) is True
+        cls.temp_db_path                = temp_file(extension='sqlite')
+        cls.bedrock_cache               = Bedrock__Cache(db_path = cls.temp_db_path)            # the db_path to the tmp file path
+        cls.bedrock_cache.add_timestamp = False                                                 # disabling timestamp since it complicates the test data verification below
+        assert parent_folder(cls.bedrock_cache.sqlite_bedrock.db_path) == current_temp_folder()
+        assert file_exists  (cls.temp_db_path)                         is True
 
     @classmethod
     def tearDownClass(cls):    #file_delete(cls.temp_db_path)
@@ -86,6 +90,17 @@ class test_Bedrock__Cache(TestCase):
             assert _.rows() == []                                                       # confirm we are back to having an empty table
             assert self.bedrock_cache.cache_entry(request_data) == {}                   # confirm entry is not available anymore
 
+    def test_cache_delete(self):
+        request_data  = {'an': 'request' }
+        response_data = {'an': 'response'}
+        with self.bedrock_cache as _:
+            row = _.cache_add(request_data, response_data)
+            assert row.request_data  == to_json_str(request_data )
+            assert row.response_data == to_json_str(response_data)
+            assert len (_.cache_entries()) == 1
+            assert _.cache_delete(request_data).get('status') == 'ok'
+            assert len(_.cache_entries()) == 0
+
     def test_cache_entry_comments(self):
         with self.bedrock_cache as _:
             assert _.cache_entries() == []
@@ -107,7 +122,7 @@ class test_Bedrock__Cache(TestCase):
             assert _.cache_entries()                    == []
 
         #cache_entry_comments
-    def test_create_new_cache_entry(self):
+    def test_create_new_cache_data(self):
         model_id                 = 'aaaa'
         body                     = {'the': 'request data'}
         response_data            = {'the': 'return value'}
@@ -128,8 +143,134 @@ class test_Bedrock__Cache(TestCase):
         assert new_cache_obj.__locals__() == expected_new_cache_obj
         assert self.bedrock_cache.cache_entries() ==[]
 
+        self.bedrock_cache.add_timestamp = True
+        new_cache_entry = self.bedrock_cache.create_new_cache_data(request_data, response_data)
+        assert new_cache_entry.get('timestamp') != 0
+        assert new_cache_entry.get('timestamp') > 0
+        self.bedrock_cache.add_timestamp = False
+
+    def test_comments(self):
+        model_id = 'an_model_id'
+        body     = {'an' : 'body'}
+        comments = 'here are some comments'
+        class An_Model(Kwargs_To_Self):
+            model_id : str
+            def body(self):
+                return body
+
+        an_model = An_Model(model_id=model_id)
+        assert an_model.__locals__() == {'model_id': model_id}
+        with self.bedrock_cache as _:
+            request_data  = _.cache_request_data(model_id, body)
+            response_data = {}
+            _.cache_add(request_data, response_data )
+            assert _.comments(an_model) is ''
+            assert _.comments_set(an_model, comments).get('status') == 'ok'
+            assert _.comments(an_model) == comments
+            with Stdout() as stdout:
+                _.comments_print(an_model)
+            assert stdout.value() == ('\n'
+                                      '\n'
+                                      '----------------------------\n'
+                                      f'comment on model: {model_id} "\n'
+                                      '\n'
+                                      f'{comments}\n')
+
+    def test_disable(self):
+        with self.bedrock_cache as _:
+            assert _.enabled is True
+            _.disable()
+            assert _.enabled is False
+            _.enable()
+            assert _.enabled is True
+
+    def test_only_from_cache(self):
+        with self.bedrock_cache as _:
+            assert _.cache_only_mode is False
+            _.only_from_cache()
+            assert _.cache_only_mode is True
+            _.only_from_cache(False)
+            assert _.cache_only_mode is False
 
 
+    def test_requests_data__all(self):
+        count = 2
+        self.add_test_requests(count)
+
+        with self.bedrock_cache as _:
+            for requests_data in _.requests_data__all():
+                assert list_set(requests_data) == ['_comments','_hash', '_id', 'body', 'model']
+            assert _.cache_table().size() == count
+
+    def test_requests_data__by_model_id(self):
+        count = 2
+        self.add_test_requests(count)
+        with self.bedrock_cache as _:
+            requests_data_by_model_id = _.requests_data__by_model_id()
+            model_ids        = list_set(requests_data_by_model_id)
+            model_id         = model_ids[0]
+            requests_data    = requests_data_by_model_id.get(model_id)
+            request_data     = requests_data[0]
+
+            assert len(model_ids    )     == count
+            assert len(requests_data)     == 1
+            assert list_set(request_data) == ['_comments', '_hash', '_id', 'body', 'model']
+            request_hash   = request_data.get('_hash')
+            rows_with_hash = _.rows_where__request_hash(request_hash)
+            row_with_hash  = rows_with_hash[0]
+            response_data  = _.response_data_for__request_hash(request_hash)
+
+            assert response_data        == from_json_str(row_with_hash.get('response_data'))
+            assert len(rows_with_hash)  == 1
+            assert from_json_str(row_with_hash.get('request_data')).get('model') == model_id
+
+    def test_requests_data__with_model_id(self):
+        count = 2
+        self.add_test_requests(count)
+        with self.bedrock_cache as _:
+            requests_data_by_model_id = _.requests_data__by_model_id()
+            for model_id, requests_data in requests_data_by_model_id.items() :
+                assert requests_data == _.requests_data__with_model_id(model_id)
+
+    def test_response_data_for__request_hash(self):
+        assert self.bedrock_cache.response_data_for__request_hash('aaaa') == {}
+
+
+    def test_setup(self):
+        with self.bedrock_cache.sqlite_bedrock as _:
+            assert _.db_path != Sqlite__Bedrock().path_sqlite_bedrock()
+            assert _.db_path == self.temp_db_path
+
+        with self.bedrock_cache.cache_table() as _:
+
+            _._table_create().add_fields_from_class(Sqlite__Bedrock__Row).sql_for__create_table()
+
+            assert _.exists() is True
+            assert _.row_schema is Sqlite__Bedrock__Row
+            assert _.schema__by_name_type() == { 'cache_hits'   : 'INTEGER' ,
+                                                 'comments'     : 'TEXT'    ,
+                                                 'id'           : 'INTEGER' ,
+                                                 'latest'       : 'BOOLEAN' ,
+                                                 'request_data' : 'TEXT'    ,
+                                                 'request_hash' : 'TEXT'    ,
+                                                 'response_data': 'TEXT'    ,
+                                                 'response_hash': 'TEXT'    ,
+                                                 'timestamp'    : 'INTEGER' }
+            assert _.indexes() == ['idx__bedrock_requests__request_hash']
+
+
+    def test_update(self):
+        with self.bedrock_cache as _:
+            assert _.update_mode is False
+            _.update()
+            assert _.update_mode is True
+            _.update(False)
+            assert _.update_mode is False
+
+
+
+
+    # Bedrock overwrite methods
     def test_model_invoke(self):
         model_id             = 'aaaa'
         body                 = {'the': 'request data'}
@@ -201,53 +342,4 @@ class test_Bedrock__Cache(TestCase):
 
         assert models == response_data
         assert self.bedrock_cache.cache_entries() ==[expected_cache_entry]
-
-    def test_requests_data__all(self):
-        count = 2
-        self.add_test_requests(count)
-
-        with self.bedrock_cache as _:
-            for requests_data in _.requests_data__all():
-                assert list_set(requests_data) == ['_comments','_hash', '_id', 'body', 'model']
-            assert _.cache_table().size() == count
-
-    def test_requests_data__by_model_id(self):
-        count = 2
-        self.add_test_requests(count)
-        with self.bedrock_cache as _:
-            requests_data_by_model_id = _.requests_data__by_model_id()
-            model_ids = list_set(requests_data_by_model_id)
-            assert len(model_ids) == count
-            model_id = model_ids.pop()
-            requests_data = requests_data_by_model_id.get(model_id)
-            request_data  = requests_data[0]
-            assert len(requests_data) ==1
-            assert list_set(request_data) == ['_comments', '_hash', '_id', 'body', 'model']
-            request_hash = request_data.get('_hash')
-            rows_via_hash = _.rows_where__request_hash(request_hash)
-            assert len(rows_via_hash) == 1
-            assert json_loads(rows_via_hash[0].get('request_data')).get('model') == model_id
-
-
-    def test_setup(self):
-        with self.bedrock_cache.sqlite_bedrock as _:
-            assert _.db_path != Sqlite__Bedrock().path_sqlite_bedrock()
-            assert _.db_path == self.temp_db_path
-
-        with self.bedrock_cache.cache_table() as _:
-
-            _._table_create().add_fields_from_class(Sqlite__Bedrock__Row).sql_for__create_table()
-
-            assert _.exists() is True
-            assert _.row_schema is Sqlite__Bedrock__Row
-            assert _.schema__by_name_type() == { 'cache_hits'   : 'INTEGER' ,
-                                                 'comments'     : 'TEXT'    ,
-                                                 'id'           : 'INTEGER' ,
-                                                 'latest'       : 'BOOLEAN' ,
-                                                 'request_data' : 'TEXT'    ,
-                                                 'request_hash' : 'TEXT'    ,
-                                                 'response_data': 'TEXT'    ,
-                                                 'response_hash': 'TEXT'    ,
-                                                 'timestamp'    : 'INTEGER' }
-            assert _.indexes() == ['idx__bedrock_requests__request_hash']
 
