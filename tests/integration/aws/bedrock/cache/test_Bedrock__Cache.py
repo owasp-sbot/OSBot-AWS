@@ -238,7 +238,7 @@ class test_Bedrock__Cache(TestCase):
 
     def test_setup(self):
         with self.bedrock_cache.sqlite_bedrock as _:
-            assert _.db_path != Sqlite__Bedrock().path_sqlite_bedrock()
+            assert _.db_path != Sqlite__Bedrock().path_local_db()
             assert _.db_path == self.temp_db_path
 
         with self.bedrock_cache.cache_table() as _:
