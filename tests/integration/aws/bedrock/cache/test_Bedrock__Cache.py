@@ -1,21 +1,14 @@
-import sqlite3
-from unittest import TestCase
-from unittest.mock import Mock
-
-from osbot_aws.aws.bedrock.Bedrock import Bedrock
-from osbot_aws.aws.bedrock.cache.Bedrock__Cache import Bedrock__Cache
-from osbot_aws.aws.bedrock.cache.Sqlite__Bedrock import Sqlite__Bedrock
-from osbot_aws.aws.bedrock.cache.Sqlite__Bedrock__Row import Sqlite__Bedrock__Row
-from osbot_utils.base_classes.Kwargs_To_Self import Kwargs_To_Self
-from osbot_utils.helpers.sqlite.Sqlite__Cursor import Sqlite__Cursor
+from unittest                                                           import TestCase
+from unittest.mock                                                      import Mock
+from osbot_aws.aws.bedrock.cache.Bedrock__Cache                         import Bedrock__Cache
+from osbot_utils.base_classes.Kwargs_To_Self                            import Kwargs_To_Self
+from osbot_utils.helpers.sqlite.domains.Sqlite__DB__Requests import Sqlite__DB__Requests
 from osbot_utils.helpers.sqlite.domains.schemas.Schema__Table__Requests import Schema__Table__Requests
-from osbot_utils.testing.Stdout import Stdout
+from osbot_utils.testing.Stdout                                         import Stdout
+from osbot_utils.utils.Files                                            import temp_file, file_not_exists, file_exists, parent_folder, current_temp_folder
+from osbot_utils.utils.Json                                             import json_dump, json_dumps, json_loads, to_json_str, from_json_str
+from osbot_utils.utils.Misc                                             import random_string, str_sha256, list_set, random_text
 from osbot_utils.utils.Dev import pprint
-from osbot_utils.utils.Files import temp_file, file_not_exists, file_delete, file_exists, parent_folder, \
-    current_temp_folder
-from osbot_utils.utils.Json import json_dump, json_dumps, json_loads, to_json_str, from_json_str
-from osbot_utils.utils.Misc import random_string, str_sha256, list_set, random_text
-
 
 class test_Bedrock__Cache(TestCase):
     bedrock_cache : Bedrock__Cache
@@ -239,12 +232,13 @@ class test_Bedrock__Cache(TestCase):
 
     def test_setup(self):
         with self.bedrock_cache.sqlite_bedrock as _:
-            assert _.db_path != Sqlite__Bedrock().path_local_db()
+            assert type(_)   is Sqlite__DB__Requests
+            assert _.db_path != Sqlite__DB__Requests().path_local_db()
             assert _.db_path == self.temp_db_path
 
         with self.bedrock_cache.cache_table() as _:
 
-            _._table_create().add_fields_from_class(Sqlite__Bedrock__Row).sql_for__create_table()
+            _._table_create().add_fields_from_class(Schema__Table__Requests).sql_for__create_table()
 
             assert _.exists()   is True
             assert _.row_schema is Schema__Table__Requests

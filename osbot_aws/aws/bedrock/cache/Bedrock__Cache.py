@@ -1,27 +1,29 @@
+from os import environ
+
 from dotenv import load_dotenv
 
-from osbot_aws.aws.bedrock.cache.Sqlite__Bedrock    import Sqlite__Bedrock
-from osbot_utils.base_classes.Kwargs_To_Self        import Kwargs_To_Self
 from osbot_utils.decorators.lists.group_by import group_by
 from osbot_utils.decorators.lists.index_by import index_by
+from osbot_utils.helpers.sqlite.domains.Sqlite__Cache__Requests import Sqlite__Cache__Requests
+from osbot_utils.helpers.sqlite.domains.Sqlite__DB__Requests import Sqlite__DB__Requests
 from osbot_utils.utils.Dev import pprint
 from osbot_utils.utils.Json                         import json_dumps, json_loads
 from osbot_utils.utils.Lists                        import list_group_by
 from osbot_utils.utils.Misc                         import str_sha256, timestamp_utc_now
 from osbot_utils.utils.Str import str_dedent
 
+ENV_NAME_BEDROCK_DB_NAME       = 'BEDROCK_DB_NAME'
+SQLITE_DB_NAME__SQLITE_BEDROCK = 'sqlite__bedrock.sqlite'
 
-class Bedrock__Cache(Kwargs_To_Self):
-    add_timestamp  : bool            = True
-    enabled        : bool            = True
-    update_mode    : bool            = False
-    cache_only_mode: bool            = False
-    sqlite_bedrock : Sqlite__Bedrock = None
+class Bedrock__Cache(Sqlite__Cache__Requests):
+    db_name        : str
+    sqlite_bedrock : Sqlite__DB__Requests = None
 
     def __init__(self, db_path=None):
         load_dotenv()
         super().__init__()
-        self.sqlite_bedrock = Sqlite__Bedrock(db_path=db_path)
+        self.db_name = environ.get(ENV_NAME_BEDROCK_DB_NAME) or SQLITE_DB_NAME__SQLITE_BEDROCK
+        self.sqlite_bedrock = Sqlite__DB__Requests(db_path=db_path, db_name=self.db_name)
 
     def cache_add(self, request_data, response_data):
         new_row_obj = self.create_new_cache_obj(request_data, response_data)
