@@ -1,16 +1,11 @@
 from os import environ
 
-from dotenv import load_dotenv
-
-from osbot_utils.decorators.lists.group_by import group_by
-from osbot_utils.decorators.lists.index_by import index_by
+from dotenv                                                     import load_dotenv
+from osbot_utils.decorators.lists.group_by                      import group_by
+from osbot_utils.decorators.lists.index_by                      import index_by
 from osbot_utils.helpers.sqlite.domains.Sqlite__Cache__Requests import Sqlite__Cache__Requests
-from osbot_utils.helpers.sqlite.domains.Sqlite__DB__Requests import Sqlite__DB__Requests
-from osbot_utils.utils.Dev import pprint
-from osbot_utils.utils.Json                         import json_dumps, json_loads
-from osbot_utils.utils.Lists                        import list_group_by
-from osbot_utils.utils.Misc                         import str_sha256, timestamp_utc_now
-from osbot_utils.utils.Str import str_dedent
+from osbot_utils.utils.Lists                                    import list_group_by
+from osbot_utils.utils.Str                                      import str_dedent
 
 ENV_NAME_BEDROCK_DB_NAME       = 'BEDROCK_DB_NAME'
 SQLITE_DB_NAME__SQLITE_BEDROCK = 'sqlite__bedrock.sqlite'
@@ -26,13 +21,12 @@ class Bedrock__Cache(Sqlite__Cache__Requests):
         self.table_name = SQLITE_TABLE__BEDROCK_REQUESTS
         super().__init__(db_path=db_path, db_name=self.db_name, table_name=self.table_name)
 
+    # Sqlite__Cache__Requests override methods
+
     def cache_request_data(self, model_id, body):
         request_data = dict(model        = model_id     ,
                             body         = body         )
         return request_data
-
-
-    # Sqlite__Cache__Requests override methods
 
 
     # Bedrock cache specific methods
@@ -61,6 +55,18 @@ class Bedrock__Cache(Sqlite__Cache__Requests):
         model_id = model.model_id
         body     = model.body()
         return self.cache_entry_comments_update(model_id=model_id, body=body, new_comments=new_comments)
+
+    def requests_data__by_model_id(self):
+        values        = self.requests_data__all()
+        group_by      = 'model'
+        requests_data = list_group_by(values=values, group_by=group_by)
+        if 'None' in requests_data:                         # if there are other entries in the cache
+            del requests_data['None']                       # don't include them
+        return requests_data
+
+    def requests_data__with_model_id(self, model_id):
+        return self.requests_data__by_model_id().get(model_id, [])
+
 
     # Bedrock overwrite methods
 
