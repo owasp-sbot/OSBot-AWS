@@ -8,6 +8,7 @@ from osbot_aws.aws.bedrock.cache.Sqlite__Bedrock import Sqlite__Bedrock
 from osbot_aws.aws.bedrock.cache.Sqlite__Bedrock__Row import Sqlite__Bedrock__Row
 from osbot_utils.base_classes.Kwargs_To_Self import Kwargs_To_Self
 from osbot_utils.helpers.sqlite.Sqlite__Cursor import Sqlite__Cursor
+from osbot_utils.helpers.sqlite.domains.schemas.Schema__Table__Requests import Schema__Table__Requests
 from osbot_utils.testing.Stdout import Stdout
 from osbot_utils.utils.Dev import pprint
 from osbot_utils.utils.Files import temp_file, file_not_exists, file_delete, file_exists, parent_folder, \
@@ -245,8 +246,8 @@ class test_Bedrock__Cache(TestCase):
 
             _._table_create().add_fields_from_class(Sqlite__Bedrock__Row).sql_for__create_table()
 
-            assert _.exists() is True
-            assert _.row_schema is Sqlite__Bedrock__Row
+            assert _.exists()   is True
+            assert _.row_schema is Schema__Table__Requests
             assert _.schema__by_name_type() == { 'cache_hits'   : 'INTEGER' ,
                                                  'comments'     : 'TEXT'    ,
                                                  'id'           : 'INTEGER' ,
@@ -256,7 +257,7 @@ class test_Bedrock__Cache(TestCase):
                                                  'response_data': 'TEXT'    ,
                                                  'response_hash': 'TEXT'    ,
                                                  'timestamp'    : 'INTEGER' }
-            assert _.indexes() == ['idx__bedrock_requests__request_hash']
+            assert _.indexes() == ['idx__requests__request_hash']
 
 
     def test_update(self):
