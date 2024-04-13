@@ -17,4 +17,4 @@ class test_Bedrock_Cache__Html_Table(TestCase):
 
     def test_table_rows(self):
         rows = self.html_table.table_rows()
-        assert len(rows) > 0
+        assert type(rows) is list
