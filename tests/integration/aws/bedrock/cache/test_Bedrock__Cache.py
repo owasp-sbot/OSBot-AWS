@@ -34,6 +34,9 @@ class test_Bedrock__Cache(TestCase):
         cls.bedrock_cache.sqlite_bedrock.delete()
         assert file_not_exists(cls.temp_db_path) is True
 
+    def tearDown(self):
+        self.bedrock_cache.cache_table().clear()
+
     def test___init__(self):
         with self.bedrock_cache as _:
             assert type      (_)                is Bedrock__Cache
@@ -45,8 +48,6 @@ class test_Bedrock__Cache(TestCase):
             assert _.sqlite_bedrock.db_name     == _.db_name
             assert _.sqlite_bedrock.table_name  == _.table_name
 
-    def tearDown(self):
-        self.bedrock_cache.cache_table().clear()
 
     def add_test_requests(self, count=10):
         for i in range(count):

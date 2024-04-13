@@ -26,15 +26,16 @@ class Bedrock__Cache(Sqlite__Cache__Requests):
         self.table_name = SQLITE_TABLE__BEDROCK_REQUESTS
         super().__init__(db_path=db_path, db_name=self.db_name, table_name=self.table_name)
 
+    def cache_request_data(self, model_id, body):
+        request_data = dict(model        = model_id     ,
+                            body         = body         )
+        return request_data
 
 
+    # Sqlite__Cache__Requests override methods
 
 
-
-
-
-
-
+    # Bedrock cache specific methods
 
     def comments(self, model):
         model_id = model.model_id
