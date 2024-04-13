@@ -16,6 +16,7 @@ class Bedrock_Cache__Html_With_Images(Bedrock_Cache__Html):
     def __init__(self):
         super().__init__()
         self.title     = 'AWS Bedrock Cached images'
+        self.target_file = '/tmp/tmp-bedrock-images.html'
 
 
     def create__amazon_titan(self):

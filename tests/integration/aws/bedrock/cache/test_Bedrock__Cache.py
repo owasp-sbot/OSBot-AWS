@@ -1,7 +1,12 @@
+from os import environ
 from unittest                                                           import TestCase
 from unittest.mock                                                      import Mock
-from osbot_aws.aws.bedrock.cache.Bedrock__Cache                         import Bedrock__Cache
+from osbot_aws.aws.bedrock.cache.Bedrock__Cache import Bedrock__Cache, ENV_NAME_BEDROCK_DB_NAME, \
+    SQLITE_DB_NAME__SQLITE_BEDROCK, SQLITE_TABLE__BEDROCK_REQUESTS
 from osbot_utils.base_classes.Kwargs_To_Self                            import Kwargs_To_Self
+from osbot_utils.helpers.sqlite.Sqlite__Database import Sqlite__Database
+from osbot_utils.helpers.sqlite.domains.Sqlite__Cache__Requests import Sqlite__Cache__Requests
+from osbot_utils.helpers.sqlite.domains.Sqlite__DB__Local import Sqlite__DB__Local
 from osbot_utils.helpers.sqlite.domains.Sqlite__DB__Requests import Sqlite__DB__Requests
 from osbot_utils.helpers.sqlite.domains.schemas.Schema__Table__Requests import Schema__Table__Requests
 from osbot_utils.testing.Stdout                                         import Stdout
@@ -9,6 +14,8 @@ from osbot_utils.utils.Files                                            import t
 from osbot_utils.utils.Json                                             import json_dump, json_dumps, json_loads, to_json_str, from_json_str
 from osbot_utils.utils.Misc                                             import random_string, str_sha256, list_set, random_text
 from osbot_utils.utils.Dev import pprint
+from osbot_utils.utils.Objects import base_types
+
 
 class test_Bedrock__Cache(TestCase):
     bedrock_cache : Bedrock__Cache
@@ -26,6 +33,17 @@ class test_Bedrock__Cache(TestCase):
     def tearDownClass(cls):    #file_delete(cls.temp_db_path)
         cls.bedrock_cache.sqlite_bedrock.delete()
         assert file_not_exists(cls.temp_db_path) is True
+
+    def test___init__(self):
+        with self.bedrock_cache as _:
+            assert type      (_)                is Bedrock__Cache
+            assert base_types(_)                == [Sqlite__Cache__Requests, Kwargs_To_Self, object]
+            assert _.db_name                    == environ.get(ENV_NAME_BEDROCK_DB_NAME) or SQLITE_DB_NAME__SQLITE_BEDROCK
+            assert _.table_name                 == SQLITE_TABLE__BEDROCK_REQUESTS
+            assert type      (_.sqlite_bedrock) is Sqlite__DB__Requests
+            assert base_types(_.sqlite_bedrock) == [Sqlite__DB__Local, Sqlite__Database, Kwargs_To_Self, object]
+            assert _.sqlite_bedrock.db_name     == _.db_name
+            assert _.sqlite_bedrock.table_name  == _.table_name
 
     def tearDown(self):
         self.bedrock_cache.cache_table().clear()
@@ -251,7 +269,7 @@ class test_Bedrock__Cache(TestCase):
                                                  'response_data': 'TEXT'    ,
                                                  'response_hash': 'TEXT'    ,
                                                  'timestamp'    : 'INTEGER' }
-            assert _.indexes() == ['idx__requests__request_hash']
+            assert _.indexes() == ['idx__bedrock_requests__request_hash']
 
 
     def test_update(self):

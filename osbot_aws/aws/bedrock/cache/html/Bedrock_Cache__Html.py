@@ -12,7 +12,7 @@ class Bedrock_Cache__Html:
     def __init__(self):
         self.cache        = Bedrock__Cache()
         self.table        = self.cache.cache_table()
-        self.target_file  = '/tmp/tmp-bedrock-images.html'
+        self.target_file  = '/tmp/tmp-bedrock-cache.html'
         self.html_tag     = Tag__Html()
         self.title        = 'Html Page with Bedrock_Cache_Data'
         self.sub_title    = '....'

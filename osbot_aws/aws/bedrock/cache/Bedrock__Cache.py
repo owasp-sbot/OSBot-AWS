@@ -14,16 +14,19 @@ from osbot_utils.utils.Str import str_dedent
 
 ENV_NAME_BEDROCK_DB_NAME       = 'BEDROCK_DB_NAME'
 SQLITE_DB_NAME__SQLITE_BEDROCK = 'sqlite__bedrock.sqlite'
+SQLITE_TABLE__BEDROCK_REQUESTS = 'bedrock_requests'
 
 class Bedrock__Cache(Sqlite__Cache__Requests):
     db_name        : str
+    table_name     : str
     sqlite_bedrock : Sqlite__DB__Requests = None
 
     def __init__(self, db_path=None):
         load_dotenv()
         super().__init__()
-        self.db_name = environ.get(ENV_NAME_BEDROCK_DB_NAME) or SQLITE_DB_NAME__SQLITE_BEDROCK
-        self.sqlite_bedrock = Sqlite__DB__Requests(db_path=db_path, db_name=self.db_name)
+        self.db_name    = environ.get(ENV_NAME_BEDROCK_DB_NAME) or SQLITE_DB_NAME__SQLITE_BEDROCK
+        self.table_name = SQLITE_TABLE__BEDROCK_REQUESTS
+        self.sqlite_bedrock = Sqlite__DB__Requests(db_path=db_path, db_name=self.db_name, table_name=self.table_name)
 
     def cache_add(self, request_data, response_data):
         new_row_obj = self.create_new_cache_obj(request_data, response_data)
