@@ -1,13 +1,6 @@
-from unittest import TestCase
-
-from osbot_aws.aws.boto3.View_Boto3_Rest_Calls import print_boto3_calls
 from osbot_aws.aws.dynamo_db.Dynamo_DB__Record import Dynamo_DB__Record, Dynamo_DB__Record__Metadata
-from osbot_aws.aws.dynamo_db.Dynamo_DB__Table import Dynamo_DB__Table
-from osbot_utils.utils.Dev import pprint
 from osbot_utils.utils.Misc import str_to_bytes
-from osbot_utils.utils.Objects import obj_info
 from tests.integration.aws.dynamo_db.TestCase__Temp_Dynamo_DB_Table import TestCase__Temp_Dynamo_DB_Table
-from tests.integration.aws.dynamo_db.test_Dynamo_DB import Dynamo_DB__with_temp_role
 
 TEST_TABLE_NAME = 'temp_table__test_Dynamo_DB__Record'
 

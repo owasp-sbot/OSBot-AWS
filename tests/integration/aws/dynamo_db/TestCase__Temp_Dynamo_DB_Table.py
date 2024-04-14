@@ -1,7 +1,7 @@
 from unittest import TestCase
 
 from osbot_aws.aws.dynamo_db.Dynamo_DB__Table import Dynamo_DB__Table
-from tests.integration.aws.dynamo_db.test_Dynamo_DB import Dynamo_DB__with_temp_role
+from osbot_aws.aws.dynamo_db.Dynamo_DB__with_temp_role import Dynamo_DB__with_temp_role
 
 
 class TestCase__Temp_Dynamo_DB_Table(TestCase):

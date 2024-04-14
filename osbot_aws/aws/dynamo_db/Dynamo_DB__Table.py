@@ -48,8 +48,8 @@ class Dynamo_DB__Table(Kwargs_To_Self):
     def delete_document(self, key_value):
         return self.dynamo_db.document_delete(table_name=self.table_name, key_name=self.key_name, key_value=key_value)
 
-    def delete_table(self):
-        return self.dynamo_db.table_delete(table_name=self.table_name)
+    def delete_table(self, wait_for_deletion=True):
+        return self.dynamo_db.table_delete(table_name=self.table_name, wait_for_deletion=wait_for_deletion)
 
     def document(self, key_value):
         return self.dynamo_db.document(table_name=self.table_name, key_name=self.key_name, key_value=key_value)

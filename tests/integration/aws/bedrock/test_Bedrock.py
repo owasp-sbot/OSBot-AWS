@@ -1,45 +1,30 @@
-from unittest                                                            import TestCase
-from dotenv                                                              import load_dotenv
-from osbot_aws.aws.bedrock.Bedrock                                       import Bedrock
-from osbot_aws.aws.bedrock.models.anthropic.Anthropic__Claude_Instant_V1 import Anthropic__Claude_Instant_V1
-from osbot_aws.aws.iam.IAM_Assume_Role                                   import IAM_Assume_Role
-from osbot_utils.decorators.methods.cache_on_self                        import cache_on_self
+import json
+
+import pytest
+
+from osbot_aws.aws.bedrock.Bedrock__with_temp_role                       import Bedrock__with_temp_role
+from osbot_aws.aws.bedrock.models.titan.Amazon_Titan_Text_Lite_V1 import Amazon_Titan_Text_Lite_V1
+from osbot_aws.aws.bedrock.models.titan.Amazon_Titan_Tg1_Large import Amazon_Titan_Tg1_Large
+from osbot_aws.aws.bedrock.models.claude.Anthropic__Claude_Instant_V1 import Anthropic__Claude_Instant_V1
+from osbot_aws.aws.bedrock.models.claude.Anthropic__Claude_V2_0 import Anthropic__Claude_V2_0
+from osbot_aws.aws.boto3.View_Boto3_Rest_Calls import print_boto3_calls
+from osbot_utils.utils.Dev import pprint
+from osbot_utils.utils.Json import json_dumps
 from osbot_utils.utils.Lists                                             import list_contains_list
 from osbot_utils.utils.Misc                                              import list_set
 from osbot_utils.utils.Objects                                           import type_full_name
+from osbot_aws.testing.TestCase__Bedrock import TestCase__Bedrock
 
-class Bedrock__with_temp_role(Bedrock):
 
-    def iam_assume_role(self, service):
-        load_dotenv()
-        #service         = "bedrock"
-        action          = "*"
-        resource        = "*"
-        role_name       = 'osbot__temp_role_for__test_Bedrock'
-        policies_to_add = [dict(service=service, action=action, resource=resource)]
-        iam_assume_role = IAM_Assume_Role(role_name=role_name, policies_to_add=policies_to_add)
-        iam_assume_role.create_role(recreate=False)
-        #iam_assume_role.credentials_reset()
-        return iam_assume_role
+class test_Bedrock(TestCase__Bedrock):
 
-    @cache_on_self
-    def client(self):
-        service = "bedrock"
-        return self.iam_assume_role(service).boto3_client(service_name=service, region_name=self.region_name)
-
-    @cache_on_self
-    def runtime(self):
-        service = "bedrock-runtime"
-        return self.iam_assume_role(service).boto3_client(service_name=service, region_name=self.region_name)
-
-class test_Bedrock(TestCase):
-
-    def setUp(self):
-        self.region_name = 'us-east-1'
-        self.bedrock     = Bedrock__with_temp_role(region_name=self.region_name)
+    # def setUp(self):
+    #     self.region_name = 'us-east-1'
+    #     self.bedrock     = Bedrock__with_temp_role(region_name=self.region_name)
+    #     self.bedrock.bedrock_cache.enabled = True
 
     def test___init__(self):
-        assert type_full_name(self.bedrock        ) == 'test_Bedrock.Bedrock__with_temp_role'
+        assert type_full_name(self.bedrock        ) == 'osbot_aws.aws.bedrock.Bedrock__with_temp_role.Bedrock__with_temp_role'
 
     def test_client(self):
         client = self.bedrock.client()
@@ -66,11 +51,29 @@ class test_Bedrock(TestCase):
                                                                 'untag_resource'                                ,
                                                                 'update_provisioned_model_throughput'           ]
 
-    def test_runtime(self):
-        runtime = self.bedrock.runtime()
-        assert type_full_name(runtime)                      == 'botocore.client.BedrockRuntime'
-        assert runtime.meta.region_name                     == 'us-east-1'
-        assert list_set(runtime.meta.method_to_api_mapping) == ['invoke_model', 'invoke_model_with_response_stream']
+
+
+    def test_model(self):
+        missing_mappings = ['amazon.titan-image-generator-v1:0',                    # this feels like a bug in AWS mappings
+                            'amazon.titan-image-generator-v1',                      # since why should these particular models not have this option
+                            'amazon.titan-embed-g1-text-02',
+                            'amazon.titan-embed-image-v1:0',
+                            'amazon.titan-embed-image-v1',
+                            'stability.stable-diffusion-xl',
+                            'stability.stable-diffusion-xl-v0',
+                            'stability.stable-diffusion-xl-v1:0',
+                            'stability.stable-diffusion-xl-v1']
+        models = self.bedrock.models()
+        for model in models:
+            model_id = model.get('modelId')
+            model = self.bedrock.model(model_id=model_id)
+            model_keys = list_set(model)                                # for some reason, some models don't have this
+            if 'responseStreamingSupported' not in model_keys:
+                model_keys.append('responseStreamingSupported')
+                assert model_id in missing_mappings                     # confirm it is one of the ones that we have seen before
+            assert model_keys == [ 'customizationsSupported', 'inferenceTypesSupported', 'inputModalities',
+                                    'modelArn', 'modelId', 'modelLifecycle',
+                                    'modelName', 'outputModalities', 'providerName', 'responseStreamingSupported']
 
     #@capture_boto3_error
     def test_model_invoke(self):
@@ -84,10 +87,34 @@ class test_Bedrock(TestCase):
                            'stop'         : '\n\nHuman:'                      ,
                            'stop_reason'  : 'stop_sequence'                   }
 
-        # model_id    = 'cohere.command-light-text-v14'
-        # model_id    = 'meta.llama2-13b-chat-v1'
+    #@pytest.mark.skip(reason="not finished")
+    def test_model_invoke_stream(self):
+
+        #self.cache.disable()
+
+        prompt = 'write an essay for living on mars in 10 words'
+
+        def test_model(model, body, chunk_field):
+            model_id = model.model_id
+            for chunk in self.bedrock.model_invoke_stream(model_id=model_id, body=body):
+                assert chunk_field in chunk
+
+
+
+        target_model = Anthropic__Claude_V2_0(prompt=prompt)
+        model_body   = target_model.body()
+        test_model(target_model, model_body, 'completion')
+
+        target_model = Amazon_Titan_Text_Lite_V1()
+        model_body   = target_model.body(prompt=prompt)
+        test_model(target_model, model_body, 'outputText')
+
+        target_model = Amazon_Titan_Tg1_Large()
+        model_body   = target_model.body(prompt=prompt)
+        test_model(target_model, model_body, 'outputText')
 
     #@capture_iam_exception
+    #@print_boto3_calls()
     def test_models(self):
         expected_attributes = ['customizationsSupported', 'inferenceTypesSupported', 'inputModalities', 'modelArn',
                                'modelId', 'modelLifecycle', 'modelName', 'outputModalities',
@@ -96,10 +123,14 @@ class test_Bedrock(TestCase):
         for model  in models:
             assert list_contains_list(list_set(model), expected_attributes)
             assert list_set(model.get('modelLifecycle')) == ['status']
-        assert len(models) == 45
+        assert len(models) == 55
 
-    def test_models_active(self):
-        models                     = self.bedrock.models_active()
+    def test_models_active__on_demand(self):
+        active_models = self.bedrock.models_active()
+        assert list_set(active_models) == ['ON_DEMAND', 'PROVISIONED']
+
+
+        models                     = active_models.get('ON_DEMAND')
         models_a1_labs             = models.get('AI21 Labs'   )
         models_a1_labs__text       = models.get('AI21 Labs'   ).get('TEXT')
         models_amazon              = models.get('Amazon'      )
@@ -113,25 +144,95 @@ class test_Bedrock(TestCase):
         models_cohere___embedding  = models.get('Cohere'      ).get('EMBEDDING')
         models_meta                = models.get('Meta'        )
         models_meta__text          = models.get('Meta'        ).get('TEXT')
+        models_mistral_ai          = models.get('Mistral AI'  )
+        models_mistral_ai__text    = models.get('Mistral AI'  ).get('TEXT')
         models_stability_ai        = models.get('Stability AI')
         models_stability_ai__image = models.get('Stability AI').get("IMAGE")
 
+        # bug_in__amazon__embedding = 'amazon.titan-embed-image-v1:0'
+        bug_in__anthropic__text   = 'anthropic.claude-v2:1'             # todo: check if this is still a bug, or if AWS now supports ':' in the model name, see my comment at https://www.linkedin.com/feed/update/urn:li:ugcPost:7167505852424265728?commentUrn=urn%3Ali%3Acomment%3A%28ugcPost%3A7167505852424265728%2C7174444739725828096%29&dashCommentUrn=urn%3Ali%3Afsd_comment%3A%287174444739725828096%2Curn%3Ali%3AugcPost%3A7167505852424265728%29
+        #bug_in__amazon__image     = 'amazon.titan-image-generator-v1:0'
+        bugs_in_anthropic_claude_3 = ['anthropic.claude-3-haiku-20240307-v1:0', 'anthropic.claude-3-sonnet-20240229-v1:0']
 
-        assert list_set(models                    ) == ['AI21 Labs', 'Amazon', 'Anthropic', 'Cohere', 'Meta', 'Stability AI']
+
+        assert list_set(models                    ) == ['AI21 Labs', 'Amazon', 'Anthropic', 'Cohere', 'Meta', 'Mistral AI', 'Stability AI']
         assert list_set(models_a1_labs            ) == ['TEXT'                         ]
         assert list_set(models_amazon             ) == ['EMBEDDING', 'IMAGE', 'TEXT'   ]
         assert list_set(models_anthropic          ) == ['TEXT'                         ]
         assert list_set(models_cohere             ) == ['EMBEDDING', 'TEXT'            ]
         assert list_set(models_meta               ) == ['TEXT'                         ]
+        assert list_set(models_mistral_ai         ) == ['TEXT'                         ]
         assert list_set(models_stability_ai       ) == ['IMAGE'                        ]
-        assert list_set(models_a1_labs__text      ) == ['ai21.j2-grande-instruct'         , 'ai21.j2-jumbo-instruct'            , 'ai21.j2-mid'                  , 'ai21.j2-mid-v1'                , 'ai21.j2-ultra'                  , 'ai21.j2-ultra-v1'                                                                       ]
-        assert list_set(models_amazon__embedding  ) == ['amazon.titan-embed-g1-text-02'   , 'amazon.titan-embed-image-v1'       , 'amazon.titan-embed-image-v1:0', 'amazon.titan-embed-text-v1'    , 'amazon.titan-embed-text-v1:2:8k'                                                                                           ]
-        assert list_set(models_amazon__image      ) == ['amazon.titan-image-generator-v1' , 'amazon.titan-image-generator-v1:0'                                                                                                                                                                                                  ]
-        assert list_set(models_amazon__text       ) == ['amazon.titan-text-express-v1'    , 'amazon.titan-text-express-v1:0:8k' , 'amazon.titan-text-lite-v1'    , 'amazon.titan-text-lite-v1:0:4k', 'amazon.titan-tg1-large'                                                                                                    ]
-        assert list_set(models_anthropic__text    ) == ['anthropic.claude-instant-v1'     , 'anthropic.claude-instant-v1:2:100k', 'anthropic.claude-v2'          , 'anthropic.claude-v2:0:100k'    , 'anthropic.claude-v2:0:18k'      , 'anthropic.claude-v2:1'       , 'anthropic.claude-v2:1:18k', 'anthropic.claude-v2:1:200k']
-        assert list_set(models_cohere___text      ) == ['cohere.command-light-text-v14'   , 'cohere.command-light-text-v14:7:4k', 'cohere.command-text-v14'      , 'cohere.command-text-v14:7:4k'                                                                                                                                ]
-        assert list_set(models_cohere___embedding ) == ['cohere.embed-english-v3'         , 'cohere.embed-multilingual-v3'                                                                                                                                                                                                       ]
-        assert list_set(models_meta__text         ) == ['meta.llama2-13b-chat-v1'         , 'meta.llama2-13b-chat-v1:0:4k'      , 'meta.llama2-13b-v1'           , 'meta.llama2-13b-v1:0:4k'       , 'meta.llama2-70b-chat-v1'        , 'meta.llama2-70b-chat-v1:0:4k', 'meta.llama2-70b-v1'       , 'meta.llama2-70b-v1:0:4k'   ]
-        assert list_set(models_stability_ai__image) == ['stability.stable-diffusion-xl-v1', 'stability.stable-diffusion-xl-v1:0'                                                                                                                                                                                                 ]
+
+        assert list_set(models_a1_labs__text      ) == ['ai21.j2-grande-instruct'         , 'ai21.j2-jumbo-instruct'      , 'ai21.j2-mid'              , 'ai21.j2-mid-v1'            , 'ai21.j2-ultra', 'ai21.j2-ultra-v1']
+        assert list_set(models_amazon__embedding  ) == ['amazon.titan-embed-g1-text-02'   , 'amazon.titan-embed-image-v1' , 'amazon.titan-embed-text-v1',                                                                 ]
+        assert list_set(models_amazon__image      ) == ['amazon.titan-image-generator-v1'                                                                                                                                 ]
+        assert list_set(models_amazon__text       ) == ['amazon.titan-text-express-v1'    , 'amazon.titan-text-lite-v1'   ,  'amazon.titan-tg1-large'                                                                     ]
+        assert list_set(models_anthropic__text    ) == [*bugs_in_anthropic_claude_3       , 'anthropic.claude-instant-v1' , 'anthropic.claude-v2'         , bug_in__anthropic__text                                                                       ]
+        assert list_set(models_cohere___text      ) == ['cohere.command-light-text-v14'   , 'cohere.command-text-v14'     ,                                                                                               ]
+        assert list_set(models_cohere___embedding ) == ['cohere.embed-english-v3'         , 'cohere.embed-multilingual-v3'                                                                                                ]
+        assert list_set(models_meta__text         ) == ['meta.llama2-13b-chat-v1'         ,  'meta.llama2-70b-chat-v1'                                                                                                    ]
+        assert list_set(models_mistral_ai__text   ) == ['mistral.mistral-7b-instruct-v0:2', 'mistral.mistral-large-2402-v1:0', 'mistral.mixtral-8x7b-instruct-v0:1']                           # todo: check if this is still a bug
+        assert list_set(models_stability_ai__image) == ['stability.stable-diffusion-xl-v1'                                                                                                                                ]
+
+
+    def test_models_active__provisioned(self):
+        active_models = self.bedrock.models_active()
+        assert list_set(active_models) == ['ON_DEMAND', 'PROVISIONED']
+
+        models                     = active_models.get('PROVISIONED')
+        models_amazon              = models.get('Amazon'      )
+        models_amazon__embedding   = models.get('Amazon'      ).get('EMBEDDING')
+        models_amazon__image       = models.get('Amazon'      ).get('IMAGE'    )
+        models_amazon__text        = models.get('Amazon'      ).get('TEXT')
+        models_anthropic           = models.get('Anthropic'   )
+        models_anthropic__text     = models.get('Anthropic'   ).get('TEXT')
+        models_cohere              = models.get('Cohere'      )
+        models_cohere__embedding   = models.get('Cohere'      ).get('EMBEDDING')
+        models_cohere___text       = models.get('Cohere'      ).get('TEXT')
+        models_meta                = models.get('Meta'        )
+        models_meta__text          = models.get('Meta'        ).get('TEXT')
+        models_stability_ai        = models.get('Stability AI')
+        models_stability_ai__image = models.get('Stability AI').get("IMAGE")
+
+        assert list_set(models                    ) == ['Amazon', 'Anthropic', 'Cohere', 'Meta', 'Stability AI']
+        assert list_set(models_amazon             ) == ['EMBEDDING', 'IMAGE', 'TEXT'   ]
+        assert list_set(models_anthropic          ) == ['TEXT'                         ]
+        assert list_set(models_cohere             ) == [ 'EMBEDDING','TEXT'            ]
+        assert list_set(models_meta               ) == ['TEXT'                         ]
+        assert list_set(models_stability_ai       ) == ['IMAGE'                        ]
+
+        bug_missing__in_anthropic__text = 'anthropic.claude-v2:1'           # BUG
+
+        assert list_set(models_amazon__embedding  ) == [ 'amazon.titan-embed-image-v1:0'     , 'amazon.titan-embed-text-v1:2:8k'                                                                                               ]
+        assert list_set(models_amazon__image      ) == [ 'amazon.titan-image-generator-v1:0'                                                                                                                                   ]
+        assert list_set(models_amazon__text       ) == [ 'amazon.titan-text-express-v1:0:8k'  , 'amazon.titan-text-lite-v1:0:4k'                                                                                               ]
+        assert list_set(models_anthropic__text    ) == [ 'anthropic.claude-3-haiku-20240307-v1:0:200k', 'anthropic.claude-3-haiku-20240307-v1:0:48k', 'anthropic.claude-3-sonnet-20240229-v1:0:200k', 'anthropic.claude-3-sonnet-20240229-v1:0:28k', 'anthropic.claude-instant-v1:2:100k' , 'anthropic.claude-v2:0:100k'    , 'anthropic.claude-v2:0:18k'       , 'anthropic.claude-v2:1:18k', 'anthropic.claude-v2:1:200k']
+        assert list_set(models_cohere___text      ) == [ 'cohere.command-light-text-v14:7:4k' , 'cohere.command-text-v14:7:4k'                                                                                                 ]
+        assert list_set(models_cohere__embedding  ) == ['cohere.embed-english-v3:0:512', 'cohere.embed-multilingual-v3:0:512']
+        assert list_set(models_meta__text         ) == [ 'meta.llama2-13b-chat-v1:0:4k'                                                                                                                                        ]
+        assert list_set(models_stability_ai__image) == [ 'stability.stable-diffusion-xl-v1:0'                                                                                                                                  ]
+
+        # Note models with 'inferenceTypesSupported': [],
+        #    - meta.llama2-13b-v1
+        #    - meta.llama2-13b-v1:0:4k
+        #    - meta.llama2-70b-chat-v1:0:4k
+        #    - meta.llama2-70b-v1
+        #    - meta.llama2-70b-v1:0:4k
+
+
+    def test_models_by_throughput(self):
+        on_demand_models   = self.bedrock.models_by_throughput__on_demand()
+        provisioned_models =  self.bedrock.models_by_throughput__provisioned()
+        assert len(on_demand_models  ) == 28
+        assert len(provisioned_models) == 20
+
+
+    def test_runtime(self):
+        runtime = self.bedrock.runtime()
+        assert type_full_name(runtime)                      == 'botocore.client.BedrockRuntime'
+        assert runtime.meta.region_name                     == 'us-east-1'
+        assert list_set(runtime.meta.method_to_api_mapping) == ['invoke_model', 'invoke_model_with_response_stream']
+
 
 

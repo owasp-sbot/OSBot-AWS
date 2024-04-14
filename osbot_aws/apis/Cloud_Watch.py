@@ -2,19 +2,10 @@ from datetime import datetime, timedelta
 
 import boto3
 from osbot_utils.utils.Lists import unique
-
-from osbot_utils.testing.Duration import Duration
-
-from osbot_utils.utils.Dev import pprint
-
 from osbot_aws.apis.Boto_Helpers import Boto_Helpers
-
 from osbot_utils.utils.Files import file_create_from_bytes
-
 from osbot_utils.utils.Json import json_parse, json_to_str
-
 from osbot_utils.utils.Misc import list_set,wait
-
 from osbot_utils.decorators.lists.index_by import index_by
 from osbot_utils.decorators.methods.cache  import cache
 from osbot_aws.apis.Session                import Session
@@ -189,7 +180,6 @@ class Cloud_Watch():
         results           = {}
         items_added       = 0
         for result in results_paginated:
-            #pprint(result)
             _dimensions  = result.get('Dimensions')
             _metric_name = result.get('MetricName')
             _namespace   = result.get('Namespace')
