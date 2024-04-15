@@ -38,7 +38,6 @@ class test_IAM_User(TestCase__Boto3_Cache):
         assert result == []
 
     def test_groups(self):
-        self.cache.print_requests = True
         result = self.user.groups(index_by='group_name')
         assert result == {}
 
