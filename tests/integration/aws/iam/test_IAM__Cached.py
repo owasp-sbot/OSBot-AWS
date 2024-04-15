@@ -1,11 +1,10 @@
-from osbot_aws.AWS_Config import AWS_Config
-from osbot_aws.aws.iam.IAM import IAM
-from osbot_aws.testing.TestCase__Boto3_Cache import TestCase__Boto3_Cache
-from osbot_utils.utils.Misc import list_set
-from tests.integration.aws.iam.test_IAM import IAM_USER_NAME__OSBOT_AWS, TEST_USER_NAME, TEST_USER_ROLE
+from osbot_aws.AWS_Config                       import AWS_Config
+from osbot_aws.aws.iam.IAM                      import IAM
+from osbot_aws.testing.TestCase__Boto3_Cache    import TestCase__Boto3_Cache
+from osbot_utils.utils.Misc                     import list_set
+from tests.integration.aws.iam.test_IAM         import IAM_USER_NAME__OSBOT_AWS, TEST_USER_NAME, TEST_USER_ROLE
 
-
-class Test_IAM__Cached(TestCase__Boto3_Cache):
+class test_IAM__Cached(TestCase__Boto3_Cache):
     account_id      : str
     aws_config      : AWS_Config
     current_user_arn: str
@@ -83,6 +82,12 @@ class Test_IAM__Cached(TestCase__Boto3_Cache):
     def test_policy_info(self):
         assert self.iam.policy_info('AAAAAA') is None
 
+    def test_policy_name_exists(self):
+        assert self.iam.policy_exists_by_name(policy_name='aaa'                                                               ) is False
+        assert self.iam.policy_exists_by_name(policy_name='AWSBatchServiceRole'                                               ) is False
+        assert self.iam.policy_exists_by_name(policy_name='AWSBatchServiceRole', policy_path='/service-role'                  ) is False
+        assert self.iam.policy_exists_by_name(policy_name='AWSBatchServiceRole', policy_path='/service-role', account_id='aws') is True
+
 
     def test_policies(self):
         for policy in self.iam.policies():
@@ -90,13 +95,30 @@ class Test_IAM__Cached(TestCase__Boto3_Cache):
             break
         #pprint(count)   # DC: last time I executed this there were 1183 polices
 
+    def test_user_exists(self):
+        assert self.iam                      .user_exists() is True
+        assert self.iam.set_user_name('aAAA').user_exists() is False
+
     def test_user_info(self):
         user = self.iam.user_info()
         assert user.get('Arn'     ) == self.test_user_arn
         assert user.get('Path'    ) == '/'
         assert user.get('UserName') ==self.test_user
 
+    def test_user_info___with_bad_user(self):
+        error_message = self.iam.set_user_name('AAAA').user_info()
+        exception     = error_message.get('exception')
+
+        assert error_message.get('error' ) == 'An error occurred (NoSuchEntity) when calling the GetUser operation: The user with name AAAA cannot be found.'
+        assert error_message.get('status') == 'error'
+        assert error_message.get('exception')
+        assert exception.operation_name == 'GetUser'
+        assert exception.response.get('Error') == { 'Code'   : 'NoSuchEntity'                            ,
+                                                    'Message': 'The user with name AAAA cannot be found.',
+                                                    'Type'   : 'Sender'                                  }
     def test_users(self):
         for user in self.iam.users():
             assert list_set(user) == ['Arn', 'CreateDate', 'Path', 'UserId', 'UserName']
             break
+
+

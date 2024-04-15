@@ -1,11 +1,7 @@
-from unittest import TestCase
-
-import pytest
-
-from osbot_aws.testing.TestCase__Boto3_Cache import TestCase__Boto3_Cache
+from unittest               import TestCase
 from osbot_utils.utils.Misc import list_set
-from osbot_aws.AWS_Config           import AWS_Config
-from osbot_aws.aws.iam.IAM          import IAM
+from osbot_aws.AWS_Config   import AWS_Config
+from osbot_aws.aws.iam.IAM  import IAM
 
 IAM_USER_NAME__OSBOT_AWS = 'OSBot-AWS-Dev__Only-IAM'
 TEST_USER_NAME           = 'test_user'
@@ -64,13 +60,6 @@ class Test_IAM(TestCase):
 
         assert self.iam.policy_delete(policy_arn) is True
 
-    # todo: move back to Cached section once we support capturing exceptions in boto3 cache
-    def test_policy_name_exists(self):
-        assert self.iam.policy_exists_by_name(policy_name='aaa'                                                               ) is False
-        assert self.iam.policy_exists_by_name(policy_name='AWSBatchServiceRole'                                               ) is False
-        assert self.iam.policy_exists_by_name(policy_name='AWSBatchServiceRole', policy_path='/service-role'                  ) is False
-        assert self.iam.policy_exists_by_name(policy_name='AWSBatchServiceRole', policy_path='/service-role', account_id='aws') is True
-
     def test_role_create__and__delete(self):
         assert self.iam.role_delete() is True                                           # we already have this role from the setUpClass
 
@@ -82,28 +71,6 @@ class Test_IAM(TestCase):
         assert role.get('AssumeRolePolicyDocument') == self.policy_document
         assert self.iam.role_arn()                  == self.test_role_arn
 
-    # todo: move back to Cached section once we support capturing exceptions in boto3 cache
-    def test_user_exists(self):
-        assert self.iam                      .user_exists() is True
-        assert self.iam.set_user_name('aAAA').user_exists() is False
-
-    # todo: move back to Cached section once we support capturing exceptions in boto3 cache
-    def test_user_info(self):
-        # user = self.iam.user_info()
-        # assert user.get('Arn'     ) == self.test_user_arn
-        # assert user.get('Path'    ) == '/'
-        # assert user.get('UserName') ==self.test_user
-        error_message = self.iam.set_user_name('AAAA').user_info()
-
-        assert error_message.get('error' ) == 'An error occurred (NoSuchEntity) when calling the GetUser operation: The user with name AAAA cannot be found.'
-        assert error_message.get('status') == 'error'
-        exception = error_message.get('exception')
-        assert exception.__class__.__name__ == 'NoSuchEntityException'
-        assert error_message.get('exception')
-        assert exception.operation_name == 'GetUser'
-        assert exception.response.get('Error') == { 'Code'   : 'NoSuchEntity'                            ,
-                                                    'Message': 'The user with name AAAA cannot be found.',
-                                                    'Type'   : 'Sender'                                  }
 
     # todo: refactor all this into a helper class
     # def test_role_create_assume_role(self):
@@ -192,5 +159,6 @@ class Test_IAM(TestCase):
     #     # test_role.role_assume_policy_update(current_assume_policy)
     #     # assert test_role.role_assume_policy() == current_assume_policy
     #     # test_role.role_delete()  # delete the temp role created
+
 
 

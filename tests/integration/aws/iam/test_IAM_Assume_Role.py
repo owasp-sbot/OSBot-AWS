@@ -1,11 +1,6 @@
-from unittest import TestCase
-
-from osbot_aws.apis.Cloud_Trail import Cloud_Trail
-from osbot_aws.aws.boto3.View_Boto3_Rest_Calls import print_boto3_calls
-from osbot_aws.testing.TestCase__Boto3_Cache import TestCase__Boto3_Cache
-from osbot_utils.utils.Dev import pprint
-from osbot_utils.utils.Misc import list_set, wait_for
-from osbot_aws.aws.iam.IAM_Assume_Role import IAM_Assume_Role
+from unittest                           import TestCase
+from osbot_utils.utils.Misc             import list_set
+from osbot_aws.aws.iam.IAM_Assume_Role  import IAM_Assume_Role
 
 TEMP_ROLE_NAME__ASSUME_ROLE = 'osbot_aws_temp_role__assume_role'
 TEST_POLICY_DOCUMENT        = { "Version": "2012-10-17",
