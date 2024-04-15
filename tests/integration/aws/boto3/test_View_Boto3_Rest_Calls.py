@@ -35,37 +35,3 @@ class test_View_Boto3_Rest_Calls(TestCase):
         assert '│ index │ api_name          │ duration │ args  │ kwargs │ ' in stdout_value
         assert 'GetCallerIdentity'                                          in stdout_value
         return 'Total Duration:    0.3 secs | Total calls: 2'               in stdout_value
-
-class test_ABC(TestCase):
-
-    @classmethod
-    def setUpClass(cls):
-        cls.view_bobo3_rest_calls = View_Boto3_Rest_Calls()
-        cls.iam = IAM()
-
-    def test_1(self):
-        sts = self.iam.sts()
-
-    def test_2(self):
-        with self.view_bobo3_rest_calls:
-            self.iam.caller_identity()
-
-        with self.view_bobo3_rest_calls:
-            self.iam.caller_identity()
-
-    def test_3(self):
-        with Duration():
-            self.iam.caller_identity()
-
-    def test_4(self):
-        with self.view_bobo3_rest_calls:
-            self.iam.caller_identity()
-
-    def test_5(self):
-        with Trace_Call() as _:
-            _.config.duration(0.1).all()
-            self.iam.caller_identity()
-
-    def test_6(self):
-        with self.view_bobo3_rest_calls:
-            self.iam.caller_identity()
