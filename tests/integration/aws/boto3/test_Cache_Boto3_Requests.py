@@ -36,9 +36,9 @@ class test_Cache_Boto3_Requests(TestCase):
     def test__init__(self):
         with self.cache_boto3_requests as _:
 
-            assert _.__attr_names__()                         == ['add_timestamp', 'cache_only_mode', 'db_name','enabled','on_invoke_target',
-                                                                  'pickle_response', 'sqlite_requests','table_name','target_class',
-                                                                  'target_function', 'target_function_name','update_mode']
+            assert _.__attr_names__()                         == ['add_timestamp', 'cache_only_mode', 'capture_exceptions', 'db_name','enabled',
+                                                                  'exception_classes', 'on_invoke_target', 'pickle_response', 'sqlite_requests',
+                                                                  'table_name','target_class', 'target_function', 'target_function_name','update_mode']
             assert _.db_name                                  == SQLITE_DB_NAME__BOTO3_REQUESTS_CACHE
             assert _.table_name                               == SQLITE_TABLE_NAME__BOTO3_REQUESTS
             assert _.sqlite_requests.exists()                 is True
