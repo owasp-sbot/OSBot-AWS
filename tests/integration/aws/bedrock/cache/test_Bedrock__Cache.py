@@ -24,12 +24,12 @@ class test_Bedrock__Cache(TestCase):
         cls.temp_db_path                = temp_file(extension='sqlite')
         cls.bedrock_cache               = Bedrock__Cache(db_path = cls.temp_db_path)            # the db_path to the tmp file path
         cls.bedrock_cache.add_timestamp = False                                                 # disabling timestamp since it complicates the test data verification below
-        assert parent_folder(cls.bedrock_cache.sqlite_bedrock.db_path) == current_temp_folder()
+        assert parent_folder(cls.bedrock_cache.sqlite_requests.db_path) == current_temp_folder()
         assert file_exists  (cls.temp_db_path)                         is True
 
     @classmethod
     def tearDownClass(cls):    #file_delete(cls.temp_db_path)
-        cls.bedrock_cache.sqlite_bedrock.delete()
+        cls.bedrock_cache.sqlite_requests.delete()
         assert file_not_exists(cls.temp_db_path) is True
 
     def tearDown(self):
@@ -41,10 +41,10 @@ class test_Bedrock__Cache(TestCase):
             assert base_types(_)                == [Sqlite__Cache__Requests, Kwargs_To_Self, object]
             assert _.db_name                    == environ.get(ENV_NAME_BEDROCK_DB_NAME) or SQLITE_DB_NAME__SQLITE_BEDROCK
             assert _.table_name                 == SQLITE_TABLE__BEDROCK_REQUESTS
-            assert type      (_.sqlite_bedrock) is Sqlite__DB__Requests
-            assert base_types(_.sqlite_bedrock) == [Sqlite__DB__Local, Sqlite__Database, Kwargs_To_Self, object]
-            assert _.sqlite_bedrock.db_name     == _.db_name
-            assert _.sqlite_bedrock.table_name  == _.table_name
+            assert type      (_.sqlite_requests) is Sqlite__DB__Requests
+            assert base_types(_.sqlite_requests) == [Sqlite__DB__Local, Sqlite__Database, Kwargs_To_Self, object]
+            assert _.sqlite_requests.db_name     == _.db_name
+            assert _.sqlite_requests.table_name  == _.table_name
 
 
     def add_test_requests(self, count=10):
