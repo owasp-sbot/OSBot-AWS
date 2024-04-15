@@ -15,8 +15,7 @@ from osbot_utils.utils.Misc import random_string, wait
 from osbot_utils.utils.Status import status_ok, status_error
 
 from osbot_aws.apis.Session                         import Session
-from osbot_utils.utils                              import Misc
-from osbot_aws.aws.iam.STS                          import STS
+from osbot_aws.aws.sts.STS import STS
 
 
 class IAM:

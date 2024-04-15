@@ -7,6 +7,7 @@ from osbot_utils.utils.Dev import pprint
 from osbot_utils.utils.Yaml import yaml_parse, yaml_to_str
 
 SQLITE_DB_NAME__BOTO3_REQUESTS_CACHE = 'boto3_requests_cache.sqlite'
+SQLITE_TABLE_NAME__BOTO3_REQUESTS    = 'boto3_requests'
 
 class Cache_Boto3_Requests(Sqlite__Cache__Requests__Patch):
 
@@ -15,6 +16,7 @@ class Cache_Boto3_Requests(Sqlite__Cache__Requests__Patch):
         self.target_function        = BaseClient._make_api_call
         self.target_function_name   = "_make_api_call"
         self.db_name                = SQLITE_DB_NAME__BOTO3_REQUESTS_CACHE
+        self.table_name             = SQLITE_TABLE_NAME__BOTO3_REQUESTS
         super().__init__(db_path=db_path)
 
     def invoke_target(self, target, target_args, target_kwargs):

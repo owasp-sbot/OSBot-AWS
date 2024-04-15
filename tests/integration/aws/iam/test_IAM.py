@@ -1,15 +1,9 @@
-import os
 from unittest import TestCase
 
 import pytest
-from osbot_utils.testing.Catch      import Catch
-from osbot_utils.utils.Misc import wait, list_set
+from osbot_utils.utils.Misc import list_set
 from osbot_aws.AWS_Config           import AWS_Config
 from osbot_aws.aws.iam.IAM          import IAM
-from osbot_aws.aws.iam.STS          import STS
-from osbot_utils.utils.Assert       import Assert
-from osbot_utils.utils.Dev          import pprint
-
 
 IAM_USER_NAME__OSBOT_AWS = 'OSBot-AWS-Dev__Only-IAM'
 TEST_USER_NAME           = 'test_user'

@@ -7,7 +7,7 @@ from osbot_utils.decorators.methods.cache import cache
 from osbot_utils.helpers.Local_Cache import Local_Cache
 from osbot_aws.aws.iam.IAM import IAM
 from osbot_aws.aws.iam.IAM_Role import IAM_Role
-from osbot_aws.aws.iam.STS import STS
+from osbot_aws.aws.sts.STS import STS
 from osbot_utils.utils.Misc import wait_for
 from osbot_utils.utils.Str import safe_str
 

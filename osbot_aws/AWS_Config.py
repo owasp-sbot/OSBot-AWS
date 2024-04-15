@@ -36,7 +36,7 @@ class AWS_Config:
     def set_bot_name                (self, value): os.environ['OSBOT_NAME'                      ] = value ; return value
 
     def sts_session_account_id(self):                   # to handle when the AWS_ACCOUNT_ID is not set
-        from osbot_aws.aws.iam.STS import STS           #   the use of this method is not advised
+        from osbot_aws.aws.sts.STS import STS           #   the use of this method is not advised
         return STS().current_account_id()               #   since this is quite an expensive method
 
     # helper methods

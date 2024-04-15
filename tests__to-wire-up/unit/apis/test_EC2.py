@@ -1,6 +1,6 @@
 import pytest
 
-from osbot_aws.aws.iam.STS import STS
+from osbot_aws.aws.sts.STS import STS
 from osbot_utils.utils.Lists import list_index_by
 
 from osbot_utils.utils.Files import file_exists, file_contents, file_delete

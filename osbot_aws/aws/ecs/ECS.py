@@ -10,7 +10,7 @@ from osbot_aws.apis.Session                 import Session
 from osbot_utils.utils.Misc                 import wait
 
 from osbot_aws.aws.iam.IAM_Role import IAM_Role
-from osbot_aws.aws.iam.STS import STS
+from osbot_aws.aws.sts.STS import STS
 
 # todo: find good solution to capture/manage these config values (See also values in EC2 class)
 ECS_WAITER_DELAY        = 1             # default was 6 seconds

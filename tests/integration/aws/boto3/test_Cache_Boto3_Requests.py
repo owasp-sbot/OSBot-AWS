@@ -5,15 +5,15 @@ import pytest
 from botocore.client import BaseClient
 from dotenv import load_dotenv
 
-from osbot_aws.aws.boto3.Cache_Boto3_Requests import Cache_Boto3_Requests, SQLITE_DB_NAME__BOTO3_REQUESTS_CACHE
+from osbot_aws.aws.boto3.Cache_Boto3_Requests import Cache_Boto3_Requests, SQLITE_DB_NAME__BOTO3_REQUESTS_CACHE, \
+    SQLITE_TABLE_NAME__BOTO3_REQUESTS
 from osbot_aws.aws.boto3.View_Boto3_Rest_Calls import print_boto3_calls
-from osbot_aws.aws.iam.STS import STS
+from osbot_aws.aws.sts.STS import STS
 from osbot_utils.base_classes.Kwargs_To_Self import Kwargs_To_Self
 from osbot_utils.helpers.sqlite.domains.Sqlite__Cache__Requests import Sqlite__Cache__Requests
 from osbot_utils.helpers.sqlite.domains.Sqlite__Cache__Requests__Patch import Sqlite__Cache__Requests__Patch
 from osbot_utils.helpers.sqlite.domains.Sqlite__DB__Local import ENV_NAME_PATH_LOCAL_DBS
-from osbot_utils.utils.Dev import pprint
-from osbot_utils.utils.Files import current_temp_folder, parent_folder, file_name, temp_file, file_extension, \
+from osbot_utils.utils.Files import current_temp_folder, parent_folder, temp_file, file_extension, \
     folder_exists
 from osbot_utils.utils.Objects import base_types
 
@@ -40,7 +40,7 @@ class test_Cache_Boto3_Requests(TestCase):
                                                                   'pickle_response', 'sqlite_requests','table_name','target_class',
                                                                   'target_function', 'target_function_name','update_mode']
             assert _.db_name                                  == SQLITE_DB_NAME__BOTO3_REQUESTS_CACHE
-            assert _.table_name.startswith('requests_table_')
+            assert _.table_name                               == SQLITE_TABLE_NAME__BOTO3_REQUESTS
             assert _.sqlite_requests.exists()                 is True
             assert _.cache_entries()                          == []
             assert _.cache_table().new_row_obj().__locals__() == {'cache_hits'      : 0     ,
@@ -73,7 +73,7 @@ class test_Cache_Boto3_Requests(TestCase):
         assert BaseClient._make_api_call == self.cache_boto3_requests.target_function
         assert BaseClient._make_api_call.__qualname__ == 'BaseClient._make_api_call'
 
-    @print_boto3_calls()
+    #@print_boto3_calls()
     def test_invoke_target(self):
         mock_account_id = 'ABC'
         def on_invoke_target(*args):
@@ -104,11 +104,6 @@ class test_Cache_Boto3_Requests(TestCase):
                                     'response_hash' : ''            ,
                                     'timestamp'     : 0             }
 
-    @print_boto3_calls()
-    def test__make_boto3_call(self):
-        sts = STS()
-        sts.current_account_id()
-
 class test_Cache_Boto3_Requests__Local_DBs(TestCase):
     cache_boto3_requests: Cache_Boto3_Requests
 
@@ -123,7 +118,7 @@ class test_Cache_Boto3_Requests__Local_DBs(TestCase):
         path_local_dbs = environ.get(ENV_NAME_PATH_LOCAL_DBS)
         assert folder_exists(path_local_dbs)
         with self.cache_boto3_requests as _:
-            assert _.table_name.startswith('requests_table_')
+            assert _.table_name                               == SQLITE_TABLE_NAME__BOTO3_REQUESTS
             assert _.db_name                                  == SQLITE_DB_NAME__BOTO3_REQUESTS_CACHE
             assert parent_folder (_.sqlite_requests.db_path)  == path_local_dbs
             assert file_extension(_.sqlite_requests.db_path)  == '.sqlite'

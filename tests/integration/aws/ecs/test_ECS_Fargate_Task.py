@@ -4,7 +4,7 @@ from osbot_utils.testing.Duration       import Duration
 from osbot_utils.utils.Misc             import wait
 from osbot_aws.aws.ecs.ECS_Fargate_Task import ECS_Fargate_Task
 from osbot_aws.aws.iam.IAM              import IAM
-from osbot_aws.aws.iam.STS              import STS
+from osbot_aws.aws.sts.STS import STS
 
 
 @pytest.mark.skip('Wire up tests')

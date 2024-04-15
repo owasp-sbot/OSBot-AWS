@@ -1,4 +1,4 @@
-from osbot_aws.aws.iam.STS import STS
+from osbot_aws.aws.sts.STS import STS
 from osbot_utils.decorators.methods.cache_on_self import cache_on_self
 
 

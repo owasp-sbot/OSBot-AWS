@@ -2,7 +2,6 @@ import  boto3
 from    boto3                   import Session
 from botocore.exceptions import ClientError
 from    botocore.session        import get_session
-from osbot_utils.testing.Duration import Duration
 
 from osbot_utils.base_classes.Kwargs_To_Self import Kwargs_To_Self
 from osbot_utils.decorators.methods.cache import cache
@@ -10,7 +9,6 @@ from osbot_utils.decorators.methods.cache_on_self import cache_on_self
 from osbot_utils.utils.Status import status_ok, status_error
 
 from    osbot_aws.AWS_Config    import AWS_Config
-from    osbot_aws.aws.iam.STS   import STS
 from osbot_aws.exceptions.Session_Bad_Credentials import Session_Bad_Credentials
 from osbot_aws.exceptions.Session_Client_Creation_Fail import Session_Client_Creation_Fail
 from osbot_aws.exceptions.Session_No_Credentials import Session_No_Credentials
