@@ -17,17 +17,19 @@ class Cache_Boto3_Requests(Sqlite__Cache__Requests__Patch):
         self.target_function_name   = "_make_api_call"
         self.db_name                = SQLITE_DB_NAME__BOTO3_REQUESTS_CACHE
         self.table_name             = SQLITE_TABLE_NAME__BOTO3_REQUESTS
+        #self.print_requests         = False
         super().__init__(db_path=db_path)
 
     def invoke_target(self, target, target_args, target_kwargs):
-        #cached_response = {'Account': '470426667096'}
-        #return cached_response
+        #if self.print_requests:
+            #print(f'[invoke_target]: {target_args}')
         return super().invoke_target(target, target_args, target_kwargs)
 
     def request_data(self, *args, **kwargs):
         target_self, operation_name, api_params = args
         request_data =  {'operation_name': operation_name,
                         'api_params'    : api_params    }
-
+        #if self.print_requests:
+            #print(f'[request_data]: {request_data}')
         request_data = yaml_to_str(request_data)
         return request_data
