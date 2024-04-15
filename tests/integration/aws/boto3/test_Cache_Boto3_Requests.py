@@ -1,6 +1,7 @@
 from os import environ
 from unittest import TestCase
 
+import pytest
 from botocore.client import BaseClient
 from dotenv import load_dotenv
 
@@ -33,33 +34,34 @@ class test_Cache_Boto3_Requests(TestCase):
         assert cls.cache_boto3_requests.sqlite_requests.exists() is False
 
     def test__init__(self):
-        _ = self.cache_boto3_requests           # we can't use the with context here since it auto applies the patch
+        with self.cache_boto3_requests as _:
 
-        assert _.__attr_names__()                         == ['add_timestamp', 'cache_only_mode', 'db_name','enabled','on_invoke_target',
-                                                              'pickle_response', 'sqlite_requests','table_name','target_class',
-                                                              'target_function', 'target_function_name','update_mode']
-        assert _.db_name                                  == SQLITE_DB_NAME__BOTO3_REQUESTS_CACHE
-        assert _.table_name.startswith('requests_table_')
-        assert _.sqlite_requests.exists()                 is True
-        assert _.cache_entries()                          == []
-        assert _.cache_table().new_row_obj().__locals__() == {'cache_hits'      : 0     ,
-                                                              'comments'        : ''    ,
-                                                              'latest'          : False ,
-                                                              'request_data'    : ''    ,
-                                                              'request_hash'    : ''    ,
-                                                              'response_bytes'  : b''   ,
-                                                              'response_data'   : ''    ,
-                                                              'response_hash'   : ''    ,
-                                                              'timestamp'       : 0     }
-        assert parent_folder (_.sqlite_requests.db_path)  == current_temp_folder()
-        assert file_extension(_.sqlite_requests.db_path)  == '.sqlite'
-        assert base_types(_)                              == [Sqlite__Cache__Requests__Patch ,
-                                                              Sqlite__Cache__Requests        ,
-                                                              Kwargs_To_Self                 ,
-                                                              object                         ]
-        assert _.target_class                             == BaseClient
-        assert _.target_function                          == BaseClient._make_api_call
-        assert _.target_function_name                     == "_make_api_call"
+            assert _.__attr_names__()                         == ['add_timestamp', 'cache_only_mode', 'db_name','enabled','on_invoke_target',
+                                                                  'pickle_response', 'sqlite_requests','table_name','target_class',
+                                                                  'target_function', 'target_function_name','update_mode']
+            assert _.db_name                                  == SQLITE_DB_NAME__BOTO3_REQUESTS_CACHE
+            assert _.table_name.startswith('requests_table_')
+            assert _.sqlite_requests.exists()                 is True
+            assert _.cache_entries()                          == []
+            assert _.cache_table().new_row_obj().__locals__() == {'cache_hits'      : 0     ,
+                                                                  'comments'        : ''    ,
+                                                                  'latest'          : False ,
+                                                                  'request_data'    : ''    ,
+                                                                  'request_hash'    : ''    ,
+                                                                  'response_bytes'  : b''   ,
+                                                                  'response_data'   : ''    ,
+                                                                  'response_hash'   : ''    ,
+                                                                  'timestamp'       : 0     }
+            assert parent_folder (_.sqlite_requests.db_path)  == current_temp_folder()
+            assert file_extension(_.sqlite_requests.db_path)  == '.sqlite'
+            assert base_types(_)                              == [Sqlite__Cache__Requests__Patch ,
+                                                                  Sqlite__Cache__Requests        ,
+                                                                  Kwargs_To_Self                 ,
+                                                                  object                         ]
+            assert _.target_class                             == BaseClient
+            assert _.target_function                          != BaseClient._make_api_call
+            assert _.target_function_name                     == "_make_api_call"
+        assert _.target_function == BaseClient._make_api_call
 
     def test___enter____exit__(self):
         assert BaseClient._make_api_call == BaseClient._make_api_call
@@ -108,9 +110,25 @@ class test_Cache_Boto3_Requests(TestCase):
         sts.current_account_id()
 
 class test_Cache_Boto3_Requests__Local_DBs(TestCase):
+    cache_boto3_requests: Cache_Boto3_Requests
 
-    def test__local_dbs_with_env_value_set(self):
+    @classmethod
+    def setUpClass(cls):
         load_dotenv()
+        if not environ.get(ENV_NAME_PATH_LOCAL_DBS):
+            pytest.skip("skipping tests because ENV_NAME_PATH_LOCAL_DBS var is not set")
+        cls.cache_boto3_requests = Cache_Boto3_Requests()
+
+    def test__init__(self):
         path_local_dbs = environ.get(ENV_NAME_PATH_LOCAL_DBS)
-        if path_local_dbs:
-            assert folder_exists(path_local_dbs)
+        assert folder_exists(path_local_dbs)
+        with self.cache_boto3_requests as _:
+            assert _.table_name.startswith('requests_table_')
+            assert _.db_name                                  == SQLITE_DB_NAME__BOTO3_REQUESTS_CACHE
+            assert parent_folder (_.sqlite_requests.db_path)  == path_local_dbs
+            assert file_extension(_.sqlite_requests.db_path)  == '.sqlite'
+            assert _.sqlite_requests.exists()                 is True
+            assert _.cache_table().exists()                   is True
+
+
+
