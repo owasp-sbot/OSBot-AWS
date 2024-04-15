@@ -2,6 +2,7 @@ from unittest import TestCase
 
 from osbot_aws.apis.Cloud_Trail import Cloud_Trail
 from osbot_aws.aws.iam.IAM_Assume_Role import IAM_Assume_Role
+from osbot_utils.utils.Misc import list_set
 
 
 class test_IAM_Assume_Role__Cloud_Trail_Lookup(TestCase):
