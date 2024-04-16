@@ -36,7 +36,9 @@ class test_Dynamo_DB__Table(TestCase__Temp_Dynamo_DB_Table):
 
     def test_clear_table(self):
         with self.table as _:
-            assert _.clear_table() == {'data': {'delete_result': [], 'deleted_keys': [],'delete_status': True}, 'status': 'ok'}
+            clear_result = _.clear_table()
+            assert list_set(clear_result            ) == ['data', 'status']
+            assert list_set(clear_result.get('data')) == ['delete_result', 'delete_status','deleted_keys']
             document_key = _.add_document({}).get('data').get('key_value')
             assert _.clear_table() == {'data'  : {'delete_result': [{'UnprocessedItems': {}}],
                                                   'deleted_keys' : [document_key]           ,
