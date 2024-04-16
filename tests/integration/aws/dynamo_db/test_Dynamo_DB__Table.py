@@ -43,7 +43,7 @@ class test_Dynamo_DB__Table(TestCase__Temp_Dynamo_DB_Table):
             assert list_set(clear_result            ) == ['data', 'status']
             assert list_set(clear_result.get('data')) == ['delete_result', 'delete_status','deleted_keys']
             document_key = _.add_document({}).get('data').get('key_value')
-            # todo: this test started failing in a non deterministic way
+            # todo: this test started failing in a non deterministic way (mainly in GitHub Actions)
             #       weirdly after some refactoring (namely when moved some tests to test_Dynamo_DB__Cached)
             #       see error at (https://github.com/owasp-sbot/OSBot-AWS/actions/runs/8704376479/job/23873194458)
             #       it not picking up the document just added (maybe we need to add a delay here?)

@@ -1,11 +1,16 @@
+import pytest
+
 from osbot_aws.aws.bedrock.models.mistral.Mistral_AI_7b_Instruct_v0_2 import Mistral_AI_7b_Instruct_v0_2
 from osbot_aws.aws.boto3.Capture_Boto3_Error import capture_boto3_error
 from osbot_aws.testing.TestCase__Bedrock import TestCase__Bedrock
-from osbot_utils.utils.Misc import list_set
+from osbot_utils.utils.Misc import list_set, in_github_action
+
 
 class test_Mistral_AI_7b_Instruct_v0_2(TestCase__Bedrock):
 
     def setUp(self) -> None:
+        if in_github_action():                                  # disabling Bedrock tests in GitHub actions since they are not 100% deterministic
+            pytest.skip()
         self.model = Mistral_AI_7b_Instruct_v0_2()
 
     def test__init__(self):
