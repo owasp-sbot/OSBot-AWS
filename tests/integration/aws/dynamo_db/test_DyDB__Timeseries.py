@@ -8,6 +8,8 @@ from osbot_utils.utils.Misc import timestamp_utc_now, random_int, list_set, is_i
 from osbot_aws.testing.TestCase__Dynamo_DB import TestCase__Dynamo_DB
 
 
+#@pytest.mark.skip()
+# todo: figure out why it takes so long to run the setUpClass and __init__() methods
 class test_DyDB__Timeseries(TestCase__Dynamo_DB):
     dydb_timeseries : DyDB__Timeseries
     delete_on_exit  : bool             = True
