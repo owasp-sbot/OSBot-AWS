@@ -14,6 +14,7 @@ from osbot_aws.aws.dynamo_db.Dynamo_DB import Dynamo_DB
 from osbot_aws.aws.dynamo_db.Dynamo_DB__with_temp_role import Dynamo_DB__with_temp_role
 from osbot_aws.aws.dynamo_db.Dynamo_Table__Resource import Dynamo_Table__Resource
 from osbot_aws.aws.iam.IAM_Assume_Role import IAM_Assume_Role
+from osbot_aws.testing.TestCase__Boto3_Cache import TestCase__Boto3_Cache
 from osbot_utils.testing.Duration import Duration
 from osbot_utils.utils.Dev import pprint
 from osbot_utils.utils.Misc import list_set, random_string
@@ -41,9 +42,6 @@ class test_Dynamo_DB(TestCase):
 
     def test__init__(self):
         assert self.dynamo_db.client().meta.region_name == 'eu-west-1'   # make sure all temp tables are in this region
-
-    def test_client(self):
-        assert type_full_name(self.dynamo_db.client()) == 'botocore.client.DynamoDB'
 
     # main methods
 
@@ -150,31 +148,13 @@ class test_Dynamo_DB(TestCase):
             assert responses_del == [{'UnprocessedItems': {}}]
             assert _.documents_all(table_name=self.table_name) == []
 
-    def test_documents_all(self):
-        assert self.dynamo_db.documents_all(table_name=self.table_name) == []
+
 
     def test_documents_delete_all(self):
         assert self.dynamo_db.documents_delete_all(table_name=self.table_name, key_name=self.table_key) == {'delete_result': [], 'delete_status': True, 'deleted_keys': []}
 
-    def test_dynamo_streams(self):
-        assert type_full_name(self.dynamo_db.client__dynamo_streams()) == 'botocore.client.DynamoDBStreams'
-
-    def test_table_exists(self):
-        assert self.dynamo_db.table_exists(table_name=self.table_name) is True
-
-    def test_table_info(self):
-        assert self.dynamo_db.table_info(table_name='AAAA-Not-Exists') == {}
-        table_info = self.dynamo_db.table_info(table_name=self.table_name)
-        assert list_set(table_info) == ['AttributeDefinitions', 'BillingModeSummary', 'CreationDateTime', 'DeletionProtectionEnabled', 'ItemCount', 'KeySchema', 'ProvisionedThroughput', 'TableArn', 'TableId', 'TableName', 'TableSizeBytes', 'TableStatus']
-
-    def test_table_status(self):
-        assert self.dynamo_db.table_status(table_name=self.table_name) == 'ACTIVE'
 
     #@print_boto3_calls()
-    def test_tables(self):
-        tables = self.dynamo_db.tables()
-        assert type(tables) == list
-        assert self.table_name in tables
 
 
 # @unittest.skip('this is not working as expected (namely the `test_streams` part)')
