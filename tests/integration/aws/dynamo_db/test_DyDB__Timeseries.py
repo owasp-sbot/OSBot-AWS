@@ -35,6 +35,7 @@ class test_DyDB__Timeseries(TestCase__Dynamo_DB):
         assert aws_config.region_name() == 'eu-west-1'
         expected_var = { 'data_field_name'      : 'data'            ,
                          'dynamo_db'            : self.dynamo_db    ,
+                         'extra_gs_indexes'     : []                ,
                          'index_name'           : 'timestamp_index' ,
                          'key_attribute_type'   : 'N'               ,
                          'key_name'             : 'timestamp'       ,
