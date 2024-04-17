@@ -1,5 +1,5 @@
-from osbot_aws.aws.dynamo_db.Dynamo_DB__Table import Dynamo_DB__Table
-from osbot_utils.utils.Misc import timestamp_utc_now
+from osbot_aws.aws.dynamo_db.Dynamo_DB__Table   import Dynamo_DB__Table
+from osbot_utils.utils.Misc                     import timestamp_utc_now
 
 class DyDB__Timeseries(Dynamo_DB__Table):
 
@@ -14,15 +14,17 @@ class DyDB__Timeseries(Dynamo_DB__Table):
         self.partition_key_name  = 'partition_key'
         self.partition_key_value = 'PROD'
         self.data_field_name     = 'data'
+        self.extra_gs_indexes    = []
 
-    def add_document(self, data, partition=None):
-        #partition = data.get('data').get('env', self.partition_key_value)
+    def add_document(self, data, extra_gsi_data=None, partition=None):
         primary_key = self.dynamo_db.random_id()
         document    = { self.primary_key         : primary_key                           ,
                         self.key_name            : timestamp_utc_now()                   ,
                         self.partition_key_name  : partition or self.partition_key_value ,
                         self.data_field_name     : data                                  }
-
+        if extra_gsi_data:
+            for key, value in extra_gsi_data.items():
+                document[key] = value
         result = super().add_document(document)
         result[self.primary_key] = primary_key
         return result
@@ -43,7 +45,6 @@ class DyDB__Timeseries(Dynamo_DB__Table):
         return delete_result
 
     def create_table(self):
-
         primary_key        = self.primary_key
         table_name         = self.table_name
         key_name           = self.key_name
@@ -65,6 +66,11 @@ class DyDB__Timeseries(Dynamo_DB__Table):
                                                         'ProjectionType'  : 'INCLUDE',
                                                         'NonKeyAttributes': [self.data_field_name]}}]
 
+        for index in self.extra_gs_indexes:
+            attribute_definitions.append({ 'AttributeName': index, 'AttributeType': 'S' })
+            global_secondary_indexes.append({ 'IndexName': f'{index}_index',
+                                              'KeySchema': [{'AttributeName': index, 'KeyType': 'HASH'}],
+                                              'Projection': {'ProjectionType': 'ALL'} })
         kwargs   = { 'AttributeDefinitions' : attribute_definitions    ,
                      'BillingMode'          : 'PAY_PER_REQUEST'        ,
                      'KeySchema'            : key_schema               ,
