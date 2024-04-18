@@ -24,15 +24,19 @@ class Dynamo_DB__Table(Kwargs_To_Self):
         super().__init__(**kwargs)
 
     def add_document(self, document):
-        if self.key_name not in document:
-            document[self.key_name] = self.dynamo_db.random_id()     # If key is present, generate a random UUID as the key
-        return self.dynamo_db.document_add(table_name=self.table_name, key_name=self.key_name, document=document)
+        if self.key_name not in document:                                   # If key is present,
+            document = {self.key_name : self.dynamo_db.random_id(),         # add it as an generate a random UUID as the key
+                        **document                               }          # to the current document object
+        return self.dynamo_db.document_add(table_name=self.table_name, document=document)
 
     def add_documents(self, documents):
+        documents_to_add = []
         for document in documents:
-            if self.key_name not in document:
-                document[self.key_name] = str(uuid.uuid4())
-        return self.dynamo_db.documents_add(table_name=self.table_name, documents=documents)
+            if self.key_name not in document:                               # If key is present,
+                document = {self.key_name: self.dynamo_db.random_id(),      # add it as a generate a random UUID as the key
+                            **document}                                     # to the current document object
+            documents_to_add.append(document)
+        return self.dynamo_db.documents_add(table_name=self.table_name, documents=documents_to_add)
 
     def add_record(self, record : Dynamo_DB__Record):
         metadata = record.metadata
@@ -52,14 +56,23 @@ class Dynamo_DB__Table(Kwargs_To_Self):
     def delete_document(self, key_value):
         return self.dynamo_db.document_delete(table_name=self.table_name, key_name=self.key_name, key_value=key_value)
 
+    def delete_documents(self, keys_values):
+        return self.dynamo_db.documents_delete(table_name=self.table_name, key_name=self.key_name, keys_values=keys_values)
+
     def delete_table(self, wait_for_deletion=True):
         return self.dynamo_db.table_delete(table_name=self.table_name, wait_for_deletion=wait_for_deletion)
 
     def document(self, key_value):
         return self.dynamo_db.document(table_name=self.table_name, key_name=self.key_name, key_value=key_value)
 
-    def documents(self):
+    def documents(self, keys_values):
+        return self.dynamo_db.documents(table_name=self.table_name, key_name=self.key_name, keys_values=keys_values)
+
+    def documents_all(self):
         return self.dynamo_db.documents_all(table_name=self.table_name)
+
+    def documents_ids(self,**kwargs):
+        return self.dynamo_db.documents_ids(table_name=self.table_name, key_name=self.key_name, **kwargs)
 
     def exists(self):
         return self.dynamo_db.table_exists(table_name=self.table_name)

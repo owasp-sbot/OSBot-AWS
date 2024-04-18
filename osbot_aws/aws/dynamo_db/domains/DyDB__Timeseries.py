@@ -14,17 +14,6 @@ class DyDB__Timeseries(DyDB__Table):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        #self.table_name          = 'tcb_timeseries'
-        #self.key_name
-        #self.primary_key         = 'dy_id'
-        #self.key_name            = 'timestamp'
-        #self.key_attribute_type  = 'N'
-        #self.key_type            = 'RANGE'
-        self.index_name          = 'timestamp_index'
-        self.index_type          = 'RANGE'
-        #self.partition_key_name  = 'partition_key'     # use env instead of partition
-        #self.partition_key_value = 'PROD'
-        #self.data_field_name     = 'data'
         self.global_secondary_indexes = []
 
     def add_document(self, document, env=None):
@@ -44,64 +33,11 @@ class DyDB__Timeseries(DyDB__Table):
         return ids
 
     def clear_table(self):                                                                      # todo: see if this can be moved to Dynamo_DB__Table
-        table_name = self.table_name
-        key_name   = self.key_name
-        key_values = self.all_ids()
-        delete_result = self.dynamo_db.documents_delete(table_name=table_name, key_name=key_name, key_values=key_values)
+        table_name  = self.table_name
+        key_name    = self.key_name
+        keys_values = self.all_ids()
+        delete_result = self.dynamo_db.documents_delete(table_name=table_name, key_name=key_name, keys_values=keys_values)
         return delete_result
-
-    def create_kwargs(self):
-        #primary_key        = self.primary_key
-        table_name         = self.table_name
-        #key_attribute_type = self.key_attribute_type
-        key_type           = self.key_type
-        index_name         = self.index_name
-
-        key_schema               = [{'AttributeName': self.key_name  , 'KeyType'      : 'HASH'}]
-        attribute_definitions    = [{'AttributeName': self.key_name  , 'AttributeType': 'S'   },
-                                    {'AttributeName': NAME_TIMESTAMP , 'AttributeType': 'N'   }]
-        global_secondary_indexes = [{ 'IndexName' : index_name,
-                                      'KeySchema' : [ {'AttributeName' :NAME_TIMESTAMP, 'KeyType': 'HASH'  },
-                                                      { 'AttributeName': self.key_name  , 'KeyType': self.index_type}],
-                                      'Projection': {'ProjectionType': 'ALL'} }]
-
-        for index in self.global_secondary_indexes:
-            attribute_definitions   .append({ 'AttributeName': index, 'AttributeType': 'S' })
-            global_secondary_indexes.append({ 'IndexName': f'{index}_index',
-                                              'KeySchema': [{'AttributeName': index, 'KeyType': 'HASH'}],
-                                              'Projection': {'ProjectionType': 'ALL'} })
-        kwargs   = { 'AttributeDefinitions'  : attribute_definitions    ,
-                     'BillingMode'           : 'PAY_PER_REQUEST'        ,
-                     'KeySchema'             : key_schema               ,
-                     'GlobalSecondaryIndexes': global_secondary_indexes ,
-                     'TableName'             : table_name               }
-        return kwargs
-
-    def create_table(self):
-        if not self.table_name:
-            raise ValueError('Table name is required')
-
-        if self.exists():
-            return False
-
-        kwargs = self.create_kwargs()
-        self.dynamo_db.client().create_table(**kwargs)
-
-        self.dynamo_db.client().get_waiter('table_exists') \
-            .wait(TableName=self.table_name, WaiterConfig={'Delay': 1, 'MaxAttempts': 50})
-        return True
-
-    def delete_document(self, key_value):
-        return self.dynamo_db.document_delete(table_name=self.table_name, key_name=self.key_name, key_value=key_value)
-
-    def document(self, key_value):
-        return self.dynamo_db.document(table_name=self.table_name, key_name=self.primary_key, key_value=key_value)
-
-    def documents(self, partition=None):
-        return self.query_by_partition(partition or self.partition_key_value)
-
-
-
 
     def query_by_partition(self, partition_value):
         table_name              = self.table_name

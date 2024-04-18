@@ -141,7 +141,7 @@ class test_Dynamo_DB(TestCase):
             documents     = [document_1, document_2]
             responses_add = _.documents_add   (table_name=self.table_name, documents=documents)
             documents_all = _.documents_all   (table_name=self.table_name)
-            responses_del = _.documents_delete(table_name=self.table_name, key_name=self.table_key, key_values=['key-1', 'key-2'])
+            responses_del = _.documents_delete(table_name=self.table_name, key_name=self.table_key, keys_values=['key-1', 'key-2'])
 
             assert documents_all == [document_2, document_1]
             assert responses_add == [{'UnprocessedItems': {}}]
