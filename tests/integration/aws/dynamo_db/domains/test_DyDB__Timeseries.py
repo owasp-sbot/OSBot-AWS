@@ -2,10 +2,14 @@ from decimal import Decimal
 import pytest
 from osbot_aws.AWS_Config import AWS_Config
 from osbot_aws.aws.boto3.View_Boto3_Rest_Calls import print_boto3_calls
-from osbot_aws.aws.dynamo_db.DyDB__Timeseries import DyDB__Timeseries
+from osbot_aws.aws.dynamo_db.Dynamo_DB__Table import Dynamo_DB__Table
+from osbot_aws.aws.dynamo_db.domains.DyDB__Table import DyDB__Table
+from osbot_aws.aws.dynamo_db.domains.DyDB__Timeseries import DyDB__Timeseries, NAME_TIMESTAMP
+from osbot_utils.base_classes.Kwargs_To_Self import Kwargs_To_Self
 from osbot_utils.utils.Dev import pprint
 from osbot_utils.utils.Misc import timestamp_utc_now, random_int, list_set, is_int, is_guid, wait_for
 from osbot_aws.testing.TestCase__Dynamo_DB import TestCase__Dynamo_DB
+from osbot_utils.utils.Objects import base_types
 
 
 #@pytest.mark.skip()
@@ -14,15 +18,15 @@ class test_DyDB__Timeseries(TestCase__Dynamo_DB):
     dydb_timeseries : DyDB__Timeseries
     delete_on_exit  : bool             = False
     partition       : str              = 'OSBOT_TEST'
+    table_name      : str              = 'pytest_db_timestamp'
 
     @classmethod
-    @print_boto3_calls()
     def setUpClass(cls):
         super().setUpClass()
-        cls.dydb_timeseries           = DyDB__Timeseries()
+        cls.dydb_timeseries           = DyDB__Timeseries(table_name=cls.table_name)
         cls.dydb_timeseries.dynamo_db = cls.dynamo_db
-        # if cls.dydb_timeseries.exists().get('data') is False:
-        #     assert cls.dydb_timeseries.create_table() is True
+        #if cls.dydb_timeseries.not_exists():
+        #assert cls.dydb_timeseries.create_table() is True
 
     @classmethod
     def tearDownClass(cls):
@@ -33,29 +37,96 @@ class test_DyDB__Timeseries(TestCase__Dynamo_DB):
     def test__init__(self):
         aws_config = AWS_Config()
         assert aws_config.region_name() == 'eu-west-1'
-        return
-        expected_var = { 'data_field_name'      : 'data'            ,
-                         'dynamo_db'            : self.dynamo_db    ,
-                         'extra_gs_indexes'     : []                ,
-                         'index_name'           : 'timestamp_index' ,
-                         'key_attribute_type'   : 'N'               ,
-                         'key_name'             : 'timestamp'       ,
-                         'key_type'             : 'RANGE'           ,
-                         'partition_key_name'   : 'partition_key'   ,
-                         'partition_key_value'  : 'PROD'            ,
-                         'primary_key'          : 'dy_id'           ,
-                         'table_name'   : 'tcb_timeseries'          }
-        assert self.dydb_timeseries.__locals__() == expected_var
+        expected_var = { 'dynamo_db'                : self.dynamo_db    ,
+                         'global_secondary_indexes' : []                ,
+                         'index_name'               : 'timestamp_index' ,
+                         'index_type'               : 'RANGE'           ,
+                         'key_name'                 : 'id'              ,
+                         'key_type'                 : 'S'           ,
+                         'table_name'               : self.table_name   }
+        with self.dydb_timeseries as _:
+            assert _.__locals__() == expected_var
+            assert base_types(_) == [DyDB__Table, Dynamo_DB__Table, Kwargs_To_Self, object]
+
 
     def test_exists(self):
-        assert self.dydb_timeseries.exists() == {'data': True, 'status': 'ok'}
+        assert self.dydb_timeseries.exists() is False
 
+
+    def test_create_kwargs(self):
+        with self.dydb_timeseries  as _:
+            default_kwargs = { 'AttributeDefinitions': [ { 'AttributeName'         : _.key_name    , 'AttributeType': _.key_type},
+                                                         { 'AttributeName'         : NAME_TIMESTAMP, 'AttributeType': 'N'}],
+                                                           'BillingMode'           :  'PAY_PER_REQUEST',
+                                                           'GlobalSecondaryIndexes': [ { 'IndexName': _.index_name,
+                                                                                         'KeySchema': [ { 'AttributeName': NAME_TIMESTAMP, 'KeyType': 'HASH'},
+                                                                                                        { 'AttributeName': _.key_name    , 'KeyType': 'RANGE'}],
+                                                                                         'Projection': {'ProjectionType': 'ALL'}}],
+                                                           'KeySchema'              : [{'AttributeName': _.key_name, 'KeyType': 'HASH'}],
+                                                           'TableName'              : _.table_name}
+            assert self.dydb_timeseries.create_kwargs() == default_kwargs
     # def test_all_ids(self):
     #     pprint(self.dydb_timeseries.all_ids())
 
     # def test__clear_table(self):
     #     result = self.dydb_timeseries.clear_table()
     #     #pprint(result)
+
+    def test_add_gsi(self):
+        with self.dydb_timeseries as _:
+            # create_kwargs =  {
+            #     'IndexName': 'string',
+            #     'KeySchema': [ { 'AttributeName': 'string', 'KeyType': 'HASH' },],
+            #     'Projection': { 'ProjectionType': 'ALL',                   }}
+            result        = _.gsi_create(index_name='string')
+            pprint(result)
+
+            #pprint(_.info())
+
+    def test_delete_gsi(self):
+        with self.dydb_timeseries as _:
+            result = _.gsi_delete(index_name='string')
+            pprint(result)
+
+    def test_create_table(self):
+        with self.dydb_timeseries as _:
+            if _.not_exists():
+                print('creating table')
+                assert _.create_table() is True
+            table_info = _.info()
+            LastUpdateToPayPerRequestDateTime = table_info.get('BillingModeSummary').get('LastUpdateToPayPerRequestDateTime')
+            CreationDateTime                  = table_info.get('CreationDateTime'  )
+            TableId                           = table_info.get('TableId'           )
+            assert table_info == { 'AttributeDefinitions': [ {'AttributeName': _.key_name, 'AttributeType': _.key_type},
+                                                             { 'AttributeName': 'timestamp',
+                                                               'AttributeType': 'N'}],
+                                   'BillingModeSummary': { 'BillingMode': 'PAY_PER_REQUEST',
+                                                           'LastUpdateToPayPerRequestDateTime': LastUpdateToPayPerRequestDateTime},
+                                   'CreationDateTime': CreationDateTime,
+                                   'DeletionProtectionEnabled': False,
+                                   'GlobalSecondaryIndexes': [ { 'IndexArn': 'arn:aws:dynamodb:eu-west-1:470426667096:table/pytest_db_timestamp/index/timestamp_index',
+                                                                 'IndexName': 'timestamp_index',
+                                                                 'IndexSizeBytes': 0,
+                                                                 'IndexStatus': 'ACTIVE',
+                                                                 'ItemCount': 0,
+                                                                 'KeySchema': [ { 'AttributeName': 'timestamp',
+                                                                                  'KeyType': 'HASH'},
+                                                                                { 'AttributeName': 'id',
+                                                                                  'KeyType': 'RANGE'}],
+                                                                 'Projection': {'ProjectionType': 'ALL'},
+                                                                 'ProvisionedThroughput': { 'NumberOfDecreasesToday': 0,
+                                                                                            'ReadCapacityUnits': 0,
+                                                                                            'WriteCapacityUnits': 0}}],
+                                   'ItemCount': 0,
+                                   'KeySchema': [{'AttributeName': 'id', 'KeyType': 'HASH'}],
+                                   'ProvisionedThroughput': { 'NumberOfDecreasesToday': 0,
+                                                              'ReadCapacityUnits': 0,
+                                                              'WriteCapacityUnits': 0},
+                                   'TableArn': 'arn:aws:dynamodb:eu-west-1:470426667096:table/pytest_db_timestamp',
+                                   'TableId': TableId,
+                                   'TableName': 'pytest_db_timestamp',
+                                   'TableSizeBytes': 0,
+                                   'TableStatus': 'ACTIVE'}
 
     #@pytest.mark.skip("needs to be fixed")  # todo don't use documents() which will fetch all items (use smaller query)
     def test_add_document(self):

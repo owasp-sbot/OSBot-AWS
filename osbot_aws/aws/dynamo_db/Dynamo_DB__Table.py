@@ -75,3 +75,20 @@ class Dynamo_DB__Table(Kwargs_To_Self):
 
     def status(self):
         return self.dynamo_db.table_status(table_name=self.table_name)
+
+    def update_table(self, attribute_definitions=None, gsi_updates=None):
+        return self.dynamo_db.table_update(self.table_name, attribute_definitions=attribute_definitions, gsi_updates=gsi_updates)
+
+    def gsi_create(self, index_name, index_type='S', schema_key_type='HASH', projection_type='ALL'):
+
+        attribute_definitions = [{ 'AttributeName': index_name, 'AttributeType': index_type}]
+        gsi_update            = {'Create': { 'IndexName' : index_name                                              ,
+                                             'KeySchema' : [{ 'AttributeName' : index_name     , 'KeyType': schema_key_type }],
+                                             'Projection':  { 'ProjectionType': projection_type                             }}}
+        gsi_updates           = [gsi_update]
+        return self.update_table( attribute_definitions=attribute_definitions, gsi_updates=gsi_updates)
+
+    def gsi_delete(self, index_name):
+        gsi_update  = {'Delete': { 'IndexName' : index_name }}
+        gsi_updates = [gsi_update]
+        return self.update_table(gsi_updates=gsi_updates)

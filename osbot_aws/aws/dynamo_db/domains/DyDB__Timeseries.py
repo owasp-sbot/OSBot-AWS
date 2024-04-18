@@ -1,6 +1,7 @@
 from os import environ
 
 from osbot_aws.aws.dynamo_db.Dynamo_DB__Table   import Dynamo_DB__Table
+from osbot_aws.aws.dynamo_db.domains.DyDB__Table import DyDB__Table
 from osbot_utils.utils.Misc                     import timestamp_utc_now
 from osbot_utils.utils.Objects import type_full_name
 
@@ -8,7 +9,8 @@ NAME_TIMESTAMP   = 'timestamp'
 NAME_ENVIRONMENT = 'environment'
 NAME_DATA        = 'data'
 VALUE_NA         = 'NA'
-class DyDB__Timeseries(Dynamo_DB__Table):
+
+class DyDB__Timeseries(DyDB__Table):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -17,8 +19,9 @@ class DyDB__Timeseries(Dynamo_DB__Table):
         #self.primary_key         = 'dy_id'
         #self.key_name            = 'timestamp'
         #self.key_attribute_type  = 'N'
-        self.key_type            = 'RANGE'
+        #self.key_type            = 'RANGE'
         self.index_name          = 'timestamp_index'
+        self.index_type          = 'RANGE'
         #self.partition_key_name  = 'partition_key'     # use env instead of partition
         #self.partition_key_value = 'PROD'
         #self.data_field_name     = 'data'
@@ -54,15 +57,12 @@ class DyDB__Timeseries(Dynamo_DB__Table):
         key_type           = self.key_type
         index_name         = self.index_name
 
-        if self.dynamo_db.table_exists(table_name):
-            return False
-
         key_schema               = [{'AttributeName': self.key_name  , 'KeyType'      : 'HASH'}]
         attribute_definitions    = [{'AttributeName': self.key_name  , 'AttributeType': 'S'   },
                                     {'AttributeName': NAME_TIMESTAMP , 'AttributeType': 'N'   }]
         global_secondary_indexes = [{ 'IndexName' : index_name,
                                       'KeySchema' : [ {'AttributeName' :NAME_TIMESTAMP, 'KeyType': 'HASH'  },
-                                                      { 'AttributeName': self.key_name  , 'KeyType': key_type}],
+                                                      { 'AttributeName': self.key_name  , 'KeyType': self.index_type}],
                                       'Projection': {'ProjectionType': 'ALL'} }]
 
         for index in self.global_secondary_indexes:
@@ -78,6 +78,12 @@ class DyDB__Timeseries(Dynamo_DB__Table):
         return kwargs
 
     def create_table(self):
+        if not self.table_name:
+            raise ValueError('Table name is required')
+
+        if self.exists():
+            return False
+
         kwargs = self.create_kwargs()
         self.dynamo_db.client().create_table(**kwargs)
 
@@ -93,6 +99,9 @@ class DyDB__Timeseries(Dynamo_DB__Table):
 
     def documents(self, partition=None):
         return self.query_by_partition(partition or self.partition_key_value)
+
+
+
 
     def query_by_partition(self, partition_value):
         table_name              = self.table_name

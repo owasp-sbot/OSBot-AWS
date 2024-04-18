@@ -197,9 +197,16 @@ class Dynamo_DB:
             kwargs['StreamSpecification'] = {'StreamEnabled': True, 'StreamViewType': 'NEW_IMAGE' }
         self.client().create_table(**kwargs)
 
-        self.client().get_waiter('table_exists') \
-            .wait(TableName=table_name, WaiterConfig={'Delay': 1, 'MaxAttempts': 50})
+        self.wait_for(table_name='table_exists')
         return True
+
+    def wait_for(self, waiter_name, table_name, delay=1, max_attempts= 50):
+        kwargs = dict(TableName    = table_name,
+                      WaiterConfig = dict(Delay=delay, MaxAttempts=max_attempts))
+        self.client().get_waiter(waiter_name).wait(**kwargs)
+
+    def wait_for_table_exists(self):
+        self.wait_for(table_name='table_exists')
 
     def table_delete(self, table_name, wait_for_deletion=True):
         if self.table_exists(table_name) is False:
@@ -221,6 +228,15 @@ class Dynamo_DB:
 
     def table_status(self, table_name):
         return self.table_info(table_name).get('TableStatus')
+
+    def table_update(self, table_name, attribute_definitions=None, gsi_updates=None):
+        update_kwargs = dict(TableName= table_name)
+        if attribute_definitions:
+            update_kwargs['AttributeDefinitions'] = attribute_definitions
+        if gsi_updates:
+            update_kwargs['GlobalSecondaryIndexUpdates'] = gsi_updates
+
+        return self.client().update_table(**update_kwargs )
 
     def tables(self):
         result = self.client().list_tables() or {}
