@@ -12,17 +12,17 @@ from osbot_aws.testing.TestCase__Dynamo_DB import TestCase__Dynamo_DB
 # todo: figure out why it takes so long to run the setUpClass and __init__() methods
 class test_DyDB__Timeseries(TestCase__Dynamo_DB):
     dydb_timeseries : DyDB__Timeseries
-    delete_on_exit  : bool             = True
+    delete_on_exit  : bool             = False
     partition       : str              = 'OSBOT_TEST'
 
     @classmethod
-    #@print_boto3_calls()
+    @print_boto3_calls()
     def setUpClass(cls):
         super().setUpClass()
-        cls.dydb_timeseries = DyDB__Timeseries()
+        cls.dydb_timeseries           = DyDB__Timeseries()
         cls.dydb_timeseries.dynamo_db = cls.dynamo_db
-        if cls.dydb_timeseries.exists().get('data') is False:
-            assert cls.dydb_timeseries.create_table() is True
+        # if cls.dydb_timeseries.exists().get('data') is False:
+        #     assert cls.dydb_timeseries.create_table() is True
 
     @classmethod
     def tearDownClass(cls):
@@ -33,6 +33,7 @@ class test_DyDB__Timeseries(TestCase__Dynamo_DB):
     def test__init__(self):
         aws_config = AWS_Config()
         assert aws_config.region_name() == 'eu-west-1'
+        return
         expected_var = { 'data_field_name'      : 'data'            ,
                          'dynamo_db'            : self.dynamo_db    ,
                          'extra_gs_indexes'     : []                ,

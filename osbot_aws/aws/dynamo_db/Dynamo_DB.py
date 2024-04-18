@@ -1,11 +1,7 @@
 import uuid
-from functools import cache
-
-from   boto3    import resource
-from boto3.dynamodb.types import TypeDeserializer, TypeSerializer
-from osbot_utils.utils.Status import status_ok
-
-from osbot_aws.apis.Session import Session
+from functools                                          import cache
+from boto3.dynamodb.types                               import TypeDeserializer, TypeSerializer
+from osbot_aws.apis.Session                             import Session
 from osbot_utils.decorators.methods.remove_return_value import remove_return_value
 
 DEFAULT_DOCUMENTS_MAX_ITEMS_TO_FETCH = 2000
@@ -133,7 +129,6 @@ class Dynamo_DB:
                 break
             if len(items) > DEFAULT_DOCUMENTS_MAX_ITEMS_TO_FETCH:
                 break
-            #print('--', len(items), 'items')
 
         return [self.document_deserialise(item) for item in items]
 

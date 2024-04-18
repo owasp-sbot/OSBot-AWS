@@ -7,16 +7,20 @@ from osbot_utils.decorators.methods.capture_status import capture_status, apply_
 from osbot_utils.utils.Dev import pprint
 from osbot_utils.utils.Misc import timestamp_utc_now
 
+PRIMARY_KEY_NAME = 'id'
+PRIMARY_KEY_TYPE = 'S'
 
 @apply_capture_status
 class Dynamo_DB__Table(Kwargs_To_Self):
     dynamo_db  : Dynamo_DB
     key_name   : str
-    key_type   : str = 'S'
+    key_type   : str
     table_name : str
 
 
     def __init__(self, **kwargs):
+        self.key_name = PRIMARY_KEY_NAME
+        self.key_type = PRIMARY_KEY_TYPE
         super().__init__(**kwargs)
 
     def add_document(self, document):
