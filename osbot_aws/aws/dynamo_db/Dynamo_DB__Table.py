@@ -94,6 +94,26 @@ class Dynamo_DB__Table(Kwargs_To_Self):
 
     def gsi_create(self, partition_name, partition_type, sort_key=None, sort_key_type=None, sort_key_schema=None, projection_type='ALL'):
 
+        attribute_definitions, gsi_update = self.gsi_create_kwargs( partition_name  = partition_name    ,
+                                                                    partition_type  = partition_type    ,
+                                                                    sort_key        = sort_key          ,
+                                                                    sort_key_type   = sort_key_type     ,
+                                                                    sort_key_schema = sort_key_schema   ,
+                                                                    projection_type = projection_type   )
+
+        return self.gsi_create_indexes(attribute_definitions, gsi_update)
+
+    def gsi_create_index(self, attribute_definitions, gsi_update):
+        gsi_updates = [gsi_update]
+        return self.gsi_create_indexes(attribute_definitions, gsi_updates)
+
+    def gsi_create_indexes(self, attribute_definitions, gsi_updates):
+        result = self.update_table( attribute_definitions=attribute_definitions, gsi_updates=gsi_updates)
+        if result.get('status') == 'ok':
+            return result.get('data')
+        return result
+
+    def gsi_create_kwargs(self, partition_name, partition_type, sort_key=None, sort_key_type=None, sort_key_schema=None, projection_type='ALL'):
         attribute_definitions = [{ 'AttributeName': partition_name,
                                    'AttributeType': partition_type}]
         gsi_update            = {'Create': { 'IndexName' : partition_name                        ,
@@ -105,12 +125,7 @@ class Dynamo_DB__Table(Kwargs_To_Self):
                                            'AttributeType': sort_key_type})
             gsi_update.get('Create').get('KeySchema').append({ 'AttributeName' : sort_key           ,
                                                                'KeyType'       : sort_key_schema })
-        gsi_updates = [gsi_update]
-
-        result = self.update_table( attribute_definitions=attribute_definitions, gsi_updates=gsi_updates)
-        if result.get('status') == 'ok':
-            return result.get('data')
-        return result
+        return attribute_definitions, gsi_update
 
     def gsi_delete(self, index_name):
         gsi_update  = {'Delete': { 'IndexName' : index_name }}

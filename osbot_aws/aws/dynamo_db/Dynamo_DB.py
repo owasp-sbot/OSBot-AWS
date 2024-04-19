@@ -237,7 +237,7 @@ class Dynamo_DB:
             kwargs['StreamSpecification'] = {'StreamEnabled': True, 'StreamViewType': 'NEW_IMAGE' }
         self.client().create_table(**kwargs)
 
-        self.wait_for(table_name='table_exists')
+        self.wait_for(waiter_name='table_exists', table_name=table_name)
         return True
 
     def wait_for(self, waiter_name, table_name, delay=1, max_attempts= 50):
@@ -245,8 +245,8 @@ class Dynamo_DB:
                       WaiterConfig = dict(Delay=delay, MaxAttempts=max_attempts))
         self.client().get_waiter(waiter_name).wait(**kwargs)
 
-    def wait_for_table_exists(self):
-        self.wait_for(table_name='table_exists')
+    def wait_for_table_exists(self, table_name):
+        self.wait_for(waiter_name='table_exists', table_name=table_name)
 
     def table_delete(self, table_name, wait_for_deletion=True):
         if self.table_exists(table_name) is False:

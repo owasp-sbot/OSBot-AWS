@@ -7,6 +7,15 @@ TIMESTAMP_PROJECTION_TYPE   = 'ALL'
 
 class DyDB__Table_With_Timestamp(DyDB__Table_With_GSI):
 
+    indexes_names = []
+
+    def __init__(self,**kwargs):
+        super().__init__(**kwargs)
+
+    def setup(self):
+        # add code to create table and indexes (if they don't exist)
+        pass
+
     def index_create(self, index_name, index_type, **kwargs):                   # every index here will have a timestamp has default
         kwargs = dict(partition_name  = index_name                ,
                       partition_type  = index_type                ,
