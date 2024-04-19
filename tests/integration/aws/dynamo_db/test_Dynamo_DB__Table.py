@@ -74,7 +74,7 @@ class test_Dynamo_DB__Table(TestCase__Temp_Dynamo_DB_Table):
                            'BillingModeSummary'      : {'BillingMode': 'PAY_PER_REQUEST'},
 
                           'DeletionProtectionEnabled': False                                                                 ,
-                          'ItemCount'                : 0                                                                     ,
+                          'ItemCount'                : data.get('ItemCount')                                                                     ,
                           'KeySchema'                : [{'AttributeName': self.key_name, 'KeyType': 'HASH'}]                 ,
                           'ProvisionedThroughput'    : { 'NumberOfDecreasesToday': 0 ,
                                                          'ReadCapacityUnits'     : 0 ,
@@ -82,7 +82,7 @@ class test_Dynamo_DB__Table(TestCase__Temp_Dynamo_DB_Table):
                           'TableArn'                 : f'arn:aws:dynamodb:{region_name}:{account_id}:table/{self.table_name}',
                           'TableId'                  : table_id                                                              ,
                           'TableName'                : self.table_name                                                       ,
-                          'TableSizeBytes'           : 0                                                                     ,
+                          'TableSizeBytes'           : data.get('TableSizeBytes')                                                                     ,
                           'TableStatus'              : 'ACTIVE'                                                              }
 
     def test_status(self):
