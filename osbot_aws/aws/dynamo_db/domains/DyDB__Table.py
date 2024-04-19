@@ -9,7 +9,10 @@ class DyDB__Table(Dynamo_DB__Table):
         super().__init__(**kwargs)
 
     def add_document(self, document):
-        return super().add_document(document).get('data')
+        result = super().add_document(document)
+        if result.get('status') == 'ok':
+            return result.get('data')
+        return result
 
     def add_documents(self,documents):
         return super().add_documents(documents).get('data')

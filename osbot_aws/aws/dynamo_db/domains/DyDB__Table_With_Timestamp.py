@@ -1,4 +1,5 @@
 from osbot_aws.aws.dynamo_db.domains.DyDB__Table_With_GSI import DyDB__Table_With_GSI
+from osbot_utils.utils.Misc import timestamp_utc_now
 
 TIMESTAMP_SORT_KEY          = 'timestamp'
 TIMESTAMP_SORT_KEY_TYPE     = 'N'
@@ -13,6 +14,11 @@ class DyDB__Table_With_Timestamp(DyDB__Table_With_GSI):
     def __init__(self,**kwargs):
         super().__init__(**kwargs)
 
+    def add_document(self,document):
+        timestamp = document.get(TIMESTAMP_SORT_KEY)
+        if not timestamp:
+            document[TIMESTAMP_SORT_KEY] = timestamp_utc_now()
+        return super().add_document(document)
 
 
     def index_create_kwargs(self, index_name):                   # every index here will have a timestamp has default
@@ -62,7 +68,6 @@ class DyDB__Table_With_Timestamp(DyDB__Table_With_GSI):
 
     def setup(self):
         with self as _:
-            _.delete_table()
             if _.not_exists():
                 self.create_table(wait_for_table=False)
 

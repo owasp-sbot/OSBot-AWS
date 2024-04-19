@@ -24,9 +24,10 @@ class Dynamo_DB__Table(Kwargs_To_Self):
         super().__init__(**kwargs)
 
     def add_document(self, document):
-        if self.key_name not in document:                                   # If key is present,
-            document = {self.key_name : self.dynamo_db.random_id(),         # add it as an generate a random UUID as the key
-                        **document                               }          # to the current document object
+        key_value = document.get(self.key_name)
+        if not key_value:                                                   # if key value is not set
+            document = {**document ,                                        # to the current document object
+                        self.key_name : self.dynamo_db.random_id()}         # add it as a random UUID
         return self.dynamo_db.document_add(table_name=self.table_name, document=document)
 
     def add_documents(self, documents):
