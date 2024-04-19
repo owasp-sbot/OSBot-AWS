@@ -75,3 +75,27 @@ class DyDB__Table(Dynamo_DB__Table):
 
     def size(self):
         return self.dynamo_db.documents_count(self.table_name)
+
+    def query_index(self, index_name, index_type, index_value):
+            query_kwargs = dict( TableName                 = self.table_name                                ,
+                                 IndexName                 = index_name                                     ,
+                                 KeyConditionExpression    =  f'#{index_name} = :{index_name}'              ,
+                                 ExpressionAttributeNames  = { f'#{index_name}' : index_name                },
+                                 ExpressionAttributeValues = { f':{index_name}' : {index_type :index_value  }})
+            response = self.query(**query_kwargs)
+
+            items = response.get('data', {}).get('Items')           # todo: add cases with large results
+            return items
+
+    def query_index_between_range(self, index_name, index_type, index_value, sort_key, sort_key_type, start_value, end_value):
+            query_kwargs = dict( TableName                 = self.table_name                        ,
+                                 IndexName                 = index_name                 ,
+                                 KeyConditionExpression    =  f'#{index_name} = :{index_name} AND #{sort_key} BETWEEN :start AND :end',
+                                 ExpressionAttributeNames  = { f'#{index_name}' : index_name,   f'#{sort_key}': sort_key }            ,
+                                 ExpressionAttributeValues = { f':{index_name}' : {index_type :index_value    },
+                                                               ':start'         : { sort_key_type : str(start_value)},
+                                                               ':end'           : { sort_key_type : str(end_value  )}})
+            response = self.query(**query_kwargs)
+
+            items = response.get('data', {}).get('Items')           # todo: add cases with large results
+            return items

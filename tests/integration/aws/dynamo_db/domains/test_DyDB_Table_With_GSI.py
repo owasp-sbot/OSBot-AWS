@@ -11,7 +11,7 @@ from osbot_aws.aws.dynamo_db.domains.DyDB__Table_With_GSI import DyDB__Table_Wit
 from osbot_aws.testing.TestCase__Dynamo_DB import TestCase__Dynamo_DB
 from osbot_utils.base_classes.Kwargs_To_Self import Kwargs_To_Self
 from osbot_utils.utils.Dev import pprint
-from osbot_utils.utils.Misc import in_github_action, random_number, timestamp_utc_now_less_delta
+from osbot_utils.utils.Misc import in_github_action, random_number, timestamp_utc_now_less_delta, list_set
 from osbot_utils.utils.Objects import base_types
 
 
@@ -133,20 +133,35 @@ class test_DyDB__Table(TestCase__Dynamo_DB):
                     _.add_document(document)
             pprint(f'there are {_.size()} documents')
 
-    def test_query_between_dates(self):
+    def test_query_index(self):
+        user_id = 'user_a'
+        with self.dydb_table_with_gsi as _:
+            query_kwargs = dict(index_name    = self.gsi_index_name,
+                                index_type    = self.gsi_index_type,
+                                index_value   = user_id            )
+
+            items = _.query_index(**query_kwargs)
+            assert len(items) == 10
+            for raw_item in items:
+                item = _.dynamo_db.document_deserialise(raw_item)
+                assert list_set(item) == ['an_random', 'an_str', 'id', 'timestamp', 'user_id']
+                assert item.get('an_str') == '42'
+                assert item.get('user_id') == user_id
+
+    def test_query_index_between_range(self):
         user_id = 'user_b'
         timestamp_start = timestamp_utc_now_less_delta(days=21)
         timestamp_end   = timestamp_utc_now_less_delta(days=10)
         with self.dydb_table_with_gsi as _:
-            query_kwargs = dict( TableName                 = _.table_name                        ,
-                                 IndexName                 = self.gsi_index_name                 ,
-                                 KeyConditionExpression    =  f'#{self.gsi_index_name} = :{self.gsi_index_name} AND #{self.gsi_sort_key} BETWEEN :start_time AND :end_time',
-                                 ExpressionAttributeNames  = { f'#{self.gsi_index_name}': self.gsi_index_name, f'#{self.gsi_sort_key}': self.gsi_sort_key }   ,
-                                 ExpressionAttributeValues = { ':user_id'    : {'S' :user_id              },
-                                                               ':start_time' : {'N' : str(timestamp_start)},
-                                                               ':end_time'   : {'N' : str(timestamp_end  )}})
-            response = _.query(**query_kwargs)
-            items = response.get('data').get('Items')
+            query_kwargs = dict(index_name    = self.gsi_index_name,
+                                index_type    = self.gsi_index_type,
+                                index_value   = user_id,
+                                sort_key      = self.gsi_sort_key       ,
+                                sort_key_type = self.gsi_sort_key_type  ,
+                                start_value   = timestamp_start         ,
+                                end_value     = timestamp_end           )
+
+            items = _.query_index_between_range(**query_kwargs)
             assert len(items) > 0
             for raw_item in items:
                 item = _.dynamo_db.document_deserialise(raw_item)
