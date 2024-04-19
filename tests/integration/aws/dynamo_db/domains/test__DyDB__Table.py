@@ -24,11 +24,10 @@ class test_DyDB__Table(TestCase__Dynamo_DB):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        cls.dydb_table           = DyDB__Table(table_name=cls.table_name)
-        cls.dydb_table.dynamo_db = cls.dynamo_db                                # set dydb_table.dynamo_db to version of dynamo_db from TestCase__Dynamo_DB (which has the correct IAM permissions)
-        cls.aws_config           = AWS_Config()
-        cls.region_name          = cls.aws_config.region_name()
-        cls.account_id           = cls.aws_config.account_id()
+        cls.dydb_table   = DyDB__Table(table_name=cls.table_name, dynamo_db=cls.dynamo_db)      # set dynamo_db to version of dynamo_db from TestCase__Dynamo_DB (which has the correct IAM permissions)
+        cls.aws_config   = AWS_Config()
+        cls.region_name  = cls.aws_config.region_name()
+        cls.account_id   = cls.aws_config.account_id()
 
         cls.dydb_table.create_table()  # create if it doesn't exist
 
