@@ -26,29 +26,43 @@ class DyDB__Table_With_Timestamp(DyDB__Table_With_GSI):
         return index_create_kwargs
 
     def indexes_create_kwargs(self):
-        indexes_create_kwargs = {}
-
+        all_attribute_definitions = []
+        all_gsi_updates           = []
+        indexes_create_kwargs = {'attribute_definitions': all_attribute_definitions ,
+                                 'gsi_updates'          : all_gsi_updates           }
         if self.table_indexes:
             for index_name in self.table_indexes:
-                pass
+                index_create_kwargs = self.index_create_kwargs(index_name)
+                attribute_definitions = index_create_kwargs.get('attribute_definitions')
+                gsi_update            = index_create_kwargs.get('gsi_update'           )
+                for attribute_definition in attribute_definitions:
+                    if attribute_definition not in all_attribute_definitions:
+                        all_attribute_definitions.append(attribute_definition)
+                all_gsi_updates.append(gsi_update)
+        return indexes_create_kwargs
 
+    def create_table_kwargs(self):
+        create_table_kwargs               = super().create_table_kwargs()
+        new_indexes_create_kwargs         = self.indexes_create_kwargs()
+        new_indexes_attribute_definitions = new_indexes_create_kwargs.get('attribute_definitions')
+        new_indexes_gsi_updates           = new_indexes_create_kwargs.get('gsi_updates')
+        table_attribute_definitions       = create_table_kwargs.get('AttributeDefinitions')
+        global_secondary_indexes          = []
 
-    def index_create(self, index_name, **kwargs):
-        index_create_kwargs = self.index_create_kwargs(index_name)
-        return self.gsi_create_index(**index_create_kwargs).get('data')
+        for attribute_definitions in new_indexes_attribute_definitions:
+            if attribute_definitions not in table_attribute_definitions:
+                table_attribute_definitions.append(attribute_definitions)
+        for gsi_update in new_indexes_gsi_updates:
+            create_index_config = gsi_update.get('Create')
+            global_secondary_indexes.append(create_index_config)
 
-    def indexes_exist(self):
-        if not self.table_indexes:                                  # if there are no indexes current defined in this class don't return True
-            return False
-        current_indexes = self.indexes_names()
-        for index_name in self.table_indexes:
-            if index_name not in current_indexes:
-                return False
-        return True
+        create_table_kwargs['GlobalSecondaryIndexes'] = global_secondary_indexes
+
+        return create_table_kwargs
 
     def setup(self):
         with self as _:
+            _.delete_table()
             if _.not_exists():
-                "print-creating table"
-                self.create_table(wait_for_table=True)
+                self.create_table(wait_for_table=False)
 

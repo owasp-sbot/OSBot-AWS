@@ -17,7 +17,7 @@ class DyDB__Table(Dynamo_DB__Table):
     def create_table_kwargs(self):
         key_schema               = [{'AttributeName': self.key_name  , 'KeyType'      : 'HASH'}]
         attribute_definitions    = [{'AttributeName': self.key_name  , 'AttributeType': 'S'   }]
-        global_secondary_indexes = []
+        #global_secondary_indexes = []
 
         # for index in self.global_secondary_indexes:
         #     attribute_definitions   .append({ 'AttributeName': index, 'AttributeType': 'S' })
