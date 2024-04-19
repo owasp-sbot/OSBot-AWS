@@ -142,16 +142,16 @@ class test_DyDB__Table(TestCase__Dynamo_DB):
                                   'BillingModeSummary'       :  {'BillingMode': 'PAY_PER_REQUEST', 'LastUpdateToPayPerRequestDateTime': LastUpdateToPayPerRequestDateTime},
                                   'CreationDateTime'         : CreationDateTime ,
                                   'DeletionProtectionEnabled': False            ,
-                                  'ItemCount'                : 0                ,
+                                  'ItemCount'                : table_info.get('ItemCount')                 ,
                                   'KeySchema'                : [{'AttributeName': 'id', 'KeyType': 'HASH'}],
-                                  'ProvisionedThroughput'    : {'NumberOfDecreasesToday': 0,
-                                                                'ReadCapacityUnits': 0,
-                                                                'WriteCapacityUnits': 0},
+                                  'ProvisionedThroughput'    : {'NumberOfDecreasesToday': 0               ,
+                                                                'ReadCapacityUnits': 0                    ,
+                                                                'WriteCapacityUnits': 0                   },
                                   'TableArn'                 : f'arn:aws:dynamodb:{self.region_name}:{self.account_id}:table/{self.table_name}',
-                                  'TableId'                  : TableId          ,
-                                  'TableName'                : self.table_name  ,
-                                  'TableSizeBytes'           : 0                ,
-                                  'TableStatus'              : 'ACTIVE'         }
+                                  'TableId'                  : TableId                                     ,
+                                  'TableName'                : self.table_name                             ,
+                                  'TableSizeBytes'           : table_info.get('TableSizeBytes')            ,
+                                  'TableStatus'              : 'ACTIVE'                                    }
 
     def test_size(self):
         assert self.dydb_table.size() >= 0

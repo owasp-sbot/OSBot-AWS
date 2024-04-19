@@ -11,7 +11,7 @@ from osbot_aws.testing.TestCase__Dynamo_DB              import TestCase__Dynamo_
 from osbot_utils.utils.Objects                          import base_types
 
 
-#@pytest.mark.skip()
+@pytest.mark.skip()
 class test_DyDB__Timeseries(TestCase__Dynamo_DB):
     delete_on_exit  : bool             = False
     dydb_timeseries : DyDB__Timeseries

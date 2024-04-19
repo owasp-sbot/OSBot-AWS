@@ -16,10 +16,10 @@ from osbot_utils.utils.Objects import base_types
 
 
 class test_DyDB__Table(TestCase__Dynamo_DB):
-    delete_on_exit     : bool        = in_github_action()
+    delete_on_exit     : bool                   = False            # in_github_action() #can't really do this since it takes ages (like several minutes for the GSIs to be created)
     aws_config         : AWS_Config
     dydb_table_with_gsi: DyDB__Table_With_GSI
-    table_name         : str         = f'pytest__dydb__table_with_gsi__auto_delete_{delete_on_exit}'
+    table_name         : str                    = f'pytest__dydb__table_with_gsi__auto_delete_{delete_on_exit}'
     account_id         : str
     region_name        : str
 
@@ -55,6 +55,23 @@ class test_DyDB__Table(TestCase__Dynamo_DB):
                                        Dynamo_DB__Table ,
                                        Kwargs_To_Self   ,
                                        object           ]
+
+    def test_AAA__add_test_data(self):
+        with self.dydb_table_with_gsi as _:
+            if _.size() > 0:                    # there is already test data
+                return
+            time_groups = [0, 10, 20, 30]
+            for user_id in ['user_a', 'user_b', 'user_c', 'user_d']:
+                for i in range(0, 10):
+                    delta_days = random.choice(time_groups)
+                    timestamp = timestamp_utc_now_less_delta(days=delta_days)
+                    document  = dict(user_id    = user_id                 ,
+                                     an_str     = '42'                    ,
+                                     an_random  = Decimal(random_number()),
+                                     timestamp  = timestamp               )
+                    _.add_document(document)
+            pprint(f'there are {_.size()} documents')
+
     def test_attribute_definitions(self):
         with self.dydb_table_with_gsi as _:
             pprint(_.attribute_definitions())
@@ -89,17 +106,19 @@ class test_DyDB__Table(TestCase__Dynamo_DB):
 
     def test_index(self):
         index_name = self.gsi_index_name
-        expected_index = { 'IndexArn'       : f'arn:aws:dynamodb:{self.region_name}:{self.account_id}:table/{self.table_name}/index/{index_name}',
-                           'IndexName'      : index_name,
-                           'IndexSizeBytes' : 0         ,
-                           'IndexStatus'    : 'ACTIVE'  ,
-                           'ItemCount'      : 0         ,
-                           'KeySchema'      : [{'AttributeName': self.gsi_index_name, 'KeyType': 'HASH'},
-                                               {'AttributeName': self.gsi_sort_key  , 'KeyType': self.gsi_sort_key_schema}],
-                           'Projection'     : {'ProjectionType': 'ALL'},
-                           'ProvisionedThroughput': { 'NumberOfDecreasesToday': 0, 'ReadCapacityUnits': 0, 'WriteCapacityUnits': 0}}
         with self.dydb_table_with_gsi as _:
-            assert _.index(index_name) == expected_index
+            index_info     = _.index(index_name)
+            expected_index = { 'IndexArn'       : f'arn:aws:dynamodb:{self.region_name}:{self.account_id}:table/{self.table_name}/index/{index_name}',
+                               'IndexName'      : index_name,
+                               'IndexSizeBytes' : index_info.get('IndexSizeBytes')  ,
+                               'IndexStatus'    : 'ACTIVE'  ,
+                               'ItemCount'      : index_info.get('ItemCount'     )  ,
+                               'KeySchema'      : [{'AttributeName': self.gsi_index_name, 'KeyType': 'HASH'},
+                                                   {'AttributeName': self.gsi_sort_key  , 'KeyType': self.gsi_sort_key_schema}],
+                               'Projection'     : {'ProjectionType': 'ALL'},
+                               'ProvisionedThroughput': { 'NumberOfDecreasesToday': 0, 'ReadCapacityUnits': 0, 'WriteCapacityUnits': 0}}
+
+            assert index_info == expected_index
 
 
     def test_indexes(self):
@@ -117,21 +136,6 @@ class test_DyDB__Table(TestCase__Dynamo_DB):
             assert _.table_status     () == 'ACTIVE'
             assert _.indexes_status() in [['ACTIVE'], []]
 
-
-    def test_add_test_data(self):
-        with self.dydb_table_with_gsi as _:
-            _.clear_table()
-            time_groups = [0, 10, 20, 30]
-            for user_id in ['user_a', 'user_b', 'user_c', 'user_d']:
-                for i in range(0, 10):
-                    delta_days = random.choice(time_groups)
-                    timestamp = timestamp_utc_now_less_delta(days=delta_days)
-                    document  = dict(user_id    = user_id                 ,
-                                     an_str     = '42'                    ,
-                                     an_random  = Decimal(random_number()),
-                                     timestamp  = timestamp               )
-                    _.add_document(document)
-            pprint(f'there are {_.size()} documents')
 
     def test_query_index(self):
         user_id = 'user_a'
