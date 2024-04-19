@@ -51,8 +51,8 @@ class test_Dynamo_DB(TestCase):
             assert _.documents_all(table_name=self.table_name) == []
             document_1 = { self.table_key: 'key-1', 'answer-1': Decimal(42) ,'var-1': 'goes-here'}
             document_2 = { self.table_key: 'key-2', 'answer-1': Decimal(43), 'var-2': 'and-here'}
-            _.document_add(table_name=self.table_name, key_name=self.table_key, document=document_1)
-            _.document_add(table_name=self.table_name, key_name=self.table_key, document=document_2)
+            _.document_add(table_name=self.table_name, document=document_1)
+            _.document_add(table_name=self.table_name, document=document_2)
             all_items = _.documents_all(table_name=self.table_name)
             assert all_items == [document_2, document_1]
 
@@ -69,7 +69,7 @@ class test_Dynamo_DB(TestCase):
         with self.dynamo_db as _:
             key_value = random_string(prefix='an_key')
             document = {self.table_key: key_value, 'answer-1': Decimal(42), 'var-1': 'goes-here'}
-            _.document_add(table_name=self.table_name, key_name=self.table_key, document=document)
+            _.document_add(table_name=self.table_name, document=document)
             assert _.document(table_name=self.table_name, key_name=self.table_key, key_value=key_value) == document
             update_result = _.document_update(table_name=self.table_name, key_name=self.table_key, key_value=key_value, update_data={'answer-1': Decimal(43)})
             assert update_result == {'Attributes': {'answer-1': {'N': '43'}}}
@@ -99,7 +99,7 @@ class test_Dynamo_DB(TestCase):
                         'number_set_attr': set([Decimal(1), Decimal(2), Decimal(3)]), }
 
             # Add the document
-            _.document_add(table_name=self.table_name, key_name=self.table_key, document=document)
+            _.document_add(table_name=self.table_name,  document=document)
             assert _.document(table_name=self.table_name, key_name=self.table_key, key_value='data_types_key') == document
 
             # Update some of the data types
@@ -144,7 +144,7 @@ class test_Dynamo_DB(TestCase):
             responses_del = _.documents_delete(table_name=self.table_name, key_name=self.table_key, keys_values=['key-1', 'key-2'])
 
             assert documents_all == [document_2, document_1]
-            assert responses_add == [{'UnprocessedItems': {}}]
+            assert responses_add == dict(documents=documents,responses=[{'UnprocessedItems': {}}])
             assert responses_del == [{'UnprocessedItems': {}}]
             assert _.documents_all(table_name=self.table_name) == []
 

@@ -93,15 +93,13 @@ class Dynamo_DB__Table(Kwargs_To_Self):
         return self.dynamo_db.table_update(self.table_name, attribute_definitions=attribute_definitions, gsi_updates=gsi_updates)
 
     def gsi_create(self, partition_name, partition_type, sort_key=None, sort_key_type=None, sort_key_schema=None, projection_type='ALL'):
-
-        attribute_definitions, gsi_update = self.gsi_create_kwargs( partition_name  = partition_name    ,
-                                                                    partition_type  = partition_type    ,
-                                                                    sort_key        = sort_key          ,
-                                                                    sort_key_type   = sort_key_type     ,
-                                                                    sort_key_schema = sort_key_schema   ,
-                                                                    projection_type = projection_type   )
-
-        return self.gsi_create_indexes(attribute_definitions, gsi_update)
+        gsi_create_kwargs= self.gsi_create_kwargs( partition_name  = partition_name    ,
+                                                   partition_type  = partition_type    ,
+                                                   sort_key        = sort_key          ,
+                                                   sort_key_type   = sort_key_type     ,
+                                                   sort_key_schema = sort_key_schema   ,
+                                                   projection_type = projection_type   )
+        return self.gsi_create_index(**gsi_create_kwargs)
 
     def gsi_create_index(self, attribute_definitions, gsi_update):
         gsi_updates = [gsi_update]
@@ -125,7 +123,9 @@ class Dynamo_DB__Table(Kwargs_To_Self):
                                            'AttributeType': sort_key_type})
             gsi_update.get('Create').get('KeySchema').append({ 'AttributeName' : sort_key           ,
                                                                'KeyType'       : sort_key_schema })
-        return attribute_definitions, gsi_update
+        create_kwargs = dict(attribute_definitions = attribute_definitions,
+                             gsi_update            = gsi_update)
+        return create_kwargs
 
     def gsi_delete(self, index_name):
         gsi_update  = {'Delete': { 'IndexName' : index_name }}

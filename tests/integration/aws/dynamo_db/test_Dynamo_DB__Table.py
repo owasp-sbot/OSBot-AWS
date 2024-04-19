@@ -24,11 +24,11 @@ class test_Dynamo_DB__Table(TestCase__Temp_Dynamo_DB_Table):
             status = result.get('status')
             data   = result.get('data')
             assert list_set(result) == ['data', 'status']
-            assert list_set(data  ) == ['document', 'document_as_item', 'key_value']
+            assert list_set(data  ) == ['document', 'document_as_item']
             assert status == 'ok'
             document         = data.get('document')
             document_as_item = data.get('document_as_item')
-            document_key     = data.get('key_value')
+            document_key     = document.get(self.key_name)
             assert is_guid(document_key) is True
             assert document_key        == document_as_item.get('el-key').get('S')
             assert document            == {'answer':42, 'el-key': document_key}
