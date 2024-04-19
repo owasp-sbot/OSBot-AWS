@@ -90,6 +90,7 @@ class DyDB__Table(Dynamo_DB__Table):
             items = response.get('data', {}).get('Items')           # todo: add cases with large results
             return items
 
+
     def query_index_between_range(self, index_name, index_type, index_value, sort_key, sort_key_type, start_value, end_value):
             query_kwargs = dict( TableName                 = self.table_name                        ,
                                  IndexName                 = index_name                 ,
@@ -100,5 +101,5 @@ class DyDB__Table(Dynamo_DB__Table):
                                                                ':end'           : { sort_key_type : str(end_value  )}})
             response = self.query(**query_kwargs)
 
-            items = response.get('data', {}).get('Items')           # todo: add cases with large results
-            return items
+            items = response.get('data', {}).get('Items', [])           # todo: add cases with large results
+            return [self.dynamo_db.document_deserialise(item) for item in items]

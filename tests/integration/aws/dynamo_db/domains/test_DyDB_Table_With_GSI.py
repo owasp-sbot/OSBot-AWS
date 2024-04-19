@@ -167,8 +167,7 @@ class test_DyDB__Table(TestCase__Dynamo_DB):
 
             items = _.query_index_between_range(**query_kwargs)
             assert len(items) > 0
-            for raw_item in items:
-                item = _.dynamo_db.document_deserialise(raw_item)
+            for item in items:
                 assert item.get('an_str'   ) == '42'
                 assert item.get('user_id'  ) == user_id
                 assert item.get('timestamp') > timestamp_start

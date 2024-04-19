@@ -66,6 +66,18 @@ class DyDB__Table_With_Timestamp(DyDB__Table_With_GSI):
 
         return create_table_kwargs
 
+    def query_index_by_timestamp(self, index_name, index_value, timestamp_start, timestamp_end):
+        query_kwargs = dict(index_name    = index_name               ,
+                            index_type    = INDEX_PARTITION_TYPE     ,
+                            index_value   = index_value              ,
+                            sort_key      = TIMESTAMP_SORT_KEY       ,
+                            sort_key_type = TIMESTAMP_SORT_KEY_TYPE  ,
+                            start_value   = timestamp_start         ,
+                            end_value     = timestamp_end           )
+
+        return self.query_index_between_range(**query_kwargs)
+
+
     def setup(self):
         with self as _:
             if _.not_exists():
