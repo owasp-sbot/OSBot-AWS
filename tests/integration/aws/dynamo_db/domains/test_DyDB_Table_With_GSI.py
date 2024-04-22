@@ -146,8 +146,7 @@ class test_DyDB__Table(TestCase__Dynamo_DB):
 
             items = _.query_index(**query_kwargs)
             assert len(items) == 10
-            for raw_item in items:
-                item = _.dynamo_db.document_deserialise(raw_item)
+            for item in items:
                 assert list_set(item) == ['an_random', 'an_str', 'id', 'timestamp', 'user_id']
                 assert item.get('an_str') == '42'
                 assert item.get('user_id') == user_id

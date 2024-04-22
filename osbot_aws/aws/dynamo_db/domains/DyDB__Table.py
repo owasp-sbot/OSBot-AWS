@@ -88,7 +88,7 @@ class DyDB__Table(Dynamo_DB__Table):
             response = self.query(**query_kwargs)
 
             items = response.get('data', {}).get('Items')           # todo: add cases with large results
-            return items
+            return [self.dynamo_db.document_deserialise(item) for item in items]
 
 
     def query_index_between_range(self, index_name, index_type, index_value, sort_key, sort_key_type, start_value, end_value):
