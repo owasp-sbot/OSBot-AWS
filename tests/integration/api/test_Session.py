@@ -22,7 +22,7 @@ class test_Session(TestCase):
 
     def test___init__(self):
         assert self.session.__default_kwargs__() == {'account_id': None, 'profile_name': None, 'region_name': None}
-        assert self.session.__kwargs__        () == {'account_id': os.getenv('AWS_ACCOUNT_ID'), 'profile_name': os.getenv('AWS_PROFILE_NAME'), 'region_name': os.getenv('AWS_DEFAULT_REGION')}
+        assert self.session.__kwargs__        () == {'account_id': None, 'profile_name': None, 'region_name': None}
         assert self.session.__locals__        () == { 'aws_config': self.session.aws_config, **self.session.__kwargs__() }
         assert self.session.aws_config.__class__.__name__ == 'AWS_Config'
 
@@ -48,8 +48,9 @@ class test_Session(TestCase):
 
     def test_caller_identity(self):
         caller_identity = self.session.caller_identity()
-        assert caller_identity.get('Account' ) == self.session.account_id
-        assert caller_identity.get('Arn'     ) == f'arn:aws:iam::{self.session.account_id}:user/{IAM_USER_NAME__OSBOT_AWS}'
+        account_id      = self.aws_config.account_id()
+        assert caller_identity.get('Account' ) == account_id
+        assert caller_identity.get('Arn'     ) == f'arn:aws:iam::{account_id}:user/{IAM_USER_NAME__OSBOT_AWS}'
         assert caller_identity.get('UserId'  ).__class__.__name__ == 'str'
 
     #@print_boto3_calls
