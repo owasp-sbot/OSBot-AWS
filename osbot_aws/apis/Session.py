@@ -22,9 +22,9 @@ class Session(Kwargs_To_Self):                  # todo: refactor to AWS_Session 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.aws_config   = AWS_Config()
-        self.account_id   = self.account_id   or self.aws_config.aws_session_account_id()
-        self.profile_name = self.profile_name or self.aws_config.aws_session_profile_name()
-        self.region_name  = self.region_name  or self.aws_config.aws_session_region_name()
+        #self.account_id   = self.account_id   or self.aws_config.aws_session_account_id()          # note: we can't do this here, since this will trigger a recursive call with with STS().caller_identity()
+        #self.profile_name = self.profile_name or self.aws_config.aws_session_profile_name()
+        #self.region_name  = self.region_name  or self.aws_config.aws_session_region_name()
 
     def boto_session(self) -> Session:
         return get_session()
@@ -95,6 +95,8 @@ class Session(Kwargs_To_Self):                  # todo: refactor to AWS_Session 
     def client_boto3(self,service_name):                   # todo: refactor with resource_boto3
         try:
 
+            self.region_name  = self.region_name  or self.aws_config.aws_session_region_name()        # todo: figure out better way todo do this
+            self.profile_name = self.profile_name or self.aws_config.aws_session_profile_name()
             if self.profile_name and self.profile_name in self.profiles():                                                  # seeing if this is a more efficient way to get the data
                 session = boto3.Session(profile_name=self.profile_name, region_name=self.region_name)      # tried to pass this params but had side effects: , botocore_session=self.boto_session()
                 client  = session.client(service_name=service_name)
