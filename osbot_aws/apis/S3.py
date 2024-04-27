@@ -197,7 +197,7 @@ class S3:
         return result.get('ResponseMetadata').get('HTTPStatusCode') == 204
 
     def file_details(self, bucket, key):
-        return self.s3().head_object(Bucket = bucket, Key= key);
+        return self.s3().head_object(Bucket = bucket, Key= key)
 
     def file_size_in_Mb(self, bucket, key):
         details = self.file_details(bucket,key)
