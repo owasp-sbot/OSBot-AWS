@@ -1,5 +1,5 @@
 from osbot_aws.aws.dynamo_db.domains.DyDB__Table_With_GSI import DyDB__Table_With_GSI
-from osbot_utils.utils.Misc import timestamp_utc_now
+from osbot_utils.utils.Misc import timestamp_utc_now, timestamp_utc_now_less_delta
 
 TIMESTAMP_SORT_KEY          = 'timestamp'
 TIMESTAMP_SORT_KEY_TYPE     = 'N'
@@ -66,14 +66,20 @@ class DyDB__Table_With_Timestamp(DyDB__Table_With_GSI):
 
         return create_table_kwargs
 
-    def query_index_by_timestamp(self, index_name, index_value, timestamp_start, timestamp_end):
-        query_kwargs = dict(index_name    = index_name               ,
-                            index_type    = INDEX_PARTITION_TYPE     ,
-                            index_value   = index_value              ,
-                            sort_key      = TIMESTAMP_SORT_KEY       ,
-                            sort_key_type = TIMESTAMP_SORT_KEY_TYPE  ,
+    def query_index_last_n_hours(self, index_name, index_value, hours, query_filter=None):
+        timestamp_start = timestamp_utc_now_less_delta(hours=hours)  # get timestamp for last n hours
+        timestamp_end = timestamp_utc_now()
+        return self.query_index_by_timestamp(index_name, index_value, timestamp_start, timestamp_end, query_filter)
+
+    def query_index_by_timestamp(self, index_name, index_value, timestamp_start, timestamp_end, query_filter=None):
+        query_kwargs = dict(index_name    = index_name              ,
+                            index_type    = INDEX_PARTITION_TYPE    ,
+                            index_value   = index_value             ,
+                            sort_key      = TIMESTAMP_SORT_KEY      ,
+                            sort_key_type = TIMESTAMP_SORT_KEY_TYPE ,
                             start_value   = timestamp_start         ,
-                            end_value     = timestamp_end           )
+                            end_value     = timestamp_end           ,
+                            query_filter  = query_filter            )
 
         return self.query_index_between_range(**query_kwargs)
 

@@ -90,16 +90,21 @@ class DyDB__Table(Dynamo_DB__Table):
             items = response.get('data', {}).get('Items')           # todo: add cases with large results
             return [self.dynamo_db.document_deserialise(item) for item in items]
 
+    def query_index_between_range(self, index_name, index_type, index_value, sort_key, sort_key_type, start_value, end_value, query_filter=None):
+        query_kwargs = dict( TableName                 = self.table_name                        ,
+                             IndexName                 = index_name                 ,
+                             KeyConditionExpression    =  f'#{index_name} = :{index_name} AND #{sort_key} BETWEEN :start AND :end',
+                             ExpressionAttributeNames  = { f'#{index_name}' : index_name,   f'#{sort_key}': sort_key }            ,
+                             ExpressionAttributeValues = { f':{index_name}' : {index_type :index_value    },
+                                                           ':start'         : { sort_key_type : str(start_value)},
+                                                           ':end'           : { sort_key_type : str(end_value  )}})
+        if query_filter and list_set(query_filter) == ['expression_attr_names', 'expression_attr_values', 'filter_expression']:
+            query_kwargs['ExpressionAttributeNames' ].update(query_filter.get('expression_attr_names'))
+            query_kwargs['ExpressionAttributeValues'].update(query_filter.get('expression_attr_values'))
+            query_kwargs['FilterExpression'         ] = query_filter.get('filter_expression')
 
-    def query_index_between_range(self, index_name, index_type, index_value, sort_key, sort_key_type, start_value, end_value):
-            query_kwargs = dict( TableName                 = self.table_name                        ,
-                                 IndexName                 = index_name                 ,
-                                 KeyConditionExpression    =  f'#{index_name} = :{index_name} AND #{sort_key} BETWEEN :start AND :end',
-                                 ExpressionAttributeNames  = { f'#{index_name}' : index_name,   f'#{sort_key}': sort_key }            ,
-                                 ExpressionAttributeValues = { f':{index_name}' : {index_type :index_value    },
-                                                               ':start'         : { sort_key_type : str(start_value)},
-                                                               ':end'           : { sort_key_type : str(end_value  )}})
-            response = self.query(**query_kwargs)
+        #pprint(query_kwargs)
+        response = self.query(**query_kwargs)
 
-            items = response.get('data', {}).get('Items', [])           # todo: add cases with large results
-            return [self.dynamo_db.document_deserialise(item) for item in items]
+        items = response.get('data', {}).get('Items', [])           # todo: add cases with large results
+        return [self.dynamo_db.document_deserialise(item) for item in items]
