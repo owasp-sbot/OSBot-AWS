@@ -76,7 +76,7 @@ class test_Dynamo_DB(TestCase):
             updated_items = update_result.get('Attributes')
             document.update(updated_items)
             assert document == {self.table_key: key_value, 'answer-1': {'N': '43'}, 'var-1': 'goes-here'}
-            updated_items_deserialised = _.document_deserialise(updated_items)
+            updated_items_deserialised = _.document_deserialize(updated_items)
             assert updated_items_deserialised == {'answer-1': Decimal('43')}
             document.update(updated_items_deserialised)
             assert document == {self.table_key: key_value, 'answer-1': Decimal(43), 'var-1': 'goes-here'}

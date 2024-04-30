@@ -27,20 +27,20 @@ class Dynamo_DB:
         key    = {key_name: {'S': key_value}}
         result = self.client().get_item(TableName=table_name, Key=key)
         item   = result.get('Item')
-        return self.document_deserialise(item)
+        return self.document_deserialize(item)
 
     def document_add(self, table_name, document):
-        document_as_item = self.document_serialise(document)
+        document_as_item = self.document_serialize(document)
         self.client().put_item(TableName=table_name, Item=document_as_item)
         result = dict(document=document, document_as_item=document_as_item)
         return result
 
     def document_delete(self, table_name, key_name, key_value):
         key = { key_name: {'S': key_value} }
-        self.client().delete_item( TableName=table_name, Key=key )
-        return True
+        self.client().delete_item( TableName=table_name, Key=key ) # note: there is no clue from DynamoDB if it worked or not
+        return True                                                #       so unless there was an exception thrown, assume it did
 
-    def document_deserialise(self, item):
+    def document_deserialize(self, item):
         if item:
             deserializer = TypeDeserializer()
             return {k: deserializer.deserialize(v) for k, v in item.items()}
@@ -86,7 +86,7 @@ class Dynamo_DB:
         )
         return response
 
-    def document_serialise(self, document):
+    def document_serialize(self, document):
         serializer = TypeSerializer()
         return {k: serializer.serialize(v) for k, v in document.items()}
 
@@ -95,7 +95,7 @@ class Dynamo_DB:
         responses = []
 
         for chunk in chunks:
-            request_items = { table_name: [ {'PutRequest': {'Item': self.document_serialise(document)}}
+            request_items = { table_name: [ {'PutRequest': {'Item': self.document_serialize(document)}}
                                               for document in chunk ] }
             response = self.client().batch_write_item(RequestItems=request_items)
             del response['ResponseMetadata']
@@ -122,7 +122,7 @@ class Dynamo_DB:
             all_responses_raw   .extend(responses.get(table_name))
             all_unprocessed_keys.append(unprocessed_keys)
         for response_raw in all_responses_raw:
-            response = self.document_deserialise(response_raw)
+            response = self.document_deserialize(response_raw)
             all_responses.append(response)
 
         return dict(all_responses        = all_responses        ,
@@ -150,7 +150,7 @@ class Dynamo_DB:
             if len(items) > max_fetch:
                 break
 
-        return [self.document_deserialise(item) for item in items]
+        return [self.document_deserialize(item) for item in items]
 
     # todo:  figure out why code below returns only 64
     def documents_count(self, table_name):

@@ -1,6 +1,5 @@
-from osbot_aws.aws.dynamo_db.Dynamo_DB__Table import Dynamo_DB__Table
-from osbot_utils.utils.Dev import pprint
-from osbot_utils.utils.Misc import list_set
+from osbot_aws.aws.dynamo_db.Dynamo_DB__Table       import Dynamo_DB__Table
+from osbot_utils.utils.Misc                         import list_set
 
 
 class DyDB__Table(Dynamo_DB__Table):
@@ -47,7 +46,8 @@ class DyDB__Table(Dynamo_DB__Table):
         return True
 
     def delete_document(self, document_id):
-        return super().delete_document(key_value=document_id).get('data')
+        result = super().delete_document(key_value=document_id)
+        return result.get('status') == 'ok'
 
     def delete_documents(self, documents_ids):
         return super().delete_documents(keys_values=documents_ids).get('data')
@@ -70,6 +70,12 @@ class DyDB__Table(Dynamo_DB__Table):
     def documents_ids(self, **kwargs):
         return super().documents_ids(**kwargs).get('data')
 
+    def dydb_document(self, document_id):
+        from osbot_aws.aws.dynamo_db.models.DyDB__Document import DyDB__Document        # need to import this here due to circular references
+        kwargs_document = dict(document = self.document(document_id),
+                               table    = self                      )
+        return DyDB__Document(**kwargs_document)
+
     def exists(self):
         return super().exists().get('data')
 
@@ -91,7 +97,7 @@ class DyDB__Table(Dynamo_DB__Table):
             response = self.query(**query_kwargs)
 
             items = response.get('data', {}).get('Items')           # todo: add cases with large results
-            return [self.dynamo_db.document_deserialise(item) for item in items]
+            return [self.dynamo_db.document_deserialize(item) for item in items]
 
     def query_index_between_range(self, index_name, index_type, index_value, sort_key, sort_key_type, start_value, end_value, query_filter=None):
         query_kwargs = dict( TableName                 = self.table_name                        ,
@@ -110,4 +116,4 @@ class DyDB__Table(Dynamo_DB__Table):
         response = self.query(**query_kwargs)
 
         items = response.get('data', {}).get('Items', [])           # todo: add cases with large results
-        return [self.dynamo_db.document_deserialise(item) for item in items]
+        return [self.dynamo_db.document_deserialize(item) for item in items]
