@@ -64,6 +64,9 @@ class DyDB__Table(Dynamo_DB__Table):
     def documents(self, documents_ids):
         return super().documents(keys_values=documents_ids).get('data').get('all_responses')
 
+    def documents_all(self, **kwargs):
+        return super().documents_all().get('data')
+
     def documents_ids(self, **kwargs):
         return super().documents_ids(**kwargs).get('data')
 
