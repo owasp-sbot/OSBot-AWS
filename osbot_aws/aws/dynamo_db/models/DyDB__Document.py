@@ -105,15 +105,7 @@ class DyDB__Document(Kwargs_To_Self):
         if field_name not in self.fields():
             return False
         kwargs = self.db_query_builder().build__delete_field(field_name)
-        # kwargs = dict( TableName                 = self.table.table_name      ,
-        #                 Key                      = self.exp_key()             ,
-        #                 UpdateExpression         = f'REMOVE #field_name'      ,
-        #                 ExpressionAttributeNames = {'#field_name': field_name},
-        #                 ReturnValues             = 'ALL_NEW'                  ) # todo make it configurable and default should be NONE
-
-        result        = self.client().update_item(**kwargs)                     # todo refactor this logic in a method that is used by all update methods
-        raw_document  = result.get('Attributes')
-        self.document = self.table.dynamo_db.document_deserialize(raw_document)
+        self.client().update_item(**kwargs)
         return True
 
     def delete_item_from_list(self, list_field_name, item_index):

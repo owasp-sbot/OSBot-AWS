@@ -118,6 +118,7 @@ class test_DyDB__Document(TestCase__Dynamo_DB):
             _.add_to_list(new_list, new_value_2)
             assert _.reload()                    == {**self.document, new_list: [new_value_1, new_value_2]}
             _.delete_field(new_list)
+            _.reload()
             assert _.fields()                    == ['an_str', 'answer', 'id', 'something_random']
 
             new_value_3 = {'action': 'connect'   }
@@ -162,6 +163,7 @@ class test_DyDB__Document(TestCase__Dynamo_DB):
             assert _.document == {**self.document, new_field:new_value}
 
             assert _.delete_field(new_field) is True
+            _.reload()
             assert _.fields()                == ['an_str', 'answer', 'id', 'something_random']
             assert _.document                == self.document
             assert _.delete_field(new_field) is False

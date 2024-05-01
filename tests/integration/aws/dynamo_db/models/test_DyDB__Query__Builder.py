@@ -9,9 +9,9 @@ class test_DyDB__Query__Builder(TestCase):
     key_value        : str      = random_guid()
     table_name       : str      = random_text('an_table')
 
-    @classmethod
-    def setUpClass(cls):
-        cls.db_query_builder = DyDB__Query__Builder(table_name=cls.table_name, key_name=cls.key_name, key_value=cls.key_value)
+
+    def setUp(self):
+        self.db_query_builder = DyDB__Query__Builder(table_name=self.table_name, key_name=self.key_name, key_value=self.key_value)
 
     def test__setUpClass(self):
         assert self.db_query_builder.__locals__() == {'key_name'     : self.key_name   ,
@@ -60,11 +60,12 @@ class test_DyDB__Query__Builder(TestCase):
 
     def test_build__delete_field(self):
         field_name = random_text('field_name')
+
         expected_query = {'TableName'               : self.table_name,
                           'Key'                     : {self.key_name: {'S': self.key_value}},
                           'UpdateExpression'        : f'REMOVE #field_name',
                           'ExpressionAttributeNames': {'#field_name': field_name},
-                          'ReturnValues'            : 'ALL_NEW'}
+                          'ReturnValues'            : 'NONE'}
         assert self.db_query_builder.build__delete_field(field_name) == expected_query
 
     def test_build__delete_item_from_list(self):
@@ -112,10 +113,10 @@ class test_DyDB__Query__Builder(TestCase):
                           'UpdateExpression'         : f'ADD #field_name :inc',
                           'ExpressionAttributeNames' : {'#field_name': field_name},
                           'ExpressionAttributeValues': {':inc': {'N': str(increment_by)}},
-                          'ReturnValues'             : 'UPDATED_NEW'  }
+                          'ReturnValues'             : 'NONE'  }
         assert self.db_query_builder.build__update_counter(field_name, increment_by) == expected_query
 
         with self.assertRaises(ValueError) as context:
             assert self.db_query_builder.build__update_counter(field_name, 'aaa') #check for query injection
         assert context.exception.args == ('in build__update_counter increment value must be an integer and it was an '
-                                          '{type(increment_by)}',)
+                                          "<class 'str'>",)
