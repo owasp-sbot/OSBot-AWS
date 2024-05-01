@@ -29,13 +29,14 @@ class test_DyDB__Query__Builder(TestCase):
     def test_build__add_to_list(self):
         list_field_name = random_text('list_field_name')
         new_list_element = random_text('new_list_element')
-        expected_query   = {'ExpressionAttributeValues' : {':empty_list': {'L': []},
+        expected_query   = {'ExpressionAttributeNames': {'#list_field_name': list_field_name              },
+                            'ExpressionAttributeValues' : {':empty_list': {'L': []}                       ,
                                                           ':new_element': {'L': [{'S': new_list_element}]}},
                             'Key'                       : {self.key_name: {'S': self.key_value}},
                             'ReturnValues'              : 'NONE',
                             'TableName'                 : self.table_name,
-                            'UpdateExpression'          : f'SET {list_field_name} = '
-                                                          f'list_append(if_not_exists({list_field_name}, '
+                            'UpdateExpression'          : f'SET #list_field_name = '
+                                                          f'list_append(if_not_exists(#list_field_name, '
                                                            ':empty_list), :new_element)'}
         assert self.db_query_builder.build__add_to_list(list_field_name, new_list_element) == expected_query
 

@@ -32,10 +32,13 @@ class DyDB__Query__Builder(Kwargs_To_Self):
 
     @enforce_type_safety
     def build__add_to_list(self, list_field_name: str, new_list_element: any):
-        self.expression_attribute_values = {':new_element': self.serialize_value([new_list_element]),
-                                            ':empty_list': self.serialize_value([])}
-        self.update_expression = f"SET {list_field_name} = list_append(if_not_exists({list_field_name}, :empty_list), :new_element)"
+        placeholder = '#list_field_name'
+        self.expression_attribute_names  = { placeholder: list_field_name }
+        self.expression_attribute_values = { ':new_element': self.serialize_value([new_list_element]),
+                                              ':empty_list': self.serialize_value([]) }
+        self.update_expression = f"SET {placeholder} = list_append(if_not_exists({placeholder}, :empty_list), :new_element)"
         return self.build()
+
 
     @enforce_type_safety
     def build__dict_delete_field(self, dict_field: str, field_key: str) -> dict:
