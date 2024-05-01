@@ -55,28 +55,14 @@ class DyDB__Document(Kwargs_To_Self):
 
     # action methods
 
-    @remove_return_value(field_name='ResponseMetadata')
-    def add_field(self, field_name, field_value):
-
-        kwargs = dict(TableName                 = self.table.table_name                                ,
-                      Key                       = self.exp_key()                                       ,
-                      UpdateExpression          = 'SET #field_name = :field_value'                     ,
-                      ExpressionAttributeNames  = { '#field_name': field_name                         },
-                      ExpressionAttributeValues = { ':field_value': self.serialize_value(field_value) },
-                      ReturnValues              = 'UPDATED_NEW'                                       )
-
-        response = self.client().update_item(**kwargs)
-        return response.get('Attributes')
-
     def add_to_list(self, list_field_name, new_list_element):
-        kwargs = dict( TableName        = self.table.table_name,
-                       Key              = self.exp_key(),
-                       UpdateExpression = f"SET {list_field_name} = list_append(if_not_exists({list_field_name}, :empty_list), :new_element)",
-                       ExpressionAttributeValues={ ':new_element': self.serialize_value([new_list_element]),    # new element must be wrapped in a list
-                                                   ':empty_list' : self.serialize_value([])                     # default empty list if the list does not exist
-            },
-            ReturnValues='UPDATED_NEW'  # Returns the updated list
-        )
+        exp_update  = f"SET {list_field_name} = list_append(if_not_exists({list_field_name}, :empty_list), :new_element)"
+        kwargs      = dict(TableName                 = self.table.table_name                                             ,
+                           Key                       = self.exp_key()                                                    ,
+                           UpdateExpression          = exp_update                                                        ,
+                           ExpressionAttributeValues = { ':new_element': self.serialize_value([new_list_element]) ,       # new element must be wrapped in a list
+                                                         ':empty_list' : self.serialize_value([])                },       # default empty list if the list does not exist
+                           ReturnValues              = 'UPDATED_NEW'                                                           )       # Returns the updated list
         response = self.client().update_item(**kwargs)
         return response.get('Attributes')
 
@@ -87,9 +73,53 @@ class DyDB__Document(Kwargs_To_Self):
                         Key                      = self.exp_key()             ,
                         UpdateExpression         = f'REMOVE #field_name'      ,
                         ExpressionAttributeNames = {'#field_name': field_name},
-                        ReturnValues             = 'ALL_NEW'              )
+                        ReturnValues             = 'ALL_NEW'                  ) # todo make it configurable and default should be NONE
 
-        result        = self.client().update_item(**kwargs)
+        result        = self.client().update_item(**kwargs)                     # todo refactor this logic in a method that is used by all update methods
         raw_document  = result.get('Attributes')
         self.document = self.table.dynamo_db.document_deserialize(raw_document)
         return True
+
+    def delete_item_from_list(self, list_field_name, item_index):
+        exp_update = f"REMOVE #list_field_name[{item_index}]"
+        kwargs = dict(TableName=self.table.table_name,
+                      Key=self.exp_key(),
+                      UpdateExpression=exp_update,
+                      ExpressionAttributeNames={ '#list_field_name': list_field_name  },
+                      ReturnValues='NONE' )
+
+        self.client().update_item(**kwargs)
+
+    def reset_document(self):
+        new_document  = {'id': self.document_id()}
+        self.document =  self.table.add_document(new_document).get('document')
+        return self
+
+    def set_dict_field(self, dict_field, field_key, field_value):
+
+        kwargs = {'TableName'                   : self.table.table_name,
+                  'Key'                         : self.exp_key()                ,
+                  'UpdateExpression'            : f'SET #dict_field.#key = :val',
+                  'ExpressionAttributeNames'    : { '#dict_field': dict_field ,
+                                                    '#key'       : field_key        },
+                  'ExpressionAttributeValues'   : { ':val': self.serialize_value(field_value)  },
+                  'ReturnValues'                : 'NONE'}
+        self.client().update_item(**kwargs)
+        return self
+
+    def set_document(self,new_document):
+        new_document[self.key_name()] = self.key_value()                             # make sure the id value is the same
+        self.document = self.table.add_document(new_document).get('document')
+        return self
+
+    @remove_return_value(field_name='ResponseMetadata')
+    def set_field(self, field_name, field_value):
+        kwargs = dict(TableName=self.table.table_name,
+                      Key=self.exp_key(),
+                      UpdateExpression='SET #field_name = :field_value',
+                      ExpressionAttributeNames={'#field_name': field_name},
+                      ExpressionAttributeValues={':field_value': self.serialize_value(field_value)},
+                      ReturnValues='NONE')
+
+        self.client().update_item(**kwargs)
+        return self

@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from osbot_aws.aws.boto3.Capture_Boto3_Error import capture_boto3_error
 from osbot_aws.aws.dynamo_db.domains.DyDB__Table import DyDB__Table
 from osbot_aws.aws.dynamo_db.models.DyDB__Document import DyDB__Document
@@ -24,10 +26,10 @@ class test_DyDB__Document(TestCase__Dynamo_DB):
         cls.temp_db_table = Temp_DyDB_Table(dynamo_db=cls.dynamo_db)
         cls.temp_db_table.create_table()
 
-        # cls.temp_db_table.clear_table()         # todo: remove when finished working on DyDB__Document
+        cls.temp_db_table.clear_table()         # todo: remove when finished working on DyDB__Document
 
         cls.key_name     = cls.temp_db_table.key_name
-        cls.source_doc   = {'answer': 45, 'an_str': 'goes here', 'something_random': random_text()}
+        cls.source_doc   = {'answer': 44, 'an_str': 'goes here', 'something_random': random_text()}
         cls.document     = cls.temp_db_table.add_document(cls.source_doc).get('document')
         cls.document_id  = cls.document.get(cls.key_name)
         cls.dydb_document = cls.temp_db_table.dydb_document(cls.document_id)
@@ -77,15 +79,72 @@ class test_DyDB__Document(TestCase__Dynamo_DB):
             assert _.serialize_value  (_.deserialize_value(value_raw)) == value_raw
             assert _.deserialize_value(_.serialize_value  (value    )) == value
 
-    #
 
-    def test_add_field(self):
+    @capture_boto3_error
+    def test_add_to_list(self):
+        with self.dydb_document as _:
+            assert _.fields() == ['an_str', 'answer', 'id', 'something_random']
+            new_list    = 'a_list'
+            new_value_1 = 'the answer'
+            new_value_2 = 'is 42'
+            assert _.add_to_list(new_list, new_value_1) == {new_list: {'L': [{'S': new_value_1}]}}
+            assert _.fields()                           == ['an_str', 'answer', 'id', 'something_random']
+            assert _.reload()                           == {**self.document, new_list: [new_value_1]}
+            assert _.add_to_list(new_list, new_value_2) == {new_list: {'L': [{'S': new_value_1},{'S': new_value_2}]}}
+            assert _.reload()                           == {**self.document, new_list: [new_value_1, new_value_2]}
+
+            _.delete_field(new_list)
+            assert _.fields() == ['an_str', 'answer', 'id', 'something_random']
+            new_value_3 = {'action': 'connect'   }
+            new_value_4 = {'action': 'disconnect'}
+
+            assert _.add_to_list(new_list, new_value_3) == {new_list: {'L': [{'M': {'action': {'S': 'connect'}}}]}}
+            _.add_to_list(new_list, new_value_4)
+            assert _.reload() == {**self.document, new_list: [new_value_3, new_value_4]}
+
+            _.add_to_list(new_list, new_value_1)
+            _.add_to_list(new_list, new_value_2)
+
+            _.delete_item_from_list(new_list,1)
+            assert _.reload() == {**self.document, new_list: [new_value_3, new_value_1, new_value_2]}
+            _.delete_item_from_list(new_list, 1)
+            assert _.reload() == {**self.document, new_list: [new_value_3, new_value_2             ]}
+
+            _.delete_field(new_list)
+
+    def test_reset_document(self):
+        with self.dydb_document as _:
+            assert _.reset_document()               .document == {self.key_name: self.document_id}
+            assert _.set_document  (self.source_doc).document == self.document
+
+
+    def test_set_dict_field(self):
+        with self.dydb_document as _:
+            _.reset_document()
+
+            assert _.table.document(self.document_id) == {'id': self.document_id}
+            dict_field = 'an_dict'
+            dict_value = {'key_1': 'value_1', 'key_2': 'value_2'}
+
+            _.set_field(dict_field, dict_value).reload()
+            assert _.document == { 'an_dict': {'key_1': 'value_1', 'key_2': 'value_2'},
+                                   'id'     : self.document_id                            }
+
+            _.set_dict_field(dict_field, 'key_1', 'changed value 1').reload()
+
+            assert _.document == {'an_dict': {'key_1': 'changed value 1', 'key_2': 'value_2'},
+                                  'id'     : self.document_id}
+
+            _.set_document(self.source_doc)
+
+
+    def test_set_field(self):
         with self.dydb_document as _:
             assert _.fields() == ['an_str', 'answer', 'id', 'something_random']
             new_field  = 'something_new'
             new_value  = 'with a new value'
-            add_result = _.add_field(new_field, new_value)
-            assert add_result == {new_field: {'S': new_value}}
+            add_result = _.set_field(new_field, new_value)
+            assert add_result == _
             assert _.fields() == ['an_str', 'answer', 'id', 'something_random']
 
             assert _.reload() == {**self.document, new_field:new_value}
@@ -98,19 +157,6 @@ class test_DyDB__Document(TestCase__Dynamo_DB):
             assert _.fields()                == ['an_str', 'answer', 'id', 'something_random']
             assert _.document                == self.document
             assert _.delete_field(new_field) is False
-
-    @capture_boto3_error
-    def test_add_to_list(self):
-        with self.dydb_document as _:
-            assert _.fields() == ['an_str', 'answer', 'id', 'something_random']
-            new_list = 'a_list'
-            new_value_1 = 'the answer'
-            new_value_2 = 'is 42'
-            assert _.add_to_list(new_list, new_value_1) == {'a_list': {'L': [{'S': 'the answer'}]}}
-
-
-
-
 
 
 
