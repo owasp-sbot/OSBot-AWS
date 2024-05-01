@@ -5,9 +5,9 @@ from osbot_aws.aws.boto3.Capture_Boto3_Error        import capture_boto3_error
 from osbot_aws.aws.dynamo_db.domains.DyDB__Table    import DyDB__Table
 from osbot_aws.aws.dynamo_db.models.DyDB__Document  import DyDB__Document
 from osbot_aws.testing.TestCase__Dynamo_DB          import TestCase__Dynamo_DB
-from osbot_utils.utils.Dev import pprint
 from osbot_utils.utils.Json                         import to_json_str
 from osbot_utils.utils.Misc                         import is_guid, random_text
+
 
 
 class Temp_DyDB_Table(DyDB__Table):
@@ -189,19 +189,29 @@ class test_DyDB__Document(TestCase__Dynamo_DB):
             assert _.delete_field(new_field) is False
 
 
-    def test_update_counter(self):
+    def test_increment_field(self):
         with self.dydb_document as _:
             assert _.fields() == ['an_str', 'answer', 'id', 'something_random']
 
-            _.update_counter('answer', 1         ).reload()
-            _.update_counter('answer', Decimal(9)).reload()
+            _.increment_field('answer', 1).reload()
+            _.increment_field('answer', Decimal(9)).reload()
             assert _.document.get('answer'       ) == 52
-            _.update_counter('answer', -42       ).reload()
+            _.increment_field('answer', -42).reload()
             assert _.document.get('answer'       ) == 10
 
-            _.update_counter('new_field', Decimal(7)).reload()
+            _.increment_field('new_field', Decimal(7)).reload()
             assert _.fields() == ['an_str', 'answer', 'id', 'new_field', 'something_random']
             assert _.document.get('new_field') == Decimal(7)
+
+    def test_increment_field__with_condition(self):
+        with self.dydb_document as _:
+            field_name = 'an_counter'
+            _.set_field(field_name, 2)
+            assert _.increment_field__if_existing_value_bigger_than(field_name, -1, 0) is True
+            assert _.value(field_name) == 1
+            assert _.increment_field__if_existing_value_bigger_than(field_name, -1, 0) is True
+            assert _.value(field_name) == 0
+            assert _.increment_field__if_existing_value_bigger_than(field_name, -1, 0) is False
 
     def test_delete_elements_from_set(self):
         with self.dydb_document as _:
@@ -239,3 +249,12 @@ class test_DyDB__Document(TestCase__Dynamo_DB):
             assert context.exception.args[0] == ("in 'build__delete_elements_from_set' the 'elements' parameter must be an "
                                                  "'set', but it was an 'str'")
 
+    # use this to intercept the DyDB__Query__Builder.build call
+    # def after_call(return_value, *args, **kwargs):
+    #     # return_value['ExpressionAttributeValues'][':zero'] =  {'N': '0'}
+    #     # return_value['ConditionExpression'] = '#field_name > :zero'
+    #     return return_value
+    #
+    # hook_method = (Hook_Method(target_module=DyDB__Query__Builder, target_method='build')
+    #                 .add_on_after_call(after_call))
+    # with hook_method:

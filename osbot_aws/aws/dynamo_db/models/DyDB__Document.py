@@ -1,4 +1,6 @@
 from boto3.dynamodb.types import TypeSerializer, TypeDeserializer
+from botocore.exceptions import ClientError
+
 from osbot_aws.aws.dynamo_db.domains.DyDB__Table        import DyDB__Table
 from osbot_aws.aws.dynamo_db.models.DyDB__Query__Builder import DyDB__Query__Builder
 from osbot_utils.base_classes.Kwargs_To_Self            import Kwargs_To_Self
@@ -60,6 +62,11 @@ class DyDB__Document(Kwargs_To_Self):
     def type_serializer(self):
         return TypeSerializer()
 
+    def value(self, field_name, reload_document=True):
+        if reload_document:
+            self.reload()
+        return self.document.get(field_name)
+
     # action methods
 
     def add_field(self, field_name, field_value):
@@ -103,8 +110,25 @@ class DyDB__Document(Kwargs_To_Self):
     def delete_elements_from_set(self, set_field_name, elements):
         kwargs = self.db_query_builder().build__delete_elements_from_set(set_field_name, elements)
         self.client().update_item(**kwargs)
-
         return self
+
+    def increment_field(self, field_name, increment_by):
+        kwargs = self.db_query_builder().build__increment_field(field_name, increment_by)
+        self.client().update_item(**kwargs)
+        return self
+
+    def increment_field__if_existing_value_bigger_than(self, field_name, increment_by, value: int):
+        kwargs = self.db_query_builder().build__increment_field(field_name, increment_by)
+        kwargs['ExpressionAttributeValues'][':zero'] = {'N': str(value)}
+        kwargs['ConditionExpression'      ] = '#field_name > :zero'
+        try:
+            self.client().update_item(**kwargs)
+            return True
+        except ClientError as error:
+            if error.response['Error']['Code'] == 'ConditionalCheckFailedException':
+                return False
+            else:
+                raise
 
     def reset_document(self):
         new_document  = {'id': self.document_id()}
@@ -119,11 +143,6 @@ class DyDB__Document(Kwargs_To_Self):
     @remove_return_value(field_name='ResponseMetadata')
     def set_field(self, field_name, field_value):
         kwargs = self.db_query_builder().build__set_field(field_name, field_value)
-        self.client().update_item(**kwargs)
-        return self
-
-    def update_counter(self, field_name, increment_by):
-        kwargs = self.db_query_builder().build__update_counter(field_name, increment_by)
         self.client().update_item(**kwargs)
         return self
 

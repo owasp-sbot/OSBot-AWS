@@ -1,6 +1,5 @@
-from decimal import Decimal
-from unittest import TestCase
-
+from decimal                                             import Decimal
+from unittest                                            import TestCase
 from osbot_aws.aws.dynamo_db.models.DyDB__Query__Builder import DyDB__Query__Builder
 from osbot_utils.utils.Misc                              import random_guid, random_text
 
@@ -131,7 +130,7 @@ class test_DyDB__Query__Builder(TestCase):
                           'ReturnValues'             : 'NONE'}
         assert self.db_query_builder.build__set_field(field_name, field_value) == expected_query
 
-    def test_build__update_counter(self):
+    def test_build__increment_field(self):
         field_name = random_text('field_name')
         increment_by = 1
         expected_query = {'TableName'                : self.table_name,
@@ -140,9 +139,9 @@ class test_DyDB__Query__Builder(TestCase):
                           'ExpressionAttributeNames' : {'#field_name': field_name},
                           'ExpressionAttributeValues': {':inc': {'N': str(increment_by)}},
                           'ReturnValues'             : 'NONE'  }
-        assert self.db_query_builder.build__update_counter(field_name, increment_by) == expected_query
+        assert self.db_query_builder.build__increment_field(field_name, increment_by) == expected_query
 
         with self.assertRaises(TypeError) as context:
-            assert self.db_query_builder.build__update_counter(field_name, 'aaa') #check for query injection
-        assert context.exception.args == ("in 'build__update_counter' the 'increment_by' parameter must be an 'int, "
+            assert self.db_query_builder.build__increment_field(field_name, 'aaa') #check for query injection
+        assert context.exception.args == ("in 'build__increment_field' the 'increment_by' parameter must be an 'int, "
                                           "Decimal', but it was an 'str'",)

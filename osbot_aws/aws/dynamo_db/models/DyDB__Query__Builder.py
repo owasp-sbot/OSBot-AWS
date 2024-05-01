@@ -142,7 +142,7 @@ class DyDB__Query__Builder(Kwargs_To_Self):
         return self.build()
 
     @enforce_type_safety
-    def build__update_counter(self, field_name:str, increment_by:Union[int, Decimal]):
+    def build__increment_field(self, field_name:str, increment_by:Union[int, Decimal]):
         self.set__attribute_names  ({ '#field_name': field_name })
         self.set__attribute_values ({ ':inc': increment_by      })
         self.set__update_expression(command='ADD',target='#field_name :inc')
