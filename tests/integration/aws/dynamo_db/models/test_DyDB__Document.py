@@ -1,15 +1,12 @@
 from decimal import Decimal
 
-from boto3.dynamodb.types import Binary
-
-from osbot_aws.aws.boto3.Capture_Boto3_Error import capture_boto3_error
-from osbot_aws.aws.boto3.View_Boto3_Rest_Calls import print_boto3_calls
-from osbot_aws.aws.dynamo_db.domains.DyDB__Table import DyDB__Table
-from osbot_aws.aws.dynamo_db.models.DyDB__Document import DyDB__Document
-from osbot_aws.testing.TestCase__Dynamo_DB import TestCase__Dynamo_DB
-from osbot_utils.utils.Dev import pprint, jprint
-from osbot_utils.utils.Json import to_json_str
-from osbot_utils.utils.Misc import is_guid, random_text
+from boto3.dynamodb.types                           import Binary
+from osbot_aws.aws.boto3.Capture_Boto3_Error        import capture_boto3_error
+from osbot_aws.aws.dynamo_db.domains.DyDB__Table    import DyDB__Table
+from osbot_aws.aws.dynamo_db.models.DyDB__Document  import DyDB__Document
+from osbot_aws.testing.TestCase__Dynamo_DB          import TestCase__Dynamo_DB
+from osbot_utils.utils.Json                         import to_json_str
+from osbot_utils.utils.Misc                         import is_guid, random_text
 
 
 class Temp_DyDB_Table(DyDB__Table):
@@ -115,18 +112,18 @@ class test_DyDB__Document(TestCase__Dynamo_DB):
             new_list    = 'a_list'
             new_value_1 = 'the answer'
             new_value_2 = 'is 42'
-            assert _.add_to_list(new_list, new_value_1) == {new_list: {'L': [{'S': new_value_1}]}}
-            assert _.fields()                           == ['an_str', 'answer', 'id', 'something_random']
-            assert _.reload()                           == {**self.document, new_list: [new_value_1]}
-            assert _.add_to_list(new_list, new_value_2) == {new_list: {'L': [{'S': new_value_1},{'S': new_value_2}]}}
-            assert _.reload()                           == {**self.document, new_list: [new_value_1, new_value_2]}
-
+            _.add_to_list(new_list, new_value_1)
+            assert _.fields()                    == ['an_str', 'answer', 'id', 'something_random']
+            assert _.reload()                    == {**self.document, new_list: [new_value_1]}
+            _.add_to_list(new_list, new_value_2)
+            assert _.reload()                    == {**self.document, new_list: [new_value_1, new_value_2]}
             _.delete_field(new_list)
-            assert _.fields() == ['an_str', 'answer', 'id', 'something_random']
+            assert _.fields()                    == ['an_str', 'answer', 'id', 'something_random']
+
             new_value_3 = {'action': 'connect'   }
             new_value_4 = {'action': 'disconnect'}
 
-            assert _.add_to_list(new_list, new_value_3) == {new_list: {'L': [{'M': {'action': {'S': 'connect'}}}]}}
+            _.add_to_list(new_list, new_value_3)
             _.add_to_list(new_list, new_value_4)
             assert _.reload() == {**self.document, new_list: [new_value_3, new_value_4]}
 
@@ -174,10 +171,11 @@ class test_DyDB__Document(TestCase__Dynamo_DB):
         with self.dydb_document as _:
             assert _.fields() == ['an_str', 'answer', 'id', 'something_random']
 
-            _.update_counter('answer', 1).reload()
-            assert _.document.get('answer') == 43
-            _.update_counter('answer', -42).reload()
-            assert _.document.get('answer') == 1
+            _.update_counter('answer', 1         ).reload()
+            _.update_counter('answer', Decimal(9)).reload()
+            assert _.document.get('answer'       ) == 52
+            _.update_counter('answer', -42       ).reload()
+            assert _.document.get('answer'       ) == 10
 
             _.update_counter('new_field', Decimal(7)).reload()
             assert _.fields() == ['an_str', 'answer', 'id', 'new_field', 'something_random']

@@ -14,9 +14,13 @@ class test_DyDB__Query__Builder(TestCase):
         cls.db_query_builder = DyDB__Query__Builder(table_name=cls.table_name, key_name=cls.key_name, key_value=cls.key_value)
 
     def test__setUpClass(self):
-        assert self.db_query_builder.__locals__() == {'key_name'  : self.key_name   ,
-                                                      'key_value' : self.key_value  ,
-                                                      'table_name': self.table_name }
+        assert self.db_query_builder.__locals__() == {'key_name'     : self.key_name   ,
+                                                      'key_value'    : self.key_value  ,
+                                                      'table_name'   : self.table_name ,
+                                                      'return_values': 'NONE'          ,
+                                                      'kwargs'       : {}              }
+
+
 
     def test_build__add_to_list(self):
         list_field_name = random_text('list_field_name')
@@ -24,7 +28,7 @@ class test_DyDB__Query__Builder(TestCase):
         expected_query   = {'ExpressionAttributeValues' : {':empty_list': {'L': []},
                                                           ':new_element': {'L': [{'S': new_list_element}]}},
                             'Key'                       : {self.key_name: {'S': self.key_value}},
-                            'ReturnValues'              : 'UPDATED_NEW',
+                            'ReturnValues'              : 'NONE',
                             'TableName'                 : self.table_name,
                             'UpdateExpression'          : f'SET {list_field_name} = '
                                                           f'list_append(if_not_exists({list_field_name}, '

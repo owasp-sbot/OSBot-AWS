@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from boto3.dynamodb.types import TypeSerializer
 
 from osbot_utils.base_classes.Kwargs_To_Self import Kwargs_To_Self
@@ -5,19 +7,24 @@ from osbot_utils.decorators.methods.cache_on_self import cache_on_self
 
 
 class DyDB__Query__Builder(Kwargs_To_Self):
-    table_name : str
-    key_name   : str
-    key_value  : str
+    table_name   : str
+    key_name     : str
+    key_value    : str
+    return_values: str = 'NONE'
+    kwargs       : dict
+
+    def build(self):
+        self.kwargs['TableName'   ] = self.table_name
+        self.kwargs['Key'         ] = self.exp_key()
+        self.kwargs['ReturnValues'] = self.return_values
+        return self.kwargs
 
     def build__add_to_list(self, list_field_name, new_list_element):
         exp_update = f"SET {list_field_name} = list_append(if_not_exists({list_field_name}, :empty_list), :new_element)"
-        kwargs = dict(TableName = self.table_name,
-                      Key = self.exp_key(),
-                      UpdateExpression = exp_update,
-                      ExpressionAttributeValues = {':new_element': self.serialize_value([new_list_element]),
-                                                   ':empty_list': self.serialize_value([])},
-                                                    ReturnValues = 'UPDATED_NEW'                           )
-        return kwargs
+        self.kwargs = dict(UpdateExpression = exp_update,
+                           ExpressionAttributeValues = {':new_element': self.serialize_value([new_list_element]),
+                                                        ':empty_list': self.serialize_value([])})
+        return self.build()
 
     def build__dict_delete_field(self, dict_field, field_key):
         kwargs = {'TableName'                   : self.table_name,
@@ -82,8 +89,8 @@ class DyDB__Query__Builder(Kwargs_To_Self):
         return kwargs
 
     def build__update_counter(self, field_name, increment_by):
-        if not isinstance(increment_by, int):
-            raise ValueError("in build__update_counter increment value must be an integer and it was an {type(increment_by)}")
+        if not isinstance(increment_by, int) and not isinstance(increment_by, Decimal):
+            raise ValueError(f"in build__update_counter increment value must be an integer and it was an {type(increment_by)}")
         kwargs = dict(TableName                 = self.table_name              ,
                       Key                       = self.exp_key()                     ,
                       UpdateExpression          = f'ADD #field_name :inc'            ,
