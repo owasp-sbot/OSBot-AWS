@@ -1,3 +1,4 @@
+from decimal import Decimal
 from unittest import TestCase
 
 from osbot_aws.aws.dynamo_db.models.DyDB__Query__Builder import DyDB__Query__Builder
@@ -73,18 +74,21 @@ class test_DyDB__Query__Builder(TestCase):
 
     def test_build__delete_item_from_list(self):
         list_field_name = random_text('list_field_name')
-        item_index = 0  # example index
+        item_index = 10  # example index
         expected_query = {'TableName'               : self.table_name,
                           'Key'                     : {self.key_name: {'S': self.key_value}},
                           'UpdateExpression'        : f'REMOVE #list_field_name[{item_index}]',
                           'ExpressionAttributeNames': {'#list_field_name': list_field_name},
                           'ReturnValues'            : 'NONE'}
         assert self.db_query_builder.build__delete_item_from_list(list_field_name, item_index) == expected_query
+        item_index = Decimal(10)
+        assert self.db_query_builder.build__delete_item_from_list(list_field_name, item_index) == expected_query
 
-        with self.assertRaises(ValueError) as context:
+        with self.assertRaises(TypeError) as context:
             assert self.db_query_builder.build__delete_item_from_list(list_field_name, 'aaa') #check for query injection
-        assert context.exception.args == ('in build__delete_item_from_list Item index must be an integer, but it was an '
-                                          "<class 'str'>",)
+        assert context.exception.args == ("in 'build__delete_item_from_list' the 'item_index' parameter must be an "
+                                          "'int, Decimal', but it was an 'str'",)
+
 
     def test_build__delete_elements_from_set(self):
         set_field_name = random_text('set_field_name')
@@ -96,6 +100,12 @@ class test_DyDB__Query__Builder(TestCase):
                           'ExpressionAttributeValues': {':elementsToRemove': {'SS': list(elements)}},
                           'ReturnValues'             : 'NONE'}
         assert self.db_query_builder.build__delete_elements_from_set(set_field_name, elements) == expected_query
+
+        with self.assertRaises(TypeError) as context:
+            assert self.db_query_builder.build__delete_elements_from_set(set_field_name, 'aaa') #check for query injection
+        assert context.exception.args == ("in 'build__delete_elements_from_set' the 'elements' parameter must be an "
+                                          "'set', but it was an 'str'",)
+
 
     def test_build__set_field(self):
         field_name = random_text('field_name')

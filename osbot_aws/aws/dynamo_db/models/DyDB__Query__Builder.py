@@ -1,7 +1,9 @@
 from decimal import Decimal
+from typing import Union
 
 from boto3.dynamodb.types import TypeSerializer
 
+from osbot_aws.decorators.enforce_type_safety import enforce_type_safety
 from osbot_utils.base_classes.Kwargs_To_Self import Kwargs_To_Self
 from osbot_utils.decorators.methods.cache_on_self import cache_on_self
 
@@ -47,25 +49,20 @@ class DyDB__Query__Builder(Kwargs_To_Self):
         self.update_expression = f'SET #dict_field.#key = :val'
         return self.build()
 
-    def build__delete_field(self, field_name):
+    def build__delete_field(self, field_name:str):
         self.expression_attribute_names = {'#field_name': field_name}
         self.update_expression          = f'REMOVE #field_name'
         return self.build()
 
-    def build__delete_item_from_list(self, list_field_name, item_index):
-        if not isinstance(item_index, int):
-            raise ValueError(f"in build__delete_item_from_list Item index must be an integer, but it was an {type(item_index)}")
-
+    @enforce_type_safety
+    def build__delete_item_from_list(self, list_field_name : str, item_index : Union[int, Decimal]):
         exp_update                      = f"REMOVE #list_field_name[{item_index}]"
         self.expression_attribute_names = { '#list_field_name': list_field_name  }
         self.update_expression = exp_update
         return self.build()
 
-
-    def build__delete_elements_from_set(self, set_field_name, elements):
-        if type(elements) is not set:
-            raise ValueError(f"in delete_elements_from_set, the type of elements must be set and it was {type(elements)}")
-
+    @enforce_type_safety
+    def build__delete_elements_from_set(self, set_field_name: str, elements: set):
         exp_update = f"DELETE #set_field_name :elementsToRemove"
         elements_to_remove = self.serialize_value(elements)
         self.expression_attribute_names  = { '#set_field_name' : set_field_name     }
@@ -79,7 +76,7 @@ class DyDB__Query__Builder(Kwargs_To_Self):
         self.update_expression ='SET #field_name = :field_value'
         return self.build()
 
-    def build__update_counter(self, field_name, increment_by):
+    def build__update_counter(self, field_name:str, increment_by:Union[int, Decimal]):
         if not isinstance(increment_by, int) and not isinstance(increment_by, Decimal):
             raise ValueError(f"in build__update_counter increment value must be an integer and it was an {type(increment_by)}")
 
