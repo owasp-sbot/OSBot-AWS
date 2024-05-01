@@ -48,6 +48,8 @@ class DyDB__Query__Builder(Kwargs_To_Self):
         return kwargs
 
     def build__delete_item_from_list(self, list_field_name, item_index):
+        if not isinstance(item_index, int):
+            raise ValueError(f"in build__delete_item_from_list Item index must be an integer, but it was an {type(item_index)}")
         exp_update = f"REMOVE #list_field_name[{item_index}]"
         kwargs = dict(TableName                = self.table_name,
                       Key                      = self.exp_key(),
@@ -80,6 +82,8 @@ class DyDB__Query__Builder(Kwargs_To_Self):
         return kwargs
 
     def build__update_counter(self, field_name, increment_by):
+        if not isinstance(increment_by, int):
+            raise ValueError("in build__update_counter increment value must be an integer and it was an {type(increment_by)}")
         kwargs = dict(TableName                 = self.table_name              ,
                       Key                       = self.exp_key()                     ,
                       UpdateExpression          = f'ADD #field_name :inc'            ,
