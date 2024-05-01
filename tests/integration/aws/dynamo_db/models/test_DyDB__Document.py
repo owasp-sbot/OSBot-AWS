@@ -5,6 +5,7 @@ from osbot_aws.aws.boto3.Capture_Boto3_Error        import capture_boto3_error
 from osbot_aws.aws.dynamo_db.domains.DyDB__Table    import DyDB__Table
 from osbot_aws.aws.dynamo_db.models.DyDB__Document  import DyDB__Document
 from osbot_aws.testing.TestCase__Dynamo_DB          import TestCase__Dynamo_DB
+from osbot_utils.utils.Dev import pprint
 from osbot_utils.utils.Json                         import to_json_str
 from osbot_utils.utils.Misc                         import is_guid, random_text
 
@@ -248,6 +249,30 @@ class test_DyDB__Document(TestCase__Dynamo_DB):
                 _.delete_elements_from_set('aaa', 'aaaa')
             assert context.exception.args[0] == ("in 'build__delete_elements_from_set' the 'elements' parameter must be an "
                                                  "'set', but it was an 'str'")
+
+    def test__multiple_updates_in_one_call(self):
+        with self.dydb_document as _:
+            value_1 = random_text('value_1')
+            value_2 = random_text('value_2')
+            value_3 = random_text('value_3')
+            update_expression           = "SET #attribute1 = :val0, #attribute2 = :val1, #attribute3 = :val2"
+            expression_attribute_names  = { "#attribute1": "attribute1",
+                                            "#attribute2": "attribute2",
+                                            "#attribute3": "attribute3"}
+
+            expression_attribute_values = { ":val0": _.serialize_value(value_1),
+                                            ":val1": _.serialize_value(value_2),
+                                            ":val2": _.serialize_value(value_3)}
+            query_builder = _.db_query_builder()
+            query_builder.update_expression             = update_expression
+            query_builder.expression_attribute_names    = expression_attribute_names
+            query_builder.expression_attribute_values   = expression_attribute_values
+            query_kwargs = query_builder.build()
+            _.update_item(**query_kwargs)
+            assert _.values('attribute1', 'attribute2', 'attribute3') == {'attribute1': value_1,
+                                                                          'attribute2': value_2,
+                                                                          'attribute3': value_3}
+            _.set_document(self.source_doc)
 
     # use this to intercept the DyDB__Query__Builder.build call
     # def after_call(return_value, *args, **kwargs):

@@ -67,6 +67,15 @@ class DyDB__Document(Kwargs_To_Self):
             self.reload()
         return self.document.get(field_name)
 
+    def values(self, *field_names, reload_document=True):
+        values = {}
+        if reload_document:
+            self.reload()
+        for field in field_names:
+            values[field] = self.document.get(field)
+        return values
+        return field_names
+
     # action methods
 
     def add_field(self, field_name, field_value):
@@ -146,3 +155,6 @@ class DyDB__Document(Kwargs_To_Self):
         self.client().update_item(**kwargs)
         return self
 
+    @remove_return_value(field_name='ResponseMetadata')
+    def update_item(self, **kwargs):
+        return self.client().update_item(**kwargs)
