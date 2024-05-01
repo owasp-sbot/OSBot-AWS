@@ -52,8 +52,8 @@ class test_DyDB__Query__Builder(TestCase):
         assert self.db_query_builder.build__dict_delete_field(dict_field, field_key) == expected_query
 
     def test_build__dict_set_field(self):
-        dict_field = random_text('dict_field')
-        field_key = random_text('field_key')
+        dict_field  = random_text('dict_field')
+        field_key   = random_text('field_key')
         field_value = random_text('field_value')
         expected_query = {'TableName'                : self.table_name,
                           'Key'                      : {self.key_name: {'S': self.key_value}},
