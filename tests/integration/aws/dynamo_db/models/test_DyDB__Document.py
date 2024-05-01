@@ -29,7 +29,7 @@ class test_DyDB__Document(TestCase__Dynamo_DB):
         cls.temp_db_table = Temp_DyDB_Table(dynamo_db=cls.dynamo_db)
         cls.temp_db_table.create_table()
 
-        cls.temp_db_table.clear_table()         # todo: remove when finished working on DyDB__Document
+        #cls.temp_db_table.clear_table()         # todo: remove when finished working on DyDB__Document
 
         cls.key_name     = cls.temp_db_table.key_name
         cls.source_doc   = {'answer': 42, 'an_str': 'goes here', 'something_random': random_text()}
@@ -41,7 +41,6 @@ class test_DyDB__Document(TestCase__Dynamo_DB):
 
     @classmethod
     def tearDownClass(cls):
-        return
         with cls.temp_db_table as _:
             assert _.delete_document(cls.document_id) is True
             assert _.documents_all() == []
