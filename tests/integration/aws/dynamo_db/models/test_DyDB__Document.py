@@ -1,10 +1,13 @@
 from decimal import Decimal
 
+from boto3.dynamodb.types import Binary
+
 from osbot_aws.aws.boto3.Capture_Boto3_Error import capture_boto3_error
+from osbot_aws.aws.boto3.View_Boto3_Rest_Calls import print_boto3_calls
 from osbot_aws.aws.dynamo_db.domains.DyDB__Table import DyDB__Table
 from osbot_aws.aws.dynamo_db.models.DyDB__Document import DyDB__Document
 from osbot_aws.testing.TestCase__Dynamo_DB import TestCase__Dynamo_DB
-from osbot_utils.utils.Dev import pprint
+from osbot_utils.utils.Dev import pprint, jprint
 from osbot_utils.utils.Json import to_json_str
 from osbot_utils.utils.Misc import is_guid, random_text
 
@@ -29,7 +32,7 @@ class test_DyDB__Document(TestCase__Dynamo_DB):
         cls.temp_db_table.clear_table()         # todo: remove when finished working on DyDB__Document
 
         cls.key_name     = cls.temp_db_table.key_name
-        cls.source_doc   = {'answer': 44, 'an_str': 'goes here', 'something_random': random_text()}
+        cls.source_doc   = {'answer': 42, 'an_str': 'goes here', 'something_random': random_text()}
         cls.document     = cls.temp_db_table.add_document(cls.source_doc).get('document')
         cls.document_id  = cls.document.get(cls.key_name)
         cls.dydb_document = cls.temp_db_table.dydb_document(cls.document_id)
@@ -38,6 +41,7 @@ class test_DyDB__Document(TestCase__Dynamo_DB):
 
     @classmethod
     def tearDownClass(cls):
+        return
         with cls.temp_db_table as _:
             assert _.delete_document(cls.document_id) is True
             assert _.documents_all() == []
@@ -80,7 +84,6 @@ class test_DyDB__Document(TestCase__Dynamo_DB):
             assert _.deserialize_value(_.serialize_value  (value    )) == value
 
 
-    @capture_boto3_error
     def test_add_to_list(self):
         with self.dydb_document as _:
             assert _.fields() == ['an_str', 'answer', 'id', 'something_random']
@@ -159,8 +162,51 @@ class test_DyDB__Document(TestCase__Dynamo_DB):
             assert _.delete_field(new_field) is False
 
 
+    def test_update_counter(self):
+        with self.dydb_document as _:
+            assert _.fields() == ['an_str', 'answer', 'id', 'something_random']
 
+            _.update_counter('answer', 1).reload()
+            assert _.document.get('answer') == 43
+            _.update_counter('answer', -42).reload()
+            assert _.document.get('answer') == 1
 
+            _.update_counter('new_field', Decimal(7)).reload()
+            assert _.fields() == ['an_str', 'answer', 'id', 'new_field', 'something_random']
+            assert _.document.get('new_field') == Decimal(7)
+
+    @capture_boto3_error
+    def test_delete_elements_from_set(self):
+        with self.dydb_document as _:
+            _.add_field('an_string_set' , {'set_1' , 'set_2', 'set_3', 'set_4'}                         )
+            _.add_field('an_int_set'    , {1, 2,3,4,5})
+            _.add_field('an_bytes_set'  , {b'bytes_1' , b'bytes_2', b'bytes_3', b'bytes_4'} )
+            _.delete_element_from_set('an_string_set' , 'set_2'   )
+            _.delete_element_from_set('an_bytes_set'  , b'bytes_2')
+            _.delete_elements_from_set('an_int_set'   , {3, 4}    ).reload()
+            #pprint(_.reload())
+            document = _.reload()
+            document['an_string_set'] = sorted(document['an_string_set'])
+            document['an_int_set'   ] = sorted(document['an_int_set'   ])
+            document['an_bytes_set' ] = sorted(document['an_bytes_set'], key=lambda x: bytes(x))        # need to covert to bytes since Binary doesn't support <
+
+            assert document == { 'an_bytes_set'    : [ Binary(b'bytes_1')   ,
+                                                       #Binary(b'bytes_2')  ,           # removed by _.delete_element_from_set('an_bytes_set'  , b'bytes_2')
+                                                       Binary(b'bytes_3')   ,
+                                                       Binary(b'bytes_4')   ],
+                                 'an_int_set'      : [ Decimal('1') ,
+                                                       Decimal('2') ,
+                                                       #Decimal('3'),                   # removed by _.delete_elements_from_set('an_int_set'   , {3, 4}    )
+                                                       #Decimal('4'),
+                                                       Decimal('5')],
+                                 'an_str'          : 'goes here'    ,
+                                 'an_string_set'   : [ 'set_1'      ,
+                                                       #'set_2'     ,                   # removed by _.delete_element_from_set('an_string_set' , 'set_2'   )
+                                                       'set_3'      ,
+                                                       'set_4'      ],
+                                 'answer'          : Decimal('42')  ,
+                                 'id'              : self.document_id,
+                                 'something_random': self.document.get('something_random')}
 
 
 

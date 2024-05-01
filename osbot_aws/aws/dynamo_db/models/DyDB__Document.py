@@ -55,6 +55,9 @@ class DyDB__Document(Kwargs_To_Self):
 
     # action methods
 
+    def add_field(self, field_name, field_value):
+        return self.set_field(field_name=field_name, field_value=field_value)
+
     def add_to_list(self, list_field_name, new_list_element):
         exp_update  = f"SET {list_field_name} = list_append(if_not_exists({list_field_name}, :empty_list), :new_element)"
         kwargs      = dict(TableName                 = self.table.table_name                                             ,
@@ -82,13 +85,33 @@ class DyDB__Document(Kwargs_To_Self):
 
     def delete_item_from_list(self, list_field_name, item_index):
         exp_update = f"REMOVE #list_field_name[{item_index}]"
-        kwargs = dict(TableName=self.table.table_name,
-                      Key=self.exp_key(),
-                      UpdateExpression=exp_update,
-                      ExpressionAttributeNames={ '#list_field_name': list_field_name  },
+        kwargs = dict(TableName                = self.table.table_name,
+                      Key                      = self.exp_key(),
+                      UpdateExpression         = exp_update,
+                      ExpressionAttributeNames = { '#list_field_name': list_field_name  },
                       ReturnValues='NONE' )
 
         self.client().update_item(**kwargs)
+        return self
+
+    def delete_element_from_set(self, set_field_name, element):
+        return self.delete_elements_from_set(set_field_name=set_field_name, elements={element})
+
+    def delete_elements_from_set(self, set_field_name, elements):
+        if type(elements) is not set:
+            raise ValueError(f"in delete_elements_from_set, the type of elements must be set and it was {type(elements)}")
+        exp_update = f"DELETE #set_field_name :elementsToRemove"
+        elements_to_remove = self.serialize_value(elements)
+        kwargs = dict(TableName                 = self.table.table_name,
+                      Key                       = self.exp_key(),
+                      UpdateExpression          = exp_update,
+                      ExpressionAttributeNames  = { '#set_field_name': set_field_name   },
+                      ExpressionAttributeValues = { ':elementsToRemove': elements_to_remove },
+                      ReturnValues              = 'NONE' )
+
+        self.client().update_item(**kwargs)
+
+        return self
 
     def reset_document(self):
         new_document  = {'id': self.document_id()}
@@ -120,6 +143,17 @@ class DyDB__Document(Kwargs_To_Self):
                       ExpressionAttributeNames={'#field_name': field_name},
                       ExpressionAttributeValues={':field_value': self.serialize_value(field_value)},
                       ReturnValues='NONE')
+
+        self.client().update_item(**kwargs)
+        return self
+
+    def update_counter(self, field_name, increment_by):
+        kwargs = dict(TableName                 = self.table.table_name              ,
+                      Key                       = self.exp_key()                     ,
+                      UpdateExpression          = f'ADD #field_name :inc'            ,
+                      ExpressionAttributeNames  = { '#field_name': field_name}       ,
+                      ExpressionAttributeValues = { ':inc': {'N': str(increment_by)}},
+                      ReturnValues              = 'UPDATED_NEW'                      )
 
         self.client().update_item(**kwargs)
         return self
