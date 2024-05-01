@@ -5,6 +5,7 @@ from osbot_aws.aws.boto3.Capture_Boto3_Error        import capture_boto3_error
 from osbot_aws.aws.dynamo_db.domains.DyDB__Table    import DyDB__Table
 from osbot_aws.aws.dynamo_db.models.DyDB__Document  import DyDB__Document
 from osbot_aws.testing.TestCase__Dynamo_DB          import TestCase__Dynamo_DB
+from osbot_utils.utils.Dev import pprint
 from osbot_utils.utils.Json                         import to_json_str
 from osbot_utils.utils.Misc                         import is_guid, random_text
 
@@ -92,6 +93,25 @@ class test_DyDB__Document(TestCase__Dynamo_DB):
                                  'id'     : self.document_id}
 
             _.set_document(self.source_doc)
+
+    @capture_boto3_error
+    def test_dict_increase_field(self):
+        with self.dydb_document as _:
+            _.reset_document()
+
+            assert _.table.document(self.document_id) == {'id': self.document_id}
+            dict_field = 'user_traffic'
+            dict_value = { 'web_calls': 10, 'api_calls': 10 }
+            _.add_field(dict_field, dict_value)
+            _.dict_set_field('user_traffic', 'web_calls', -30)
+            _.dict_set_field('user_traffic', 'another'  ,   7)
+            _.dict_update_counter('user_traffic', 'api_calls', 36)
+            _.dict_update_counter('user_traffic', 'api_calls', -4)
+            assert _.reload() == { 'id'          : _.document_id()          ,
+                                   'user_traffic': { 'another': Decimal('7'),
+                                   'api_calls'   : Decimal('42')            ,
+                                   'web_calls'   : Decimal('-30')}          }
+
 
     def test_deserialize_value(self):
         value     = {"an_str": 'here', 'an_int': 42, "some_bytes": b"are there", "an_dict": {"is": "here"}}

@@ -63,6 +63,18 @@ class test_DyDB__Query__Builder(TestCase):
                           'ReturnValues'             : 'NONE'}
         assert self.db_query_builder.build__dict_set_field(dict_field, field_key, field_value) == expected_query
 
+    def test_build__dict_update_counter(self):
+        dict_name    = random_text('dict_name')
+        field_name   = random_text('field_name')
+        increment_by = 42
+        expected_query = {'TableName'                : self.table_name,
+                          'Key'                      : {self.key_name: {'S': self.key_value}},
+                          'UpdateExpression'         : f'ADD #dict_name.#field_name :inc',
+                          'ExpressionAttributeNames' : {'#dict_name': dict_name, '#field_name': field_name},
+                          'ExpressionAttributeValues': {':inc': {'N': str(increment_by)}},
+                          'ReturnValues'             : 'NONE'}
+        assert self.db_query_builder.build__dict_update_counter(dict_name, field_name, increment_by) == expected_query
+
     def test_build__delete_field(self):
         field_name = random_text('field_name')
 

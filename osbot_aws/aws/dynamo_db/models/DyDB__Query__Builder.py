@@ -65,6 +65,8 @@ class DyDB__Query__Builder(Kwargs_To_Self):
             expression = f'REMOVE {target}'
         elif command == 'DELETE':
             expression = f'DELETE {target}'
+        elif command == 'ADD':
+            expression = f'ADD {target}'
         else:
             expression = ''
         self.update_expression = expression
@@ -101,6 +103,14 @@ class DyDB__Query__Builder(Kwargs_To_Self):
         return self.build()
 
     @enforce_type_safety
+    def build__dict_update_counter(self, dict_name, field_name: str, increment_by: Union[int, Decimal]):
+        self.set__attribute_names({'#field_name': field_name,
+                                   '#dict_name' : dict_name})
+        self.set__attribute_values({':inc': increment_by})
+        self.set__update_expression(command='ADD', target='#dict_name.#field_name :inc')
+        return self.build()
+
+    @enforce_type_safety
     def build__delete_field(self, field_name: str) -> dict:
         self.set__attribute_names  (names_dict = {'#field_name': field_name})
         self.set__update_expression(command    = 'REMOVE'                   ,
@@ -133,9 +143,9 @@ class DyDB__Query__Builder(Kwargs_To_Self):
 
     @enforce_type_safety
     def build__update_counter(self, field_name:str, increment_by:Union[int, Decimal]):
-        self.expression_attribute_names  = { '#field_name': field_name       }
-        self.expression_attribute_values = { ':inc': {'N': str(increment_by)}}
-        self.update_expression =f'ADD #field_name :inc'
+        self.set__attribute_names  ({ '#field_name': field_name })
+        self.set__attribute_values ({ ':inc': increment_by      })
+        self.set__update_expression(command='ADD',target='#field_name :inc')
         return self.build()
 
     def exp_key(self):

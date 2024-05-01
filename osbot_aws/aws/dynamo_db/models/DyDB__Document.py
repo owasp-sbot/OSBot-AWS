@@ -80,6 +80,11 @@ class DyDB__Document(Kwargs_To_Self):
         self.client().update_item(**kwargs)
         return self
 
+    def dict_update_counter(self, dict_field, field_name, increment_by):
+        kwargs = self.db_query_builder().build__dict_update_counter(dict_field, field_name, increment_by)
+        self.client().update_item(**kwargs)
+        return self
+
     def delete_field(self, field_name):
         if field_name not in self.fields():
             return False
@@ -121,3 +126,4 @@ class DyDB__Document(Kwargs_To_Self):
         kwargs = self.db_query_builder().build__update_counter(field_name, increment_by)
         self.client().update_item(**kwargs)
         return self
+
