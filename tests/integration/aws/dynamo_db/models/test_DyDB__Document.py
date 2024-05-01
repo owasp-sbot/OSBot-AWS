@@ -71,6 +71,31 @@ class test_DyDB__Document(TestCase__Dynamo_DB):
     def test___repr__(self):
         assert repr(self.dydb_document) == f'[DyDB__Document]\n' + to_json_str(self.dydb_document.document)
 
+    @capture_boto3_error
+    def test_dict_set_field(self):
+        with self.dydb_document as _:
+            _.reset_document()
+
+            assert _.table.document(self.document_id) == {'id': self.document_id}
+            dict_field = 'an_dict'
+            dict_value = {'key_1': 'value_1', 'key_2': 'value_2'}
+
+            _.set_field(dict_field, dict_value).reload()
+            assert _.document == { 'an_dict': {'key_1': 'value_1', 'key_2': 'value_2'},
+                                   'id'     : self.document_id                            }
+
+            _.dict_set_field(dict_field, 'key_1', 'changed value 1').reload()
+
+            assert _.document == {'an_dict': {'key_1': 'changed value 1', 'key_2': 'value_2'},
+                                  'id'     : self.document_id}
+
+            _.dict_delete_field(dict_field, 'key_2').reload()
+
+            assert _.document == {'an_dict': {'key_1': 'changed value 1'},
+                                 'id'     : self.document_id}
+
+            _.set_document(self.source_doc)
+
     def test_deserialize_value(self):
         value     = {"an_str": 'here', 'an_int': 42, "some_bytes": b"are there", "an_dict": {"is": "here"}}
         value_raw = {'M': {'an_dict'   : {'M': {'is': {'S': 'here' }}},
@@ -121,24 +146,7 @@ class test_DyDB__Document(TestCase__Dynamo_DB):
             assert _.set_document  (self.source_doc).document == self.document
 
 
-    def test_set_dict_field(self):
-        with self.dydb_document as _:
-            _.reset_document()
 
-            assert _.table.document(self.document_id) == {'id': self.document_id}
-            dict_field = 'an_dict'
-            dict_value = {'key_1': 'value_1', 'key_2': 'value_2'}
-
-            _.set_field(dict_field, dict_value).reload()
-            assert _.document == { 'an_dict': {'key_1': 'value_1', 'key_2': 'value_2'},
-                                   'id'     : self.document_id                            }
-
-            _.set_dict_field(dict_field, 'key_1', 'changed value 1').reload()
-
-            assert _.document == {'an_dict': {'key_1': 'changed value 1', 'key_2': 'value_2'},
-                                  'id'     : self.document_id}
-
-            _.set_document(self.source_doc)
 
 
     def test_set_field(self):
