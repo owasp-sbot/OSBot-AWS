@@ -1,5 +1,6 @@
 import functools
-from typing import get_type_hints, Union
+from typing import get_type_hints, Union, Any
+
 
 def enforce_type_safety(func):
     @functools.wraps(func)                                                                         # Preserve function's metadata during wrapping
@@ -12,6 +13,8 @@ def enforce_type_safety(func):
         for var_name, var_type in all_args.items():                                                # Iterate over all arguments provided to the function
             if var_name in hints:                                                                  # Check if the argument has a type hint specified
                 expected_type = hints[var_name]                                                    # Get the expected type from type hints
+                if expected_type is Any or expected_type is any:                                   # Skip type checking for Any, as it accepts any type
+                    continue
                 if hasattr(expected_type, '__origin__') and expected_type.__origin__ is Union:     # Check if the type hint is a Union
                     expected_types = expected_type.__args__                                        # Retrieve all types inside the Union
                 else:

@@ -183,7 +183,6 @@ class test_DyDB__Document(TestCase__Dynamo_DB):
             assert _.fields() == ['an_str', 'answer', 'id', 'new_field', 'something_random']
             assert _.document.get('new_field') == Decimal(7)
 
-    @capture_boto3_error
     def test_delete_elements_from_set(self):
         with self.dydb_document as _:
             _.add_field('an_string_set' , {'set_1' , 'set_2', 'set_3', 'set_4'}                         )
@@ -215,6 +214,8 @@ class test_DyDB__Document(TestCase__Dynamo_DB):
                                  'answer'          : Decimal('42')  ,
                                  'id'              : self.document_id,
                                  'something_random': self.document.get('something_random')}
-
-
+            with self.assertRaises(TypeError) as context:
+                _.delete_elements_from_set('aaa', 'aaaa')
+            assert context.exception.args[0] == ("in 'build__delete_elements_from_set' the 'elements' parameter must be an "
+                                                 "'set', but it was an 'str'")
 

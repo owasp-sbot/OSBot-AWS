@@ -129,7 +129,7 @@ class test_DyDB__Query__Builder(TestCase):
                           'ReturnValues'             : 'NONE'  }
         assert self.db_query_builder.build__update_counter(field_name, increment_by) == expected_query
 
-        with self.assertRaises(ValueError) as context:
+        with self.assertRaises(TypeError) as context:
             assert self.db_query_builder.build__update_counter(field_name, 'aaa') #check for query injection
-        assert context.exception.args == ('in build__update_counter increment value must be an integer and it was an '
-                                          "<class 'str'>",)
+        assert context.exception.args == ("in 'build__update_counter' the 'increment_by' parameter must be an 'int, "
+                                          "Decimal', but it was an 'str'",)

@@ -30,26 +30,30 @@ class DyDB__Query__Builder(Kwargs_To_Self):
 
         return self.kwargs
 
-    def build__add_to_list(self, list_field_name, new_list_element):
+    @enforce_type_safety
+    def build__add_to_list(self, list_field_name: str, new_list_element: any):
         self.expression_attribute_values = {':new_element': self.serialize_value([new_list_element]),
                                             ':empty_list': self.serialize_value([])}
         self.update_expression = f"SET {list_field_name} = list_append(if_not_exists({list_field_name}, :empty_list), :new_element)"
         return self.build()
 
-    def build__dict_delete_field(self, dict_field, field_key):
+    @enforce_type_safety
+    def build__dict_delete_field(self, dict_field: str, field_key: str) -> dict:
         self.expression_attribute_names = { '#dict_field': dict_field   ,
                                             '#key'       : field_key    }
         self.update_expression = f'REMOVE #dict_field.#key'
         return self.build()
 
-    def build__dict_set_field(self, dict_field, field_key, field_value):
+    @enforce_type_safety
+    def build__dict_set_field(self, dict_field: str, field_key: str, field_value: any) -> dict:
         self.expression_attribute_names = { '#dict_field': dict_field ,
                                              '#key'       : field_key }
         self.expression_attribute_values = { ':val': self.serialize_value(field_value)  }
         self.update_expression = f'SET #dict_field.#key = :val'
         return self.build()
 
-    def build__delete_field(self, field_name:str):
+    @enforce_type_safety
+    def build__delete_field(self, field_name: str) -> dict:
         self.expression_attribute_names = {'#field_name': field_name}
         self.update_expression          = f'REMOVE #field_name'
         return self.build()
@@ -70,16 +74,15 @@ class DyDB__Query__Builder(Kwargs_To_Self):
         self.update_expression = exp_update
         return self.build()
 
-    def build__set_field(self, field_name, field_value):
+    @enforce_type_safety
+    def build__set_field(self, field_name: str, field_value: any) -> dict:
         self.expression_attribute_names =  {'#field_name' : field_name                       }
         self.expression_attribute_values = {':field_value': self.serialize_value(field_value)}
         self.update_expression ='SET #field_name = :field_value'
         return self.build()
 
+    @enforce_type_safety
     def build__update_counter(self, field_name:str, increment_by:Union[int, Decimal]):
-        if not isinstance(increment_by, int) and not isinstance(increment_by, Decimal):
-            raise ValueError(f"in build__update_counter increment value must be an integer and it was an {type(increment_by)}")
-
         self.expression_attribute_names  = { '#field_name': field_name       }
         self.expression_attribute_values = { ':inc': {'N': str(increment_by)}}
         self.update_expression =f'ADD #field_name :inc'
