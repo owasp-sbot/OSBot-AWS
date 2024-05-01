@@ -14,11 +14,12 @@ class test_DyDB__Query__Builder(TestCase):
         self.db_query_builder = DyDB__Query__Builder(table_name=self.table_name, key_name=self.key_name, key_value=self.key_value)
 
     def test__setUpClass(self):
-        assert self.db_query_builder.__locals__() == {'key_name'     : self.key_name   ,
-                                                      'key_value'    : self.key_value  ,
-                                                      'table_name'   : self.table_name ,
-                                                      'return_values': 'NONE'          ,
-                                                      'kwargs'       : {}              }
+        assert self.db_query_builder.__locals__() == {'key_name'         : self.key_name   ,
+                                                      'key_value'        : self.key_value  ,
+                                                      'kwargs'           : {}              ,
+                                                      'return_values'    : 'NONE'          ,
+                                                      'table_name'       : self.table_name ,
+                                                      'update_expression': ''              }
 
 
 
