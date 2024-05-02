@@ -29,6 +29,9 @@ class DyDB__Document(Kwargs_To_Self):
     def client(self):
         return self.table.dynamo_db.client()
 
+    def delete(self):
+        return self.table.delete_document(self.document_id())
+
     def document_id(self):
         return self.key_value()
 
@@ -66,6 +69,9 @@ class DyDB__Document(Kwargs_To_Self):
 
     def deserialize_value(self, value):
         return self.type_deserializer().deserialize(value)
+
+    def value(self, field_name):
+        return self.field(field_name, reload_document=False)
 
     @cache_on_self
     def type_deserializer(self):
