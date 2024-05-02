@@ -61,7 +61,9 @@ class DyDB__Document(Kwargs_To_Self):
         return self.document.get(self.key_name())
 
     def reload(self):
-        self.document = self.table.document(self.document_id())
+        document = self.table.document(self.document_id())
+        if document:
+            self.document = document
         return self.document
 
     def serialize_value(self, value):
@@ -72,6 +74,9 @@ class DyDB__Document(Kwargs_To_Self):
 
     def value(self, field_name):
         return self.field(field_name, reload_document=False)
+
+    def values(self):
+        return self.document
 
     @cache_on_self
     def type_deserializer(self):

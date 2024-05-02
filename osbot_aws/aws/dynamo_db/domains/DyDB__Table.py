@@ -72,13 +72,14 @@ class DyDB__Table(Dynamo_DB__Table):
 
     def dydb_document(self, document_id, load_data=True):
         from osbot_aws.aws.dynamo_db.models.DyDB__Document import DyDB__Document        # need to import this here due to circular references
-        if load_data:
-            document = self.document(document_id)
-        else:
-            document = {self.key_name: document_id}
-        kwargs_document = dict(document = document,
-                               table    = self    )
-        return DyDB__Document(**kwargs_document)
+        document = None                                                                 # create var to hold document data
+        if load_data:                                                                   # if asked to load data
+            document = self.document(document_id)                                       # try to load data (this will return None if the document doesn't exist)
+        if not document:                                                                # if load_data is False or self.document(document_id) returned none
+            document = {self.key_name: document_id}                                     # create a default document representation with only the id
+        kwargs_document = dict(document = document,                                     # kwargs for DyDB__Document object
+                               table    = self    )                                     #     where pass a reference to the current table
+        return DyDB__Document(**kwargs_document)                                        # create DyDB__Document
 
     def exists(self):
         return super().exists().get('data')
