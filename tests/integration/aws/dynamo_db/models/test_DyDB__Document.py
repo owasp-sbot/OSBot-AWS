@@ -129,18 +129,18 @@ class test_DyDB__Document(TestCase__Dynamo_DB):
 
     def test_add_to_list(self):
         with self.dydb_document as _:
-            assert _.fields() == ['an_str', 'answer', 'id', 'something_random']
+            assert _.fields_names() == ['an_str', 'answer', 'id', 'something_random']
             new_list    = 'a_list'
             new_value_1 = 'the answer'
             new_value_2 = 'is 42'
             _.add_to_list(new_list, new_value_1)
-            assert _.fields()                    == ['an_str', 'answer', 'id', 'something_random']
+            assert _.fields_names() == ['an_str', 'answer', 'id', 'something_random']
             assert _.reload()                    == {**self.document, new_list: [new_value_1]}
             _.add_to_list(new_list, new_value_2)
             assert _.reload()                    == {**self.document, new_list: [new_value_1, new_value_2]}
             _.delete_field(new_list)
             _.reload()
-            assert _.fields()                    == ['an_str', 'answer', 'id', 'something_random']
+            assert _.fields_names() == ['an_str', 'answer', 'id', 'something_random']
 
             new_value_3 = {'action': 'connect'   }
             new_value_4 = {'action': 'disconnect'}
@@ -156,43 +156,49 @@ class test_DyDB__Document(TestCase__Dynamo_DB):
             assert _.reload() == {**self.document, new_list: [new_value_3, new_value_1, new_value_2]}
             _.delete_item_from_list(new_list, 1)
             assert _.reload() == {**self.document, new_list: [new_value_3, new_value_2             ]}
-
             _.delete_field(new_list)
+
+    def test_add_to_set(self):
+        with self.dydb_document as _:
+            _.add_field('an_set', {'an', 'set'})
+
+            _.add_to_set('an_set', 'new item')
+            assert _.field('an_set') == {'set', 'an', 'new item'}
+            _.delete_from_set('an_set', 'an')
+            assert _.field('an_set') == {'set', 'new item'}
+
+            _.set_document(self.source_doc)
 
     def test_reset_document(self):
         with self.dydb_document as _:
             assert _.reset_document()               .document == {self.key_name: self.document_id}
             assert _.set_document  (self.source_doc).document == self.document
 
-
-
-
-
     def test_set_field(self):
         with self.dydb_document as _:
-            assert _.fields() == ['an_str', 'answer', 'id', 'something_random']
+            assert _.fields_names() == ['an_str', 'answer', 'id', 'something_random']
             new_field  = 'something_new'
             new_value  = 'with a new value'
             add_result = _.set_field(new_field, new_value)
             assert add_result == _
-            assert _.fields() == ['an_str', 'answer', 'id', 'something_random']
+            assert _.fields_names() == ['an_str', 'answer', 'id', 'something_random']
 
             assert _.reload() == {**self.document, new_field:new_value}
-            assert _.fields() == ['an_str', 'answer', 'id', new_field, 'something_random']
+            assert _.fields_names() == ['an_str', 'answer', 'id', new_field, 'something_random']
 
             assert _.document != self.document
             assert _.document == {**self.document, new_field:new_value}
 
             assert _.delete_field(new_field) is True
             _.reload()
-            assert _.fields()                == ['an_str', 'answer', 'id', 'something_random']
+            assert _.fields_names() == ['an_str', 'answer', 'id', 'something_random']
             assert _.document                == self.document
             assert _.delete_field(new_field) is False
 
 
     def test_increment_field(self):
         with self.dydb_document as _:
-            assert _.fields() == ['an_str', 'answer', 'id', 'something_random']
+            assert _.fields_names() == ['an_str', 'answer', 'id', 'something_random']
 
             _.increment_field('answer', 1).reload()
             _.increment_field('answer', Decimal(9)).reload()
@@ -201,7 +207,7 @@ class test_DyDB__Document(TestCase__Dynamo_DB):
             assert _.document.get('answer'       ) == 10
 
             _.increment_field('new_field', Decimal(7)).reload()
-            assert _.fields() == ['an_str', 'answer', 'id', 'new_field', 'something_random']
+            assert _.fields_names() == ['an_str', 'answer', 'id', 'new_field', 'something_random']
             assert _.document.get('new_field') == Decimal(7)
 
     def test_increment_field__with_condition(self):
@@ -209,9 +215,9 @@ class test_DyDB__Document(TestCase__Dynamo_DB):
             field_name = 'an_counter'
             _.set_field(field_name, 2)
             assert _.increment_field__if_existing_value_bigger_than(field_name, -1, 0) is True
-            assert _.value(field_name) == 1
+            assert _.field(field_name) == 1
             assert _.increment_field__if_existing_value_bigger_than(field_name, -1, 0) is True
-            assert _.value(field_name) == 0
+            assert _.field(field_name) == 0
             assert _.increment_field__if_existing_value_bigger_than(field_name, -1, 0) is False
 
     def test_delete_elements_from_set(self):
@@ -219,8 +225,8 @@ class test_DyDB__Document(TestCase__Dynamo_DB):
             _.add_field('an_string_set' , {'set_1' , 'set_2', 'set_3', 'set_4'}                         )
             _.add_field('an_int_set'    , {1, 2,3,4,5})
             _.add_field('an_bytes_set'  , {b'bytes_1' , b'bytes_2', b'bytes_3', b'bytes_4'} )
-            _.delete_element_from_set('an_string_set' , 'set_2'   )
-            _.delete_element_from_set('an_bytes_set'  , b'bytes_2')
+            _.delete_from_set('an_string_set', 'set_2')
+            _.delete_from_set('an_bytes_set', b'bytes_2')
             _.delete_elements_from_set('an_int_set'   , {3, 4}    ).reload()
             #pprint(_.reload())
             document = _.reload()
@@ -269,7 +275,7 @@ class test_DyDB__Document(TestCase__Dynamo_DB):
             query_builder.expression_attribute_values   = expression_attribute_values
             query_kwargs = query_builder.build()
             _.update_item(**query_kwargs)
-            assert _.values('attribute1', 'attribute2', 'attribute3') == {'attribute1': value_1,
+            assert _.fields('attribute1', 'attribute2', 'attribute3') == {'attribute1': value_1,
                                                                           'attribute2': value_2,
                                                                           'attribute3': value_3}
             _.set_document(self.source_doc)

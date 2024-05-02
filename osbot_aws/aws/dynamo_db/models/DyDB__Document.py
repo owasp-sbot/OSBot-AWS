@@ -32,7 +32,20 @@ class DyDB__Document(Kwargs_To_Self):
     def document_id(self):
         return self.key_value()
 
-    def fields(self):
+    def field(self, field_name, reload_document=True):
+        if reload_document:
+            self.reload()
+        return self.document.get(field_name)
+
+    def fields(self, *field_names, reload_document=True):
+        fields = {}
+        if reload_document:
+            self.reload()
+        for field in field_names:
+            fields[field] = self.document.get(field)
+        return fields
+
+    def fields_names(self):
         return list_set(self.document)
 
     def exp_key(self):
@@ -62,19 +75,6 @@ class DyDB__Document(Kwargs_To_Self):
     def type_serializer(self):
         return TypeSerializer()
 
-    def value(self, field_name, reload_document=True):
-        if reload_document:
-            self.reload()
-        return self.document.get(field_name)
-
-    def values(self, *field_names, reload_document=True):
-        values = {}
-        if reload_document:
-            self.reload()
-        for field in field_names:
-            values[field] = self.document.get(field)
-        return values
-        return field_names
 
     # action methods
 
@@ -86,13 +86,33 @@ class DyDB__Document(Kwargs_To_Self):
         response = self.client().update_item(**kwargs)
         return response.get('Attributes')
 
+    def add_to_set(self, field_name, element):
+        kwargs   = self.db_query_builder().build__add_to_set(field_name, element)
+        response = self.client().update_item(**kwargs)
+        return response.get('Attributes')
+
+    def dict_add_to_set(self, dict_field, field_name, element):
+        kwargs = self.db_query_builder().build__dict_add_to_set(dict_field, field_name, element)
+        response = self.client().update_item(**kwargs)
+        return response.get('Attributes')
+
     def dict_delete_field(self, dict_field, field_key):
         kwargs = self.db_query_builder().build__dict_delete_field(dict_field, field_key)
         self.client().update_item(**kwargs)
         return self
 
+    def dict_delete_from_set(self, dict_field, field_name, elements):
+        kwargs = self.db_query_builder().build__delete_from_set(dict_field, field_name , elements)
+        self.client().update_item(**kwargs)
+        return self
+
     def dict_set_field(self, dict_field, field_key, field_value):
         kwargs = self.db_query_builder().build__dict_set_field(dict_field, field_key, field_value)
+        self.client().update_item(**kwargs)
+        return self
+
+    def dict_dict_set_field(self, parent_dict_field, child_dict_field, field_key, field_value):
+        kwargs = self.db_query_builder().build__dict_dict_set_field(parent_dict_field, child_dict_field, field_key, field_value)
         self.client().update_item(**kwargs)
         return self
 
@@ -102,7 +122,7 @@ class DyDB__Document(Kwargs_To_Self):
         return self
 
     def delete_field(self, field_name):
-        if field_name not in self.fields():
+        if field_name not in self.fields_names():
             return False
         kwargs = self.db_query_builder().build__delete_field(field_name)
         self.client().update_item(**kwargs)
@@ -113,7 +133,7 @@ class DyDB__Document(Kwargs_To_Self):
         self.client().update_item(**kwargs)
         return self
 
-    def delete_element_from_set(self, set_field_name, element):
+    def delete_from_set(self, set_field_name, element):
         return self.delete_elements_from_set(set_field_name=set_field_name, elements={element})
 
     def delete_elements_from_set(self, set_field_name, elements):
@@ -139,6 +159,12 @@ class DyDB__Document(Kwargs_To_Self):
             else:
                 raise
 
+    def print_value(self, field_name, new_line_before=True):
+        value = self.field(field_name)
+        if new_line_before:
+            print()
+        print(value)
+        return value
     def reset_document(self):
         new_document  = {'id': self.document_id()}
         self.document =  self.table.add_document(new_document).get('document')

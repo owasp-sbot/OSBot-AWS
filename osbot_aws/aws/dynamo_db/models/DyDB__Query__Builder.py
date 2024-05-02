@@ -84,6 +84,21 @@ class DyDB__Query__Builder(Kwargs_To_Self):
         self.set__update_expression('SET', target, **expression_kwargs)
         return self.build()
 
+    def build__add_to_set(self, field_name: str, element: any):
+        target = '#field_name'
+        self.set__attribute_name (name=target, value=field_name)
+        self.set__attribute_value(key =':element', value={element})
+        self.set__update_expression(command='ADD', target='#field_name :element')
+        return self.build()
+
+    def build__dict_add_to_set(self, dict_field:str, field_name: str, element: any):
+        target = '#field_name'
+        self.set__attribute_names({'#dict_field': dict_field,
+                                   '#field_name': field_name})
+        self.set__attribute_values({':element'  : {element} })
+        self.set__update_expression(command='ADD', target='#dict_field.#field_name :element')
+        return self.build()
+
 
     @enforce_type_safety
     def build__dict_delete_field(self, dict_field: str, field_key: str) -> dict:
@@ -93,6 +108,14 @@ class DyDB__Query__Builder(Kwargs_To_Self):
         return self.build()
 
     @enforce_type_safety
+    def build__delete_from_set(self, dict_field: str, field_name: str, element: any):
+        self.set__attribute_names  (names_dict  = { '#dict_field': dict_field,
+                                                    '#field_name' : field_name })
+        self.set__attribute_values (values_dict = {':elements': {element}       })
+        self.set__update_expression(command     = "DELETE"                              ,
+                                    target      = f'#dict_field.#field_name :elements' )
+        return self.build()
+    @enforce_type_safety
     def build__dict_set_field(self, dict_field: str, field_key: str, field_value: any) -> dict:
         self.set__attribute_names ({'#dict_field': dict_field  ,
                                     '#key'       : field_key})
@@ -100,6 +123,17 @@ class DyDB__Query__Builder(Kwargs_To_Self):
         self.set__update_expression(command   = 'SET',
                                     target    = '#dict_field.#key',
                                     new_value = ':val')
+        return self.build()
+
+    @enforce_type_safety
+    def build__dict_dict_set_field(self, parent_dict_field: str, child_dict_field: str, field_key: str, field_value: any) -> dict:
+        self.set__attribute_names({'#parent_dict_field': parent_dict_field,
+                                   '#child_dict_field' : child_dict_field,
+                                   '#key'              : field_key})
+        self.set__attribute_values({':val'             : field_value})
+        self.set__update_expression(command='SET',
+                                    target='#parent_dict_field.#child_dict_field.#key',
+                                    new_value=':val')
         return self.build()
 
     @enforce_type_safety
