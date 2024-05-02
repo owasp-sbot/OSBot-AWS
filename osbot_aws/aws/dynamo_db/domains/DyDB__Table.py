@@ -70,10 +70,14 @@ class DyDB__Table(Dynamo_DB__Table):
     def documents_ids(self, **kwargs):
         return super().documents_ids(**kwargs).get('data')
 
-    def dydb_document(self, document_id):
+    def dydb_document(self, document_id, load_data=True):
         from osbot_aws.aws.dynamo_db.models.DyDB__Document import DyDB__Document        # need to import this here due to circular references
-        kwargs_document = dict(document = self.document(document_id),
-                               table    = self                      )
+        if load_data:
+            document = self.document(document_id)
+        else:
+            document = {self.key_name: document_id}
+        kwargs_document = dict(document = document,
+                               table    = self    )
         return DyDB__Document(**kwargs_document)
 
     def exists(self):
