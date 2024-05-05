@@ -1,4 +1,6 @@
 from botocore.exceptions                    import ClientError
+
+from osbot_utils.utils.Dev import pprint
 from osbot_utils.utils.Lists import list_get
 
 from osbot_aws.AWS_Config                   import AWS_Config
@@ -22,6 +24,9 @@ class ECS:
         self.aws_config = AWS_Config()
         self.account_id = self.aws_config.aws_session_account_id()
         self.region     = self.aws_config.aws_session_region_name()
+
+    def __enter__(self                           ): return self
+    def __exit__ (self, exc_type, exc_val, exc_tb): pass
 
     @cache
     def client(self):
@@ -108,8 +113,9 @@ class ECS:
         return container_instances
 
     def container_instances_arns(self, cluster_name='default', instance_status='ACTIVE'):
-        kwargs = { "cluster": cluster_name    ,
-                   "status" : instance_status }
+        kwargs = { "cluster": cluster_name }
+        if instance_status:
+            kwargs["status"] = instance_status
 
         return self.client().list_container_instances(**kwargs).get('containerInstanceArns')
 
@@ -249,16 +255,26 @@ class ECS:
         result = self.client().describe_tasks(cluster=cluster_name, tasks=[task_arn]).get('tasks')
         return list_get(result,0)
 
-    def task_create(self, task_definition_arn, subnet_id, security_group_id, cluster_name='default', launch_type='FARGATE', assign_public_ip='ENABLED'):
-        kwargs = {
-                    'cluster'             : cluster_name        ,
-                    'taskDefinition'      : task_definition_arn ,
-                    'launchType'          : launch_type         ,
-                    'networkConfiguration': { 'awsvpcConfiguration': { 'subnets'        : [ subnet_id        ],
-                                                                       'securityGroups' : [ security_group_id],
-                                                                       'assignPublicIp' : assign_public_ip   }},
-                 }
+    def task_create(self, task_definition_arn, subnet_id, security_group_id, cluster_name='default', launch_type='FARGATE', assign_public_ip='ENABLED', constraint_expression=None):
 
+        kwargs = {
+                    'cluster'             : cluster_name         ,
+                    'taskDefinition'      : task_definition_arn  ,
+                    'launchType'          : launch_type          ,
+                    #'networkConfiguration': network_configuration,
+                 }
+        if launch_type != 'EXTERNAL':
+            network_configuration          = {'awsvpcConfiguration': {'subnets': [subnet_id],
+                                                                      'securityGroups': [security_group_id],
+                                                                      'assignPublicIp': assign_public_ip}}
+            kwargs['networkConfiguration'] = network_configuration
+        if constraint_expression:
+            kwargs['placementConstraints'] = [
+                {
+                    'type': 'memberOf',
+                    'expression': constraint_expression
+                }
+            ]
         result = self.client().run_task(**kwargs)
         return result.get('tasks')[0]
 
