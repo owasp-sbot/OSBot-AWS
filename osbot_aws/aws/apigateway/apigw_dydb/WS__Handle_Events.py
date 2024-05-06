@@ -13,7 +13,6 @@ class WS__Handle_Events(WS__Handle_Lambda):
                         lambda_event  = event         )
         self.dydb_ws.register_connection(**kwargs)
         return {'statusCode': 200, 'body': 'Connected.'}
-        #return {'statusCode': 200, 'body': 'Connected.', 'connection_id': connection_id}       # this (returning connection_id) doesn't work since we get an 502 Bad Gateway when trying to connect
 
     def route_default(self, event, connection_id):
         kwargs   = dict(connection_id = connection_id ,
@@ -27,5 +26,4 @@ class WS__Handle_Events(WS__Handle_Lambda):
                         lambda_event  = event         )
         self.dydb_ws.register_disconnect(**kwargs)
         return {'statusCode': 200, 'body': 'Disconnected.'}
-        #return {'statusCode': 200, 'body': 'Disconnected.', 'connection_id': connection_id}     # this (returning connection_id) doesn't work since we get an 502 Bad Gateway when trying to connect
 

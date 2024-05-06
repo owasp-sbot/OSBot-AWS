@@ -22,10 +22,11 @@ class WS__DyDB(DyDB__Table_With_Timestamp):
         self.table_indexes = TABLE_WEB_SOCKETS__INDEXES_NAMES
 
     def handle_route(self, connection_id, source=None, lambda_event=None):
-        timestamp        = timestamp_utc_now()
-        request_data     = from_json_str(lambda_event.get('body'))
+        timestamp         = timestamp_utc_now()
+        lambda_event_body = (lambda_event or {}).get('body')
+        request_data      = from_json_str(lambda_event_body)
         if not request_data:
-            request_data = {"request": lambda_event.get('body')}
+            request_data = {"request": lambda_event_body}
 
         response_message = self.handle_request_data(connection_id, request_data)
 
