@@ -116,7 +116,6 @@ class Lambda:
 
     def create(self):
         kwargs = self.create_kwargs()
-
         kwargs_status = self.validate_create_kwargs(kwargs)
         if kwargs_status.get('status') != 'ok':
             return kwargs_status
@@ -173,10 +172,9 @@ class Lambda:
     def event_sources(self):
         return self.client().list_event_source_mappings().get('EventSourceMappings')
 
-    def exists(self):
+    def exists(self, function_name=None):
         try:
-            self.info()
-            return True
+            return self.info(function_name or self.name) is not None
         except:
             return False
 
@@ -284,8 +282,8 @@ class Lambda:
     #   ]
     # }
     @remove_return_value('ResponseMetadata')
-    def info(self):
-        return self.client().get_function(FunctionName=self.name)
+    def info(self, function_name=None):
+        return self.client().get_function(FunctionName=function_name or self.name)
 
     def invoke_raw(self, payload = None, client_context=None, log_type='None', qualifier=None):
         try:
@@ -476,7 +474,7 @@ class Lambda:
 
         if len(name) > 64:
             return status_error(message="lambda functions name cannot be bigger than 64 chars", data=self.name)
-        if Lambda(name=name).exists():
+        if self.exists(function_name=name):
             return status_warning(message=f'lambda function already exists: {name}')
 
         if image_uri is None:

@@ -1,3 +1,5 @@
+import os
+
 import osbot_aws
 from osbot_utils.utils.Files import file_contents, path_combine
 
@@ -14,3 +16,5 @@ class Version:
     def value(self):
         version = file_contents(self.path_version_file()) or ""
         return version.strip()
+
+version = Version().value()
