@@ -24,7 +24,7 @@ class AWS_Config:
     def lambda_s3_folder_layers     (self): return os.getenv('OSBOT_LAMBDA_S3_FOLDER_LAYERS' , 'layers'                                           )
     def lambda_s3_folder_lambdas    (self): return os.getenv('OSBOT_LAMBDA_S3_FOLDER_LAMBDAS', 'lambdas'                                          )
     def lambda_role_name            (self): return os.getenv('OSBOT_LAMBDA_ROLE_NAME'          'role-osbot-lambda'                                )
-
+    def temp_data_bucket           (self): return self.resolve_temp_data_bucket_name()
 
     def set_aws_session_profile_name(self, value): os.environ['AWS_PROFILE_NAME'                ] = value ; return value
     def set_aws_session_region_name (self, value): os.environ['AWS_DEFAULT_REGION'              ] = value ; return value
@@ -48,6 +48,15 @@ class AWS_Config:
         if bucket_name is None:
             bucket_name = f'{self.aws_session_account_id()}--osbot-lambdas--{self.region_name()}' # this is a needed breaking change
         return bucket_name
+
+    def resolve_temp_data_bucket_name(self):
+        bucket_name = os.getenv('OSBOT_TEMP_DATA_S3_BUCKET')
+        if bucket_name is None:
+            bucket_name = f'{self.aws_session_account_id()}--temp-data--{self.region_name()}'
+        return bucket_name
+
+
+
 
 
 def set_aws_region(region_name):
