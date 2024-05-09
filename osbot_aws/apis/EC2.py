@@ -33,17 +33,28 @@ class EC2:
 
     @index_by
     @group_by
-    def amis(self, owner='self', state='available', name=None, description=None, ami_id=None):  # todo: find how to search for amis in the quick start
+    def amis(self, owner='self', architecture=None, state='available', name=None, description=None, ami_id=None):  # todo: find how to search for amis in the quick start
         kwargs = {'Owners' : [owner] ,
                   'Filters' : [ {'Name': 'state', 'Values': [state]}]}
-
-        if name       : kwargs.get('Filters').append({'Name': 'name'       , 'Values': [name        ]})
-        if description: kwargs.get('Filters').append({'Name': 'description', 'Values': [description ]})
-        if ami_id     : kwargs.get('Filters').append({'Name': 'image-id'   , 'Values': [ami_id      ]})
+        if architecture : kwargs.get('Filters').append({'Name': 'architecture', 'Values': [architecture]})
+        if name         : kwargs.get('Filters').append({'Name': 'name'        , 'Values': [name        ]})
+        if description  : kwargs.get('Filters').append({'Name': 'description' , 'Values': [description ]})
+        if ami_id       : kwargs.get('Filters').append({'Name': 'image-id'    , 'Values': [ami_id      ]})
         return self.client().describe_images(**kwargs).get('Images')
 
-    def instance_create(self, image_id, name='created by osbot_aws', instance_type='t2.micro', iam_instance_profile=None, key_name=None,
-                              network_interface=None, tags=None, security_group_id=None , block_device_mappings=None , dry_run=False):
+    def instance_create(self, image_id                                      ,   # only var needed is the image_id which is region specific
+                              dry_run               = False                 ,   # todo: refactor into a EC2_Create_Instance helper class
+                              block_device_mappings = None                  ,
+                              instance_type         = 't2.micro'            ,
+                              iam_instance_profile  = None                  ,
+                              spot_instance         = False                 ,
+                              key_name              = None                  ,
+                              name                  = 'created by osbot_aws',
+                              network_interface     = None                  ,
+                              tags                  = None                  ,
+                              security_group_id     = None                  ):
+
+
         kwargs = {  "ImageId"      : image_id                                                               ,
                     "InstanceType" : instance_type                                                          ,
                     "MaxCount"     : 1                                                                      ,
@@ -55,7 +66,14 @@ class EC2:
         if key_name              : kwargs["KeyName"            ] = key_name
         if network_interface     : kwargs['NetworkInterfaces'  ] = [network_interface]
         if security_group_id     : kwargs['SecurityGroupIds'   ] = [security_group_id]
-
+        if spot_instance:
+            max_spot_price                  = '0.1'                     # max price to pay
+            spot_instance_type              = 'one-time'                # or 'persistent'
+            interrupt_behaviour             = 'terminate'               # or 'stop' or 'hibernate'
+            kwargs['InstanceMarketOptions'] = { 'MarketType' : 'spot',
+                                                'SpotOptions': { 'MaxPrice'                    : max_spot_price      ,
+                                                                 'SpotInstanceType'            : spot_instance_type  ,
+                                                                 'InstanceInterruptionBehavior': interrupt_behaviour }}
         if dry_run:
             return kwargs
 
@@ -65,21 +83,22 @@ class EC2:
 
     def format_instance_details(self, target):
         if target:
-            instance_details = { 'availability_zone': target.placement.get('AvailabilityZone'),
-                                 'block_devices': {}                                          ,
-                                 'cpus'         : target.cpu_options['CoreCount']             ,
-                                 'image_id'     : target.image_id                             ,
-                                 'instance_type': target.instance_type                        ,
-                                 'instance_id'  : target.instance_id                          ,
-                                 'key_name'     : target.key_name                             ,
-                                 'launch_time'  : target.meta.data.get('LauchTime')           ,
-                                 'private_ip'   : target.private_ip_address                   ,
-                                 'public_ip'    : target.public_ip_address                    ,
-                                 'subnet_id'    : target.meta.data.get('SubnetId')            ,
-                                 'spot_id'      : target.spot_instance_request_id             ,
-                                 'state'        : target.state                                ,
-                                 'tags'         : target.tags                                 ,
-                                 'vpc_id'       : target.meta.data.get('VpcId')               }
+            instance_details = { 'architecture'     : target.architecture                         ,
+                                 'availability_zone': target.placement.get('AvailabilityZone')    ,
+                                 'block_devices'    : {}                                          ,
+                                 'cpus'             : target.cpu_options['CoreCount']             ,
+                                 'image_id'         : target.image_id                             ,
+                                 'instance_type'    : target.instance_type                        ,
+                                 'instance_id'      : target.instance_id                          ,
+                                 'key_name'         : target.key_name                             ,
+                                 'launch_time'      : target.meta.data.get('LauchTime')           ,
+                                 'private_ip'       : target.private_ip_address                   ,
+                                 'public_ip'        : target.public_ip_address                    ,
+                                 'subnet_id'        : target.meta.data.get('SubnetId')            ,
+                                 'spot_id'          : target.spot_instance_request_id             ,
+                                 'state'            : target.state                                ,
+                                 'tags'             : target.tags                                 ,
+                                 'vpc_id'           : target.meta.data.get('VpcId')               }
 
             for block_device_mapping in target.block_device_mappings:
                 block_device_name = block_device_mapping.get('DeviceName')
@@ -92,7 +111,7 @@ class EC2:
                                          "volume_id"  : str(ebs_data.get('VolumeId'  ))}
                 instance_details.get('block_devices')[block_device_name] = block_device
 
-        return instance_details
+            return instance_details
 
     def instance_block_devices(self, instance_id):
         instance = self.instance_details_raw(instance_id)
