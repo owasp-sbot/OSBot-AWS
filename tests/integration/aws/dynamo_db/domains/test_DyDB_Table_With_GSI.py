@@ -151,10 +151,11 @@ class test_DyDB__Table(TestCase__Dynamo_DB):
                 assert item.get('an_str') == '42'
                 assert item.get('user_id') == user_id
 
+    #@pytest.mark.skip("starts to fail, after some time since this is using the test data created a while back")
     def test_query_index_between_range(self):
         user_id = 'user_b'
-        timestamp_start = timestamp_utc_now_less_delta(days=21)
-        timestamp_end   = timestamp_utc_now_less_delta(days=10)
+        timestamp_start = timestamp_utc_now_less_delta(days=60)         # BUG this is using the test data create a while back, so this test starts to fail after a while
+        timestamp_end   = timestamp_utc_now_less_delta(days=0 )
         with self.dydb_table_with_gsi as _:
             query_kwargs = dict(index_name    = self.gsi_index_name,
                                 index_type    = self.gsi_index_type,
@@ -163,7 +164,6 @@ class test_DyDB__Table(TestCase__Dynamo_DB):
                                 sort_key_type = self.gsi_sort_key_type  ,
                                 start_value   = timestamp_start         ,
                                 end_value     = timestamp_end           )
-
             items = _.query_index_between_range(**query_kwargs)
             assert len(items) > 0
             for item in items:

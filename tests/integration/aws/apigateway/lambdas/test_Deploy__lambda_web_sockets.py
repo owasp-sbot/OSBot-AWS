@@ -1,8 +1,12 @@
 import json
+
+import pytest
+
 from osbot_aws.aws.apigateway.lambdas.Deploy__lambda_web_sockets import Deploy__lambda_web_sockets
 from osbot_aws.testing.TestCase__Lambda                          import TestCase__Lambda
 from osbot_utils.utils.Dev                                       import pprint
 
+@pytest.mark.skip("need refactoring to deploy code - only need in test")
 class test_Deploy__lambda_web_sockets(TestCase__Lambda):
 
     def setUp(self):

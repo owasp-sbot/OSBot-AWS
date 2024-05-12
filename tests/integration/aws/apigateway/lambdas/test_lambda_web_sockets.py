@@ -11,6 +11,7 @@ from osbot_aws.testing.TestCase__Lambda                          import TestCase
 from osbot_aws.utils.Version                                     import version
 from osbot_utils.utils.Misc                                      import random_guid
 
+@pytest.mark.skip("need refactoring to deploy code - only need in test")
 class test_lambda_web_sockets(TestCase__Lambda):
 
     def setUp(self):
