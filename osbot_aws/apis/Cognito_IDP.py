@@ -1,3 +1,4 @@
+import jwt
 import requests
 
 from osbot_utils.decorators.methods.remove_return_value import remove_return_value
@@ -30,8 +31,12 @@ class Cognito_IDP:
                             'SCOPE'   : 'openid profile email'  }
         client = self.cognito()
         try:
-            response = client.initiate_auth( ClientId=client_id, AuthFlow='USER_PASSWORD_AUTH',AuthParameters=auth_parameters)
-            return response
+            response              = client.initiate_auth( ClientId=client_id, AuthFlow='USER_PASSWORD_AUTH',AuthParameters=auth_parameters)
+            access_token          = response.get('AuthenticationResult').get('AccessToken')
+            return {'auth_result'     : response.get('AuthenticationResult'),
+                    'challenge_params': response.get('ChallengeParameters' ),
+                    'jwt_token'       : self.decode_jwt_token(access_token )}
+
         except Exception as error:
             return {'error':  str(error) }
 
@@ -42,6 +47,10 @@ class Cognito_IDP:
         headers = { 'Authorization': f"Bearer {access_token}" }
         response = requests.get(user_info_url, headers=headers)
         return response.json()
+
+    def decode_jwt_token(self, access_token):
+        if access_token:
+            return jwt.decode(access_token, algorithms=["RS256"], options={"verify_signature": False})
 
     def user_info(self,  user_pool_id, user_name):
         return self.user(user_pool_id, user_name)
