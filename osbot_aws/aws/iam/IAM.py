@@ -379,8 +379,8 @@ class IAM:
 
                 policy_document = self.client().get_role_policy(RoleName=self.role_name, PolicyName=policy_name)
                 policies[policy_name] = policy_document.get('PolicyDocument')
-                print(f"Policy Name: {policy_name}")
-                print("Policy Document:", policy_document['PolicyDocument'])
+                #print(f"Policy Name: {policy_name}")
+                #print("Policy Document:", policy_document['PolicyDocument'])
 
         return policies
 
