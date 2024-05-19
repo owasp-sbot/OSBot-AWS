@@ -1,4 +1,5 @@
 from functools import wraps
+from os import getenv
 
 from osbot_utils.decorators.methods.cache import cache
 from osbot_utils.decorators.methods.cache_on_self import cache_on_self
@@ -14,6 +15,7 @@ SHELL_VAR_METHOD_NAME    = 'method_name'
 SHELL_VAR_METHOD_KWARDS  = 'method_kwargs'
 SHELL_VAR_METHOD_INVOKED = 'method_invoked'
 SHELL_VAR_RETURN_VALUE   = 'return_value'
+SHELL__ENV_VAR__AUTH_KEY = 'LAMBDA_SHELL__AUTH_KEY'
 
 def add_lambda_shell_decorator(function_code):
     updated_code =  "from osbot_aws.apis.shell.Lambda_Shell import lambda_shell\n" +  \
@@ -40,6 +42,10 @@ class Lambda_Shell:
 
     @cache_on_self                                              # cache this value since it doesn't change in the lifetime of a lambda function
     def get_lambda_shell_auth(self):                            # this method can be used on both client and server
+        data = getenv(SHELL__ENV_VAR__AUTH_KEY)
+        if data:
+            return data
+
         data = self.secret.value_from_json_string()             # this will create a new secret if it doesn't exist
         if data:
             return data.get('key')

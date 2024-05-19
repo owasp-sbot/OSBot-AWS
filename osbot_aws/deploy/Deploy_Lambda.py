@@ -63,6 +63,9 @@ class Deploy_Lambda:
     def invoke_async(self, params=None):
         return self.lambda_function().invoke_async(params)
 
+    def invoke_return_logs(self, params=None):
+        return self.lambda_function().invoke_return_logs(params)
+
     def files(self):
         return self.package.get_files()
 

@@ -33,7 +33,7 @@ from osbot_aws.aws.iam.IAM_Assume_Role import IAM_Assume_Role
 
 class Lambda__with_temp_role(Lambda):
     temp_service_name   : str = "lambda"
-    temp_role__services : str = ["lambda"]
+    temp_role__services : str = ["lambda", 's3']
     temp_role__action   : str = "*"
     temp_role__resource : str = "*"
     temp_role__name     : str = 'osbot__temp_role_for__test_Lambda'

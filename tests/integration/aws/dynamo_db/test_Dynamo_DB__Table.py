@@ -1,6 +1,7 @@
 import pytest
 
 from osbot_aws.AWS_Config import AWS_Config
+from osbot_utils.utils.Dev import pprint
 from osbot_utils.utils.Misc import list_set, is_guid
 from tests.integration.aws.dynamo_db.TestCase__Temp_Dynamo_DB_Table import TestCase__Temp_Dynamo_DB_Table
 

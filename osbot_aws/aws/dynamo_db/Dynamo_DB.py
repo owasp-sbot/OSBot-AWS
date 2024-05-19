@@ -268,12 +268,14 @@ class Dynamo_DB:
     def table_status(self, table_name):
         return self.table_info(table_name).get('TableStatus')
 
-    def table_update(self, table_name, attribute_definitions=None, gsi_updates=None):
+    def table_update(self, table_name, attribute_definitions=None, gsi_updates=None, stream_specification=None):
         update_kwargs = dict(TableName= table_name)
         if attribute_definitions:
-            update_kwargs['AttributeDefinitions'] = attribute_definitions
+            update_kwargs['AttributeDefinitions'       ] = attribute_definitions
         if gsi_updates:
             update_kwargs['GlobalSecondaryIndexUpdates'] = gsi_updates
+        if stream_specification:
+            update_kwargs['StreamSpecification'        ] = stream_specification
 
         return self.client().update_table(**update_kwargs )
 
