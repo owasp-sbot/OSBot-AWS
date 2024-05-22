@@ -26,6 +26,8 @@ class AWS_Config:
     def lambda_role_name            (self): return os.getenv('OSBOT_LAMBDA_ROLE_NAME'          'role-osbot-lambda'                                )
     def temp_data_bucket           (self): return self.resolve_temp_data_bucket_name()
 
+    def set_aws_access_key_id       (self, value): os.environ['AWS_ACCESS_KEY_ID'               ] = value ; return value
+    def set_aws_secret_access_key   (self, value): os.environ['AWS_SECRET_ACCESS_KEY'           ] = value ; return value
     def set_aws_session_profile_name(self, value): os.environ['AWS_PROFILE_NAME'                ] = value ; return value
     def set_aws_session_region_name (self, value): os.environ['AWS_DEFAULT_REGION'              ] = value ; return value
     def set_aws_session_account_id  (self, value): os.environ['AWS_ACCOUNT_ID'                  ] = value ; return value
