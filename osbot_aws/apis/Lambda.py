@@ -425,7 +425,7 @@ class Lambda:
         return self
 
     def upload(self):
-        if self.image_uri is not None:                                                  # don't need to upload when running lambda from a container
+        if self.image_uri is None:              # only upload when not using image_uri                                              # don't need to upload when running lambda from a container
             self.s3().folder_upload(self.folder_code, self.s3_bucket, self.s3_key)
             return self.s3().file_exists(self.s3_bucket, self.s3_key)
 
