@@ -445,9 +445,15 @@ class Lambda:
 
     def update_lambda_code(self):
         self.wait_for_function_update_to_complete()
-        return self.client().update_function_code(FunctionName = self.name,
-                                                  S3Bucket     = self.s3_bucket,
-                                                  S3Key        = self.s3_key)
+        if self.image_uri:
+            update_kwargs = dict(FunctionName = self.name     ,
+                                 ImageUri     = self.image_uri)
+        else:
+            update_kwargs = dict(FunctionName = self.name     ,
+                                 S3Bucket     = self.s3_bucket,
+                                 S3Key        = self.s3_key   )
+
+        return self.client().update_function_code(**update_kwargs)
 
     def update_lambda_image_uri(self, image_uri):
         self.wait_for_function_update_to_complete()
