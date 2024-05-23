@@ -1,3 +1,5 @@
+from osbot_utils.decorators.methods.remove_return_value import remove_return_value
+
 from osbot_utils.decorators.lists.group_by import group_by
 from osbot_utils.decorators.lists.index_by import index_by
 from osbot_utils.decorators.methods.catch import catch
@@ -45,6 +47,10 @@ class Route_53:
     @index_by
     def domains(self):
         return self.client_domains().list_domains().get('Domains')
+
+    @remove_return_value('ResponseMetadata')
+    def hosted_zone(self, hosted_zone_id):
+        return self.client().get_hosted_zone(Id= hosted_zone_id)
 
     @catch
     @index_by
