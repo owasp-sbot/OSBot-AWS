@@ -11,13 +11,13 @@ class Route_53:
         self._route_53_domains = None
 
     @catch
-    def route_53(self):
+    def client(self):
         if self._route_53 is None:
             self._route_53 = Session().client('route53',region_name='us-east-1')
         return self._route_53
 
     @catch
-    def route_53_domains(self):
+    def client_domains(self):
         if self._route_53_domains is None:
             self._route_53_domains = Session().client('route53domains',region_name='us-east-1')
         return self._route_53_domains
@@ -33,22 +33,22 @@ class Route_53:
                                                                                            "HostedZoneId": alias_hosted_zone_id,
                                                                                            "EvaluateTargetHealth": False}}}]}}
 
-        return self.route_53().change_resource_record_sets(**params)
+        return self.client().change_resource_record_sets(**params)
 
 
     @catch
     @group_by
-    def record_sets(self,hosted_zone):
-        return self.route_53().list_resource_record_sets(HostedZoneId=hosted_zone).get('ResourceRecordSets')
+    def record_sets(self, hosted_zone_id):
+        return self.client().list_resource_record_sets(HostedZoneId=hosted_zone_id).get('ResourceRecordSets')
 
     @catch
     @index_by
     def domains(self):
-        return self.route_53_domains().list_domains().get('Domains')
+        return self.client_domains().list_domains().get('Domains')
 
     @catch
     @index_by
     def hosted_zones(self):
-        return self.route_53().list_hosted_zones().get('HostedZones')
+        return self.client().list_hosted_zones().get('HostedZones')
 
 

@@ -84,18 +84,18 @@ class Session(Kwargs_To_Self):                  # todo: refactor to AWS_Session 
     def session_default(self):
         return get_session()
 
-    def client(self, service_name):
-        status = self.client_boto3(service_name)
+    def client(self, service_name, region_name=None):
+        status = self.client_boto3(service_name, region_name=region_name)
         if status.get('status') == 'ok':
             client = status.get('data',{}).get('client')
             return client
         else:
             raise Session_Client_Creation_Fail(status=status)
 
-    def client_boto3(self,service_name):                   # todo: refactor with resource_boto3
+    def client_boto3(self,service_name, region_name=None):                   # todo: refactor with resource_boto3
         try:
 
-            self.region_name  = self.region_name  or self.aws_config.aws_session_region_name()        # todo: figure out better way todo do this
+            self.region_name  = region_name or self.region_name  or self.aws_config.aws_session_region_name()        # todo: figure out better way todo do this
             self.profile_name = self.profile_name or self.aws_config.aws_session_profile_name()
             if self.profile_name and self.profile_name in self.profiles():                                                  # seeing if this is a more efficient way to get the data
                 session = boto3.Session(profile_name=self.profile_name, region_name=self.region_name)      # tried to pass this params but had side effects: , botocore_session=self.boto_session()
