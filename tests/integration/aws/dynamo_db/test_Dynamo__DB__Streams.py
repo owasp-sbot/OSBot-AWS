@@ -4,6 +4,7 @@ from osbot_aws.aws.dynamo_db.Dynamo_DB__Table import Dynamo_DB__Table
 from osbot_aws.aws.dynamo_db.domains.DyDB__Table import DyDB__Table
 from osbot_aws.testing.TestCase__Dynamo_DB import TestCase__Dynamo_DB
 from osbot_utils.utils.Dev import pprint
+from osbot_utils.utils.Misc import wait_for
 
 
 class test_Dynamo__DB__Streams(TestCase__Dynamo_DB):
@@ -18,7 +19,6 @@ class test_Dynamo__DB__Streams(TestCase__Dynamo_DB):
     @classmethod
     def setUpClass(cls) -> None:
         super().setUpClass()
-        cls.dynamo_db_streams = Dynamo_DB__Streams(dynamo_db=cls.dynamo_db)
         cls.table_name        = 'temp-table-for-streams'
         cls.table_key_name         = 'an_key'
         cls.table_key_type         = 'S'
@@ -27,6 +27,8 @@ class test_Dynamo__DB__Streams(TestCase__Dynamo_DB):
                             key_type   = cls.table_key_type ,
                             table_name = cls.table_name     )
         cls.dynamo_db_table = DyDB__Table(**table_kwargs)
+
+        cls.dynamo_db_streams = Dynamo_DB__Streams(dynamo_db_table=cls.dynamo_db_table)
         #cls.dynamo_db_table.delete_table()
         #cls.dynamo_db_table.create_table()
 
@@ -44,11 +46,16 @@ class test_Dynamo__DB__Streams(TestCase__Dynamo_DB):
             assert table_info.get('TableName'           ) == self.table_name
 
 
+    # todo: finish adding streaming_support
     # def test_add_streaming_support(self):
-    #     with self.table as _:
+    #     with self.dynamo_db_table as _:
     #         pprint(_.info())
     #         stream_view_type = 'NEW_IMAGE'
     #         stream_specification = { 'StreamEnabled'  : True            ,
     #                                  'StreamViewType': stream_view_type}
-    #         result = _.update_table(stream_specification)
-    #         pprint(result)
+    #         #result = _.update_table(stream_specification)
+    #         #pprint(result)
+    #         from osbot_utils.utils.Misc import wait_for
+    #         wait_for(0.2)
+
+

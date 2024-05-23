@@ -1,4 +1,4 @@
-git+https://github.com/owasp-sbot/OSBot-Utils.git@dev
+osbot-utils
 python-dotenv
 pyyaml
 
