@@ -30,25 +30,35 @@ class test_Bedrock(TestCase__Bedrock):
         client = self.bedrock.client()
         assert type_full_name(client)                      == 'botocore.client.Bedrock'
         assert client.meta.region_name                     == 'us-east-1'
-        assert list_set(client.meta.method_to_api_mapping) == [ 'create_model_customization_job'                ,
+        assert list_set(client.meta.method_to_api_mapping) == [ 'create_evaluation_job'                         ,
+                                                                'create_guardrail'                              ,
+                                                                'create_guardrail_version'                      ,
+                                                                'create_model_customization_job'                ,
                                                                 'create_provisioned_model_throughput'           ,
                                                                 'delete_custom_model'                           ,
+                                                                'delete_guardrail'                              ,
                                                                 'delete_model_invocation_logging_configuration' ,
                                                                 'delete_provisioned_model_throughput'           ,
                                                                 'get_custom_model'                              ,
+                                                                'get_evaluation_job'                            ,
                                                                 'get_foundation_model'                          ,
+                                                                'get_guardrail'                                 ,
                                                                 'get_model_customization_job'                   ,
                                                                 'get_model_invocation_logging_configuration'    ,
                                                                 'get_provisioned_model_throughput'              ,
                                                                 'list_custom_models'                            ,
+                                                                'list_evaluation_jobs'                          ,
                                                                 'list_foundation_models'                        ,
+                                                                'list_guardrails'                               ,
                                                                 'list_model_customization_jobs'                 ,
                                                                 'list_provisioned_model_throughputs'            ,
                                                                 'list_tags_for_resource'                        ,
                                                                 'put_model_invocation_logging_configuration'    ,
+                                                                'stop_evaluation_job'                           ,
                                                                 'stop_model_customization_job'                  ,
                                                                 'tag_resource'                                  ,
                                                                 'untag_resource'                                ,
+                                                                'update_guardrail'                              ,
                                                                 'update_provisioned_model_throughput'           ]
 
 

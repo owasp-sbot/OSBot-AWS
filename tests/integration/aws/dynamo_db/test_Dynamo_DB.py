@@ -14,6 +14,7 @@ from osbot_aws.aws.dynamo_db.Dynamo_DB import Dynamo_DB
 from osbot_aws.aws.dynamo_db.Dynamo_DB__with_temp_role import Dynamo_DB__with_temp_role
 from osbot_aws.aws.dynamo_db.Dynamo_Table__Resource import Dynamo_Table__Resource
 from osbot_aws.aws.iam.IAM_Assume_Role import IAM_Assume_Role
+from osbot_aws.testing.TestCase__Boto3_Cache import TestCase__Boto3_Cache
 from osbot_utils.testing.Duration import Duration
 from osbot_utils.utils.Dev import pprint
 from osbot_utils.utils.Misc import list_set, random_string
@@ -42,9 +43,6 @@ class test_Dynamo_DB(TestCase):
     def test__init__(self):
         assert self.dynamo_db.client().meta.region_name == 'eu-west-1'   # make sure all temp tables are in this region
 
-    def test_client(self):
-        assert type_full_name(self.dynamo_db.client()) == 'botocore.client.DynamoDB'
-
     # main methods
 
     #@print_boto3_calls()
@@ -53,8 +51,8 @@ class test_Dynamo_DB(TestCase):
             assert _.documents_all(table_name=self.table_name) == []
             document_1 = { self.table_key: 'key-1', 'answer-1': Decimal(42) ,'var-1': 'goes-here'}
             document_2 = { self.table_key: 'key-2', 'answer-1': Decimal(43), 'var-2': 'and-here'}
-            _.document_add(table_name=self.table_name, key_name=self.table_key, document=document_1)
-            _.document_add(table_name=self.table_name, key_name=self.table_key, document=document_2)
+            _.document_add(table_name=self.table_name, document=document_1)
+            _.document_add(table_name=self.table_name, document=document_2)
             all_items = _.documents_all(table_name=self.table_name)
             assert all_items == [document_2, document_1]
 
@@ -71,14 +69,14 @@ class test_Dynamo_DB(TestCase):
         with self.dynamo_db as _:
             key_value = random_string(prefix='an_key')
             document = {self.table_key: key_value, 'answer-1': Decimal(42), 'var-1': 'goes-here'}
-            _.document_add(table_name=self.table_name, key_name=self.table_key, document=document)
+            _.document_add(table_name=self.table_name, document=document)
             assert _.document(table_name=self.table_name, key_name=self.table_key, key_value=key_value) == document
             update_result = _.document_update(table_name=self.table_name, key_name=self.table_key, key_value=key_value, update_data={'answer-1': Decimal(43)})
             assert update_result == {'Attributes': {'answer-1': {'N': '43'}}}
             updated_items = update_result.get('Attributes')
             document.update(updated_items)
             assert document == {self.table_key: key_value, 'answer-1': {'N': '43'}, 'var-1': 'goes-here'}
-            updated_items_deserialised = _.document_deserialise(updated_items)
+            updated_items_deserialised = _.document_deserialize(updated_items)
             assert updated_items_deserialised == {'answer-1': Decimal('43')}
             document.update(updated_items_deserialised)
             assert document == {self.table_key: key_value, 'answer-1': Decimal(43), 'var-1': 'goes-here'}
@@ -101,7 +99,7 @@ class test_Dynamo_DB(TestCase):
                         'number_set_attr': set([Decimal(1), Decimal(2), Decimal(3)]), }
 
             # Add the document
-            _.document_add(table_name=self.table_name, key_name=self.table_key, document=document)
+            _.document_add(table_name=self.table_name,  document=document)
             assert _.document(table_name=self.table_name, key_name=self.table_key, key_value='data_types_key') == document
 
             # Update some of the data types
@@ -143,38 +141,20 @@ class test_Dynamo_DB(TestCase):
             documents     = [document_1, document_2]
             responses_add = _.documents_add   (table_name=self.table_name, documents=documents)
             documents_all = _.documents_all   (table_name=self.table_name)
-            responses_del = _.documents_delete(table_name=self.table_name, key_name=self.table_key, key_values=['key-1', 'key-2'])
+            responses_del = _.documents_delete(table_name=self.table_name, key_name=self.table_key, keys_values=['key-1', 'key-2'])
 
             assert documents_all == [document_2, document_1]
-            assert responses_add == [{'UnprocessedItems': {}}]
+            assert responses_add == dict(documents=documents,responses=[{'UnprocessedItems': {}}])
             assert responses_del == [{'UnprocessedItems': {}}]
             assert _.documents_all(table_name=self.table_name) == []
 
-    def test_documents_all(self):
-        assert self.dynamo_db.documents_all(table_name=self.table_name) == []
+
 
     def test_documents_delete_all(self):
         assert self.dynamo_db.documents_delete_all(table_name=self.table_name, key_name=self.table_key) == {'delete_result': [], 'delete_status': True, 'deleted_keys': []}
 
-    def test_dynamo_streams(self):
-        assert type_full_name(self.dynamo_db.client__dynamo_streams()) == 'botocore.client.DynamoDBStreams'
-
-    def test_table_exists(self):
-        assert self.dynamo_db.table_exists(table_name=self.table_name) is True
-
-    def test_table_info(self):
-        assert self.dynamo_db.table_info(table_name='AAAA-Not-Exists') == {}
-        table_info = self.dynamo_db.table_info(table_name=self.table_name)
-        assert list_set(table_info) == ['AttributeDefinitions', 'BillingModeSummary', 'CreationDateTime', 'DeletionProtectionEnabled', 'ItemCount', 'KeySchema', 'ProvisionedThroughput', 'TableArn', 'TableId', 'TableName', 'TableSizeBytes', 'TableStatus']
-
-    def test_table_status(self):
-        assert self.dynamo_db.table_status(table_name=self.table_name) == 'ACTIVE'
 
     #@print_boto3_calls()
-    def test_tables(self):
-        tables = self.dynamo_db.tables()
-        assert type(tables) == list
-        assert self.table_name in tables
 
 
 # @unittest.skip('this is not working as expected (namely the `test_streams` part)')

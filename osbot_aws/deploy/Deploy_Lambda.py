@@ -18,8 +18,13 @@ class Deploy_Lambda:
         load_dotenv()
         self.osbot_setup          = OSBot_Setup()
         self.aws_config           = self.osbot_setup.aws_config
-        self.handler              = handler
-        self.module_name          = handler.__module__
+        if type(handler) is str:
+            self.handler          = None
+            self.module_name      = handler
+        else:
+            self.handler          = handler
+            self.module_name      = handler.__module__
+
         self.stage                = stage
         self.role_arn             = Temp_Aws_Roles().for_lambda_invocation__role_arn()
         # self.layers               = []
@@ -63,6 +68,9 @@ class Deploy_Lambda:
     def invoke_async(self, params=None):
         return self.lambda_function().invoke_async(params)
 
+    def invoke_return_logs(self, params=None):
+        return self.lambda_function().invoke_return_logs(params)
+
     def files(self):
         return self.package.get_files()
 
@@ -87,9 +95,10 @@ class Deploy_Lambda:
         return Shell_Client(self.lambda_function())
 
     def update(self, wait_for_update=True):
-        self.add_function_source_code()
-        if len(self.package.get_files()) == 0:                       # todo: add this check to the package.update()  method
-            raise Exception("There are not files to deploy")
+        if self.uses_container_image() is False:
+            self.add_function_source_code()
+            if len(self.package.get_files()) == 0:                       # todo: add this check to the package.update()  method
+                raise Exception("There are not files to deploy")
         update_result= self.package.update()
         if update_result.get('status') == 'ok':
             if wait_for_update:
@@ -121,6 +130,8 @@ class Deploy_Lambda:
     def set_env_variables(self, env_variables):
         self.package.set_env_variables(env_variables)
 
+    def uses_container_image(self):
+        return self.package.uses_image_uri()
 
 # legacy methods
 Deploy_Lambda.lambda_invoke = Deploy_Lambda.invoke

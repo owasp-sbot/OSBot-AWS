@@ -180,6 +180,9 @@ class Lambda_Package:
         Files.copy(file_path,target_file)
         return  { 'status': 'ok', 'file_path': file_path, 'target_file': target_file }
 
+    def uses_image_uri(self):
+        return self.aws_lambda.image_uri is not None
+
     def update_with_root_folder(self,delete_before=False):
         if delete_before:
             self.delete()

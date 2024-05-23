@@ -72,8 +72,9 @@ class Bedrock__Cache(Sqlite__Cache__Requests):
 
     def model_invoke(self, bedrock, model_id, body):
         target           = bedrock.model_invoke
+        target_args      = []
         target_kwargs    = {'model_id': model_id, 'body': body}
-        return self.invoke_with_cache(target, target_kwargs)
+        return self.invoke_with_cache(target, target_args, target_kwargs)
 
 
     def model_invoke_stream(self,bedrock, model_id, body):
@@ -85,17 +86,19 @@ class Bedrock__Cache(Sqlite__Cache__Requests):
             return chunks
 
         target           = capture_chunks
+        target_args      = []
         target_kwargs    = {}
         request_data     = dict(model_id=model_id, body=body, mode='invoke_stream')
-        return self.invoke_with_cache(target, target_kwargs, request_data)
+        return self.invoke_with_cache(target, target_args, target_kwargs, request_data)
 
 
     @index_by
     @group_by
     def models(self, bedrock):                          # todo refactor out the caching login with this and model_invoke methods
         target           = bedrock.models
+        target_args      = []
         target_kwargs    = {}
         request_data     = dict(method='models')
-        return self.invoke_with_cache(target, target_kwargs, request_data)
+        return self.invoke_with_cache(target, target_args, target_kwargs, request_data)
 
 

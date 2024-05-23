@@ -1,8 +1,6 @@
-import json
-import unittest
 from unittest import TestCase
 
-from osbot_aws.aws.iam.STS import STS
+from osbot_aws.aws.sts.STS import STS
 from osbot_utils.utils import Misc
 
 from osbot_aws.apis.Secrets import Secrets

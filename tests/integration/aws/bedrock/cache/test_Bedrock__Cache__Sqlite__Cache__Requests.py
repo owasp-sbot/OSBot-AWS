@@ -19,12 +19,12 @@ class test_Bedrock__Cache__Sqlite__Cache__Requests(TestCase):
         cls.temp_db_path                = temp_file(extension='sqlite')
         cls.bedrock_cache               = Bedrock__Cache(db_path = cls.temp_db_path)            # the db_path to the tmp file path
         cls.bedrock_cache.add_timestamp = False                                                 # disabling timestamp since it complicates the test data verification below
-        assert parent_folder(cls.bedrock_cache.sqlite_bedrock.db_path) == current_temp_folder()
+        assert parent_folder(cls.bedrock_cache.sqlite_requests.db_path) == current_temp_folder()
         assert file_exists  (cls.temp_db_path)                         is True
 
     @classmethod
     def tearDownClass(cls):    #file_delete(cls.temp_db_path)
-        cls.bedrock_cache.sqlite_bedrock.delete()
+        cls.bedrock_cache.sqlite_requests.delete()
         assert file_not_exists(cls.temp_db_path) is True
 
     def tearDown(self):
@@ -41,7 +41,7 @@ class test_Bedrock__Cache__Sqlite__Cache__Requests(TestCase):
         self.bedrock_cache.model_invoke(**kwargs)
 
     def test_cache_add(self):
-        self.bedrock_cache.sqlite_bedrock.table_requests__reset()
+        self.bedrock_cache.sqlite_requests.table_requests__reset()
         request_data         = {'the':'request_data', 'random_value' : random_string()}
         request_data_json    = json_dump(request_data)
         request_data_sha256  = str_sha256(request_data_json)
@@ -166,7 +166,7 @@ class test_Bedrock__Cache__Sqlite__Cache__Requests(TestCase):
 
 
     def test_setup(self):
-        with self.bedrock_cache.sqlite_bedrock as _:
+        with self.bedrock_cache.sqlite_requests as _:
             assert type(_)   is Sqlite__DB__Requests
             assert _.db_path != Sqlite__DB__Requests().path_local_db()
             assert _.db_path == self.temp_db_path

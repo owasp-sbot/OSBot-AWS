@@ -1,14 +1,11 @@
 import uuid
-from functools import cache
-
-from   boto3    import resource
-from boto3.dynamodb.types import TypeDeserializer, TypeSerializer
-from osbot_utils.utils.Status import status_ok
-
-from osbot_aws.apis.Session import Session
+from functools                                          import cache
+from boto3.dynamodb.types                               import TypeDeserializer, TypeSerializer
+from osbot_aws.apis.Session                             import Session
 from osbot_utils.decorators.methods.remove_return_value import remove_return_value
 
-DEFAULT_DOCUMENTS_MAX_ITEMS_TO_FETCH = 2000
+DEFAULT_DOCUMENTS_MAX_ITEMS_TO_FETCH = 100000
+DEFAULT_DOCUMENTS_FETCH_BATCH_SIZE   = 20000
 
 class Dynamo_DB:
 
@@ -30,21 +27,20 @@ class Dynamo_DB:
         key    = {key_name: {'S': key_value}}
         result = self.client().get_item(TableName=table_name, Key=key)
         item   = result.get('Item')
-        return self.document_deserialise(item)
+        return self.document_deserialize(item)
 
-    def document_add(self, table_name, key_name, document):
-        document_as_item = self.document_serialise(document)
-        key_value        = document.get(key_name)
+    def document_add(self, table_name, document):
+        document_as_item = self.document_serialize(document)
         self.client().put_item(TableName=table_name, Item=document_as_item)
-        return dict(document=document, document_as_item=document_as_item, key_value=key_value)
-
+        result = dict(document=document, document_as_item=document_as_item)
+        return result
 
     def document_delete(self, table_name, key_name, key_value):
         key = { key_name: {'S': key_value} }
-        self.client().delete_item( TableName=table_name, Key=key )
-        return True
+        self.client().delete_item( TableName=table_name, Key=key ) # note: there is no clue from DynamoDB if it worked or not
+        return True                                                #       so unless there was an exception thrown, assume it did
 
-    def document_deserialise(self, item):
+    def document_deserialize(self, item):
         if item:
             deserializer = TypeDeserializer()
             return {k: deserializer.deserialize(v) for k, v in item.items()}
@@ -90,7 +86,7 @@ class Dynamo_DB:
         )
         return response
 
-    def document_serialise(self, document):
+    def document_serialize(self, document):
         serializer = TypeSerializer()
         return {k: serializer.serialize(v) for k, v in document.items()}
 
@@ -99,20 +95,40 @@ class Dynamo_DB:
         responses = []
 
         for chunk in chunks:
-            request_items = { table_name: [ {'PutRequest': {'Item': self.document_serialise(document)}}
+            request_items = { table_name: [ {'PutRequest': {'Item': self.document_serialize(document)}}
                                               for document in chunk ] }
             response = self.client().batch_write_item(RequestItems=request_items)
             del response['ResponseMetadata']
             responses.append(response)
-        return responses        # Contains unprocessed items
+        result = dict(documents=documents, responses=responses)
+        return result                                               # Contains unprocessed items
 
-    def documents_all(self, table_name, limit=100):
-        """
-        Retrieves all items from the DynamoDB table with pagination and optional limit.
-        :param table_name: Name of the DynamoDB table.
-        :param limit: Maximum number of items to retrieve in a single scan operation.
-        :return: A list of dictionaries, each representing an item in the table.
-        """
+    def documents(self, table_name, key_name, keys_values):
+        keys = []
+        for key_value in keys_values:
+            key = {key_name: {'S': key_value}}
+            keys.append(key)
+
+        chunks = [keys[x:x + 100] for x in range(0, len(keys), 100)]  # Split the items list into chunks of 100 (DynamoDB batch_get_item limit)
+
+        all_responses        = []
+        all_responses_raw    = []
+        all_unprocessed_keys = []
+        for chunk in chunks:
+            kwargs           = {'RequestItems': {table_name: {'Keys': chunk}}}
+            result           = self.client().batch_get_item(**kwargs)
+            responses        = result.get('Responses')
+            unprocessed_keys = result.get('UnprocessedKeys')
+            all_responses_raw   .extend(responses.get(table_name))
+            all_unprocessed_keys.append(unprocessed_keys)
+        for response_raw in all_responses_raw:
+            response = self.document_deserialize(response_raw)
+            all_responses.append(response)
+
+        return dict(all_responses        = all_responses        ,
+                    all_unprocessed_keys = all_unprocessed_keys )
+
+    def documents_all(self, table_name, batch_size=DEFAULT_DOCUMENTS_FETCH_BATCH_SIZE, max_fetch=DEFAULT_DOCUMENTS_MAX_ITEMS_TO_FETCH):
         #todo: figure out why this is only returning 64 records at the time
         items = []
         last_evaluated_key = None
@@ -120,7 +136,7 @@ class Dynamo_DB:
         while True:
             scan_kwargs = {
                 'TableName': table_name,
-                'Limit'    : limit      # Specify the limit here
+                'Limit'    : batch_size   # Specify the limit here
             }
             if last_evaluated_key:
                 scan_kwargs['ExclusiveStartKey'] = last_evaluated_key
@@ -131,24 +147,24 @@ class Dynamo_DB:
 
             if not last_evaluated_key:
                 break
-            if len(items) > DEFAULT_DOCUMENTS_MAX_ITEMS_TO_FETCH:
+            if len(items) > max_fetch:
                 break
-            #print('--', len(items), 'items')
 
-        return [self.document_deserialise(item) for item in items]
+        return [self.document_deserialize(item) for item in items]
 
     # todo:  figure out why code below returns only 64
-    # def documents_count(self, table_name):
-    #     """
-    #     Counts the number of items in the DynamoDB table.
-    #     :return: The total count of items in the table.
-    #     """
-    #     response = self.client().scan(TableName=table_name, Select='COUNT')
-    #     return response.get('Count', 0)
+    def documents_count(self, table_name):
+        count_total  = 0
+        response     = self.client().scan(TableName=table_name, Select='COUNT')
+        count_total += response.get('Count', 0)
+        while 'LastEvaluatedKey' in response:
+            response = self.client().scan(TableName=table_name, Select='COUNT', ExclusiveStartKey=response['LastEvaluatedKey'])
+            count_total += response.get('Count', 0)
+        return count_total
 
-    def documents_delete(self, table_name, key_name, key_values):
+    def documents_delete(self, table_name, key_name, keys_values):
 
-        keys = [{key_name: {'S': key_value}} for key_value in key_values]
+        keys = [{key_name: {'S': key_value}} for key_value in keys_values]
 
         chunks = [keys[x:x+25] for x in range(0, len(keys), 25)]        # Split the keys list into chunks of 25 (DynamoDB batch write limit)
         responses = []
@@ -163,13 +179,32 @@ class Dynamo_DB:
 
     def documents_delete_all(self, table_name, key_name):
         all_keys      = self.documents_keys  (table_name=table_name, key_name=key_name)
-        delete_result = self.documents_delete(table_name=table_name, key_name=key_name, key_values=all_keys)
+        delete_result = self.documents_delete(table_name=table_name, key_name=key_name, keys_values=all_keys)
         delete_status = True
         for response in delete_result:
             if response.get('UnprocessedItems'):
                 delete_status = False
                 break
         return dict(deleted_keys=all_keys, delete_result=delete_result, delete_status=delete_status)
+
+    def documents_ids(self, table_name, key_name, batch_size=DEFAULT_DOCUMENTS_FETCH_BATCH_SIZE, max_fetch=DEFAULT_DOCUMENTS_MAX_ITEMS_TO_FETCH):
+
+        scan_kwargs = dict(ProjectionExpression = key_name  ,
+                           Limit                = batch_size,
+                           TableName            = table_name)
+        response = self.client().scan(**scan_kwargs)
+
+        all_items = []
+        all_items.extend(response['Items'])
+        while 'LastEvaluatedKey' in response and len(all_items) < max_fetch:
+            scan_kwargs['ExclusiveStartKey'] = response.get('LastEvaluatedKey')
+            response = self.client().scan(**scan_kwargs)
+            all_items.extend(response['Items'])
+
+        ids = []
+        for item in all_items:
+            ids.append(item.get(key_name).get('S'))
+        return ids
 
     def documents_keys(self, table_name, key_name, key_type='S'):
         """
@@ -202,17 +237,23 @@ class Dynamo_DB:
             kwargs['StreamSpecification'] = {'StreamEnabled': True, 'StreamViewType': 'NEW_IMAGE' }
         self.client().create_table(**kwargs)
 
-        self.client().get_waiter('table_exists') \
-            .wait(TableName=table_name, WaiterConfig={'Delay': 1, 'MaxAttempts': 50})
+        self.wait_for(waiter_name='table_exists', table_name=table_name)
         return True
+
+    def wait_for(self, waiter_name, table_name, delay=1, max_attempts= 50):
+        kwargs = dict(TableName    = table_name,
+                      WaiterConfig = dict(Delay=delay, MaxAttempts=max_attempts))
+        self.client().get_waiter(waiter_name).wait(**kwargs)
+
+    def wait_for_table_exists(self, table_name):
+        self.wait_for(waiter_name='table_exists', table_name=table_name)
 
     def table_delete(self, table_name, wait_for_deletion=True):
         if self.table_exists(table_name) is False:
             return False
         self.client().delete_table(TableName = table_name)
         if wait_for_deletion:
-            self.client().get_waiter('table_not_exists')      \
-                       .wait(TableName=table_name, WaiterConfig={'Delay': 5, 'MaxAttempts':20 })
+            self.wait_for(waiter_name='table_not_exists', table_name=table_name)
         return True
 
     def table_exists(self, table_name):
@@ -226,6 +267,17 @@ class Dynamo_DB:
 
     def table_status(self, table_name):
         return self.table_info(table_name).get('TableStatus')
+
+    def table_update(self, table_name, attribute_definitions=None, gsi_updates=None, stream_specification=None):
+        update_kwargs = dict(TableName= table_name)
+        if attribute_definitions:
+            update_kwargs['AttributeDefinitions'       ] = attribute_definitions
+        if gsi_updates:
+            update_kwargs['GlobalSecondaryIndexUpdates'] = gsi_updates
+        if stream_specification:
+            update_kwargs['StreamSpecification'        ] = stream_specification
+
+        return self.client().update_table(**update_kwargs )
 
     def tables(self):
         result = self.client().list_tables() or {}

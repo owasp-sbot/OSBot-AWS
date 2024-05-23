@@ -1,0 +1,26 @@
+[tool.poetry]
+name        = "osbot_aws"
+version     = "v2.5.0"
+description = "OWASP Security Bot - AWS"
+authors     = ["Dinis Cruz <dinis.cruz@owasp.org>"]
+license     = "MIT"
+readme      = "README.md"
+homepage    = "https://github.com/owasp-sbot/OSBot-AWS"
+repository  = "https://github.com/owasp-sbot/OSBot-AWS"
+
+[tool.poetry.dependencies]
+python          = "^3.11"
+python-dotenv   = "*"
+pyyaml          = "*"
+boto3           = "*"
+osbot-utils     = "*"
+
+[tool.poetry.dev-dependencies]
+pytest          = "*"
+pytest-cov      = "*"
+coveralls       = "*"
+setuptools      = "*"
+
+[build-system]
+requires        = ["poetry-core>=1.0.0"]
+build-backend   = "poetry.core.masonry.api"

@@ -6,7 +6,7 @@ from osbot_aws.apis.Lambda_Layer import Lambda_Layer
 
 from osbot_utils.utils.Process  import Process
 from osbot_utils.utils.Files import current_temp_folder, path_combine, folder_create, folder_sub_folders, folders_names, \
-    folder_exists, folder_delete_recursively
+    folder_exists, folder_delete_recursively, file_exists
 
 from osbot_aws.helpers.Lambda_Layers_Local import Lambda_Layers_Local
 
@@ -122,7 +122,8 @@ class Lambda_Layer_Create:
         return list_set(self.installed_packages())
 
     def installed_packages_reset(self):
-        json_save_file({}, self.path_installed_packages())
+        if file_exists(self.path_installed_packages()):
+            json_save_file({}, self.path_installed_packages())
         self.delete_local_layer_folder()
         self.layer_folder_create()
         return self

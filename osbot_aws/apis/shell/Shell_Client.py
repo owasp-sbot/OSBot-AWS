@@ -13,11 +13,14 @@ class Shell_Client:
     def _lambda_auth_key(self):
         return Lambda_Shell().get_lambda_shell_auth()
 
-    def _invoke(self, method_name, method_kwargs=None):
+    def _invoke(self, method_name, method_kwargs=None,return_logs=False):
         event = {'lambda_shell': {'method_name': method_name, 'method_kwargs': method_kwargs}}
         if self.aws_lambda:
             event['lambda_shell']['auth_key'] = self._lambda_auth_key()
-            return self.aws_lambda.invoke(event)
+            if return_logs:
+                return self.aws_lambda.invoke_return_logs(event)
+            else:
+                return self.aws_lambda.invoke(event)
         else:
             return Shell_Server().invoke(event)
 
@@ -35,8 +38,11 @@ class Shell_Client:
             return f'Error: {result.get("errorMessage")}'
         return result
 
-    def exec_function(self, function):
-        return self.python_exec_function(function)
+    def exec_function(self, function, return_logs=False):
+        return self.python_exec_function(function,return_logs=return_logs)
+
+    def exec_function_return_logs(self, function):
+        return self.python_exec_function(function,return_logs=True)
 
 
 
@@ -49,14 +55,14 @@ class Shell_Client:
             self.aws_lambda.set_s3_key   (f'{AWS_Config().lambda_s3_folder_lambdas()}/{self.aws_lambda.original_name}.zip')  # which are needed
         return self.aws_lambda.update_lambda_code()                                                               # to trigger the update (which will reset the lambda and force a cold start on next lambda invocation)
 
-    def python_exec(self, code):
-        return self._invoke('python_exec', {'code' : code})
+    def python_exec(self, code, return_logs=False):
+        return self._invoke('python_exec', {'code' : code}, return_logs=return_logs)
 
-    def python_exec_function(self, function):
+    def python_exec_function(self, function, return_logs=False):
         function_name = function.__name__
         function_code = function_source_code(function)
         exec_code     = f"{function_code}\nresult= {function_name}()"
-        return self.python_exec(exec_code)
+        return self.python_exec(exec_code, return_logs=return_logs)
 
     # command methods
 

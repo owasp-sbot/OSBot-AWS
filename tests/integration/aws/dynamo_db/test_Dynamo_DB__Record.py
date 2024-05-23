@@ -1,4 +1,5 @@
 from osbot_aws.aws.dynamo_db.Dynamo_DB__Record import Dynamo_DB__Record, Dynamo_DB__Record__Metadata
+from osbot_utils.utils.Dev import pprint
 from osbot_utils.utils.Misc import str_to_bytes
 from tests.integration.aws.dynamo_db.TestCase__Temp_Dynamo_DB_Table import TestCase__Temp_Dynamo_DB_Table
 
@@ -26,8 +27,8 @@ class test_Dynamo_DB__Record(TestCase__Temp_Dynamo_DB_Table):
     def test_add_record(self):
         with self.table as _:
             result    = _.add_record(self.db_record)
-            key_value = result.get('data').get('key_value')
             document  = result.get('data').get('document')
+            key_value = document.get(self.key_name)
             assert result.get('status') == 'ok'
             assert document             == _.document(key_value).get('data')
             new_record = Dynamo_DB__Record().deserialize_from_dict(document)

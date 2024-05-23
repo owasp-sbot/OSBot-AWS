@@ -3,7 +3,7 @@ from time import sleep
 from unittest.case import skip
 
 from osbot_aws.aws.iam.IAM_Role_With_Policy import IAM_Role_With_Policy
-from osbot_aws.aws.iam.STS import STS
+from osbot_aws.aws.sts.STS import STS
 from osbot_aws.helpers.Test_Helper import Test_Helper
 from osbot_aws.apis.API_Gateway import API_Gateway
 from osbot_aws.helpers.Rest_API import Rest_API

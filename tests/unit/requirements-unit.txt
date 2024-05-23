@@ -1,6 +1,7 @@
 # for OWSBot-Utils
 git+https://github.com/owasp-sbot/OSBot-Utils.git@dev
 python-dotenv
+pyyaml
 
 # for OWSBot-AWS
 boto3

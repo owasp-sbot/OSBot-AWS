@@ -21,6 +21,6 @@ class test_Bedrock_Cache__Html(TestCase):
         assert self.bedrock_cache.row_elements     == []
 
         with self.bedrock_cache.cache as _:
-            sqlite_bedrock = _.sqlite_bedrock
+            sqlite_requests = _.sqlite_requests
             assert type(_)                           is Bedrock__Cache
-            assert file_name(sqlite_bedrock.db_path) == _.db_name
+            assert file_name(sqlite_requests.db_path) == _.db_name

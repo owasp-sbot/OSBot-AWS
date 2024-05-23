@@ -116,7 +116,6 @@ class Lambda:
 
     def create(self):
         kwargs = self.create_kwargs()
-
         kwargs_status = self.validate_create_kwargs(kwargs)
         if kwargs_status.get('status') != 'ok':
             return kwargs_status
@@ -173,10 +172,9 @@ class Lambda:
     def event_sources(self):
         return self.client().list_event_source_mappings().get('EventSourceMappings')
 
-    def exists(self):
+    def exists(self, function_name=None):
         try:
-            self.info()
-            return True
+            return self.info(function_name or self.name) is not None
         except:
             return False
 
@@ -284,8 +282,8 @@ class Lambda:
     #   ]
     # }
     @remove_return_value('ResponseMetadata')
-    def info(self):
-        return self.client().get_function(FunctionName=self.name)
+    def info(self, function_name=None):
+        return self.client().get_function(FunctionName=function_name or self.name)
 
     def invoke_raw(self, payload = None, client_context=None, log_type='None', qualifier=None):
         try:
@@ -427,8 +425,9 @@ class Lambda:
         return self
 
     def upload(self):
-        self.s3().folder_upload(self.folder_code, self.s3_bucket, self.s3_key)
-        return self.s3().file_exists(self.s3_bucket, self.s3_key)
+        if self.image_uri is None:              # only upload when not using image_uri                                              # don't need to upload when running lambda from a container
+            self.s3().folder_upload(self.folder_code, self.s3_bucket, self.s3_key)
+            return self.s3().file_exists(self.s3_bucket, self.s3_key)
 
     def update(self):
         if self.exists() is False:
@@ -446,9 +445,15 @@ class Lambda:
 
     def update_lambda_code(self):
         self.wait_for_function_update_to_complete()
-        return self.client().update_function_code(FunctionName = self.name,
-                                                  S3Bucket     = self.s3_bucket,
-                                                  S3Key        = self.s3_key)
+        if self.image_uri:
+            update_kwargs = dict(FunctionName = self.name     ,
+                                 ImageUri     = self.image_uri)
+        else:
+            update_kwargs = dict(FunctionName = self.name     ,
+                                 S3Bucket     = self.s3_bucket,
+                                 S3Key        = self.s3_key   )
+
+        return self.client().update_function_code(**update_kwargs)
 
     def update_lambda_image_uri(self, image_uri):
         self.wait_for_function_update_to_complete()
@@ -476,7 +481,7 @@ class Lambda:
 
         if len(name) > 64:
             return status_error(message="lambda functions name cannot be bigger than 64 chars", data=self.name)
-        if Lambda(name=name).exists():
+        if self.exists(function_name=name):
             return status_warning(message=f'lambda function already exists: {name}')
 
         if image_uri is None:

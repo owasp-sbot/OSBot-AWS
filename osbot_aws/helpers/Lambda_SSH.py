@@ -1,9 +1,6 @@
-from osbot_aws.aws.iam.STS import STS
+from osbot_aws.aws.sts.STS import STS
 from osbot_aws.deploy.Deploy_Lambda import Deploy_Lambda
-from osbot_utils.utils.Json import json_parse
-from osbot_utils.utils.Misc import split_lines
 
-from osbot_aws.apis.Lambda import Lambda
 from osbot_utils.utils.Files import file_name, file_contents
 
 from osbot_aws.lambdas.server_ssh import run

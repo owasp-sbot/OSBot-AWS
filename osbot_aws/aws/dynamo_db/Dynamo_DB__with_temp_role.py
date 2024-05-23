@@ -27,3 +27,7 @@ class Dynamo_DB__with_temp_role(Dynamo_DB):
         iam_assume_role.create_role(recreate=role_recreate)
         #iam_assume_role.credentials_reset()
         return iam_assume_role.boto3_client(service_name=service)
+
+    def temp_role__iam_reset_credentials(self):
+        iam_assume_role = IAM_Assume_Role(role_name=self.temp_role__name)
+        return iam_assume_role.credentials_reset()

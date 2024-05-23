@@ -1,8 +1,8 @@
 from unittest import TestCase
 
 from osbot_aws.aws.iam.IAM import IAM
-from osbot_aws.aws.iam.STS import STS
-from osbot_utils.utils.Files import folder_files, files_list, path_combine, file_exists
+from osbot_aws.aws.sts.STS import STS
+from osbot_utils.utils.Files import files_list, path_combine, file_exists
 from osbot_aws.deploy.Deploy_Lambda import Deploy_Lambda
 from osbot_aws.lambdas.dev.hello_world import run
 from osbot_utils.utils.Misc import random_string, list_set

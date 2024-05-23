@@ -7,7 +7,7 @@ from osbot_utils.decorators.methods.cache import cache
 from osbot_utils.helpers.Local_Cache import Local_Cache
 from osbot_aws.aws.iam.IAM import IAM
 from osbot_aws.aws.iam.IAM_Role import IAM_Role
-from osbot_aws.aws.iam.STS import STS
+from osbot_aws.aws.sts.STS import STS
 from osbot_utils.utils.Misc import wait_for
 from osbot_utils.utils.Str import safe_str
 
@@ -53,8 +53,8 @@ class IAM_Assume_Role:
     def assume_policy(self):
         return self.setup_data().get('assume_policy')
 
-    def boto3_client(self, service_name='iam', region_name=None):
-        credentials = self.credentials()
+    def boto3_client(self, service_name='iam', region_name=None, retries=20):
+        credentials = self.credentials(retries=retries)
         kwargs = dict(service_name          = service_name                  ,
                       aws_access_key_id     = credentials['AccessKeyId'    ],
                       aws_secret_access_key = credentials['SecretAccessKey'],
@@ -63,8 +63,8 @@ class IAM_Assume_Role:
             kwargs['region_name'] = region_name
         return boto3.client(**kwargs)
 
-    def create_credentials(self):
-        self.credentials_raw()
+    def create_credentials(self, retries=20):
+        self.credentials_raw(retries=retries)
         return self
 
     def create_policy_document(self, service, action, resource, effect='Allow'):
@@ -91,11 +91,11 @@ class IAM_Assume_Role:
             self.create_policies()
             self.create_credentials()
 
-    def credentials(self, reset=False):
+    def credentials(self, reset=False, retries=20):
         if reset or self.credentials_expired():
             self.credentials_reset()
 
-        credentials_raw = self.credentials_raw()
+        credentials_raw = self.credentials_raw(retries=retries)
         if credentials_raw:
             credentials_data = credentials_raw.get('Credentials', {})
             return { 'AccessKeyId'    : credentials_data.get('AccessKeyId'    ),

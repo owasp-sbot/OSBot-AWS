@@ -1,16 +1,27 @@
-import pytest
+from os import environ
 from unittest               import TestCase
-from osbot_aws.aws.iam.STS  import STS
+
+from osbot_aws.aws.boto3.View_Boto3_Rest_Calls import print_boto3_calls
+from osbot_aws.aws.sts.STS  import STS
+from osbot_aws.testing.TestCase__Boto3_Cache import TestCase__Boto3_Cache
+from osbot_utils.utils.Dev import pprint
 
 
-@pytest.mark.skip('Wire up tests')
-class test_STS(TestCase):
+class test_STS(TestCase__Boto3_Cache):
 
     def setUp(self) -> None:
         self.sts = STS()
 
     def test_check_current_session_credentials(self):
         self.sts.check_current_session_credentials()
+
+
+    def test_current_account_id(self):
+        current_account_id = self.sts.current_account_id()
+        env_account_id     = environ.get('AWS_ACCOUNT_ID')
+        assert current_account_id
+        if env_account_id:
+            assert current_account_id == env_account_id
 
     #@pytest.mark.usefixtures('fixtures')                                   # todo add test that goes around the current caching that occurs in self.sts.sts()
     #def test_check_current_session_credentials__bad_credentials(self):

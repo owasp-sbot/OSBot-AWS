@@ -9,21 +9,23 @@ from osbot_aws.aws.iam.IAM                  import IAM
 class ECS_Fargate_Task:
 
     def __init__(self, cluster_name, image_name, subnet_id=None, security_group_id=None):
-        self.ecs                = ECS()
-        self.ec2                = EC2()
-        self.cloud_watch_logs   = Cloud_Watch_Logs()
-        self.aws_config         = AWS_Config()                                         # load config from env variables
-        self.account_id         = self.cloud_watch_logs.account_id
-        self.region_name        = self.cloud_watch_logs.region_name
-        self.cluster_name       = cluster_name
-        self.image_name         = image_name
-        self.subnet_id          = subnet_id
-        self.security_group_id  = security_group_id
-        self.task_family        = f"family__{self.image_name}"
-        self.task_name          = f'task__{self.cluster_name}'
+        self.ecs                   = ECS()
+        self.ec2                   = EC2()
+        self.cloud_watch_logs      = Cloud_Watch_Logs()
+        self.aws_config            = AWS_Config()                                         # load config from env variables
+        self.account_id            = self.cloud_watch_logs.account_id
+        self.region_name           = self.cloud_watch_logs.region_name
+        self.cluster_name          = cluster_name
+        self.image_name            = image_name
+        self.subnet_id             = subnet_id
+        self.security_group_id     = security_group_id
+        self.task_family           = f"family__{self.image_name}"
+        self.task_name             = f'task__{self.cluster_name}'
+        self.launch_type           = 'FARGATE'
         #self.iam_execution_role = f'fargate-execution-role_{self.region_name}_{self.task_family}'
         #self.iam_task_role      = f'fargate-task-role_{self.region_name}_{self.task_family}'
-        self.task_arn           = None
+        self.task_arn              = None
+        self.constraint_expression = None
 
     # helper methods
     def cluster_arn(self):
@@ -76,7 +78,9 @@ class ECS_Fargate_Task:
         task_config = { "cluster_name"          : self.cluster_name                                                          ,
                         "security_group_id"     : self.security_group_id or self.ec2.security_group_default().get('GroupId' ),
                         "subnet_id"             : self.subnet_id         or self.ec2.subnet_default_for_az ().get('SubnetId'),
-                        "task_definition_arn"   : self.task_definition_arn()                                                 }
+                        "task_definition_arn"   : self.task_definition_arn()                                                 ,
+                        "launch_type"           : self.launch_type                                                           ,
+                        'constraint_expression' : self.constraint_expression                                                 }
 
         return task_config
 
