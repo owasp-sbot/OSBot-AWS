@@ -13,8 +13,8 @@ jobs:
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - name: Increment Tag (for MAIN)
+      - uses: actions/checkout@v4
+      - name: Increment Tag - Main
         uses: ./.github/actions/increment-tag-main
         with:
           package_name: ${{ secrets.PACKAGE_NAME          }}

@@ -59,10 +59,16 @@ runs:
       run: |
         echo $NEW_TAG > ./${{ inputs.package_name }}/version
 
+    - name: Update Version in pyproject.toml
+      shell: bash
+      run: |
+        #sed -i "s/version = \".*\"/version = \"$NEW_TAG\"/" pyproject.toml
+        sed -i "s/\(version[[:space:]]*=[[:space:]]*\)\".*\"/\1\"$NEW_TAG\"/" pyproject.toml
+
     - name: Commit and push changes
       shell: bash
       run: |
-        git add README.md ./${{ inputs.package_name }}/version
+        git add README.md ./${{ inputs.package_name }}/version pyproject.toml
         git commit -m "Update release badge and version file"
         git push origin main     # Push to the 'main' branch
 
