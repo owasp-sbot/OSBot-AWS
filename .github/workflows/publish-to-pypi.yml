@@ -1,0 +1,44 @@
+name: Publish to PyPI
+
+on:
+  workflow_dispatch:
+  workflow_run:
+    workflows: ["Increment Tag - Main branch"]
+    types:
+      - completed
+
+permissions:
+  id-token: write
+
+jobs:
+  build-and-publish:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    name: Build distribution 📦
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.x"
+
+    - name: Install Poetry
+      run: |
+        curl -sSL https://install.python-poetry.org | python3 -
+        export PATH="$HOME/.local/bin:$PATH"
+
+    - name: Install dependencies
+      run: poetry install
+
+    - name: Build the package
+      run: poetry build
+
+    - name: Publish distribution 📦 to PyPI
+      uses: pypa/gh-action-pypi-publish@release/v1
+      with:
+        password: ${{ secrets.PYPI_API_TOKEN }}
+      env:
+        TWINE_USERNAME: __token__
+        TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
