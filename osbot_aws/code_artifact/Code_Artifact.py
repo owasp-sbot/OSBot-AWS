@@ -4,6 +4,7 @@ from osbot_utils.base_classes.Kwargs_To_Self import Kwargs_To_Self
 from osbot_utils.decorators.methods.cache_on_self import cache_on_self
 from osbot_utils.decorators.methods.remove_return_value import remove_return_value
 from osbot_utils.utils.Files import stream_to_bytes
+from osbot_utils.utils.Zip import gz_tar_bytes_file_list
 
 
 class Code_Artifact(Kwargs_To_Self):
@@ -12,6 +13,16 @@ class Code_Artifact(Kwargs_To_Self):
     @cache_on_self
     def client(self):
         return Session().client('codeartifact', region_name=self.region_name)
+
+    def asset_name__gz(self, package_name, version):
+        package_name = package_name.replace('-', '_')           # can't have - in asset_name
+        asset_name   = f'{package_name}-{version}.tar.gz'
+        return asset_name
+
+    def asset_name__whl(self, package_name, version):
+        package_name = package_name.replace('-', '_')
+        asset_name   = f'{package_name}-{version}-py3-none-any.whl'
+        return asset_name
 
     def authorization_token(self, domain):
         return self.client().get_authorization_token(domain=domain).get('authorizationToken')
@@ -47,6 +58,19 @@ class Code_Artifact(Kwargs_To_Self):
         asset       = response.get('asset')
         asset_bytes = stream_to_bytes(asset)
         return asset_bytes
+
+    def package_version_asset__files(self, domain, repository,package_name, package_version):
+        kwargs =dict(domain         = domain           ,
+                     repository     = repository       , #'pypi-store'     ,
+                     format         = 'pypi'           ,
+                     package        = package_name     ,
+                     packageVersion = package_version  )
+        asset_name               = self.asset_name__gz(package_name, package_version)
+        kwargs['packageVersion'] = package_version
+        kwargs['asset'         ] = asset_name
+        asset_bytes              = self.package_version_asset__bytes(**kwargs)
+        asset_files              = gz_tar_bytes_file_list(asset_bytes)
+        return asset_files
 
     def package_version_assets(self, **kwargs):
         return self.client().list_package_version_assets(**kwargs).get('assets')
