@@ -6,12 +6,11 @@ from osbot_utils.decorators.methods.remove_return_value import remove_return_val
 
 
 class Code_Artifact(Kwargs_To_Self):
-
-    aws_config : AWS_Config
-
+    aws_config  : AWS_Config
+    region_name : str
     @cache_on_self
     def client(self):
-        return Session().client('codeartifact')
+        return Session().client('codeartifact', region_name=self.region_name)
 
     def authorization_token(self, domain):
         return self.client().get_authorization_token(domain=domain).get('authorizationToken')
@@ -40,7 +39,7 @@ class Code_Artifact(Kwargs_To_Self):
 
     @remove_return_value(field_name='ResponseMetadata')
     def package_version_asset(self, **kwargs):
-        return self.client().get_package_version_asset(**kwargs)#.get('assets')
+        return self.client().get_package_version_asset(**kwargs)
 
     def package_version_assets(self, **kwargs):
         return self.client().list_package_version_assets(**kwargs).get('assets')
