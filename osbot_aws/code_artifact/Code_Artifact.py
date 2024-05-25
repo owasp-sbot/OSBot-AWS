@@ -3,6 +3,7 @@ from osbot_aws.apis.Session import Session
 from osbot_utils.base_classes.Kwargs_To_Self import Kwargs_To_Self
 from osbot_utils.decorators.methods.cache_on_self import cache_on_self
 from osbot_utils.decorators.methods.remove_return_value import remove_return_value
+from osbot_utils.utils.Files import stream_to_bytes
 
 
 class Code_Artifact(Kwargs_To_Self):
@@ -40,6 +41,12 @@ class Code_Artifact(Kwargs_To_Self):
     @remove_return_value(field_name='ResponseMetadata')
     def package_version_asset(self, **kwargs):
         return self.client().get_package_version_asset(**kwargs)
+
+    def package_version_asset__bytes(self, **kwargs):
+        response    = self.package_version_asset(**kwargs)
+        asset       = response.get('asset')
+        asset_bytes = stream_to_bytes(asset)
+        return asset_bytes
 
     def package_version_assets(self, **kwargs):
         return self.client().list_package_version_assets(**kwargs).get('assets')
