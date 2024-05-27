@@ -4,7 +4,8 @@ from osbot_utils.base_classes.Kwargs_To_Self import Kwargs_To_Self
 from osbot_utils.decorators.methods.cache_on_self import cache_on_self
 from osbot_utils.decorators.methods.remove_return_value import remove_return_value
 from osbot_utils.utils.Files import stream_to_bytes
-from osbot_utils.utils.Zip import gz_tar_bytes_file_list
+from osbot_utils.utils.Zip import gz_tar_bytes_file_list, gz_zip_bytes_file_list, zip_bytes_file_list, \
+    zip_bytes_extract_to_folder
 
 
 class Code_Artifact(Kwargs_To_Self):
@@ -59,7 +60,7 @@ class Code_Artifact(Kwargs_To_Self):
         asset_bytes = stream_to_bytes(asset)
         return asset_bytes
 
-    def package_version_asset__files(self, domain, repository,package_name, package_version):
+    def package_version_asset__files__gz(self, domain, repository,package_name, package_version):
         kwargs =dict(domain         = domain           ,
                      repository     = repository       , #'pypi-store'     ,
                      format         = 'pypi'           ,
@@ -71,6 +72,26 @@ class Code_Artifact(Kwargs_To_Self):
         asset_bytes              = self.package_version_asset__bytes(**kwargs)
         asset_files              = gz_tar_bytes_file_list(asset_bytes)
         return asset_files
+
+    def package_version_asset__files__whl(self, domain, repository,package_name, package_version):
+        kwargs =dict(domain         = domain           ,
+                     repository     = repository       , #'pypi-store'     ,
+                     format         = 'pypi'           ,
+                     package        = package_name     ,
+                     packageVersion = package_version  )
+        asset_name               = self.asset_name__whl(package_name, package_version)
+        kwargs['packageVersion'] = package_version
+        kwargs['asset'         ] = asset_name
+        asset_bytes              = self.package_version_asset__bytes(**kwargs)
+        asset_files              = zip_bytes_file_list(asset_bytes)
+        return asset_files
+
+    def package_version_asset__whl__extract_to_folder(self, target_folder, **kwargs):
+        response    = self.package_version_asset(**kwargs)
+        asset       = response.get('asset')
+        asset_bytes = stream_to_bytes(asset)
+        return zip_bytes_extract_to_folder(asset_bytes, target_folder)
+
 
     def package_version_assets(self, **kwargs):
         return self.client().list_package_version_assets(**kwargs).get('assets')

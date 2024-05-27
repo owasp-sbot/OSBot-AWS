@@ -3,7 +3,7 @@ from unittest import TestCase
 
 import pytest
 
-from osbot_aws.code_artifact.Code_Artifact import Code_Artifact
+from osbot_aws.aws.code_artifact.Code_Artifact import Code_Artifact
 from osbot_utils.utils.Files import stream_to_file, file_delete
 from osbot_utils.utils.Misc import in_github_action, list_set
 from osbot_utils.utils.Objects import obj_info, base_types
