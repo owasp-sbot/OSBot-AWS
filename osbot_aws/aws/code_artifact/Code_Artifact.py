@@ -40,15 +40,11 @@ class Code_Artifact(Kwargs_To_Self):
     def package_group(self, **kwargs):
         return self.client().describe_package_group(**kwargs).get('packageGroup')
 
-    def package_version(self, **kwargs):
-        return self.client().describe_package_version(**kwargs).get('packageVersion')
-
     def package_groups(self, **kwargs):
         return self.client().list_package_groups(**kwargs).get('packageGroups')
 
-    @remove_return_value('ResponseMetadata')
-    def package_versions(self, **kwargs):
-        return self.client().list_package_versions(**kwargs)
+    def package_version(self, **kwargs):
+        return self.client().describe_package_version(**kwargs).get('packageVersion')
 
     @remove_return_value(field_name='ResponseMetadata')
     def package_version_asset(self, **kwargs):
@@ -92,12 +88,19 @@ class Code_Artifact(Kwargs_To_Self):
         asset_bytes = stream_to_bytes(asset)
         return zip_bytes_extract_to_folder(asset_bytes, target_folder)
 
-
     def package_version_assets(self, **kwargs):
         return self.client().list_package_version_assets(**kwargs).get('assets')
 
+    def package_version_create(self, **kwargs):
+        return self.client().publish_package_version(**kwargs)
+
     def package_version_dependencies(self, **kwargs):
         return self.client().list_package_version_dependencies(**kwargs).get('dependencies')
+
+    @remove_return_value('ResponseMetadata')
+    def package_versions(self, **kwargs):
+        return self.client().list_package_versions(**kwargs)
+
 
     def packages(self, domain, repository):
         return self.client().list_packages(domain=domain, repository=repository).get('packages')
