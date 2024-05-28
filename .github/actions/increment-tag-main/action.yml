@@ -10,7 +10,7 @@ runs:
   using: 'composite'
   steps:
     - name: Checkout code
-      uses: actions/checkout@v2  # updated to v2
+      uses: actions/checkout@v4
       with:
         ref: 'main'  # Check out the 'main' branch
         fetch-depth: 0  # Fetch all history for .Git info
