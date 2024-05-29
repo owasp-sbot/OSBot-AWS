@@ -1,0 +1,9 @@
+services:
+  osbot-aws__python-3.12.3:
+    build:
+      context: ../..
+      dockerfile: ./docker/pytest/3.12.3.Dockerfile
+    volumes:
+      - ../..:/app
+    env_file:
+      - ../../.env
