@@ -1,5 +1,7 @@
 name: Build and Push Docker Image
 
+#on:
+#  push
 on:
   workflow_dispatch:
   workflow_run:
@@ -31,3 +33,11 @@ jobs:
           file: ./docker/python_slim/Dockerfile
           push: true
           tags: diniscruz/osbot_aws:latest
+
+      - name: Build and push Docker image (diniscruz/osbot_aws:lambda_shell)
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./docker/lambda_shell/Dockerfile
+          push: true
+          tags: diniscruz/osbot_aws:lambda_shell
