@@ -35,7 +35,7 @@ class Docker_Composer__Build_And_Run:
         result = run_process('docker-compose', ['up', '-d'], cwd=self.cwd_folder)
         return result.get('stderr')
 
-class Example_2__Invoke_Lambda_Shell:
+class Example_2__Invoke_Lambda_Shell__Locally:
 
 
     def __init__(self):
@@ -67,13 +67,17 @@ class Example_2__Invoke_Lambda_Shell:
         return requests.post(self.url_invoke, json=payload).json()
 
 
-class test_Example_1__Build_And_Run(TestCase):
+class test_Example_2__Invoke_Lambda_Shell__Locally(TestCase):
 
     def setUp(self):
-        self.example = Example_2__Invoke_Lambda_Shell()
+        self.example = Example_2__Invoke_Lambda_Shell__Locally()
 
     def test_1_just_start(self):
         self.example.just_start()
+
+    def test_2_invoke_lambda(self):
+        result = self.example.make_request({})
+        pprint(result)
 
     def test_2_invoke_lambda_shell(self):
         env_file = path_combine(__file__, '../.env')
@@ -97,4 +101,4 @@ class test_Example_1__Build_And_Run(TestCase):
 
 
 if __name__ == '__main__':
-    Example_2__Invoke_Lambda_Shell().build_and_run()
+    Example_2__Invoke_Lambda_Shell__Locally().build_and_run()

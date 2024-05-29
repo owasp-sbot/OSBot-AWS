@@ -1,0 +1,22 @@
+# command to download from docker hub and run locally
+
+docker run -it --rm -p 9000:8080 --platform linux/amd64  diniscruz/osbot_aws:lambda_shell
+
+
+# command to download from docker hub and run locally with the .env file with the LAMBDA_SHELL__AUTH_KEY to use
+
+docker run -it --rm -p 9000:8080        \
+        --env LAMBDA_SHELL__AUTH_KEY    \
+        --platform linux/amd64          \
+        diniscruz/osbot_aws:lambda_shell
+
+
+# commands to publish to ECR (convert this to python code using OWSBot_AWS classes)
+
+aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com
+
+aws ecr create-repository --repository-name lambda-shell --region $AWS_DEFAULT_REGION
+
+docker tag diniscruz/osbot_aws:lambda_shell $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/lambda-shell:latest
+
+docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/lambda-shell:latest
