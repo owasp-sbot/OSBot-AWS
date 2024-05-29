@@ -15,11 +15,11 @@ pyyaml          = "*"
 boto3           = "*"
 osbot-utils     = "*"
 
-[tool.poetry.dev-dependencies]
-pytest          = "*"
-pytest-cov      = "*"
-coveralls       = "*"
-setuptools      = "*"
+#[tool.poetry.dev-dependencies]
+#pytest          = "*"
+#pytest-cov      = "*"
+#coveralls       = "*"
+#setuptools      = "*"
 
 [build-system]
 requires        = ["poetry-core>=1.0.0"]
