@@ -96,8 +96,11 @@ class test_Cache_Boto3_Requests(TestCase):
                                     'comments'      : ''            ,
                                     'id'            : 1             ,
                                     'latest'        : 0             ,
-                                    'request_data'  : '"api_params: {}\\noperation_name: GetCallerIdentity\\n"',
-                                    'request_hash'  : '2601fc898fb72b1f7b3207185225199a2f7370bb532f0e5448335c97ca319b85',
+                                    # 'request_data'  : '"api_params: {}\\noperation_name: GetCallerIdentity\\n"',
+                                    # 'request_hash'  : '2601fc898fb72b1f7b3207185225199a2f7370bb532f0e5448335c97ca319b85',
+                                    'request_data': '"{\\n    \\"operation_name\\": '
+                                                       '\\"GetCallerIdentity\\",\\n    \\"api_params\\": {}\\n}"',
+                                    'request_hash': '612f59e11f66106d9aae85311816db22a1e78fce2825c76729ac35e66e76b76e',
                                     'response_bytes': b'\x80\x04\x95\x14\x00\x00\x00\x00\x00\x00\x00}'
                                                       b'\x94\x8c\x07Account\x94\x8c\x03ABC\x94s.',
                                     'response_data' : ''            ,

@@ -1,0 +1,10 @@
+services:
+  osbot_utils:
+    build:
+      context     : ../..
+      dockerfile  : ./docker/python_slim/Dockerfile
+    image         : diniscruz/osbot_aws-python_slim
+    container_name: osbot_aws_container
+
+    env_file:
+      - ../../.env
