@@ -26,13 +26,13 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN    }}
 
-#      - name: Build and push Docker image (diniscruz/osbot_aws:latest)
-#        uses: docker/build-push-action@v5
-#        with:
-#          context: .
-#          file: ./docker/python_slim/Dockerfile
-#          push: true
-#          tags: diniscruz/osbot_aws:latest
+      - name: Build and push Docker image (diniscruz/osbot_aws:latest)
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./docker/python_slim/Dockerfile
+          push: true
+          tags: diniscruz/osbot_aws:latest
 
       - name: Build and push Docker image (diniscruz/osbot_aws:lambda_shell)
         uses: docker/build-push-action@v5
