@@ -2,6 +2,7 @@ from osbot_aws.AWS_Config import AWS_Config
 from osbot_aws.apis.shell.Lambda_Shell import Lambda_Shell
 from osbot_aws.apis.shell.Shell_Server import Shell_Server
 from osbot_aws.apis.Lambda import Lambda                    # todo: see how to resolve the circular dependency with the Lambda Function
+from osbot_utils.decorators.methods.cache_on_self import cache_on_self
 from osbot_utils.utils.Functions import function_source_code
 
 
@@ -10,6 +11,7 @@ class Shell_Client:
     def __init__(self, aws_lambda: Lambda):
         self.aws_lambda = aws_lambda
 
+    @cache_on_self
     def _lambda_auth_key(self):
         return Lambda_Shell().get_lambda_shell_auth()
 

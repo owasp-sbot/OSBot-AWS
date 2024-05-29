@@ -1,0 +1,15 @@
+services:
+  osbot_aws__lambda_shell:
+    build:
+      context     : ../..
+      dockerfile  : ./docker/lambda_shell/Dockerfile
+    image         : diniscruz/osbot_aws-lambda_shell
+    container_name: osbot_aws_lambda_shell_container
+    ports:
+      - "9000:8080"
+#    env_file:
+#      - ../../.env
+    env_file:
+      - ./examples/example_2/.env
+    volumes:
+      - .:/var/task

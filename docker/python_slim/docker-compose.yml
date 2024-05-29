@@ -1,5 +1,5 @@
 services:
-  osbot_utils:
+  osbot_aws:
     build:
       context     : ../..
       dockerfile  : ./docker/python_slim/Dockerfile
