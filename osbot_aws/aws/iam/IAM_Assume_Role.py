@@ -77,7 +77,7 @@ class IAM_Assume_Role:
         for policy_to_add in self.policies_to_add:
             self.add_policy(**policy_to_add)
 
-    def create_role(self, recreate=False):
+    def create_role(self, recreate=False, create_credentials=True):
         if recreate:
             self.reset()
             self.delete_role()
@@ -89,7 +89,8 @@ class IAM_Assume_Role:
             self.cached_role.set('result__role_create', result__role_create)
             self.cached_role.set('role_exists', True                 )  # todo see how to check this would having to make another Boto3 call
             self.create_policies()
-            self.create_credentials()
+            if create_credentials:
+                self.create_credentials()
 
     def credentials(self, reset=False, retries=20):
         if reset or self.credentials_expired():

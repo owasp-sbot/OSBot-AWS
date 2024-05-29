@@ -1,5 +1,7 @@
 from unittest               import TestCase
 
+import pytest
+
 from osbot_aws.aws.apigateway.API_Gateway_V2 import API_Gateway_V2
 from osbot_aws.aws.boto3.View_Boto3_Rest_Calls import print_boto3_calls
 from osbot_aws.testing.TestCase__API_Gateway_V2 import TestCase__API_Gateway_V2
@@ -7,6 +9,7 @@ from osbot_utils.utils.Misc import list_set
 from osbot_utils.utils.Objects import obj_info
 
 
+@pytest.mark.skip('needs active API Gateway setup')
 class test_API_Gateway_V2(TestCase__API_Gateway_V2):
     api_gateway : API_Gateway_V2
 

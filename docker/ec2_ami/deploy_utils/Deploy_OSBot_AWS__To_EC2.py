@@ -3,6 +3,7 @@ from os import environ
 from docker.ec2_ami import deploy_utils
 from osbot_aws.AWS_Config import AWS_Config
 from osbot_aws.apis.EC2 import EC2
+from osbot_aws.aws.s3.S3__with_temp_role import S3__with_temp_role
 from osbot_aws.aws.sts.STS import STS
 from osbot_aws.helpers.EC_Instance import EC2_Instance
 from osbot_utils.base_classes.Kwargs_To_Self import Kwargs_To_Self
@@ -25,29 +26,42 @@ class Deploy_OSBot_AWS__To_EC2(Kwargs_To_Self):
         assert file_exists(env_file)
         load_dotenv(env_file, override=True)
 
-    def create_kwargs(self):
+    def create_kwargs(self, image_id=None):
         load_dotenv()
-        instance_type     = 't3.nano'
-        spot_instance     = True
-        security_group_id = environ.get('EC2_TESTS__SECURITY_GROUP_ID')
-        ssh_key_name      = environ.get('EC2_TESTS__PATH_SSH_KEY_FILE_NAME')
-        return  dict(image_id          = 'ami-008ea0202116dbc56' ,
-                     key_name          = ssh_key_name  ,
-                     security_group_id = security_group_id,
-                     instance_type     = instance_type      ,
-                     spot_instance     = spot_instance      )
+        instance_type        = 't3.nano'
+        spot_instance        = True
+        iam_role_name        = self.role_to_assign_EC2_instance()
+        security_group_id    = environ.get('EC2_TESTS__SECURITY_GROUP_ID')
+        ssh_key_name         = environ.get('EC2_TESTS__PATH_SSH_KEY_FILE_NAME')
+        iam_instance_profile = {'Name': iam_role_name }              #"environ.get('EC2_TESTS__IAM_ROLE_TO_ASSUME')
+
+        return  dict(image_id             = image_id or 'ami-008ea0202116dbc56' ,
+                     iam_instance_profile = iam_instance_profile                   ,
+                     key_name             = ssh_key_name                        ,
+                     security_group_id    = security_group_id                   ,
+                     instance_type        = instance_type                       ,
+                     spot_instance        = spot_instance                       )
+
+    def ec2_instance(self, instance_id):
+        return EC2_Instance(instance_id=instance_id)
 
     def instance_info(self, instance_id):
         return self.ec2.instance_details(instance_id)
 
+    def role_to_assign_EC2_instance(self):
+        iam_assume_role = S3__with_temp_role().iam_assume_role()
+        iam_assume_role.create_role(create_credentials=False)
+        return iam_assume_role.role_name
+
     def running_instances(self):
         return self.ec2.instances_details()
 
-    def start_instance(self):
+    def start_instance(self,image_id=None):
         try:
             ec2_instance = EC2_Instance()
-            ec2_instance.create_kwargs = self.create_kwargs()
-            region_name  = self.aws_config.region_name()
+            ec2_instance.create_kwargs = self.create_kwargs(image_id=image_id)
+            pprint(ec2_instance.create_kwargs)
+            #region_name  = self.aws_config.region_name()
             #image_id     = AMIS_PER_REGION.get(region_name)
             return ec2_instance.create()
         except Exception as e:

@@ -31,6 +31,12 @@ class EC2:
     def resource(self):
         return Session().resource('ec2')
 
+    def ami(self, ami_id):
+        result = self.amis(ami_id=ami_id)
+        images = self.client().describe_images(ImageIds=[ami_id]).get('Images')
+        if len(images) == 1:
+            return result.pop()
+
     @index_by
     @group_by
     def amis(self, owner='self', architecture=None, state='available', name=None, description=None, ami_id=None):  # todo: find how to search for amis in the quick start
@@ -41,6 +47,9 @@ class EC2:
         if description  : kwargs.get('Filters').append({'Name': 'description' , 'Values': [description ]})
         if ami_id       : kwargs.get('Filters').append({'Name': 'image-id'    , 'Values': [ami_id      ]})
         return self.client().describe_images(**kwargs).get('Images')
+
+    def image(self, image_id):
+        return self.ami(ami_id=image_id)
 
     def instance_create(self, image_id                                      ,   # only var needed is the image_id which is region specific
                               dry_run               = False                 ,   # todo: refactor into a EC2_Create_Instance helper class
@@ -81,6 +90,13 @@ class EC2:
         instance = result.get('Instances')[0]
         return  instance.get('InstanceId')
 
+    def create_image(self, instance_id, name, description=None, no_reboot=False, tags=None):
+        kwargs = { 'InstanceId' : instance_id ,
+                   'Name'       : name        }
+        if description: kwargs['Description'] = description
+        if no_reboot  : kwargs['NoReboot'   ] = no_reboot
+        if tags       : kwargs['TagSpecifications'] = self.tag_specifications_create(tags=tags, resource_type='image')
+        return self.client().create_image(**kwargs).get('ImageId')
     def format_instance_details(self, target):
         if target:
             instance_details = { 'architecture'     : target.architecture                         ,
