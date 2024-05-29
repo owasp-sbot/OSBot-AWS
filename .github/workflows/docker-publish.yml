@@ -1,14 +1,11 @@
 name: Build and Push Docker Image
 
 on:
-  push:
-
-#on:
-#  workflow_dispatch:
-#  workflow_run:
-#    workflows: ["Increment Tag - Main branch"]
-#    types:
-#      - completed
+  workflow_dispatch:
+  workflow_run:
+    workflows: ["Increment Tag - Main branch"]
+    types:
+      - completed
 
 jobs:
   build-and-push:
