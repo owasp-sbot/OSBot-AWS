@@ -2,6 +2,8 @@ import json
 from functools import cache
 
 import boto3
+
+from osbot_utils.utils.Dev import pprint
 from osbot_utils.utils.Objects import get_value
 
 from osbot_utils.decorators.methods.cache_on_self   import cache_on_self
@@ -10,7 +12,7 @@ from osbot_utils.decorators.lists.index_by          import index_by
 from osbot_utils.decorators.methods.catch           import catch
 from osbot_utils.decorators.methods.remove_return_value import remove_return_value
 from osbot_utils.testing.Duration import Duration
-from osbot_utils.utils.Json                         import json_to_str
+from osbot_utils.utils.Json import json_to_str, from_json_str
 from osbot_utils.utils.Misc import random_string, wait
 from osbot_utils.utils.Status import status_ok, status_error
 
@@ -312,6 +314,12 @@ class IAM:
             return result.get('ResponseMetadata',{}).get('HTTPStatusCode') == 200
         return False
 
+    def role_create_instance_profile(self, role_name):
+        return self.client().create_instance_profile(InstanceProfileName=role_name)
+
+    def role_add_to_instance_profile(self, role_name, instance_profile_name):
+        return self.client().add_role_to_instance_profile(InstanceProfileName = instance_profile_name,
+                                                          RoleName            = role_name            )
     def role_not_exists(self):
         return self.role_exists() is False
 
