@@ -12,6 +12,7 @@ from osbot_utils.utils.Zip import zip_file_list
 ENV_VAR__CODE_ARTIFACT__TEST_DOMAIN_NAME = 'CODE_ARTIFACT__TEST_DOMAIN_NAME'
 ENV_VAR__CODE_ARTIFACT__TEST_REGION_NAME = 'CODE_ARTIFACT__TEST_REGION_NAME'
 
+@pytest.mark.skip(reason="Code Artifact tests need account with code artifacts")
 class test_Code_Artifact(TestCase):
     code_artifact : Code_Artifact
     domain_name   : str

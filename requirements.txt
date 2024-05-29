@@ -1,6 +1,5 @@
 osbot-utils
 python-dotenv
-pyyaml
 
 # for AWS
 boto3
