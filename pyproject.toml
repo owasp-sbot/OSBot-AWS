@@ -1,6 +1,6 @@
 [tool.poetry]
 name        = "osbot_aws"
-version     = "v2.11.2"
+version     = "v2.12.0"
 description = "OWASP Security Bot - AWS"
 authors     = ["Dinis Cruz <dinis.cruz@owasp.org>"]
 license     = "MIT"
