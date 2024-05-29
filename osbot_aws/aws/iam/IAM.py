@@ -314,6 +314,12 @@ class IAM:
             return result.get('ResponseMetadata',{}).get('HTTPStatusCode') == 200
         return False
 
+    def role_create_instance_profile(self, role_name):
+        return self.client().create_instance_profile(InstanceProfileName=role_name)
+
+    def role_add_to_instance_profile(self, role_name, instance_profile_name):
+        return self.client().add_role_to_instance_profile(InstanceProfileName = instance_profile_name,
+                                                          RoleName            = role_name            )
     def role_not_exists(self):
         return self.role_exists() is False
 

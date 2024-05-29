@@ -82,6 +82,12 @@ class IAM_Role:
             data = self.iam.role_create(policy_document)
             return {'status': 'ok', 'data': data, 'role_name': self.iam.role_name, 'role_arn': data.get('Arn') }
 
+    def create_instance_profile(self):
+        return self.iam.role_create_instance_profile(role_name=self.role_name).get('InstanceProfile')
+
+    def add_to_instance_profile(self):
+        return self.iam.role_add_to_instance_profile(instance_profile_name=self.role_name, role_name=self.role_name) # it seems that the convension is to use the same for both
+
     def delete(self):
         return self.iam.role_delete()
 

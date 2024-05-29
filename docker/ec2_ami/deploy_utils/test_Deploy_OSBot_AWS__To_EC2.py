@@ -18,6 +18,13 @@ class test_Deploy_OSBot_AWS__To_EC2(TestCase):
         cls.deploy_to_ec2 = Deploy_OSBot_AWS__To_EC2()
         cls.deploy_to_ec2.load_dotenv()
 
+    def test_setup_ec2_instance_role(self):
+        with self.deploy_to_ec2 as _:
+            role_for_ec2_instance = _.setup_ec2_instance_role()
+            pprint(role_for_ec2_instance)
+            #assert role_for_ec2_instance.exists() is True
+
+
     def test_start_instance(self):
         with self.deploy_to_ec2 as _:
             instance_id = _.start_instance()
@@ -81,10 +88,10 @@ class test_Deploy_OSBot_AWS__To_EC2(TestCase):
 
     def test_create_ami(self):
         instance_id = 'i-0160d310c454aca75'
-        name        = 'ami-with-osbot-aws'
+        name        = 'ami-with-osbot-aws'          # this created the ami 'ami-0062dc7f40a35e99a'
         with self.deploy_to_ec2 as _:
             new_image_id = _.ec2.create_image(instance_id, name)
-            pprint(new_image_id) # 'ami-0062dc7f40a35e99a'
+            pprint(new_image_id)                # 'ami-0062dc7f40a35e99a'
 
     def test_new_image_details(self):
         new_image_id = 'ami-0062dc7f40a35e99a'
@@ -98,7 +105,7 @@ class test_Deploy_OSBot_AWS__To_EC2(TestCase):
             iam = IAM(role_name=role_name)
             assert iam.role_exists() is True
 
-    def test_create_and_execute(self):
+    def test_create_and_execute__image__with_osbot_utils(self):
         logging = Logging().enable_log_to_console()
         image_id = 'ami-0062dc7f40a35e99a'
         with self.deploy_to_ec2 as _:
@@ -118,33 +125,31 @@ class test_Deploy_OSBot_AWS__To_EC2(TestCase):
 
             def test_osbot_aws():
                 from osbot_aws.aws.sts.STS import STS
+                from osbot_aws.apis.S3 import S3
                 sts = STS()
-                return f'iam details : {sts.caller_identity()}'
+                s3  = S3()
+                return f'iam details : {sts.caller_identity()}\ns3 buckets : {s3.buckets()}'
             result = ssh.execute_python__function__return_stdout(test_osbot_aws)
             logging.info(f'Step 4: confirm iam result is correct: {result}')
             pprint(result)
-            #ec2_instance.delete()
+            ec2_instance.delete()
 
     def test_just_execute(self):
-        instance_id = 'i-06fd81c8d7bedef72'
+        instance_id = 'i-086fc0d421f06f57e'
         def test_osbot_aws():
             from osbot_aws.AWS_Config import AWS_Config
             aws_config = AWS_Config()
             aws_config.set_aws_session_region_name('eu-west-1')
 
-            from osbot_aws.helpers.EC_Instance import EC2_Instance
-            instance_id  = 'i-07ec029b1835e9195'
-            ec2_instance = EC2_Instance(instance_id=instance_id)
-
-            ec2_client   = ec2_instance.ec2.client()
-            details      = ec2_client.describe_tags(instanceIds=[instance_id])
-            return f'iam details : {details}'
+            from osbot_aws.apis.S3 import S3
+            s3 = S3()
+            return f's3 buckets : {s3.buckets()}'
             #return f'iam details : {ec2_instance.info()}'
 
         with self.deploy_to_ec2 as _:
             ssh = _.ssh(instance_id)
-            #result = ssh.execute_python__function__return_stdout(test_osbot_aws)
-            result = ssh.execute_python__function__return_stderr(test_osbot_aws)
+            result = ssh.execute_python__function__return_stdout(test_osbot_aws)
+            #result = ssh.execute_python__function__return_stderr(test_osbot_aws)
             pprint(result)
 
 
