@@ -29,7 +29,6 @@ class Deploy_OSBot_AWS__To_EC2(Kwargs_To_Self):
         load_dotenv(env_file, override=True)
 
     def create_kwargs(self, image_id=None):
-        load_dotenv()
         instance_type        = 't3.nano'
         spot_instance        = True
         security_group_id    = environ.get('EC2_TESTS__SECURITY_GROUP_ID')

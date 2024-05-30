@@ -30,6 +30,7 @@ class IAM__Role_for__EC2_Instances(IAM__Role_For):
 
     def attach_policy__full_access__s3(self):
         iam_policy = IAM__Policy__Service__Full_Access(service_name='s3')
+        iam_policy.create()                                                 # create if doesn't exist
         iam_policy_arn = iam_policy.arn()
         return self.iam_role.iam.role_policy_attach(policy_arn=iam_policy_arn)
 

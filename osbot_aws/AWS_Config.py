@@ -1,6 +1,7 @@
 import os
 
-from dotenv import load_dotenv
+from osbot_utils.utils.Env import load_dotenv
+
 
 class AWS_Config:
 
