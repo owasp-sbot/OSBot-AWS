@@ -22,7 +22,6 @@ class test_IAM_Assume_Role(TestCase):
 
     #@print_boto3_calls()
     def test_create_role(self):
-        print()
         self.iam_assume_role.reset()                                        # reset cache (delete and create a new one)
         assert self.iam_assume_role.cached_role.cache_exists() is True      # check that cache doesn't exist
 
