@@ -6,6 +6,7 @@ from osbot_aws.aws.dynamo_db.Dynamo_DB            import Dynamo_DB
 from osbot_aws.aws.dynamo_db.Dynamo_DB__with_temp_role import Dynamo_DB__with_temp_role
 from osbot_aws.aws.lambda_.Lambda__with_temp_role import Lambda__with_temp_role
 from osbot_aws.aws.s3.S3__with_temp_role          import S3__with_temp_role
+from osbot_aws.testing.Pytest import skip_pytest___aws_pytest_user_name__is_not_set
 from osbot_utils.decorators.methods.cache_on_self import cache_on_self
 from osbot_utils.utils.Misc import random_text
 
@@ -24,6 +25,7 @@ class TestCase__Lambda(TestCase):
 
     @classmethod
     def setUpClass(cls):
+        skip_pytest___aws_pytest_user_name__is_not_set()
         cls.type_Dynamo_DB    = Dynamo_DB__with_temp_role
         cls.type_Lambda       = Lambda__with_temp_role
         cls.type_S3           = S3__with_temp_role

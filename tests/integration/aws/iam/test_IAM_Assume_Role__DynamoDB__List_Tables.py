@@ -1,9 +1,14 @@
 from unittest import TestCase
 
 from osbot_aws.aws.iam.IAM_Assume_Role import IAM_Assume_Role
+from osbot_aws.testing.Pytest import skip_pytest___aws_pytest_user_name__is_not_set
 
 
 class test_IAM_Assume_Role__DynamoDB__List_Tables(TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        skip_pytest___aws_pytest_user_name__is_not_set()
 
     def setUp(self):
         self.role_name = "temp_role__for_dynamo_db_access"

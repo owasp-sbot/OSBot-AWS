@@ -14,6 +14,7 @@ from osbot_aws.aws.dynamo_db.Dynamo_DB import Dynamo_DB
 from osbot_aws.aws.dynamo_db.Dynamo_DB__with_temp_role import Dynamo_DB__with_temp_role
 from osbot_aws.aws.dynamo_db.Dynamo_Table__Resource import Dynamo_Table__Resource
 from osbot_aws.aws.iam.IAM_Assume_Role import IAM_Assume_Role
+from osbot_aws.testing.Pytest import skip_pytest___aws_pytest_user_name__is_not_set
 from osbot_aws.testing.TestCase__Boto3_Cache import TestCase__Boto3_Cache
 from osbot_utils.testing.Duration import Duration
 from osbot_utils.utils.Dev import pprint
@@ -28,6 +29,7 @@ class test_Dynamo_DB(TestCase):
 
     @classmethod
     def setUpClass(cls) -> None:
+        skip_pytest___aws_pytest_user_name__is_not_set()
         cls.dynamo_db = Dynamo_DB__with_temp_role()
         cls.table_name = 'temp-table'
         cls.table_key = 'an_key'

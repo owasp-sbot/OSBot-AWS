@@ -1,6 +1,7 @@
 from unittest import TestCase
 from botocore.client import BaseClient
 from osbot_aws.aws.iam.IAM import IAM
+from osbot_aws.testing.Pytest import skip_pytest___aws_pytest_user_name__is_not_set
 from osbot_utils.helpers.trace.Trace_Call import Trace_Call
 from osbot_utils.testing.Duration import Duration
 from osbot_aws.aws.boto3.View_Boto3_Rest_Calls import View_Boto3_Rest_Calls
@@ -8,6 +9,10 @@ from osbot_utils.testing.Stdout import Stdout
 
 
 class test_View_Boto3_Rest_Calls(TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        skip_pytest___aws_pytest_user_name__is_not_set()
 
     def setUp(self):
         self.view_bobo3_rest_calls = View_Boto3_Rest_Calls()
@@ -21,7 +26,6 @@ class test_View_Boto3_Rest_Calls(TestCase):
         assert type(self.view_bobo3_rest_calls.total_duration)  is Duration
 
     def test___enter__exit__(self):
-
         self.view_bobo3_rest_calls.config__print_calls = False
 
         with self.view_bobo3_rest_calls:

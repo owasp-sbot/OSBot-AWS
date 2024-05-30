@@ -1,4 +1,6 @@
 from unittest               import TestCase
+
+from osbot_aws.testing.Pytest import skip_pytest___aws_pytest_user_name__is_not_set
 from osbot_utils.utils.Misc import list_set
 from osbot_aws.AWS_Config   import AWS_Config
 from osbot_aws.aws.iam.IAM  import IAM
@@ -20,6 +22,7 @@ class Test_IAM(TestCase):
 
     @classmethod
     def setUpClass(cls):
+        skip_pytest___aws_pytest_user_name__is_not_set()
         super().setUpClass()
         cls.aws_config       = AWS_Config()
         cls.account_id       = cls.aws_config.aws_session_account_id()

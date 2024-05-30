@@ -5,6 +5,7 @@ from unittest import TestCase
 import botocore
 
 from osbot_aws.AWS_Config import AWS_Config
+from osbot_aws.testing.Pytest import skip_pytest___aws_pytest_user_name__is_not_set
 from osbot_utils.utils.Functions import method_params
 from osbot_aws.apis.Session import Session
 from tests.integration.aws.iam.test_IAM import IAM_USER_NAME__OSBOT_AWS
@@ -47,6 +48,9 @@ class test_Session(TestCase):
         assert botocore_session.region_name == self.aws_config.aws_session_region_name()
 
     def test_caller_identity(self):
+
+        skip_pytest___aws_pytest_user_name__is_not_set()
+
         caller_identity = self.session.caller_identity()
         account_id      = self.aws_config.account_id()
         assert caller_identity.get('Account' ) == account_id

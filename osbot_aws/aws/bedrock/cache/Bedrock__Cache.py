@@ -4,6 +4,7 @@ from dotenv                                                     import load_dote
 from osbot_utils.decorators.lists.group_by                      import group_by
 from osbot_utils.decorators.lists.index_by                      import index_by
 from osbot_utils.helpers.sqlite.domains.Sqlite__Cache__Requests import Sqlite__Cache__Requests
+from osbot_utils.utils.Json import json_loads
 from osbot_utils.utils.Lists                                    import list_group_by
 from osbot_utils.utils.Str                                      import str_dedent
 
@@ -55,6 +56,15 @@ class Bedrock__Cache(Sqlite__Cache__Requests):
         model_id = model.model_id
         body     = model.body()
         return self.cache_entry_comments_update(model_id=model_id, body=body, new_comments=new_comments)
+
+    def requests_data__all(self):                                               # this fixes the change in behaviour of requests_data__all which now returns the data in the request_data object
+        requests_data__all = super().requests_data__all()
+        for item in requests_data__all:
+            request_data_raw      = item.get('request_data')                    # get the request_data value
+            request_data_original = json_loads(request_data_raw)                # convert to object
+            del item['request_data']                                            # delete the original entry to request_data
+            item.update(request_data_original)                                  # add the request_data vars to the item of the array to return
+        return requests_data__all
 
     def requests_data__by_model_id(self):
         values        = self.requests_data__all()
