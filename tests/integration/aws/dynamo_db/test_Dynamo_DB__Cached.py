@@ -22,6 +22,7 @@ class test_Dynamo_DB(TestCase__Boto3_Cache):
 
     @classmethod
     def tearDownClass(cls) -> None:
+        super().tearDownClass()
         if cls.remove_on_exit:
             cls.dynamo_db.table_delete(table_name=cls.table_name, wait_for_deletion=False)
 

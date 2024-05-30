@@ -23,6 +23,7 @@ class temp_Role__for__EC2_Instances(TestCase):
 
     @classmethod
     def tearDownClass(cls):
+        super().tearDownClass()
         if cls.delete_on_exit:
             assert cls.ec2_instances_role.iam_role.delete() is True
 

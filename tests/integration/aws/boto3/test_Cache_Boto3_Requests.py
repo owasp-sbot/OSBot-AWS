@@ -32,6 +32,7 @@ class test_Cache_Boto3_Requests(TestCase):
     def tearDownClass(cls):
         cls.cache_boto3_requests.delete()
         assert cls.cache_boto3_requests.sqlite_requests.exists() is False
+        assert BaseClient._make_api_call.__qualname__ == 'BaseClient._make_api_call'        # confirm the original function is still there
 
     def test__init__(self):
         with self.cache_boto3_requests as _:

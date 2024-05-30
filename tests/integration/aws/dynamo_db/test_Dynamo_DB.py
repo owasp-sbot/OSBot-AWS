@@ -9,17 +9,10 @@ from unittest import TestCase
 
 from dotenv import load_dotenv
 
-from osbot_aws.aws.boto3.View_Boto3_Rest_Calls import print_boto3_calls
-from osbot_aws.aws.dynamo_db.Dynamo_DB import Dynamo_DB
-from osbot_aws.aws.dynamo_db.Dynamo_DB__with_temp_role import Dynamo_DB__with_temp_role
-from osbot_aws.aws.dynamo_db.Dynamo_Table__Resource import Dynamo_Table__Resource
-from osbot_aws.aws.iam.IAM_Assume_Role import IAM_Assume_Role
-from osbot_aws.testing.Pytest import skip_pytest___aws_pytest_user_name__is_not_set
-from osbot_aws.testing.TestCase__Boto3_Cache import TestCase__Boto3_Cache
-from osbot_utils.testing.Duration import Duration
-from osbot_utils.utils.Dev import pprint
-from osbot_utils.utils.Misc import list_set, random_string
-from osbot_utils.utils.Objects import type_full_name
+from osbot_aws.aws.dynamo_db.Dynamo_DB                  import Dynamo_DB
+from osbot_aws.aws.dynamo_db.Dynamo_DB__with_temp_role  import Dynamo_DB__with_temp_role
+from osbot_aws.testing.Pytest                           import skip_pytest___aws_pytest_user_name__is_not_set
+from osbot_utils.utils.Misc                             import random_string
 
 class test_Dynamo_DB(TestCase):
     dynamo_db       : Dynamo_DB
