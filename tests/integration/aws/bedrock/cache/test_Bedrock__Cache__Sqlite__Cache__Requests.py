@@ -48,18 +48,19 @@ class test_Bedrock__Cache__Sqlite__Cache__Requests(TestCase):
         response_data        = {'the':'response_data'}
         response_data_json   = json_dump(response_data)
         response_data_sha256 = str_sha256(response_data_json)
-        expected_new_row     = { 'cache_hits'     : 0                    ,
-                                 'comments'       : ''                   ,
-                                 'latest'         : False                ,
+        expected_new_row     = { 'comments'       : ''                   ,
+                                 'metadata'       : ''                   ,
                                  'request_data'   : request_data_json    ,
                                  'request_hash'   : request_data_sha256  ,
+                                 'request_type'   : ''                   ,
                                  'response_bytes' : b''                  ,
                                  'response_data'  : response_data_json   ,
                                  'response_hash'  : response_data_sha256 ,
-                                 'timestamp'      : 0                    }           # BUG: todo: value not being set
+                                 'response_type'  : ''                   ,
+                                 'source'         : ''                   ,
+                                 'timestamp'      : 0                    }
         expected_row_entry   = { **expected_new_row                      ,
-                                 'id'            : 1                     ,
-                                 'latest'        : 0                     }           # BUG: todo: need to add support for converting db's int value into the BOOL equivalent
+                                 'id'            : 1                     }
 
         new_row = self.bedrock_cache.cache_add(request_data, response_data)
         assert new_row.json() == expected_new_row
@@ -112,17 +113,19 @@ class test_Bedrock__Cache__Sqlite__Cache__Requests(TestCase):
         response_data            = {'the': 'return value'}
         request_data             = self.bedrock_cache.cache_request_data(model_id, body)
         new_cache_entry          = self.bedrock_cache.create_new_cache_data(request_data, response_data)
-        expected_new_cache_entry = {'request_data'  : json_dumps(request_data)                                           ,
+        expected_new_cache_entry = {'comments'      : ''                                                                 ,
+                                    'metadata'      : ''                                                                 ,
+                                    'request_data'  : json_dumps(request_data)                                           ,
                                     'request_hash'  : '1b16c63a54a704c20df7c449d04acb56f8c8d44a48e1d43bee20359536edcd71' ,
+                                    'request_type'  : ''                                                                 ,
                                     'response_bytes': b''                                                                ,
                                     'response_data' : json_dumps(response_data)                                          ,
                                     'response_hash' : '69e330ec7bf6334aa41ecaf56797fa86345d3cf85da4c622821aa42d4bee1799' ,
+                                    'response_type' : ''                                                                 ,
+                                    'source'        : ''                                                                 ,
                                     'timestamp'     :  0                                                                 }
         expected_new_cache_obj   = { **expected_new_cache_entry,
-                                     'comments': '',
-                                     'cache_hits': 0        ,
-                                     'latest'    : False    ,
-                                     'timestamp' : 0        }
+                                     'timestamp' : 0           }
         assert new_cache_entry == expected_new_cache_entry
         new_cache_obj = self.bedrock_cache.cache_table().new_row_obj(new_cache_entry)
         assert new_cache_obj.__locals__() == expected_new_cache_obj
@@ -177,16 +180,18 @@ class test_Bedrock__Cache__Sqlite__Cache__Requests(TestCase):
 
             assert _.exists()   is True
             assert _.row_schema is Schema__Table__Requests
-            assert _.schema__by_name_type() == { 'cache_hits'    : 'INTEGER' ,
-                                                 'comments'      : 'TEXT'    ,
-                                                 'id'            : 'INTEGER' ,
-                                                 'latest'        : 'BOOLEAN' ,
-                                                 'request_data'  : 'TEXT'    ,
-                                                 'request_hash'  : 'TEXT'    ,
-                                                 'response_bytes': 'BLOB'    ,
-                                                 'response_data' : 'TEXT'    ,
-                                                 'response_hash' : 'TEXT'    ,
-                                                 'timestamp'     : 'INTEGER' }
+            assert _.schema__by_name_type() =={ 'comments'      : 'TEXT'    ,
+                                                'id'            : 'INTEGER' ,
+                                                'metadata'      : 'TEXT'    ,
+                                                'request_data'  : 'TEXT'    ,
+                                                'request_hash'  : 'TEXT'    ,
+                                                'request_type'  : 'TEXT'    ,
+                                                'response_bytes': 'BLOB'    ,
+                                                'response_data' : 'TEXT'    ,
+                                                'response_hash' : 'TEXT'    ,
+                                                'response_type' : 'TEXT'    ,
+                                                'source'        : 'TEXT'    ,
+                                                'timestamp'     : 'INTEGER' }
             assert _.indexes() == ['idx__bedrock_requests__request_hash']
 
 

@@ -37,21 +37,23 @@ class test_Cache_Boto3_Requests(TestCase):
     def test__init__(self):
         with self.cache_boto3_requests as _:
 
-            assert _.__attr_names__()                         == ['add_timestamp', 'cache_only_mode', 'capture_exceptions', 'db_name','enabled',
+            assert _.__attr_names__()                         == ['add_source_location', 'add_timestamp', 'cache_only_mode', 'capture_exceptions', 'db_name','enabled',
                                                                   'exception_classes', 'on_invoke_target', 'pickle_response', 'sqlite_requests',
                                                                   'table_name','target_class', 'target_function', 'target_function_name','update_mode']
             assert _.db_name                                  == SQLITE_DB_NAME__BOTO3_REQUESTS_CACHE
             assert _.table_name                               == SQLITE_TABLE_NAME__BOTO3_REQUESTS
             assert _.sqlite_requests.exists()                 is True
             assert _.cache_entries()                          == []
-            assert _.cache_table().new_row_obj().__locals__() == {'cache_hits'      : 0     ,
-                                                                  'comments'        : ''    ,
-                                                                  'latest'          : False ,
+            assert _.cache_table().new_row_obj().__locals__() == {'comments'        : ''    ,
+                                                                  'metadata'        : ''    ,
                                                                   'request_data'    : ''    ,
                                                                   'request_hash'    : ''    ,
+                                                                  'request_type'    : ''    ,
                                                                   'response_bytes'  : b''   ,
                                                                   'response_data'   : ''    ,
                                                                   'response_hash'   : ''    ,
+                                                                  'response_type'   : ''    ,
+                                                                  'source'          : ''    ,
                                                                   'timestamp'       : 0     }
             assert parent_folder (_.sqlite_requests.db_path)  == current_temp_folder()
             assert file_extension(_.sqlite_requests.db_path)  == '.sqlite'
@@ -93,19 +95,19 @@ class test_Cache_Boto3_Requests(TestCase):
             assert mock_account_id        == account_id
             assert len(_.cache_entries()) == 1
 
-            assert cache_entry == { 'cache_hits'    : 0             ,
-                                    'comments'      : ''            ,
+            assert cache_entry == { 'comments'      : ''            ,
+                                    'metadata'      : ''            ,
                                     'id'            : 1             ,
-                                    'latest'        : 0             ,
-                                    # 'request_data'  : '"api_params: {}\\noperation_name: GetCallerIdentity\\n"',
-                                    # 'request_hash'  : '2601fc898fb72b1f7b3207185225199a2f7370bb532f0e5448335c97ca319b85',
-                                    'request_data': '"{\\n    \\"operation_name\\": '
+                                    'request_data'  : '"{\\n    \\"operation_name\\": '
                                                        '\\"GetCallerIdentity\\",\\n    \\"api_params\\": {}\\n}"',
-                                    'request_hash': '612f59e11f66106d9aae85311816db22a1e78fce2825c76729ac35e66e76b76e',
+                                    'request_hash'  : '612f59e11f66106d9aae85311816db22a1e78fce2825c76729ac35e66e76b76e',
+                                    'request_type'  : ''                                                ,
                                     'response_bytes': b'\x80\x04\x95\x14\x00\x00\x00\x00\x00\x00\x00}'
-                                                      b'\x94\x8c\x07Account\x94\x8c\x03ABC\x94s.',
+                                                      b'\x94\x8c\x07Account\x94\x8c\x03ABC\x94s.'       ,
                                     'response_data' : ''            ,
                                     'response_hash' : ''            ,
+                                    'response_type' : ''            ,
+                                    'source'        : ''            ,
                                     'timestamp'     : 0             }
 
 class test_Cache_Boto3_Requests__Local_DBs(TestCase):

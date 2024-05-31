@@ -134,8 +134,7 @@ class test_Bedrock__Cache(TestCase):
         request_data         = self.bedrock_cache.cache_request_data(model_id, body)                    # create object to tbe used to query cache
         new_row_obj          = self.bedrock_cache.create_new_cache_obj(request_data,response_data)      # get an object that is equal to the one that is going to be sent to the cache
         expected_cache_entry = { **new_row_obj.__locals__() ,                                           # extract its data , add the id and fix bug with bools
-                                 'id'    : 1                ,
-                                 'latest': 0                }                                           # BUG: this should be False
+                                 'id'    : 1                }
         bedrock              = Mock()                                                                   # create Mock object to capture calls
         bedrock.model_invoke.return_value = response_data                                               # simulate return value from call to bedrock.model_invoke
         assert len(self.bedrock_cache.cache_entries()) == 0                                             # assert that before call assert there are no entries
@@ -187,10 +186,7 @@ class test_Bedrock__Cache(TestCase):
         response_data        = [0,1,2,3]
         new_cache_entry      = self.bedrock_cache.create_new_cache_data(request_data, response_data)
         expected_cache_entry = { **new_cache_entry,
-                                 'comments'  : '',
-                                 'cache_hits': 0 ,
                                  'id'        : 1 ,
-                                 'latest'    : 0 ,
                                  'timestamp' : 0 }
         bedrock = Mock()
         bedrock.models.return_value = response_data
