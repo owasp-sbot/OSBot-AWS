@@ -1,6 +1,6 @@
 from osbot_aws.apis.EC2 import EC2
 from osbot_utils.base_classes.Kwargs_To_Self import Kwargs_To_Self
-from osbot_utils.helpers.SSH import SSH
+from osbot_utils.helpers.ssh.SSH import SSH
 from osbot_utils.utils.Dev import pprint
 from osbot_utils.utils.Http import wait_for_ssh
 from osbot_utils.utils.Misc import random_string
