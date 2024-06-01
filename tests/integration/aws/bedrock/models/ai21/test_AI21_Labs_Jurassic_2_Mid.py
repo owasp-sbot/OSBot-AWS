@@ -1,7 +1,6 @@
 from osbot_aws.aws.bedrock.models.ai21.AI21_Labs_Jurassic_2_Mid import AI21_Labs_Jurassic_2_Mid
-from osbot_aws.testing.TestCase__Bedrock import TestCase__Bedrock
-from osbot_utils.utils.Dev import pprint
-from osbot_utils.utils.Misc import list_set
+from osbot_aws.testing.TestCase__Bedrock                        import TestCase__Bedrock
+from osbot_utils.utils.Misc                                     import list_set
 
 
 class test_AI21_Labs_Jurassic_2_Mid(TestCase__Bedrock):
