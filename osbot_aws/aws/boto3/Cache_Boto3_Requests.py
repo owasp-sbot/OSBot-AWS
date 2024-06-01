@@ -14,10 +14,11 @@ class Cache_Boto3_Requests(Sqlite__Cache__Requests__Patch):
         self.target_function_name   = "_make_api_call"
         self.db_name                = SQLITE_DB_NAME__BOTO3_REQUESTS_CACHE
         self.table_name             = SQLITE_TABLE_NAME__BOTO3_REQUESTS
-        self.capture_exceptions     = True
-        self.exception_classes      = [ClientError]
-        #self.print_requests         = False
         super().__init__(db_path=db_path)
+        self.config.capture_exceptions     = True
+        self.config.exception_classes      = [ClientError]
+        #self.print_requests         = False
+
 
     def cache_entry_comments(self, model_id, body):
         return super().cache_entry_comments(model_id=model_id, body=body)

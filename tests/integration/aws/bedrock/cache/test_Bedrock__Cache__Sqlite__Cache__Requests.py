@@ -144,19 +144,19 @@ class test_Bedrock__Cache__Sqlite__Cache__Requests(TestCase):
 
     def test_disable(self):
         with self.bedrock_cache as _:
-            assert _.enabled is True
+            assert _.config.enabled is True
             _.disable()
-            assert _.enabled is False
+            assert _.config.enabled is False
             _.enable()
-            assert _.enabled is True
+            assert _.config.enabled is True
 
     def test_only_from_cache(self):
         with self.bedrock_cache as _:
-            assert _.cache_only_mode is False
+            assert _.config.cache_only_mode is False
             _.only_from_cache()
-            assert _.cache_only_mode is True
+            assert _.config.cache_only_mode is True
             _.only_from_cache(False)
-            assert _.cache_only_mode is False
+            assert _.config.cache_only_mode is False
 
 
     def test_requests_data__all(self):
@@ -202,8 +202,8 @@ class test_Bedrock__Cache__Sqlite__Cache__Requests(TestCase):
 
     def test_update(self):
         with self.bedrock_cache as _:
-            assert _.update_mode is False
+            assert _.config.update_mode is False
             _.update()
-            assert _.update_mode is True
+            assert _.config.update_mode is True
             _.update(False)
-            assert _.update_mode is False
+            assert _.config.update_mode is False

@@ -161,7 +161,7 @@ class test_Bedrock__Cache(TestCase):
         assert len(self.bedrock_cache.cache_entries()) == 1                                             # assert we still only have one entry in the cache
         assert bedrock.model_invoke.call_count         == 1                                             # confirm we only had one call
 
-        self.bedrock_cache.enabled = False                                                              # disable cache
+        self.bedrock_cache.config.enabled = False                                                              # disable cache
         response_3 = self.bedrock_cache.model_invoke(**kwargs)                                          # make another call
         assert response_3 == response_1                                                                 # confirm the responses are still the same
         assert bedrock.model_invoke.call_count == 2                                                     # confirm that two calls were made to the bedrock.model_invoke method
@@ -174,7 +174,7 @@ class test_Bedrock__Cache(TestCase):
         assert bedrock.model_invoke.call_count == 3                                                     # confirm that there was another call to the bedrock.model_invoke method
 
         # note: this next tests show a behaviour that happens when the case is enabled and disabled (the disable mode does not touch the cache database)
-        self.bedrock_cache.enabled = True                                                               # enable cache
+        self.bedrock_cache.config.enabled = True                                                               # enable cache
         response_5 = self.bedrock_cache.model_invoke(**kwargs)                                          # make another call to bedrock_cache.model_invoke
         assert response_5 == response_1                                                                 # where we now get previous value (since that is the one that was cached
         assert response_5 != response_4                                                                 # and doesn't match the changed value

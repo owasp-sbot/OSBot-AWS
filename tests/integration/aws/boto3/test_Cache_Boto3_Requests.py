@@ -81,7 +81,7 @@ class test_Cache_Boto3_Requests(TestCase):
 
         with self.cache_boto3_requests as _:
             _.set__add_timestamp(False)
-            _.on_invoke_target = on_invoke_target
+            _.set_on_invoke_target(on_invoke_target)
 
             assert _.cache_entries() == []
 
