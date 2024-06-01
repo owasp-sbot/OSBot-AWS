@@ -1,7 +1,7 @@
 from botocore.client                                                    import BaseClient
 from botocore.exceptions                                                import ClientError
-from osbot_utils.helpers.sqlite.domains.Sqlite__Cache__Requests__Patch  import Sqlite__Cache__Requests__Patch
-from osbot_utils.utils.Json import json_to_str
+from osbot_utils.helpers.sqlite.cache.Sqlite__Cache__Requests__Patch    import Sqlite__Cache__Requests__Patch
+from osbot_utils.utils.Json                                             import json_to_str
 
 SQLITE_DB_NAME__BOTO3_REQUESTS_CACHE = 'boto3_requests_cache.sqlite'
 SQLITE_TABLE_NAME__BOTO3_REQUESTS    = 'boto3_requests'
