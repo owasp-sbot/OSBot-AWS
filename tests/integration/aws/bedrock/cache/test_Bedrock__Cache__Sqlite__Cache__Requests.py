@@ -95,17 +95,19 @@ class test_Bedrock__Cache__Sqlite__Cache__Requests(TestCase):
             new_comment   = random_string(prefix='new_comment')
             request_data  = {'model': model_id, 'body': body}
             response_data = {'in': 'response'}
+
             _.cache_add(request_data, response_data)
-            assert len(_.cache_entries()) ==1
+
             cache_entry = _.cache_entries()[0]
-            assert request_data                                                             == json_loads(cache_entry.get('request_data'))
-            assert response_data                                                            == json_loads(cache_entry.get('response_data'))
-            assert _.cache_entry_for_request_params(model_id=model_id, body=body)           == cache_entry
-            assert _.cache_entry_comments       (model_id, body)                            == ''
-            assert _.cache_entry_comments_update(model_id, body, new_comment).get('status') == 'ok'
-            assert _.cache_entry_comments       (model_id, body)                            == new_comment
-            assert _.cache_table__clear().get('status')                                     == 'ok'
-            assert _.cache_entries()                                                        == []
+            assert len(_.cache_entries()) == 1
+            assert request_data          == json_loads(cache_entry.get('request_data'))
+            assert response_data         == json_loads(cache_entry.get('response_data'))
+            assert _.cache_entry_for_request_params(             model_id=model_id, body=body)               == cache_entry
+            assert _.cache_entry_comments          (             model_id=model_id, body=body)               == ''
+            assert _.cache_entry_comments_update   (new_comment, model_id=model_id, body=body).get('status') == 'ok'
+            assert _.cache_entry_comments          (             model_id=model_id, body=body)                == new_comment
+            assert _.cache_table__clear().get('status')  == 'ok'
+            assert _.cache_entries()                     == []
 
     def test_create_new_cache_data(self):
         model_id                 = 'aaaa'

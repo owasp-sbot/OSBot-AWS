@@ -19,6 +19,12 @@ class Cache_Boto3_Requests(Sqlite__Cache__Requests__Patch):
         #self.print_requests         = False
         super().__init__(db_path=db_path)
 
+    def cache_entry_comments(self, model_id, body):
+        return super().cache_entry_comments(model_id=model_id, body=body)
+
+    def cache_entry_comments_update(self, model_id, body, new_comments):
+        return super().cache_entry_comments_update(new_comments, model_id=model_id, body=body)
+
     def invoke_target(self, target, target_args, target_kwargs):
         #if self.print_requests:
             #print(f'[invoke_target]: {target_args}')
