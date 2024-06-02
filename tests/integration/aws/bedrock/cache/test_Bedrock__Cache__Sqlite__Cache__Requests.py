@@ -118,19 +118,19 @@ class test_Bedrock__Cache__Sqlite__Cache__Requests(TestCase):
         response_data            = {'the': 'return value'}
         request_data             = self.bedrock_cache.cache_request_data(model_id, body)
         new_cache_entry          = self.bedrock_cache.create_new_cache_row_data(request_data, response_data)
-        expected_new_cache_entry = {'comments'      : ''                                                                 ,
-                                    'metadata'      : ''                                                                 ,
-                                    'request_data'  : json_dumps(request_data)                                           ,
+        expected_new_cache_entry = {'request_data'  : json_dumps(request_data)                                           ,
                                     'request_hash'  : '1b16c63a54a704c20df7c449d04acb56f8c8d44a48e1d43bee20359536edcd71' ,
-                                    'request_type'  : ''                                                                 ,
                                     'response_bytes': b''                                                                ,
                                     'response_data' : json_dumps(response_data)                                          ,
                                     'response_hash' : '69e330ec7bf6334aa41ecaf56797fa86345d3cf85da4c622821aa42d4bee1799' ,
                                     'response_type' : 'dict'                                                             ,
-                                    'source'        : ''                                                                 ,
                                     'timestamp'     :  0                                                                 }
         expected_new_cache_obj   = { **expected_new_cache_entry,
-                                     'timestamp' : 0           }
+                                     'comments'    : '' ,
+                                     'metadata'    : '' ,
+                                     'request_type': '' ,
+                                     'source'      : '' ,
+                                     'timestamp'   : 0  }
         assert new_cache_entry == expected_new_cache_entry
         new_cache_obj = self.bedrock_cache.cache_table().new_row_obj(new_cache_entry)
         assert new_cache_obj.__locals__() == expected_new_cache_obj

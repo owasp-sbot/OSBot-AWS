@@ -190,8 +190,12 @@ class test_Bedrock__Cache(TestCase):
         response_data        = [0,1,2,3]
         new_cache_entry      = self.bedrock_cache.create_new_cache_row_data(request_data, response_data)
         expected_cache_entry = { **new_cache_entry,
-                                 'id'        : 1 ,
-                                 'timestamp' : 0 }
+                                 'comments'    : '' ,
+                                 'id'          : 1  ,
+                                 'metadata'    : '' ,
+                                 'request_type': '' ,
+                                 'source'      : '' ,
+                                 'timestamp'   : 0  }
         bedrock = Mock()
         bedrock.models.return_value = response_data
         models                      = self.bedrock_cache.models(bedrock)
