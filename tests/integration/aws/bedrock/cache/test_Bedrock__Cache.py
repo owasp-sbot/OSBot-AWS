@@ -10,7 +10,7 @@ from osbot_utils.base_classes.Kwargs_To_Self                            import K
 from osbot_utils.helpers.sqlite.Sqlite__Database                        import Sqlite__Database
 from osbot_utils.helpers.sqlite.cache.Sqlite__Cache__Requests           import Sqlite__Cache__Requests
 from osbot_utils.helpers.sqlite.domains.Sqlite__DB__Local               import Sqlite__DB__Local
-from osbot_utils.helpers.sqlite.domains.Sqlite__DB__Requests            import Sqlite__DB__Requests
+from osbot_utils.helpers.sqlite.cache.db.Sqlite__DB__Requests           import Sqlite__DB__Requests
 from osbot_utils.testing.Stdout                                         import Stdout
 from osbot_utils.utils.Files                                            import temp_file, file_not_exists, file_exists, parent_folder, current_temp_folder
 from osbot_utils.utils.Json                                             import from_json_str

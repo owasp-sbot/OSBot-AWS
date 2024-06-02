@@ -1,17 +1,14 @@
 from os import environ
 
-from botocore.client                            import BaseClient
-
-from osbot_aws.aws.boto3.Cache_Boto3_Requests import Cache_Boto3_Requests, SQLITE_DB_NAME__BOTO3_REQUESTS_CACHE, \
-    SQLITE_TABLE_NAME__BOTO3_REQUESTS
-from osbot_aws.testing.TestCase__Boto3_Cache    import TestCase__Boto3_Cache
-from osbot_utils.base_classes.Kwargs_To_Self import Kwargs_To_Self
-from osbot_utils.helpers.sqlite.Sqlite__Database import Sqlite__Database
-from osbot_utils.helpers.sqlite.domains.Sqlite__DB__Local import Sqlite__DB__Local, ENV_NAME_PATH_LOCAL_DBS
-from osbot_utils.helpers.sqlite.domains.Sqlite__DB__Requests import Sqlite__DB__Requests
-from osbot_utils.utils.Dev import pprint
-from osbot_utils.utils.Files import parent_folder
-from osbot_utils.utils.Objects import base_types
+from botocore.client                                            import BaseClient
+from osbot_aws.aws.boto3.Cache_Boto3_Requests                   import Cache_Boto3_Requests, SQLITE_DB_NAME__BOTO3_REQUESTS_CACHE, SQLITE_TABLE_NAME__BOTO3_REQUESTS
+from osbot_aws.testing.TestCase__Boto3_Cache                    import TestCase__Boto3_Cache
+from osbot_utils.base_classes.Kwargs_To_Self                    import Kwargs_To_Self
+from osbot_utils.helpers.sqlite.Sqlite__Database                import Sqlite__Database
+from osbot_utils.helpers.sqlite.domains.Sqlite__DB__Local       import Sqlite__DB__Local, ENV_NAME_PATH_LOCAL_DBS
+from osbot_utils.helpers.sqlite.cache.db.Sqlite__DB__Requests   import Sqlite__DB__Requests
+from osbot_utils.utils.Files                                    import parent_folder
+from osbot_utils.utils.Objects                                  import base_types
 
 
 class test_TestCase__Boto3_Cache(TestCase__Boto3_Cache):
