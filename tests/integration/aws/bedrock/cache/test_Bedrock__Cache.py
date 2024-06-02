@@ -36,7 +36,7 @@ class test_Bedrock__Cache(TestCase):
         assert file_not_exists(cls.temp_db_path) is True
 
     def tearDown(self):
-        self.bedrock_cache.cache_table().clear()
+        self.bedrock_cache.cache_table.clear()
 
     def test___init__(self):
         with self.bedrock_cache as _:

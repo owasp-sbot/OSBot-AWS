@@ -41,17 +41,17 @@ class test_Cache_Boto3_Requests(TestCase):
             assert _.table_name                               == SQLITE_TABLE_NAME__BOTO3_REQUESTS
             assert _.sqlite_requests.exists()                 is True
             assert _.cache_entries()                          == []
-            assert _.cache_table().new_row_obj().__locals__() == {'comments'        : ''    ,
-                                                                  'metadata'        : ''    ,
-                                                                  'request_data'    : ''    ,
-                                                                  'request_hash'    : ''    ,
-                                                                  'request_type'    : ''    ,
-                                                                  'response_bytes'  : b''   ,
-                                                                  'response_data'   : ''    ,
-                                                                  'response_hash'   : ''    ,
-                                                                  'response_type'   : ''    ,
-                                                                  'source'          : ''    ,
-                                                                  'timestamp'       : 0     }
+            assert _.cache_table.new_row_obj().__locals__() == {'comments'        : ''    ,
+                                                                'metadata'        : ''    ,
+                                                                'request_data'    : ''    ,
+                                                                'request_hash'    : ''    ,
+                                                                'request_type'    : ''    ,
+                                                                'response_bytes'  : b''   ,
+                                                                'response_data'   : ''    ,
+                                                                'response_hash'   : ''    ,
+                                                                'response_type'   : ''    ,
+                                                                'source'          : ''    ,
+                                                                'timestamp'       : 0     }
             assert parent_folder (_.sqlite_requests.db_path)  == current_temp_folder()
             assert file_extension(_.sqlite_requests.db_path)  == '.sqlite'
             assert base_types(_)                              == [Sqlite__Cache__Requests__Patch ,
@@ -126,7 +126,7 @@ class test_Cache_Boto3_Requests__Local_DBs(TestCase):
             assert parent_folder (_.sqlite_requests.db_path)  == path_local_dbs
             assert file_extension(_.sqlite_requests.db_path)  == '.sqlite'
             assert _.sqlite_requests.exists()                 is True
-            assert _.cache_table().exists()                   is True
+            assert _.cache_table.exists()                   is True
 
 
 

@@ -42,7 +42,6 @@ class test_Amazon_Titan_Tg1_Large(TestCase__Bedrock):
     def test__check_bedrock_behaviour(self):
         bedrock_cache: Bedrock__Cache
         bedrock_cache   = self.bedrock.bedrock_cache
-        cache_table     = bedrock_cache.cache_table()
         prompt          = 'hello'
         model_id        = self.model_id
         body            = self.model.body(prompt)

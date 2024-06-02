@@ -29,7 +29,7 @@ class test_Bedrock__Cache__Sqlite__Cache__Requests(TestCase):
         assert file_not_exists(cls.temp_db_path) is True
 
     def tearDown(self):
-        self.bedrock_cache.cache_table().clear()
+        self.bedrock_cache.cache_table.clear()
 
     def add_test_request(self):
         bedrock       = Mock()
@@ -66,7 +66,7 @@ class test_Bedrock__Cache__Sqlite__Cache__Requests(TestCase):
         new_row = self.bedrock_cache.cache_add(request_data, response_data)
         assert new_row.json() == expected_new_row
 
-        with self.bedrock_cache.cache_table() as _:
+        with self.bedrock_cache.cache_table as _:
             rows = _.select_rows_where(request_hash=request_data_sha256)
             assert len(rows) == 1
             row = rows [0]
@@ -131,7 +131,7 @@ class test_Bedrock__Cache__Sqlite__Cache__Requests(TestCase):
                                      'source'      : '' ,
                                      'timestamp'   : 0  }
         assert new_cache_entry == expected_new_cache_entry
-        new_cache_obj = self.bedrock_cache.cache_table().new_row_obj(new_cache_entry)
+        new_cache_obj = self.bedrock_cache.cache_table.new_row_obj(new_cache_entry)
         assert new_cache_obj.__locals__() == expected_new_cache_obj
         assert self.bedrock_cache.cache_entries() ==[]
 
@@ -166,7 +166,7 @@ class test_Bedrock__Cache__Sqlite__Cache__Requests(TestCase):
         with self.bedrock_cache as _:
             for requests_data in _.requests_data__all():
                 assert list_set(requests_data) == ['_comments','_hash', '_id', 'body', 'model']
-            assert _.cache_table().size() == count
+            assert _.cache_table.size() == count
 
     def test_response_data_for__request_hash(self):
         assert self.bedrock_cache.response_data_for__request_hash('aaaa') == {}
@@ -178,7 +178,7 @@ class test_Bedrock__Cache__Sqlite__Cache__Requests(TestCase):
             assert _.db_path != Sqlite__DB__Requests().path_local_db()
             assert _.db_path == self.temp_db_path
 
-        with self.bedrock_cache.cache_table() as _:
+        with self.bedrock_cache.cache_table as _:
 
             _._table_create().add_fields_from_class(Schema__Table__Requests).sql_for__create_table()
 
