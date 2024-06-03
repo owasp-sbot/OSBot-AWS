@@ -1,9 +1,10 @@
 import pytest
 
-from osbot_aws.aws.bedrock.models.mistral.Mistral_AI_7b_Instruct_v0_2 import Mistral_AI_7b_Instruct_v0_2
-from osbot_aws.aws.boto3.Capture_Boto3_Error import capture_boto3_error
-from osbot_aws.testing.TestCase__Bedrock import TestCase__Bedrock
-from osbot_utils.utils.Misc import list_set, in_github_action
+from osbot_aws.aws.bedrock.models.mistral.Mistral_AI_7b_Instruct_v0_2   import Mistral_AI_7b_Instruct_v0_2
+from osbot_aws.aws.boto3.Capture_Boto3_Error                            import capture_boto3_error
+from osbot_aws.testing.TestCase__Bedrock                                import TestCase__Bedrock
+from osbot_utils.utils.Env                                              import in_github_action
+from osbot_utils.utils.Misc import list_set
 
 
 class test_Mistral_AI_7b_Instruct_v0_2(TestCase__Bedrock):

@@ -1,9 +1,9 @@
 import pytest
 
 from osbot_aws.aws.bedrock.models.titan.Amazon_Titan_Image_Generator_V1 import Amazon_Titan_Image_Generator_V1
-from osbot_utils.utils.Dev import pprint
-from osbot_utils.utils.Misc import list_set, in_github_action
-from osbot_aws.testing.TestCase__Bedrock import TestCase__Bedrock
+from osbot_aws.testing.TestCase__Bedrock                                import TestCase__Bedrock
+from osbot_utils.utils.Env                                              import in_github_action
+from osbot_utils.utils.Misc                                             import list_set
 
 
 class test_Amazon_Titan_Image_Generator_V1(TestCase__Bedrock):

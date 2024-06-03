@@ -1,10 +1,11 @@
 import pytest
 
-from osbot_aws.aws.bedrock.cache.Bedrock__Cache import Bedrock__Cache
-from osbot_aws.aws.bedrock.models.titan.Amazon_Titan_Tg1_Large import Amazon_Titan_Tg1_Large
-from osbot_aws.testing.TestCase__Bedrock import TestCase__Bedrock
-from osbot_utils.utils.Json import json_parse
-from osbot_utils.utils.Misc import list_set, in_github_action
+from osbot_aws.aws.bedrock.cache.Bedrock__Cache                 import Bedrock__Cache
+from osbot_aws.aws.bedrock.models.titan.Amazon_Titan_Tg1_Large  import Amazon_Titan_Tg1_Large
+from osbot_aws.testing.TestCase__Bedrock                        import TestCase__Bedrock
+from osbot_utils.utils.Json                                     import json_parse
+from osbot_utils.utils.Env                                      import in_github_action
+from osbot_utils.utils.Misc                                     import list_set
 
 
 class test_Amazon_Titan_Tg1_Large(TestCase__Bedrock):
@@ -41,7 +42,6 @@ class test_Amazon_Titan_Tg1_Large(TestCase__Bedrock):
     def test__check_bedrock_behaviour(self):
         bedrock_cache: Bedrock__Cache
         bedrock_cache   = self.bedrock.bedrock_cache
-        cache_table     = bedrock_cache.cache_table()
         prompt          = 'hello'
         model_id        = self.model_id
         body            = self.model.body(prompt)

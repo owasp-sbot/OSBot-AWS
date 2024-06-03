@@ -1,0 +1,32 @@
+services:
+  postgres:
+    image: postgres:13
+    environment:
+      POSTGRES_USER: prefect
+      POSTGRES_PASSWORD: prefect
+      POSTGRES_DB: prefect
+    ports:
+      - "5432:5432"
+
+  prefect-server:
+    build: ./server
+    environment:
+      PREFECT_API_URL: http://0.0.0.0:4200/api
+      PREFECT_ORION_UI_API_URL: http://0.0.0.0:4200/api
+      PREFECT_DATABASE_CONNECTION_URL: postgresql+asyncpg://prefect:prefect@postgres/prefect
+    ports:
+      - "4200:4200"  # Prefect UI
+      - "8080:8080"  # Prefect API
+    depends_on:
+      - postgres
+
+  prefect-worker:
+    build: ./agent
+    depends_on:
+      - prefect-server
+    environment:
+      PREFECT_API_URL: http://prefect-server:4200/api
+      PREFECT_API_KEY: <your_api_key_here>
+      PREFECT_WORK_QUEUE_NAME: default
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock

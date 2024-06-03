@@ -62,21 +62,6 @@ class test_Deploy_OSBot_AWS__To_EC2(TestCase):
 # import sys
 # print(sys.version_info.major, sys.version_info.minor, sys.version_info.micro)
 # """
-            #assert '3.9.16' in _.execute_command__return_stdout(multi_line_command)
-            #assert _.execute_python__code__return_stdout(multi_line_command) == '3 9 16'#
-
-            # def an_function():
-            #     return 'Hello from the EC2 instance!'
-            # assert _.execute_python__function(an_function).get('stdout') == 'Hello from the EC2 instance!\n'
-            #pprint(exec_code)
-
-            # def test_osbot_utils():
-            #     from osbot_utils.utils.Misc import str_to_base64
-            #     an_value = 'this will be base64 encoded!'
-            #     return str_to_base64(an_value)
-            #
-            # function_return_value = _.execute_python__function__return_stdout(test_osbot_utils)
-            # assert base64_to_str(function_return_value) == 'this will be base64 encoded!'
 
             # def test_osbot_aws():
             #     from osbot_aws.aws.sts.STS import STS

@@ -4,15 +4,15 @@ from decimal import Decimal
 
 import pytest
 
-from osbot_aws.AWS_Config import AWS_Config
-from osbot_aws.aws.dynamo_db.Dynamo_DB__Table import Dynamo_DB__Table
-from osbot_aws.aws.dynamo_db.domains.DyDB__Table import DyDB__Table
-from osbot_aws.aws.dynamo_db.domains.DyDB__Table_With_GSI import DyDB__Table_With_GSI
-from osbot_aws.testing.TestCase__Dynamo_DB import TestCase__Dynamo_DB
-from osbot_utils.base_classes.Kwargs_To_Self import Kwargs_To_Self
-from osbot_utils.utils.Dev import pprint
-from osbot_utils.utils.Misc import in_github_action, random_number, timestamp_utc_now_less_delta, list_set
-from osbot_utils.utils.Objects import base_types
+from osbot_aws.AWS_Config                                   import AWS_Config
+from osbot_aws.aws.dynamo_db.Dynamo_DB__Table               import Dynamo_DB__Table
+from osbot_aws.aws.dynamo_db.domains.DyDB__Table            import DyDB__Table
+from osbot_aws.aws.dynamo_db.domains.DyDB__Table_With_GSI   import DyDB__Table_With_GSI
+from osbot_aws.testing.TestCase__Dynamo_DB                  import TestCase__Dynamo_DB
+from osbot_utils.base_classes.Kwargs_To_Self                import Kwargs_To_Self
+from osbot_utils.utils.Dev                                  import pprint
+from osbot_utils.utils.Misc                                 import random_number, timestamp_utc_now_less_delta, list_set
+from osbot_utils.utils.Objects                              import base_types
 
 
 class test_DyDB__Table(TestCase__Dynamo_DB):

@@ -4,10 +4,15 @@ from osbot_aws.AWS_Config import AWS_Config
 from osbot_aws.aws.bedrock.Bedrock import Bedrock
 from osbot_aws.aws.dynamo_db.Dynamo_DB import Dynamo_DB
 from osbot_aws.aws.iam.Capture_IAM_Exception import Capture_IAM_Exception
+from osbot_aws.testing.Pytest import skip_pytest___aws_pytest_user_name__is_not_set
 from tests.integration.aws.iam.test_IAM import IAM_USER_NAME__OSBOT_AWS
 
 
 class test_Capture_IAM_Exception(TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        skip_pytest___aws_pytest_user_name__is_not_set()
 
     def setUp(self):
         self.aws_config = AWS_Config()

@@ -1,4 +1,6 @@
 from unittest                           import TestCase
+
+from osbot_aws.testing.Pytest import skip_pytest___aws_pytest_user_name__is_not_set
 from osbot_utils.utils.Misc             import list_set
 from osbot_aws.aws.iam.IAM_Assume_Role  import IAM_Assume_Role
 
@@ -15,11 +17,11 @@ class test_IAM_Assume_Role(TestCase):
 
     @classmethod
     def setUpClass(cls):
+        skip_pytest___aws_pytest_user_name__is_not_set()
         cls.iam_assume_role = IAM_Assume_Role(role_name=TEMP_ROLE_NAME__ASSUME_ROLE)
 
     #@print_boto3_calls()
     def test_create_role(self):
-        print()
         self.iam_assume_role.reset()                                        # reset cache (delete and create a new one)
         assert self.iam_assume_role.cached_role.cache_exists() is True      # check that cache doesn't exist
 

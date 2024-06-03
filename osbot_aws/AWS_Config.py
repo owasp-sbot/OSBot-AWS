@@ -1,6 +1,7 @@
 import os
 
-from dotenv import load_dotenv
+from osbot_utils.utils.Env import load_dotenv
+
 
 class AWS_Config:
 
@@ -18,6 +19,7 @@ class AWS_Config:
     def aws_session_profile_name    (self): return os.getenv('AWS_PROFILE_NAME'                                                                   )
     def aws_session_region_name     (self): return os.getenv('AWS_DEFAULT_REGION'                                                                 )
     def aws_session_account_id      (self): return os.getenv('AWS_ACCOUNT_ID'                ) or  self.sts_session_account_id()
+
     def dev_skip_aws_key_check      (self): return os.getenv('DEV_SKIP_AWS_KEY_CHECK'        , False                                              )     # use to not have the 500ms check that happens during this check
     def bot_name                    (self): return os.getenv('OSBOT_NAME'                                                                         )     # todo: refactor variable to osbot_name (need to check for side effects)
     def lambda_s3_bucket            (self): return self.resolve_lambda_bucket_name()
