@@ -23,7 +23,7 @@ class EC2_Instance(Kwargs_To_Self):
     def create(self):
         kwargs = self.create_kwargs
         random_name = random_string(prefix='test_ec2_with_ssh_support')
-        if not kwargs.get('image_id'     ): kwargs['image_id'     ] = AMI().amazon_linux_2()
+        if not kwargs.get('image_id'     ): kwargs['image_id'     ] = AMI().amazon_linux_3()
         if not kwargs.get('instance_type'): kwargs['instance_type'] = 't2.nano'
         if not kwargs.get('name'         ): kwargs['name'         ] = random_name
         if not kwargs.get('tags'         ): kwargs['tags'         ] = {'Type': 'EC2_Instance'}

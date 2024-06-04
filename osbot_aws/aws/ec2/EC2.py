@@ -4,6 +4,7 @@ import boto3
 from botocore.exceptions import ClientError
 
 from osbot_utils.base_classes.Type_Safe import Type_Safe
+from osbot_utils.utils.Dev import pprint
 from osbot_utils.utils.Lists import list_index_by, list_get
 
 from osbot_aws.AWS_Config import set_aws_region, AWS_Config
@@ -36,21 +37,25 @@ class EC2(Type_Safe):
         return Session().resource('ec2')
 
     def ami(self, ami_id):
-        result = self.amis(ami_id=ami_id)
+        #result = self.amis(ami_id=ami_id)
         images = self.client().describe_images(ImageIds=[ami_id]).get('Images')
         if len(images) == 1:
-            return result.pop()
+            return images.pop()
 
     @index_by
     @group_by
-    def amis(self, owner='self', architecture=None, state='available', name=None, description=None, ami_id=None):  # todo: find how to search for amis in the quick start
-        kwargs = {'Owners' : [owner] ,
-                  'Filters' : [ {'Name': 'state', 'Values': [state]}]}
-        if architecture : kwargs.get('Filters').append({'Name': 'architecture', 'Values': [architecture]})
-        if name         : kwargs.get('Filters').append({'Name': 'name'        , 'Values': [name        ]})
-        if description  : kwargs.get('Filters').append({'Name': 'description' , 'Values': [description ]})
-        if ami_id       : kwargs.get('Filters').append({'Name': 'image-id'    , 'Values': [ami_id      ]})
-        return self.client().describe_images(**kwargs).get('Images')
+    def amis(self, owner='self', architecture=None, state='available', name=None, description=None, ami_id=None, **kwargs):  # todo: find how to search for amis in the quick start
+        filters = [{'Name': 'state', 'Values': [state]}]
+        if architecture : filters.append({'Name': 'architecture', 'Values': [architecture]})
+        if name         : filters.append({'Name': 'name'        , 'Values': [name        ]})
+        if description  : filters.append({'Name': 'description' , 'Values': [description ]})
+        if ami_id       : filters.append({'Name': 'image-id'    , 'Values': [ami_id      ]})
+        for key,value in kwargs.items():
+            filters.append({'Name': key, 'Values': [value]})
+        describe_kwargs = {'Owners': [owner],
+                           'Filters':filters }
+        pprint(describe_kwargs)
+        return self.client().describe_images(**describe_kwargs).get('Images')
 
     def image(self, image_id):
         return self.ami(ami_id=image_id)

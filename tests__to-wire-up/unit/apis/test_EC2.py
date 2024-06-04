@@ -2,11 +2,10 @@ import pytest
 
 from osbot_aws.aws.sts.STS import STS
 from osbot_utils.utils.Lists import list_index_by
-
 from osbot_utils.utils.Files import file_exists, file_contents, file_delete
 
 from osbot_aws.apis.test_helpers.Temp_VPC import Temp_VPC
-from osbot_aws.apis.EC2                   import EC2
+from osbot_aws.aws.ec2.EC2                   import EC2
 from unittest                             import TestCase
 from osbot_utils.utils.Dev                import pprint
 
