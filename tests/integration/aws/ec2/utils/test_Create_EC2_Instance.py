@@ -46,13 +46,13 @@ class test_Create__EC2__Instance(TestCase__EC2):
             # ssh into instance
 
             ec_instance     = EC2_Instance(instance_id=instance_id, ec2=_.ec2)
+            ec_instance.wait_for_ssh()
+
             ssh_key_file    = _.path_key_file()
             key_key_user    = 'ec2-user'
             ssh             = ec_instance.ssh(ssh_key_file, key_key_user)
 
             assert ec_instance.exists() is True
-            ec_instance.wait_for_ssh()
-
             assert ssh.ssh_linux().pwd() == '/home/ec2-user'
 
             # delete instance
