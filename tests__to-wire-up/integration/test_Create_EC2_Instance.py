@@ -20,7 +20,7 @@ class test_EC2_Create_Instance(TestCase):
     #    Queue
 
     def test_create_and_delete_ec2_instance(self):
-        image_id = AMI().amazon_linux_2()
+        image_id = AMI().amazon_linux_3()
         name     = random_string(prefix='test_ec2_with_ssh_support-')
         tags     = {'Name': f'osbot_aws - {name}'}
         kwargs   = {  "image_id"         : image_id          ,
@@ -38,7 +38,7 @@ class test_EC2_Create_Instance(TestCase):
         import logging
         #logging.getLogger('botocore').setLevel(logging.DEBUG)
         #logging.getLogger('boto3').setLevel(logging.DEBUG)
-        image_id            = AMI().amazon_linux_2()
+        image_id            = AMI().amazon_linux_3()
         name                = random_string(prefix='test_ec2_with_ssh_support-')
         tags                = {'Name': f'osbot_aws - {name}'}
         key_name            = f'osbot-{name}'

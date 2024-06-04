@@ -1,0 +1,11 @@
+services:
+  osbot_aws:
+    build:
+      context     : .
+      dockerfile  : Dockerfile
+    platform      : linux/amd64
+    image         : diniscruz/osbot_aws_fast_api
+    container_name: osbot_aws_fast_api__container
+
+    env_file:
+      - ../../.env

@@ -1,15 +1,13 @@
 from os import environ
 
-from osbot_aws.apis.EC2 import EC2
-from osbot_utils.base_classes.Kwargs_To_Self import Kwargs_To_Self
-from osbot_utils.helpers.ssh.SSH import SSH
-from osbot_utils.helpers.ssh.SSH__Execute import ENV_VAR__SSH__HOST, ENV_VAR__SSH__KEY_FILE, ENV_VAR__SSH__USER
-from osbot_utils.utils.Dev import pprint
-from osbot_utils.utils.Http import wait_for_ssh
-from osbot_utils.utils.Misc import random_string
-
-from osbot_aws.helpers.AMI import AMI
-
+from osbot_aws.aws.ec2.AMI import AMI
+from osbot_aws.aws.ec2.EC2                      import EC2
+from osbot_utils.base_classes.Kwargs_To_Self    import Kwargs_To_Self
+from osbot_utils.helpers.ssh.SSH                import SSH
+from osbot_utils.helpers.ssh.SSH__Execute       import ENV_VAR__SSH__HOST, ENV_VAR__SSH__KEY_FILE, ENV_VAR__SSH__USER
+from osbot_utils.utils.Dev                      import pprint
+from osbot_utils.utils.Http                     import wait_for_ssh
+from osbot_utils.utils.Misc                     import random_string
 
 class EC2_Instance(Kwargs_To_Self):
     instance_id   : str
@@ -23,7 +21,7 @@ class EC2_Instance(Kwargs_To_Self):
     def create(self):
         kwargs = self.create_kwargs
         random_name = random_string(prefix='test_ec2_with_ssh_support')
-        if not kwargs.get('image_id'     ): kwargs['image_id'     ] = AMI().amazon_linux_2()
+        if not kwargs.get('image_id'     ): kwargs['image_id'     ] = AMI().amazon_linux_3()
         if not kwargs.get('instance_type'): kwargs['instance_type'] = 't2.nano'
         if not kwargs.get('name'         ): kwargs['name'         ] = random_name
         if not kwargs.get('tags'         ): kwargs['tags'         ] = {'Type': 'EC2_Instance'}

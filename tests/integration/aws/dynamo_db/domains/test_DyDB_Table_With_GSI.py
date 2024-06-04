@@ -15,6 +15,7 @@ from osbot_utils.utils.Misc                                 import random_number
 from osbot_utils.utils.Objects                              import base_types
 
 
+@pytest.mark.skip("Needs AWS environment setup ")
 class test_DyDB__Table(TestCase__Dynamo_DB):
     delete_on_exit     : bool                   = False            # in_github_action() #can't really do this since it takes ages (like several minutes for the GSIs to be created)
     aws_config         : AWS_Config

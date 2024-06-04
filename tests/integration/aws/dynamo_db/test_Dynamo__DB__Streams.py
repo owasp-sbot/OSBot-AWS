@@ -1,3 +1,5 @@
+import pytest
+
 from osbot_aws.aws.dynamo_db.Dynamo_DB import Dynamo_DB
 from osbot_aws.aws.dynamo_db.Dynamo_DB__Streams import Dynamo_DB__Streams
 from osbot_aws.aws.dynamo_db.Dynamo_DB__Table import Dynamo_DB__Table
@@ -7,6 +9,7 @@ from osbot_utils.utils.Dev import pprint
 from osbot_utils.utils.Misc import wait_for
 
 
+@pytest.mark.skip("Needs AWS environment setup")
 class test_Dynamo__DB__Streams(TestCase__Dynamo_DB):
 
     dynamo_db_streams: Dynamo_DB__Streams

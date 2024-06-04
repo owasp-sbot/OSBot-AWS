@@ -50,6 +50,15 @@ class STS:
     def caller_identity_arn(self):
         return self.caller_identity().get('Arn')
 
+    def caller_identity_user(self):
+        arn = self.caller_identity().get('Arn')
+        if ':user/' in arn:
+            return arn.split(':user/')[-1]
+        elif ':assumed-role/' in arn:
+            return arn.split(':assumed-role/')[-1].split('/')[1]
+        else:
+            raise ValueError("ARN does not contain a user or assumed-role")
+
     def check_aws_session(self):
         try:
             caller_arn = self.caller_identity().get('Arn')

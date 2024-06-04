@@ -1,11 +1,13 @@
 import os
 
+from osbot_utils.base_classes.Type_Safe import Type_Safe
 from osbot_utils.utils.Env import load_dotenv
 
 
-class AWS_Config:
+class AWS_Config(Type_Safe):
 
     def __init__(self):
+        super().__init__()
         load_dotenv()
 
     def __enter__(self):
@@ -18,7 +20,7 @@ class AWS_Config:
     def aws_secret_access_key       (self): return os.getenv('AWS_SECRET_ACCESS_KEY'                                                              )
     def aws_session_profile_name    (self): return os.getenv('AWS_PROFILE_NAME'                                                                   )
     def aws_session_region_name     (self): return os.getenv('AWS_DEFAULT_REGION'                                                                 )
-    def aws_session_account_id      (self): return os.getenv('AWS_ACCOUNT_ID'                ) or  self.sts_session_account_id()
+    def aws_session_account_id      (self): return os.getenv('AWS_ACCOUNT_ID'                ) or  self.sts__session_account_id()
 
     def dev_skip_aws_key_check      (self): return os.getenv('DEV_SKIP_AWS_KEY_CHECK'        , False                                              )     # use to not have the 500ms check that happens during this check
     def bot_name                    (self): return os.getenv('OSBOT_NAME'                                                                         )     # todo: refactor variable to osbot_name (need to check for side effects)
@@ -39,9 +41,13 @@ class AWS_Config:
     def set_lambda_role_name        (self, value): os.environ['OSBOT_LAMBDA_ROLE_NAME'          ] = value ; return value
     def set_bot_name                (self, value): os.environ['OSBOT_NAME'                      ] = value ; return value
 
-    def sts_session_account_id(self):                   # to handle when the AWS_ACCOUNT_ID is not set
+    def sts__session_account_id(self):                   # to handle when the AWS_ACCOUNT_ID is not set
         from osbot_aws.aws.sts.STS import STS           #   the use of this method is not advised
         return STS().current_account_id()               #   since this is quite an expensive method
+
+    def sts__caller_identity_user(self):                               #
+        from osbot_aws.aws.sts.STS import STS           #
+        return STS().caller_identity_user()                  #
 
     # helper methods
     def account_id (self): return self.aws_session_account_id()

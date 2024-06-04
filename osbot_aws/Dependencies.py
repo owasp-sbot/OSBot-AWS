@@ -5,6 +5,7 @@ from osbot_utils.decorators.methods.cache_on_self import cache_on_self
 from osbot_utils.utils.Files    import Files, folder_exists, folder_not_exists, folder_create, file_not_exists
 from osbot_utils.utils.Process  import Process
 
+# todo: move to lambdas_ section (since this is used by lambdas to dynamically load dependencies from zip files in s3)
 
 class Dependencies:
 
