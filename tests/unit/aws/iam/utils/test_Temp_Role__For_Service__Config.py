@@ -27,6 +27,6 @@ class test_Temp_Role__For_Service__Config(TestCase):
                               'required_services'   : ['required-service-A']                                 ,
                               'resource'            : '*'                                                    ,
                               'role_access_type'    : 'Full_Access'                                          ,
-                              'role_name'           : 'ROLE__temp__Full_Access__osbot__for__an-service-name' }
+                              'role_name'           : 'ROLE__temp_osbot__Full_Access__an-service-name' }
 
             assert _.data().__locals__() == expected_data
