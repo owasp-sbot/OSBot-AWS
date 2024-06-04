@@ -47,5 +47,12 @@ class Temp_Role__For_Service(Type_Safe):
         iam_assume_role = self._iam_assume_role()
         return iam_assume_role.boto3_client(service_name=service_name)
 
+    @cache_on_self
+    def resource(self):
+        self._create_role_and_credentials()
+        service_name = self._temp_role_config.boto3_service_name
+        iam_assume_role = self._iam_assume_role()
+        return iam_assume_role.boto3_resource(service_name=service_name)
+
 
 

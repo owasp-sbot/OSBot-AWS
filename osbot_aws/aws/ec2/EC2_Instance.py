@@ -1,15 +1,13 @@
 from os import environ
 
-from osbot_aws.apis.EC2 import EC2
-from osbot_utils.base_classes.Kwargs_To_Self import Kwargs_To_Self
-from osbot_utils.helpers.ssh.SSH import SSH
-from osbot_utils.helpers.ssh.SSH__Execute import ENV_VAR__SSH__HOST, ENV_VAR__SSH__KEY_FILE, ENV_VAR__SSH__USER
-from osbot_utils.utils.Dev import pprint
-from osbot_utils.utils.Http import wait_for_ssh
-from osbot_utils.utils.Misc import random_string
-
-from osbot_aws.helpers.AMI import AMI
-
+from osbot_aws.aws.ec2.AMI import AMI
+from osbot_aws.aws.ec2.EC2                      import EC2
+from osbot_utils.base_classes.Kwargs_To_Self    import Kwargs_To_Self
+from osbot_utils.helpers.ssh.SSH                import SSH
+from osbot_utils.helpers.ssh.SSH__Execute       import ENV_VAR__SSH__HOST, ENV_VAR__SSH__KEY_FILE, ENV_VAR__SSH__USER
+from osbot_utils.utils.Dev                      import pprint
+from osbot_utils.utils.Http                     import wait_for_ssh
+from osbot_utils.utils.Misc                     import random_string
 
 class EC2_Instance(Kwargs_To_Self):
     instance_id   : str

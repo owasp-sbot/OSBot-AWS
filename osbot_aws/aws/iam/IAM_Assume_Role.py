@@ -63,6 +63,16 @@ class IAM_Assume_Role:
             kwargs['region_name'] = region_name
         return boto3.client(**kwargs)
 
+    def boto3_resource(self, service_name='iam', region_name=None, retries=20):
+        credentials = self.credentials(retries=retries)
+        kwargs = dict(service_name          = service_name                  ,
+                      aws_access_key_id     = credentials['AccessKeyId'    ],
+                      aws_secret_access_key = credentials['SecretAccessKey'],
+                      aws_session_token     = credentials['SessionToken'   ])
+        if region_name:
+            kwargs['region_name'] = region_name
+        return boto3.resource(**kwargs)
+
     def create_credentials(self, retries=30):
         self.credentials_raw(retries=retries)
         return self
