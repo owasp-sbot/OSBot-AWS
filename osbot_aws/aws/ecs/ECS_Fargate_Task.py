@@ -1,7 +1,7 @@
 from osbot_aws.apis.Cloud_Watch_Logs        import Cloud_Watch_Logs
 from osbot_utils.decorators.lists.index_by  import index_by
 from osbot_aws.AWS_Config                   import AWS_Config
-from osbot_aws.apis.EC2                     import EC2
+from osbot_aws.aws.ec2.EC2                  import EC2
 from osbot_aws.aws.ecs.ECS                  import ECS
 from osbot_aws.aws.iam.IAM                  import IAM
 

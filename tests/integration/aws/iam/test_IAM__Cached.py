@@ -1,7 +1,12 @@
+import os
+
 from osbot_aws.AWS_Config                       import AWS_Config
+from osbot_aws.aws.boto3.View_Boto3_Rest_Calls import print_boto3_calls
 from osbot_aws.aws.iam.IAM                      import IAM
 from osbot_aws.testing.TestCase__Boto3_Cache    import TestCase__Boto3_Cache
+from osbot_utils.testing.Logging import Logging
 from osbot_utils.utils.Misc                     import list_set
+from osbot_utils.utils.Python_Logger import Python_Logger
 from tests.integration.aws.iam.test_IAM         import IAM_USER_NAME__OSBOT_AWS, TEST_USER_NAME, TEST_USER_ROLE
 
 class test_IAM__Cached(TestCase__Boto3_Cache):
@@ -50,6 +55,7 @@ class test_IAM__Cached(TestCase__Boto3_Cache):
         assert self.test_role_arn     == f'arn:aws:iam::{self.account_id}:role/{self.test_role}'
 
 
+    #@print_boto3_calls()
     def test_access_keys(self):
         access_keys = self.iam.access_keys(index_by='AccessKeyId')
         access_key  = access_keys[self.access_key_id]

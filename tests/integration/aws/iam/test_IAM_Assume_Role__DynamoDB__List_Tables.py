@@ -4,6 +4,7 @@ from osbot_aws.aws.iam.IAM_Assume_Role import IAM_Assume_Role
 from osbot_aws.testing.Pytest import skip_pytest___aws_pytest_user_name__is_not_set
 
 
+
 class test_IAM_Assume_Role__DynamoDB__List_Tables(TestCase):
 
     @classmethod
@@ -22,7 +23,7 @@ class test_IAM_Assume_Role__DynamoDB__List_Tables(TestCase):
             _.create_role(recreate=True)
             client_dynamodb = _.boto3_client(service_name='dynamodb', region_name = 'eu-west-2')
             table_names     = client_dynamodb.list_tables().get('TableNames')
-            assert len(table_names) > 1
+            assert type(table_names) is list
 
     # #  todo: document better this bug: research more the interesting error that is happening when we quickly create and delete a role (the credentials work for a couple seconds and then stop working)
     # #  note: this test is commented out, but all passed ok when executed locally

@@ -2,9 +2,11 @@ from os import chmod
 
 import boto3
 from botocore.exceptions import ClientError
+
+from osbot_utils.base_classes.Type_Safe import Type_Safe
 from osbot_utils.utils.Lists import list_index_by, list_get
 
-from osbot_aws.AWS_Config import set_aws_region
+from osbot_aws.AWS_Config import set_aws_region, AWS_Config
 from osbot_utils.decorators.methods.cache_on_self import cache_on_self
 from osbot_utils.utils.Files import file_name, temp_folder, path_combine, file_create
 
@@ -21,14 +23,16 @@ from osbot_utils.utils.Status import status_warning, status_ok
 EC2_WAITER_DELAY        = 1             # default was 15 seconds
 EC2_WAITER_MAX_ATTEMPTS = 600           # default was 40 times
 
-class EC2:
+class EC2(Type_Safe):
+
+    aws_config : AWS_Config
 
     @cache_on_self
     def client(self):
         return Session().client('ec2')
 
     @cache_on_self
-    def resource(self):
+    def resource(self):                     # todo: refactor this out and only use client() for all calls
         return Session().resource('ec2')
 
     def ami(self, ami_id):

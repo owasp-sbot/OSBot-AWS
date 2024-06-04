@@ -63,7 +63,7 @@ class IAM_Assume_Role:
             kwargs['region_name'] = region_name
         return boto3.client(**kwargs)
 
-    def create_credentials(self, retries=20):
+    def create_credentials(self, retries=30):
         self.credentials_raw(retries=retries)
         return self
 
@@ -92,7 +92,7 @@ class IAM_Assume_Role:
             if create_credentials:
                 self.create_credentials()
 
-    def credentials(self, reset=False, retries=20):
+    def credentials(self, reset=False, retries=30):
         if reset or self.credentials_expired():
             self.credentials_reset()
 
@@ -121,22 +121,22 @@ class IAM_Assume_Role:
             return expiration_time < current_time
         return True
 
-    def credentials_raw(self, role_session_name=None,  retries=20, delay=0.2):
+    def credentials_raw(self, role_session_name=None,  retries=30, delay=0.5):      # todo: capture metric for how long it takes to get the credentials
         credentials_raw = self.data().get('result__credentials')
-        if credentials_raw is None:
-            for attempt in range(retries):
-                try:
-                    credentials_raw = self.sts().assume_role(role_arn=self.role_arn(), role_session_name=role_session_name)
-                    self.cached_role.set('result__credentials', credentials_raw)
-                    return credentials_raw
-                except ClientError as e:
-                    if e.response['Error']['Code'] == 'AccessDenied' and attempt < retries - 1:
-                        # todo: remove this print once we confirm that this is working ok
-                        print(">>>>>>>> in credentials_raw <<<<<< waiting for 0.2 seconds before retrying")
-                        wait_for(delay)
-                    else:
-                       raise
-        return credentials_raw
+        if credentials_raw is not None:
+            return credentials_raw
+        for attempt in range(retries):
+            try:
+                credentials_raw = self.sts().assume_role(role_arn=self.role_arn(), role_session_name=role_session_name)
+                self.cached_role.set('result__credentials', credentials_raw)
+                return credentials_raw
+            except ClientError as e:
+                if e.response['Error']['Code'] == 'AccessDenied' and attempt < retries - 1:
+                    wait_for(delay)
+                else:
+                    print(">>>>>>>> in credentials_raw <<<<<< FAILED TO GET CREDENTIALS")
+                    raise
+        raise Exception(">>>>>>>> in credentials_raw <<<<<< FAILED TO GET CREDENTIALS")
 
 
     def credentials_reset(self):
@@ -230,7 +230,7 @@ class IAM_Assume_Role:
                 return target_method()
             except Exception as e:
                 print()
-                print(">>>>>>>> in wait_for_valid_execution <<<<<< waiting for 0.2 seconds before retrying")
-                print(f"        error:{e}")
+                print(f">> [ attempt {attempt}] in wait_for_valid_execution | waiting for {delay} seconds before retrying << ")
+                print(f">>   error:{e}")
             wait_for(delay)
             self.credentials_reset()                # reset credentials before trying again

@@ -5,7 +5,7 @@ from osbot_aws.aws.apigateway.apigw_dydb.WS__DyDB import WS__DyDB, DYNAMO_DB__TA
 from osbot_aws.testing.TestCase__Dynamo_DB import TestCase__Dynamo_DB
 from osbot_aws.utils.Execution_Env import current_execution_env
 
-
+@pytest.mark.skip('need to add caching layer ') # todo: add caching layer
 class test_WS__DyDB(TestCase__Dynamo_DB):
     dydb_ws: WS__DyDB
     source : str

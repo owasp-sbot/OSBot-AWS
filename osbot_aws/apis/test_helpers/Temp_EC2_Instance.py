@@ -1,4 +1,4 @@
-from osbot_aws.helpers.EC_Instance import EC2_Instance
+from osbot_aws.helpers.EC2_Instance import EC2_Instance
 
 
 class Temp_EC2_Instance:

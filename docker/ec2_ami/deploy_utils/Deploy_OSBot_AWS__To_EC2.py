@@ -6,7 +6,7 @@ from osbot_aws.apis.EC2 import EC2
 from osbot_aws.aws.iam.roles.IAM__Role_for__EC2_Instances import IAM__Role_for__EC2_Instances
 from osbot_aws.aws.s3.S3__with_temp_role import S3__with_temp_role
 from osbot_aws.aws.sts.STS import STS
-from osbot_aws.helpers.EC_Instance import EC2_Instance
+from osbot_aws.helpers.EC2_Instance import EC2_Instance
 from osbot_utils.base_classes.Kwargs_To_Self import Kwargs_To_Self
 from osbot_utils.utils.Dev import pprint
 from osbot_utils.utils.Env import load_dotenv

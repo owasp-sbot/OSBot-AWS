@@ -1,6 +1,6 @@
 import pytest
 from unittest               import TestCase
-from osbot_aws.apis.EC2     import EC2
+from osbot_aws.aws.ec2.EC2  import EC2
 from osbot_utils.utils.Dev  import pprint
 from osbot_aws.aws.ecs.ECS  import ECS
 

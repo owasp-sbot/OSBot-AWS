@@ -13,6 +13,7 @@ from osbot_utils.utils.Misc import list_set
 from osbot_utils.utils.Objects import obj_info, base_types
 
 
+@pytest.mark.skip("Needs AWS environment setup ")
 class test_DyDB__Table__Registry(TestCase__Dynamo_DB):
     temp_dydb_table_resources: DyDB__Table__Resources
     table_name               : str                    = 'temp_dydb_table_resources'

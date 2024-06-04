@@ -1,3 +1,5 @@
+import pytest
+
 from osbot_aws.aws.apigateway.apigw_dydb.WS__Handle_Events  import WS__Handle_Events
 from osbot_aws.testing.TestCase__Dynamo_DB                  import TestCase__Dynamo_DB
 from osbot_aws.utils.Version                                import version
@@ -5,6 +7,7 @@ from osbot_utils.utils.Json                                 import from_json_str
 from osbot_utils.utils.Misc                                 import random_guid, list_set
 
 
+@pytest.mark.skip("Needs AWS environment setup , in this case the Lambda function invoked below")
 class test_WS__Handle_Events(TestCase__Dynamo_DB):
     connection_id   : str
     source          : str                = 'PyTest'

@@ -1,6 +1,7 @@
 from unittest               import TestCase
 
 from osbot_aws.testing.Pytest import skip_pytest___aws_pytest_user_name__is_not_set
+from osbot_aws.testing.TestCase__Boto3_Cache import TestCase__Boto3_Cache
 from osbot_utils.utils.Misc import list_set
 from osbot_aws.AWS_Config   import AWS_Config
 from osbot_aws.aws.iam.IAM  import IAM
@@ -9,7 +10,7 @@ IAM_USER_NAME__OSBOT_AWS = 'OSBot-AWS-Dev__Only-IAM'
 TEST_USER_NAME           = 'test_user'
 TEST_USER_ROLE           = 'test_role'
 
-class Test_IAM(TestCase):
+class Test_IAM(TestCase__Boto3_Cache):
     account_id      : str
     aws_config      : AWS_Config
     current_user_arn: str

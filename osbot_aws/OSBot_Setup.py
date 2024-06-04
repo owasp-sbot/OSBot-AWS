@@ -2,6 +2,10 @@ from osbot_aws.AWS_Config import AWS_Config
 from osbot_aws.apis.S3 import S3
 from osbot_aws.helpers.Lambda_Package import Lambda_Package
 
+# todo: add support for running these tests in different accounts, but for now use this to make sure we are always in the correct AWS account
+CURRENT__OSBOT_AWS__TESTS__ACCOUNT_ID     = '381492182978'
+CURRENT__OSBOT_AWS__TESTS__IAM_USER       = 'OSBot-AWS-Dev__Only-IAM'
+CURRENT__OSBOT_AWS__TESTS__DEFAULT_REGION = 'eu-west-1'
 
 class OSBot_Setup:      # todo refactor out this code, most of this has been moved into aws_config and Deploy_Lambda
 
