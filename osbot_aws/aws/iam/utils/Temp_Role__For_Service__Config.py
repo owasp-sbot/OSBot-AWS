@@ -1,7 +1,7 @@
 from osbot_utils.base_classes.Type_Safe import Type_Safe
 from osbot_utils.utils.Misc import random_text, lower
 
-TEMP_ROLE__NAME_FORMAT = 'ROLE__temp__{role_access_type}__osbot__for__{boto3_service_name}'
+TEMP_ROLE__NAME_FORMAT = 'ROLE__temp_osbot__{role_access_type}__{boto3_service_name}'
 
 class Temp_Role__For_Service__Config(Type_Safe):
     boto3_service_name : str

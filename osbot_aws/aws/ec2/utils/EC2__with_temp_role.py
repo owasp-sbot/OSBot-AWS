@@ -4,4 +4,7 @@ from osbot_aws.aws.iam.utils.Temp_Role__For_Service import Temp_Role__For_Servic
 
 class EC2__with_temp_role(Temp_Role__For_Service, EC2):
 
-    pass
+    def __init__(self):
+        super().__init__()
+        self._temp_role_config.boto3_service_name = 'ec2'
+        self._temp_role_config.required_services  = ['ec2']

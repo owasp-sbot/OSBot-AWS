@@ -36,15 +36,16 @@ class Temp_Role__For_Service(Type_Safe):
         self._temp_role_config.required_services  = required_services
         return self
 
+    def _temp_role__iam_reset_credentials(self):
+        return self._iam_assume_role().credentials_reset()
+
+    # methods that override the normal Boto3 helper classes in OSBot_AWS
     @cache_on_self
     def client(self):
+        self._create_role_and_credentials()
         service_name    = self._temp_role_config.boto3_service_name
         iam_assume_role = self._iam_assume_role()
         return iam_assume_role.boto3_client(service_name=service_name)
 
-    #     #iam_assume_role.credentials_reset()
-    #     return iam_assume_role.boto3_client(service_name=service)
-    #
-    # def temp_role__iam_reset_credentials(self):
-    #     iam_assume_role = IAM_Assume_Role(role_name=self.temp_role__name)
-    #     return iam_assume_role.credentials_reset()
+
+
