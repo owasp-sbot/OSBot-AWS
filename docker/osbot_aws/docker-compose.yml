@@ -1,0 +1,10 @@
+services:
+  osbot_aws:
+    build:
+      context     : ../..
+      dockerfile  : ./docker/osbot_aws/Dockerfile
+    image         : diniscruz/osbot_aws
+    container_name: osbot_aws__container
+
+    env_file:
+      - ../../.env
