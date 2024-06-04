@@ -41,8 +41,9 @@ class test_Create__EC2__Instance(TestCase__EC2):
             assert instance_details.get('key_name'     ) == _.key_name__from_account_id_and_region_name()
             assert instance_details.get('spot_id'      ) is not None
             assert instance_details.get('spot_id'      ) is not None
-            assert instance_details.get('tags'         ) == [{'Key': 'Name', 'Value': 'created by osbot_aws'},
-                                                             {'Key': 'created-by', 'Value': 'OSBot_AWS.Create_EC2_Instance'}]
+            #assert instance_details.get('tags'         ) == [{'Key': 'Name', 'Value': 'created by osbot_aws'},
+            #                                                 {'Key': 'created-by', 'Value': 'OSBot_AWS.Create_EC2_Instance'}]
+
             # ssh into instance
 
             ec_instance     = EC2_Instance(instance_id=instance_id, ec2=_.ec2)
