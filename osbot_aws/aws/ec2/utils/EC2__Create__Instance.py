@@ -68,9 +68,10 @@ class EC2__Create__Instance(Type_Safe):
         key_path = self.path_key_file()
         key_details = self.ec2.key_pair(key_pair_name=key_name)
         if key_details:
-            if file_not_exists(key_path):
-                raise Exception(f"Key pair {key_name} exists in EC2 but the local key file not found: {key_path}")
-            return key_name
+            if file_not_exists(key_path):   # f"Key pair {key_name} exists in EC2 but the local key file not found: {key_path}")
+                self.ec2.key_pair_delete(key_pair_name=key_name)
+            else:
+                return key_name
 
         key_data     = self.ec2.key_pair_create(key_name=key_name)
         key_contents = key_data.get('KeyMaterial')
