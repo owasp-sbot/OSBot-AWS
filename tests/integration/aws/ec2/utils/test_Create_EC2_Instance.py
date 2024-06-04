@@ -30,7 +30,7 @@ class test_Create__EC2__Instance(TestCase__EC2):
 
         with self.create_ec2_instance as _:
             # create instance
-            _.setup__with_amazon_linux__t3_name__ssh_sh__spot()
+            _.setup__with_amazon_linux__t3_nano__ssh_sg__spot()
             instance_id      = _.create_instance()
 
             # check created instance details
@@ -46,19 +46,19 @@ class test_Create__EC2__Instance(TestCase__EC2):
 
             # ssh into instance
 
-            ec_instance     = EC2_Instance(instance_id=instance_id, ec2=_.ec2)
-            ec_instance.wait_for_ssh()
+            ec2_instance     = EC2_Instance(instance_id=instance_id, ec2=_.ec2)
+            ec2_instance.wait_for_ssh()
 
             ssh_key_file    = _.path_key_file()
             key_key_user    = 'ec2-user'
-            ssh             = ec_instance.ssh(ssh_key_file, key_key_user)
+            ssh             = ec2_instance.ssh(ssh_key_file, key_key_user)
 
-            assert ec_instance.exists() is True
+            assert ec2_instance.exists() is True
             assert ssh.ssh_linux().pwd() == '/home/ec2-user'
 
             # delete instance
-            ec_instance.delete()
-            assert ec_instance.info().get('state') == {'Code': 32, 'Name': 'shutting-down'}
+            ec2_instance.delete()
+            assert ec2_instance.info().get('state') == {'Code': 32, 'Name': 'shutting-down'}
 
 
     def test_create_kwargs(self):
@@ -70,9 +70,9 @@ class test_Create__EC2__Instance(TestCase__EC2):
     #     with self.create_ec2_instance as _:
     #         security_group = _.security_group_with_ssh()
 
-    def test_setup__with_amazon_linux__t3_name__ssh_sh__spot(self):
+    def test_setup__with_amazon_linux__t3_nano__ssh_sg__spot(self):
         with self.create_ec2_instance as _:
-            _.setup__with_amazon_linux__t3_name__ssh_sh__spot()
+            _.setup__with_amazon_linux__t3_nano__ssh_sg__spot()
             assert _.create_kwargs() == {'image_id'         : _.ami_amazon_linux_3_x86_64()       ,
                                          'instance_type'    : 't3.nano'                           ,
                                          'key_name'         : _.key_name__create_if_doesnt_exist(),

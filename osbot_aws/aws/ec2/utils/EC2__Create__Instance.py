@@ -54,7 +54,11 @@ class EC2__Create__Instance(Type_Safe):
         create_kwargs = self.create_kwargs()
         return self.ec2.instance_create(**create_kwargs)
 
-    def setup__with_amazon_linux__t3_name__ssh_sh__spot(self):
+    def create_instance__with_amazon_linux__t3_nano__ssh_sg__spot(self):
+        self.setup__with_amazon_linux__t3_nano__ssh_sg__spot()
+        return self.create_instance()
+
+    def setup__with_amazon_linux__t3_nano__ssh_sg__spot(self):
         self.image_id          = self.ami_amazon_linux_3_x86_64()
         self.instance_type     = 't3.nano'
         self.key_name          = self.key_name__create_if_doesnt_exist()
