@@ -35,8 +35,13 @@ class EC2__Create__AMI(Type_Safe):
             _.ssh_linux_amazon().install_python3()
             _.ssh_linux_amazon().pip_install('osbot_aws')
 
+    def install_fastapi(self):
+        with self.ssh() as _:
+            _.ssh_linux_amazon().pip_install('fastapi')
 
-    def create_ami__for__osbot_utils(self):
+
+
+    def create_ami__for__osbot_aws(self):
         region_name         = self.ec2_create_instance.ec2.aws_config.region_name()
         osbot_version       = Version().value()
         self.ami_name      = f'osbot-aws__{region_name}__{osbot_version}'
@@ -44,4 +49,12 @@ class EC2__Create__AMI(Type_Safe):
         self.install_python_and_osbot_aws()
         self.create_ami_from_instance_id()
 
+    def create_ami__for__osbot_fast_api(self):
+        region_name = self.ec2_create_instance.ec2.aws_config.region_name()
+        osbot_version = Version().value()
+        self.ami_name = f'osbot-fastapi___{osbot_version}___{region_name}'
+        self.create_instance()
+        self.install_python_and_osbot_aws()
+        self.install_fastapi()
+        self.create_ami_from_instance_id()
 

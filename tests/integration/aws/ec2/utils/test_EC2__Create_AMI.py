@@ -18,6 +18,8 @@ class test_EC2__Create__AMI(TestCase__EC2):
         instance_id = self.ec2_create_ami.create_instance()
         pprint(instance_id)
 
-    @capture_exception
-    def test_create_ami__for__osbot_utils(self):
-        self.ec2_create_ami.create_ami__for__osbot_utils()       # todo , add workflow to wait for the ami to be created and then stop the instance
+    def test_create_ami__for__osbot_aws(self):
+        self.ec2_create_ami.create_ami__for__osbot_aws()       # todo , add workflow to wait for the ami to be created and then stop the instance
+
+    def test_create_ami__for__osbot_fastapi(self):
+        self.ec2_create_ami.create_ami__for__osbot_fast_api()
