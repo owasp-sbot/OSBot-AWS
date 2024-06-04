@@ -23,4 +23,6 @@ class EC2__Temp__Instance(Type_Safe):
         self.ec2_instance.delete()
         return False
 
+    def ssh(self):
+        return self.ec2_instance.ssh(self.ec2_create_instance.path_key_file(), 'ec2-user')
 
