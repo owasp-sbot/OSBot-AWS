@@ -11,7 +11,6 @@ repository  = "https://github.com/owasp-sbot/OSBot-AWS"
 [tool.poetry.dependencies]
 python          = "^3.7"
 python-dotenv   = "*"
-pyyaml          = "*"
 boto3           = "*"
 osbot-utils     = "*"
 
