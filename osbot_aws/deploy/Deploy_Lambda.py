@@ -35,6 +35,9 @@ class Deploy_Lambda:
         root_module_name = self.handler.__module__.split(".").pop(0)
         self.package.add_module(root_module_name)
 
+    def add_folder(self, source, ignore=None):
+        self.package.add_folder(source=source, ignore=ignore)
+
     def add_layer(self, layer_arn):
         self.package.add_layer(layer_arn)
         return self
