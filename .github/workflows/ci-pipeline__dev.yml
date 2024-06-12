@@ -7,11 +7,11 @@ on:
 env:
   GIT__BRANCH         : 'dev'
   PACKAGE_NAME        : 'osbot_aws'
+  RELEASE_TYPE        : 'minor'
 
 jobs:
 
   run-unit-tests:
-    if: False
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -43,7 +43,7 @@ jobs:
       - name: Increment Tag (for DEV)
         uses: owasp-sbot/OSBot-GitHub-Actions/.github/actions/git__increment-tag@dev
         with:
-          release_type : 'minor'
+          release_type : ${RELEASE_TYPE}
     needs:
       - run-unit-tests
 
