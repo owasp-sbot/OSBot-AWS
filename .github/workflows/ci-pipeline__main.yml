@@ -9,7 +9,7 @@ env:
   DOCKER__CONTEXT     : "."
   DOCKER_HUB__USERNAME: diniscruz
   DOCKER_HUB__TOKEN   : ${{ secrets.DOCKERHUB_TOKEN    }}
-  GIT__BRANCH         : 'dev'
+  GIT__BRANCH         : 'main'
   PACKAGE_NAME        : 'osbot_aws'
   RELEASE_TYPE        : 'major'
 
