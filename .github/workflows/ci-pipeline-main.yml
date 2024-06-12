@@ -15,31 +15,6 @@ env:
 
 jobs:
 
-#  run-unit-tests:
-#    runs-on: ubuntu-latest
-#    steps:
-#      - uses: actions/checkout@v4
-#
-#      - name: Poetry - Install Dependencies
-#        uses: owasp-sbot/OSBot-GitHub-Actions/.github/actions/poetry__install@dev
-#        with:
-#          pip_install: '-r requirements-test.txt'
-#
-#      - name: Run Unit Tests (using Poetry)
-#        uses: owasp-sbot/OSBot-GitHub-Actions/.github/actions/poetry__run-unit-tests@dev
-
-#  increment-tag:
-#    name: Increment Tag - DEV
-#    runs-on: ubuntu-latest
-#    steps:
-#      - uses: actions/checkout@v4
-#      - name: Increment Tag (for DEV)
-#        uses: owasp-sbot/OSBot-GitHub-Actions/.github/actions/git__increment-tag@dev
-#        with:
-#          release_type : ${{ env.RELEASE_TYPE }}
-
-
-
   publish-to-pypi:
     permissions:
       id-token: write
@@ -48,8 +23,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-        with:
-          token: ${{ secrets.GIT_HUB__ACCESS_TOKEN }}
 
       - name: Git Update Current Branch
         uses: owasp-sbot/OSBot-GitHub-Actions/.github/actions/git__update_branch@dev
@@ -75,8 +48,8 @@ jobs:
         env:
           DOCKER__FILE: './docker/lambda_shell/Dockerfile'
           VERSION     : 'lambda_shell'
-
-
+    needs:
+      - publish-to-pypi
 #      - name: Set $Version from file
 #        uses: owasp-sbot/OSBot-GitHub-Actions/.github/actions/git__read_version@dev
 
@@ -87,37 +60,7 @@ jobs:
 #        uses: owasp-sbot/OSBot-GitHub-Actions/.github/actions/docker-hub__publish@dev
 #        env:
 #          VERSION: "latest"
-#    needs:
-#      - publish-to-pypi
 
-
-  publish-to-gcp:
-    runs-on: ubuntu-latest
-
-    steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
-
-    - name: "Pull origin (to get latest value of the project's version)"
-      shell: bash
-      run: |
-        git fetch --no-tags origin ${{ github.ref }}
-        git reset --hard FETCH_HEAD
-
-    - name: Authenticate to GCP
-      uses: 'google-github-actions/auth@v2'
-      with:
-        credentials_json: '${{ secrets.GCP_SA_KEY }}'
-
-    - name: Set up Cloud SDK
-      uses: google-github-actions/setup-gcloud@v2
-
-    - name: Run deployment script
-      run: |
-        # chmod +x ./gcp__deploy__cloud-run.sh
-        ./deploy/gcp/gcp__deploy__cloud-run.sh
-    needs:
-      - publish-to-docker-hub
 
 #  publish-to-pypi:
 #    permissions:
@@ -136,32 +79,3 @@ jobs:
 #    needs:
 #      - increment-tag
 #
-#  publish-to-docker-hub:
-#    runs-on: ubuntu-latest
-#
-#    steps:
-#      - name: Publish to Docker Hub
-#        uses: actions/checkout@v4
-#
-#      - name: "Pull origin (to get latest value of the project's version)"
-#        shell: bash
-#        run: |
-#          git fetch --no-tags origin ${{ github.ref }}
-#          git reset --hard FETCH_HEAD
-#
-#      - name: Read version from file
-#        id: get_version
-#        run: echo "IMAGE_TAG=$(cat ./cbr_website_beta/version)" >> $GITHUB_ENV
-#
-#      - name: Install Dependencies
-#        uses: ./.github/actions/publish-to-docker-hub
-#        with:
-#          DOCKERHUB_USERNAME : ${{ secrets.DOCKERHUB_USERNAME }}
-#          DOCKERHUB_TOKEN    : ${{ secrets.DOCKERHUB_TOKEN    }}
-#          IMAGE_NAME         : "diniscruz/cbr_website_beta"
-#          IMAGE_TAG          : ${{ env.IMAGE_TAG }}
-#          DOCKER_CONTEXT     : "."
-#          #DOCKER_FILE        : "./deploy/docker/cbr-website-beta__using-pip/Dockerfile"
-#          DOCKER_FILE        : "./deploy/docker/cbr-website__static__api-gateway__using-supervisord/Dockerfile"
-#    needs:
-#      - publish-to-pypi
