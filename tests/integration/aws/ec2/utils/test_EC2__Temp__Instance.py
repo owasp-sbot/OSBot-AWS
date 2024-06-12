@@ -6,6 +6,7 @@ from osbot_utils.decorators.methods.capture_exception import capture_exception
 from osbot_utils.utils.Dev import pprint
 
 
+@pytest.mark.skip("will create an EC2 instance so skip for now")
 class test_EC2__Temp__Instance(TestCase__EC2):
 
     def test___enter__exit__(self):
