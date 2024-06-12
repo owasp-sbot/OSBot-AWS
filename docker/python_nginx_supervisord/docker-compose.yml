@@ -1,0 +1,8 @@
+services:
+  osbot_aws:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    platform: linux/amd64
+    image: diniscruz/python_nginx_supervisord
+    container_name: python_nginx_supervisord
