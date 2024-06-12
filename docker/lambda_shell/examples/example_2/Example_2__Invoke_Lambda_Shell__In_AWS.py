@@ -12,7 +12,7 @@ from osbot_utils.utils.Files import path_combine
 class Example_2__Invoke_Lambda_Shell__In_AWS:
 
     def __init__(self):
-        self.lambda_name     = 'asd'
+        self.lambda_name     = '__put_here_your_lambda_name__'
         self.lambda_function = Lambda('lambda_shell')
         self.lambda_shell    = Shell_Client(self.lambda_function)
 

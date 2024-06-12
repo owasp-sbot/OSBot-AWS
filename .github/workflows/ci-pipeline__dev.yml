@@ -23,6 +23,11 @@ jobs:
       - name: Run Unit Tests (using Poetry)
         uses: owasp-sbot/OSBot-GitHub-Actions/.github/actions/poetry__run-unit-tests@dev
 
+      - name: Run Integrations Tests (using Poetry)
+        uses: owasp-sbot/OSBot-GitHub-Actions/.github/actions/poetry__run-unit-tests@dev
+        with:
+          test_target: 'tests/integration'
+
 
   increment-tag:
     name: Increment Tag - DEV
