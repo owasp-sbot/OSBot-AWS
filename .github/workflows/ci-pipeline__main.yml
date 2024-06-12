@@ -11,7 +11,7 @@ env:
   DOCKER_HUB__TOKEN   : ${{ secrets.DOCKERHUB_TOKEN    }}
   GIT__BRANCH         : 'dev'
   PACKAGE_NAME        : 'osbot_aws'
-  RELEASE_TYPE        : 'minor'
+  RELEASE_TYPE        : 'major'
 
 jobs:
 
