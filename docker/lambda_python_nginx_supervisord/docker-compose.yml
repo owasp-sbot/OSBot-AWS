@@ -1,8 +1,8 @@
 services:
   osbot_aws:
     build:
-      context: .
-      dockerfile: ./Dockerfile
+      context: ../..
+      dockerfile: ./docker/lambda_python_nginx_supervisord/Dockerfile
     platform: linux/amd64
     image: diniscruz/lambda_python_nginx_supervisord
     container_name: lambda_python_nginx_supervisord
