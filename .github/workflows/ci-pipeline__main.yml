@@ -1,0 +1,101 @@
+name       : CD Pipeline - MAIN
+on:
+  push:
+    branches:
+      - main
+
+
+env:
+  DOCKER__CONTEXT     : "."
+  DOCKER_HUB__USERNAME: diniscruz
+  DOCKER_HUB__TOKEN   : ${{ secrets.DOCKERHUB_TOKEN    }}
+  GIT__BRANCH         : 'dev'
+  PACKAGE_NAME        : 'osbot_aws'
+  RELEASE_TYPE        : 'minor'
+
+jobs:
+
+  run-unit-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Poetry - Install Dependencies
+        uses: owasp-sbot/OSBot-GitHub-Actions/.github/actions/poetry__install@dev
+        with:
+          pip_install: '-r requirements-test.txt'
+
+      - name: Run Unit Tests (using Poetry)
+        uses: owasp-sbot/OSBot-GitHub-Actions/.github/actions/poetry__run-unit-tests@dev
+
+      - name: Run Integrations Tests (using Poetry)
+        uses: owasp-sbot/OSBot-GitHub-Actions/.github/actions/poetry__run-unit-tests@dev
+        with:
+          test_target: 'tests/integration'
+        env:
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION    }}
+          AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID        }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID     }}
+
+
+  increment-tag:
+    name: Increment Tag - DEV
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Increment Tag (for DEV)
+        uses: owasp-sbot/OSBot-GitHub-Actions/.github/actions/git__increment-tag@dev
+        with:
+          release_type: ${{env.RELEASE_TYPE}}
+    needs:
+      - run-unit-tests
+
+  publish-to-pypi:
+    permissions:
+      id-token: write
+    name: "Publish to PYPI"
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Git Update Current Branch
+        uses: owasp-sbot/OSBot-GitHub-Actions/.github/actions/git__update_branch@dev
+
+      - name: publish-to-pypi
+        uses: owasp-sbot/OSBot-GitHub-Actions/.github/actions/pypi__publish@dev
+    needs:
+      - increment-tag
+
+
+  publish-to-docker-hub:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Git Update Current Branch
+        uses: owasp-sbot/OSBot-GitHub-Actions/.github/actions/git__update_branch@dev
+
+      - name: Deploy to Docker Hub (latest)
+        uses: owasp-sbot/OSBot-GitHub-Actions/.github/actions/docker-hub__publish@dev
+        env:
+          DOCKER__FILE: './docker/lambda_shell/Dockerfile'
+          VERSION     : 'lambda_shell'
+    needs:
+      - publish-to-pypi
+#      - name: Set $Version from file
+#        uses: owasp-sbot/OSBot-GitHub-Actions/.github/actions/git__read_version@dev
+
+#      - name: Deploy to Docker Hub (current version)
+#        uses: owasp-sbot/OSBot-GitHub-Actions/.github/actions/docker-hub__publish@dev
+
+#      - name: Deploy to Docker Hub (latest)
+#        uses: owasp-sbot/OSBot-GitHub-Actions/.github/actions/docker-hub__publish@dev
+#        env:
+#          VERSION: "latest"
+
+
