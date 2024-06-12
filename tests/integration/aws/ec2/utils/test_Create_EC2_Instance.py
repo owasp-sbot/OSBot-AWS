@@ -6,6 +6,7 @@ from osbot_aws.aws.ec2.utils.TestCase__EC2          import TestCase__EC2
 from osbot_utils.utils.Env                          import not_in_github_action
 
 
+@pytest.mark.skip("will create an EC2 instance so skip for now")
 class test_Create__EC2__Instance(TestCase__EC2):
     create_ec2_instance : EC2__Create__Instance
 
