@@ -1,0 +1,2 @@
+todo: move this into another repo, this is not OSBot_AWS specific
+      since we don't want to install OSBot_AWS in this container

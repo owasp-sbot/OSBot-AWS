@@ -1,0 +1,4 @@
+None of these multiple experiements worked due to limitations of running containers in Lambda
+
+All I wanted was a container with both Nginx and Python 3.12 (or 3.11) and seems really hard todo do, without compiling from source and doing
+a bunch of other changes

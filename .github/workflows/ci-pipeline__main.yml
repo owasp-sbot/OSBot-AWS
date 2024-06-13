@@ -83,7 +83,7 @@ jobs:
       - name: Deploy to Docker Hub (latest)
         uses: owasp-sbot/OSBot-GitHub-Actions/.github/actions/docker-hub__publish@dev
         env:
-          DOCKER__FILE: './docker/lambda_shell/Dockerfile'
+          DOCKER__FILE: './dev/docker/lambda_shell/Dockerfile'
           VERSION     : 'lambda_shell'
     needs:
       - publish-to-pypi
