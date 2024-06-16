@@ -46,8 +46,6 @@ class Shell_Client:
     def exec_function_return_logs(self, function):
         return self.python_exec_function(function,return_logs=True)
 
-
-
     def process_run(self, executable, params=None, cwd=None):
         return self._invoke('process_run', {'executable' : executable , 'params': params, 'cwd': cwd} )
 
