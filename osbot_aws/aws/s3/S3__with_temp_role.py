@@ -41,6 +41,9 @@ class S3__with_temp_role(S3):
         service        = self.temp_service_name
         return iam_assume_role.boto3_client(service_name=service)
 
+    def sts(self):
+         return self.iam_assume_role().aws__client__sts()            # this is an STS object to the current identity (not the one used to create it)
+
     def temp_role__iam_reset_credentials(self):
         iam_assume_role = IAM_Assume_Role(role_name=self.temp_role__name)
         return iam_assume_role.credentials_reset()

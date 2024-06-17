@@ -44,6 +44,12 @@ class IAM_Assume_Role:
     def iam_role(self) -> IAM_Role:
         return IAM_Role(role_name=self.role_name)
 
+    def aws__client__sts(self):
+        class STS__Assume_Role(STS):
+            def client(_self):
+                return self.boto3_client(service_name='sts')
+        return STS__Assume_Role()
+
     def add_policy(self, service, action, resource):
         if service and action and resource:
             policy_name = f'inline_policy_for_{safe_str(service)}_{safe_str(action)}_{safe_str(resource)}'
