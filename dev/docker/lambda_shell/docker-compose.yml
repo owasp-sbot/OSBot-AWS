@@ -2,7 +2,7 @@ services:
   osbot_aws__lambda_shell:
     build:
       context     : ../..
-      dockerfile  : ./docker/lambda_shell/Dockerfile
+      dockerfile  : ./dev/docker/lambda_shell/Dockerfile
     image         : diniscruz/osbot_aws-lambda_shell
     container_name: osbot_aws_lambda_shell_container
     ports:

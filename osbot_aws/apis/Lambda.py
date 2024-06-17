@@ -123,7 +123,7 @@ class Lambda:
             data = self.client().create_function(**kwargs)
             return { 'status': 'ok', 'name': self.name , 'data' : data }
         except Exception as error:
-            return {'status': 'error', 'data': '{0}'.format(error)}
+            return {'status': 'error', 'error': '{0}'.format(error), 'data': kwargs}
 
     def create_kwargs(self):
         kwargs = {  'Architectures' : [self.architecture]                                , # no idea why this is an array since we get an exception when there is more than one value

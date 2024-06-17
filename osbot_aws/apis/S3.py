@@ -175,6 +175,9 @@ class S3:
     def file_copy(self, src_bucket, src_key, dest_bucket, dest_key):
         return self.s3().copy({'Bucket': src_bucket, 'Key': src_key}, dest_bucket,dest_key )
 
+    def file_create_from_bytes(self, file_bytes, bucket, key):
+        return self.file_upload_from_bytes(file_bytes, bucket, key)
+
     def file_create_from_string_as_gzip(self, file_contents, bucket, key):
         tmp_path = tempfile.NamedTemporaryFile().name
 

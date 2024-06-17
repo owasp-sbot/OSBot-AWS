@@ -3,7 +3,7 @@ from unittest import TestCase
 from osbot_utils.utils.Dev import pprint
 
 from osbot_aws.helpers.S3_Zip_From_Files import S3_Zip_From_Files
-from osbot_utils.utils.Zip import zip_bytes_file_list
+from osbot_utils.utils.Zip import zip_bytes__file_list
 
 
 class test_S3_Zip_From_Files(TestCase):
@@ -28,6 +28,6 @@ class test_S3_Zip_From_Files(TestCase):
             assert _.s3_file_create() is True
             assert _.s3_file_exists() is True
             assert _.s3_file_contents() == _.zip_bytes()
-            assert zip_bytes_file_list(_.s3_file_contents()) == ['file_1.txt']
+            assert zip_bytes__file_list(_.s3_file_contents()) == ['file_1.txt']
             assert _.s3_file_delete() is True
             assert _.s3_file_exists() is False

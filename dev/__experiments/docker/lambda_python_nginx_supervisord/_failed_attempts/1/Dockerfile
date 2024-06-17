@@ -13,10 +13,9 @@ COPY --from=public.ecr.aws/awsguru/aws-lambda-adapter:0.8.3 /lambda-adapter /opt
 
 RUN pip install osbot_aws
 
+RUN mkdir -p /tmp/nginx
 COPY ./docker/lambda_python_nginx_supervisord/nginx.conf /etc/nginx/nginx.conf
-
 COPY ./docker/lambda_python_nginx_supervisord/public /var/task/app/public
-
 #
 #COPY ./docker/lambda_python_nginx_supervisord/app.py ${LAMBDA_TASK_ROOT}
 #
