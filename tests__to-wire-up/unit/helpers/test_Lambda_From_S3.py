@@ -16,7 +16,7 @@ from osbot_utils.utils.Functions import function_source_code
 
 def run(event, context=None):
     from osbot_aws.apis.S3     import S3
-    from osbot_utils.utils.Zip import zip_bytes_file_list
+    from osbot_utils.utils.Zip import zip_bytes__file_list
     from osbot_utils.utils.Zip import unzip_file
     from osbot_utils.utils.Zip import zip_bytes_to_file
     s3              = S3()
