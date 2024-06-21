@@ -3,28 +3,20 @@ from    boto3                   import Session
 from botocore.exceptions import ClientError
 from    botocore.session        import get_session
 
-from osbot_utils.base_classes.Kwargs_To_Self import Kwargs_To_Self
-from osbot_utils.decorators.methods.cache import cache
-from osbot_utils.decorators.methods.cache_on_self import cache_on_self
-from osbot_utils.utils.Status import status_ok, status_error
-
-from    osbot_aws.AWS_Config    import AWS_Config
-from osbot_aws.exceptions.Session_Bad_Credentials import Session_Bad_Credentials
-from osbot_aws.exceptions.Session_Client_Creation_Fail import Session_Client_Creation_Fail
-from osbot_aws.exceptions.Session_No_Credentials import Session_No_Credentials
+from osbot_utils.base_classes.Kwargs_To_Self            import Kwargs_To_Self
+from osbot_utils.decorators.methods.cache               import cache
+from osbot_utils.decorators.methods.cache_on_self       import cache_on_self
+from osbot_utils.utils.Status                           import status_ok, status_error
+from osbot_aws.AWS_Config                               import aws_config
+from osbot_aws.exceptions.Session_Bad_Credentials       import Session_Bad_Credentials
+from osbot_aws.exceptions.Session_Client_Creation_Fail  import Session_Client_Creation_Fail
+from osbot_aws.exceptions.Session_No_Credentials        import Session_No_Credentials
 
 
 class Session(Kwargs_To_Self):                  # todo: refactor to AWS_Session so it doesn't clash with boto3.Session object
     account_id      = None
     profile_name    = None
     region_name     = None
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self.aws_config   = AWS_Config()
-        #self.account_id   = self.account_id   or self.aws_config.aws_session_account_id()          # note: we can't do this here, since this will trigger a recursive call with with STS().caller_identity()
-        #self.profile_name = self.profile_name or self.aws_config.aws_session_profile_name()
-        #self.region_name  = self.region_name  or self.aws_config.aws_session_region_name()
 
     def boto_session(self) -> Session:
         return get_session()
@@ -95,8 +87,8 @@ class Session(Kwargs_To_Self):                  # todo: refactor to AWS_Session 
     def client_boto3(self,service_name, region_name=None):                   # todo: refactor with resource_boto3
         try:
 
-            self.region_name  = region_name or self.region_name  or self.aws_config.aws_session_region_name()        # todo: figure out better way todo do this
-            self.profile_name = self.profile_name or self.aws_config.aws_session_profile_name()
+            self.region_name  = region_name or self.region_name  or aws_config.aws_session_region_name()        # todo: figure out better way todo do this
+            self.profile_name = self.profile_name or aws_config.aws_session_profile_name()
             if self.profile_name and self.profile_name in self.profiles():                                                  # seeing if this is a more efficient way to get the data
                 session = boto3.Session(profile_name=self.profile_name, region_name=self.region_name)      # tried to pass this params but had side effects: , botocore_session=self.boto_session()
                 client  = session.client(service_name=service_name)
@@ -123,8 +115,8 @@ class Session(Kwargs_To_Self):                  # todo: refactor to AWS_Session 
 
     def resource_boto3(self,service_name, profile_name=None, region_name=None):                 # todo: refactor with client_boto3
         try:
-            profile_name = profile_name or AWS_Config().aws_session_profile_name()
-            region_name  = region_name  or AWS_Config().aws_session_region_name()
+            profile_name = profile_name or aws_config.aws_session_profile_name()
+            region_name  = region_name  or aws_config.aws_session_region_name()
 
             profiles = get_session()._build_profile_map()
             if profile_name in profiles:

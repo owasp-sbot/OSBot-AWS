@@ -66,8 +66,7 @@ class AWS_Config(Type_Safe):
         return bucket_name
 
 
-
-
-
 def set_aws_region(region_name):
     AWS_Config().set_aws_session_region_name(region_name)
+
+aws_config = AWS_Config()

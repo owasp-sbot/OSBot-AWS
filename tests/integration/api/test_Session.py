@@ -24,8 +24,6 @@ class test_Session(TestCase):
     def test___init__(self):
         assert self.session.__default_kwargs__() == {'account_id': None, 'profile_name': None, 'region_name': None}
         assert self.session.__kwargs__        () == {'account_id': None, 'profile_name': None, 'region_name': None}
-        assert self.session.__locals__        () == { 'aws_config': self.session.aws_config, **self.session.__kwargs__() }
-        assert self.session.aws_config.__class__.__name__ == 'AWS_Config'
 
     def test_boto_session(self):
         boto_session = self.session.boto_session()
