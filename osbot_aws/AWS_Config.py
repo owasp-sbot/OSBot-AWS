@@ -65,6 +65,9 @@ class AWS_Config(Type_Safe):
             bucket_name = f'{self.aws_session_account_id()}--temp-data--{self.region_name()}'
         return bucket_name
 
+    def set_region(self,region_name):
+        self.set_aws_session_region_name(region_name)
+
 
 def set_aws_region(region_name):
     AWS_Config().set_aws_session_region_name(region_name)
