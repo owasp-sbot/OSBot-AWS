@@ -1,5 +1,6 @@
 import  boto3
 from    boto3                   import Session
+from botocore.config import Config
 from botocore.exceptions import ClientError
 from    botocore.session        import get_session
 
@@ -76,25 +77,26 @@ class Session(Kwargs_To_Self):                  # todo: refactor to AWS_Session 
     def session_default(self):
         return get_session()
 
-    def client(self, service_name, region_name=None):
-        status = self.client_boto3(service_name, region_name=region_name)
+    def client(self, service_name, region_name=None,config=None):
+        status = self.client_boto3(service_name, region_name=region_name,config=config)
         if status.get('status') == 'ok':
             client = status.get('data',{}).get('client')
             return client
         else:
             raise Session_Client_Creation_Fail(status=status)
 
-    def client_boto3(self,service_name, region_name=None):                   # todo: refactor with resource_boto3
+    def client_boto3(self,service_name, region_name=None, config=None):                   # todo: refactor with resource_boto3
         try:
-
+            if config is None:
+                config = self.config()
             self.region_name  = region_name or self.region_name  or aws_config.aws_session_region_name()        # todo: figure out better way todo do this
             self.profile_name = self.profile_name or aws_config.aws_session_profile_name()
             if self.profile_name and self.profile_name in self.profiles():                                                  # seeing if this is a more efficient way to get the data
                 session = boto3.Session(profile_name=self.profile_name, region_name=self.region_name)      # tried to pass this params but had side effects: , botocore_session=self.boto_session()
-                client  = session.client(service_name=service_name)
+                client  = session.client(service_name=service_name,config=config)
                 message = f"Created client_boto3 session using profile: {self.profile_name}"
             else:
-                client = boto3.client(service_name=service_name, region_name=self.region_name)
+                client = boto3.client(service_name=service_name, region_name=self.region_name,config=config)
                 session = None
                 message = "Created client_boto3 session using environment variables"             # todo: see if this is 100% correct, or if there are other ways credentials can be found inside boto3 client
 
@@ -104,6 +106,15 @@ class Session(Kwargs_To_Self):                  # todo: refactor to AWS_Session 
 
             message = f"client_boto3 failed with error: {error}"
             return status_error(message=message, data=None, error=error)
+
+    @cache_on_self
+    def config(self):
+        retries = {
+            'max_attempts': 0,  # Disable retries                       # todo: see if there are negative side effects of doing this
+            'mode': 'standard'  # Standard retry mode
+        }
+        kwargs = dict(retries=retries)
+        return Config(**kwargs)
 
     def profiles(self):
         return self.session().available_profiles
