@@ -23,7 +23,7 @@ class test_Dynamo_DB__Record(TestCase__Temp_Dynamo_DB_Table):
         assert self.db_record.__locals__()   == expected_locals
         assert self.table.exists()           == {'data': True, 'status': 'ok'}
 
-    #@print_boto3_calls()
+    
     def test_add_record(self):
         with self.table as _:
             result    = _.add_record(self.db_record)

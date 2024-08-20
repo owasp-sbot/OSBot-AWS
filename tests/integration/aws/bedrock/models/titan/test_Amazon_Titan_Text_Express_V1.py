@@ -23,7 +23,7 @@ class test_Amazon_Titan_Text_Express_V1(TestCase__Bedrock):
         assert self.model.__locals__() == expected_vars
 
 
-    #@print_boto3_calls()
+    
     #@capture_boto3_error
     def test_model_invoke(self):
         prompt = "Hello"

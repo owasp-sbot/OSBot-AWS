@@ -29,8 +29,7 @@ class test_Session(TestCase):
         boto_session = self.session.boto_session()
         assert type(boto_session) == botocore.session.Session
 
-    #@print_boto3_calls
-    # @trace_calls(include=['*'], show_parent=True, show_duration=True,
+        # @trace_calls(include=['*'], show_parent=True, show_duration=True,
     #              duration_bigger_than=0.01,
     #              locals=False)
     def test_botocore_session(self):
@@ -55,8 +54,7 @@ class test_Session(TestCase):
         assert caller_identity.get('Arn'     ) == f'arn:aws:iam::{account_id}:user/{IAM_USER_NAME__OSBOT_AWS}'
         assert caller_identity.get('UserId'  ).__class__.__name__ == 'str'
 
-    #@print_boto3_calls
-    def test_credentials_ok(self):
+        def test_credentials_ok(self):
         self.session.credentials_ok()
 
 

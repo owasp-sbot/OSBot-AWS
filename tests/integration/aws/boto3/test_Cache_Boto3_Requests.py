@@ -73,7 +73,7 @@ class test_Cache_Boto3_Requests(TestCase):
         assert BaseClient._make_api_call == self.cache_boto3_requests.target_function
         assert BaseClient._make_api_call.__qualname__ == 'BaseClient._make_api_call'
 
-    #@print_boto3_calls()
+    
     def test_invoke_target(self):
         mock_account_id = 'ABC'
         def on_invoke_target(*args):

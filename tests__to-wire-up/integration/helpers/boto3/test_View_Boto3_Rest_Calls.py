@@ -2,7 +2,8 @@ from unittest                                      import TestCase
 from unittest.mock                                 import call, patch
 from osbot_aws.apis.S3                             import S3
 from osbot_aws.apis.Lambda                         import Lambda
-from osbot_aws.helpers.boto3.View_Boto3_Rest_Calls import print_boto3_calls
+from osbot_aws.aws.boto3.View_Boto3_Rest_Calls import print_boto3_calls
+
 
 class test_View_Boto3_Rest_Calls(TestCase):
 

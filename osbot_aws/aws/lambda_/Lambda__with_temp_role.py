@@ -39,7 +39,7 @@ class Lambda__with_temp_role(Lambda):
     temp_role__name     : str = 'osbot__temp_role_for__test_Lambda'
     temp_role__recreate : bool = False
 
-    #@print_boto3_calls()
+    
     @cache
     def client(self):
         load_dotenv()
