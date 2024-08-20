@@ -14,7 +14,7 @@ class test_IAM_Assume_Role__DynamoDB__List_Tables(TestCase):
     def setUp(self):
         self.role_name = "temp_role__for_dynamo_db_access"
 
-        def test_1_get_dynamo_db_tables(self):
+    def test_1_get_dynamo_db_tables(self):
 
         policies_to_add = [dict(service="dynamodb", action="ListTables", resource="*")]
         iam_assume_role = IAM_Assume_Role(role_name=self.role_name, policies_to_add=policies_to_add)

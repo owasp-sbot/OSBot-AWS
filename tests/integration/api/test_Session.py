@@ -54,7 +54,7 @@ class test_Session(TestCase):
         assert caller_identity.get('Arn'     ) == f'arn:aws:iam::{account_id}:user/{IAM_USER_NAME__OSBOT_AWS}'
         assert caller_identity.get('UserId'  ).__class__.__name__ == 'str'
 
-        def test_credentials_ok(self):
+    def test_credentials_ok(self):
         self.session.credentials_ok()
 
 
