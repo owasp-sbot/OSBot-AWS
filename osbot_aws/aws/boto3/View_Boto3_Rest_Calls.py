@@ -1,16 +1,11 @@
-from functools import wraps
-
-from botocore.client                 import BaseClient
-
-from osbot_utils.helpers.Print_Table import Print_Table
-from osbot_utils.utils.Call_Stack import Call_Stack
-from osbot_utils.utils.Dev import pformat
-
-from osbot_utils.base_classes.Kwargs_To_Self import Kwargs_To_Self
-
-from osbot_utils.testing.Duration import Duration
-from osbot_utils.testing.Hook_Method import Hook_Method
-from osbot_utils.utils.Objects import obj_data
+from functools                                  import wraps
+from botocore.client                            import BaseClient
+from osbot_utils.helpers.Print_Table            import Print_Table
+from osbot_utils.utils.Dev                      import pformat
+from osbot_utils.base_classes.Kwargs_To_Self    import Kwargs_To_Self
+from osbot_utils.testing.Duration               import Duration
+from osbot_utils.testing.Hook_Method            import Hook_Method
+from osbot_utils.utils.Objects                  import obj_data
 
 
 # todo: create unit tests specifically for this class
@@ -32,6 +27,7 @@ def print_boto3_calls(show=True, show_args=True, show_calls= False, show_return=
     def decorator(function):
         @wraps(function)
         def wrapper(*args, **kwargs):
+            aaaa.aaaa()
             with View_Boto3_Rest_Calls(**decorator_kwargs):         # Pass decorator_kwargs to the View_Boto3_Rest_Calls class
                 return function(*args, **kwargs)
         return wrapper
