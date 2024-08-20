@@ -35,7 +35,7 @@ class test_WS__Handle_Events(TestCase__Dynamo_DB):
                                  source  = self.source,)
             assert _.__locals__() == expected_vars
 
-    #@print_boto3_calls()
+    
     def test_handle_lambda(self):
 
         with self.ws_handle_event as _:

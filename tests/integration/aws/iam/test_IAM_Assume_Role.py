@@ -24,7 +24,7 @@ class test_IAM_Assume_Role(TestCase__Boto3_Cache):
         skip_pytest___aws_pytest_user_name__is_not_set()
         cls.iam_assume_role = IAM_Assume_Role(role_name=TEMP_ROLE_NAME__ASSUME_ROLE)
 
-    #@print_boto3_calls()
+    
     def test_create_role(self):
         self.iam_assume_role.reset()                                        # reset cache (delete and create a new one)
         assert self.iam_assume_role.cached_role.cache_exists() is True      # check that cache doesn't exist
@@ -48,7 +48,7 @@ class test_IAM_Assume_Role(TestCase__Boto3_Cache):
         policies = self.iam_assume_role.policies()
         assert type(policies) == dict
 
-    #@print_boto3_calls()
+    
     # note: this can take quite a while, sometimes 7 or 10 seconds
     def test_set_inline_policy(self):
         policy_name     = 'test_policy'

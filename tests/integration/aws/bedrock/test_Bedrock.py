@@ -7,7 +7,6 @@ from osbot_aws.aws.bedrock.models.titan.Amazon_Titan_Text_Lite_V1 import Amazon_
 from osbot_aws.aws.bedrock.models.titan.Amazon_Titan_Tg1_Large import Amazon_Titan_Tg1_Large
 from osbot_aws.aws.bedrock.models.claude.Anthropic__Claude_Instant_V1 import Anthropic__Claude_Instant_V1
 from osbot_aws.aws.bedrock.models.claude.Anthropic__Claude_V2_0 import Anthropic__Claude_V2_0
-from osbot_aws.aws.boto3.View_Boto3_Rest_Calls import print_boto3_calls
 from osbot_utils.utils.Dev import pprint
 from osbot_utils.utils.Json import json_dumps
 from osbot_utils.utils.Lists                                             import list_contains_list
@@ -125,7 +124,7 @@ class test_Bedrock(TestCase__Bedrock):
         test_model(target_model, model_body, 'outputText')
 
     #@capture_iam_exception
-    #@print_boto3_calls()
+    
     def test_models(self):
         expected_attributes = ['customizationsSupported', 'inferenceTypesSupported', 'inputModalities', 'modelArn',
                                'modelId', 'modelLifecycle', 'modelName', 'outputModalities',

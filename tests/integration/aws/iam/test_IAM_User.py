@@ -2,7 +2,6 @@ from unittest import TestCase
 import pytest
 
 from osbot_aws.AWS_Config                                   import AWS_Config
-from osbot_aws.aws.boto3.View_Boto3_Rest_Calls import print_boto3_calls
 from osbot_aws.testing.TestCase__Boto3_Cache                import TestCase__Boto3_Cache
 from osbot_utils.utils.Dev import pprint
 from osbot_utils.utils.Misc                                 import random_password

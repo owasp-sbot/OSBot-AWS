@@ -12,8 +12,7 @@ from osbot_utils.utils.Misc import list_set
 @pytest.mark.skip('Started to fail with error above') # todo: find root cause
 class test_IAM_Assume_Role__Cloud_Trail_Lookup(TestCase):
 
-    #@print_boto3_calls(config__print_return_value=True)
-    def test_get_cloud_trail_logs(self):
+        def test_get_cloud_trail_logs(self):
         role_name            = "temp_role__for_cloud_trail_logs"
 
         self.iam_assume_role = IAM_Assume_Role(role_name=role_name)

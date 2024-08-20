@@ -1,6 +1,5 @@
 import pytest
 
-from osbot_aws.aws.boto3.View_Boto3_Rest_Calls import print_boto3_calls
 from osbot_aws.aws.dynamo_db.domains.DyDB__Table__Resources import DyDB__Table__Resources, KEY_NAME__TABLE__RESOURCES, \
     Resource__Config
 from osbot_aws.aws.dynamo_db.models.DyDB__Document import DyDB__Document
@@ -37,7 +36,7 @@ class test_DyDB__Table__Registry(TestCase__Dynamo_DB):
             assert type(config)       is Resource__Config
             assert base_types(config) == [DyDB__Resource, DyDB__Document, Kwargs_To_Self, object]
 
-    #@print_boto3_calls()
+    
     def test_resource(self):
         config_resource = self.temp_dydb_table_resources.resource('config')
         with config_resource as _:
