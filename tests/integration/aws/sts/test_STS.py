@@ -1,7 +1,6 @@
 from os import environ
 from unittest               import TestCase
 
-from osbot_aws.aws.boto3.View_Boto3_Rest_Calls import print_boto3_calls
 from osbot_aws.aws.sts.STS  import STS
 from osbot_aws.testing.TestCase__Boto3_Cache import TestCase__Boto3_Cache
 from osbot_utils.utils.Dev import pprint

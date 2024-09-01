@@ -40,7 +40,7 @@ class test_Dynamo_DB(TestCase):
 
     # main methods
 
-    #@print_boto3_calls()
+    
     def test_document_add(self):
         with self.dynamo_db as _:
             assert _.documents_all(table_name=self.table_name) == []
@@ -149,7 +149,7 @@ class test_Dynamo_DB(TestCase):
         assert self.dynamo_db.documents_delete_all(table_name=self.table_name, key_name=self.table_key) == {'delete_result': [], 'delete_status': True, 'deleted_keys': []}
 
 
-    #@print_boto3_calls()
+    
 
 
 # @unittest.skip('this is not working as expected (namely the `test_streams` part)')

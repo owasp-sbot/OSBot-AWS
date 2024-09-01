@@ -37,8 +37,7 @@ class test_Amazon_Titan_Tg1_Large(TestCase__Bedrock):
         response  = self.bedrock.model_invoke(model_id, body)
         assert response == expected_response
 
-    #@print_boto3_calls
-    #@trace_calls(ignore=[], include=['osbot_'], contains=[])
+        #@trace_calls(ignore=[], include=['osbot_'], contains=[])
     def test__check_bedrock_behaviour(self):
         bedrock_cache: Bedrock__Cache
         bedrock_cache   = self.bedrock.bedrock_cache

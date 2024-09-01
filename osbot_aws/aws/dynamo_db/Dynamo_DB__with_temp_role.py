@@ -13,7 +13,7 @@ class Dynamo_DB__with_temp_role(Dynamo_DB):
     temp_role__name     : str = 'osbot__temp_role_for__test_Dynamo_DB'
     temp_role__recreate : bool = False
 
-    #@print_boto3_calls()
+    
     @cache
     def client(self):
         load_dotenv()

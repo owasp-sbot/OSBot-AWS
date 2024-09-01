@@ -110,7 +110,7 @@ class Session(Kwargs_To_Self):                  # todo: refactor to AWS_Session 
     @cache_on_self
     def config(self):
         retries = {
-            'max_attempts': 0,  # Disable retries                       # todo: see if there are negative side effects of doing this
+            'max_attempts': 1,  # set retry to 1
             'mode': 'standard'  # Standard retry mode
         }
         kwargs = dict(retries=retries)

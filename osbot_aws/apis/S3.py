@@ -6,13 +6,39 @@ from    io                                    import BytesIO
 from    gzip                                  import GzipFile
 from    boto3.s3.transfer                     import TransferConfig
 from    botocore.errorfactory                 import ClientError
+
+from osbot_aws.AWS_Config import aws_config
 from    osbot_utils.decorators.lists.group_by import group_by
 from    osbot_utils.decorators.lists.index_by import index_by
 from    osbot_utils.decorators.methods.cache  import cache
 
 from    osbot_aws.apis.Session                import Session
-from    osbot_utils.utils.Files               import Files
+from osbot_utils.decorators.methods.cache_on_self import cache_on_self
+from osbot_utils.decorators.methods.remove_return_value import remove_return_value
+from osbot_utils.testing.Temp_File import Temp_File
+from osbot_utils.utils.Files import Files, file_extension
 from osbot_utils.utils.Zip import zip_folder
+
+S3_DEFAULT_FILE_CONTENT_TYPE = 'binary/octet-stream'
+S3_HTML_PAGE_CONTENT_TYPE    = 'text/html; charset=utf-8'
+S3_FILES_CONTENT_TYPES       = { '.js'  : 'application/javascript; charset=utf-8',
+                                 '.jpg' : 'image/jpeg'                           ,
+                                 '.jpeg': 'image/jpeg'                           ,
+                                 '.png' : 'image/png'                            ,
+                                 '.txt' : 'text/plain; charset=utf-8'            ,
+                                 '.pdf' : 'application/pdf'                      ,
+                                 '.html': 'text/html; charset=utf-8'             ,
+                                 '.css' : 'text/css; charset=utf-8'              ,
+                                 '.svg' : 'image/svg+xml'                        ,
+                                 '.gif' : 'image/gif'                            ,
+                                 '.webp': 'image/webp'                           ,
+                                 '.json': 'application/json; charset=utf-8'      ,
+                                 '.xml' : 'application/xml; charset=utf-8'       ,
+                                 '.zip' : 'application/zip'                      ,
+                                 '.mp3' : 'audio/mpeg'                           ,
+                                 '.mp4' : 'video/mp4'                            ,
+                                 '.avi' : 'video/x-msvideo'                      ,
+                                 '.mov' : 'video/quicktime'                      }
 
 
 # helper methods
@@ -29,17 +55,35 @@ class S3:
         self.tmp_file_folder = 's3_temp_files'
         self.use_threads     = True
 
-    @cache
+    @cache_on_self
     def client(self):
-        return Session().client('s3')
+        return self.session().client('s3')
 
-    @cache
+    # todo: see if we still need this code below to set the region, since the session.client_boto3 should do it
+    # @cache_on_self
+    # def client(self):
+    #     # todo: understand the impact of having to add the endpoint_url below
+    #     #       we needed this because (some, not all, which is really weird) buckets
+    #     #       were throwing this error when creating the pre-signed URL
+    #     #       <Code>SignatureDoesNotMatch</Code>
+    #     #           <Message>The request signature we calculated does not match the signature you provided. Check your key and signing method.</Message>
+    #     #       this is the comment that gave the solution https://github.com/boto/boto3/issues/1149#issuecomment-793737086
+    #     region_name = aws_config.region_name()
+    #     # endpoint_url = f'https://s3.{region_name}.amazonaws.com'            # this was causing issues uploading files
+    #     # return boto3.client('s3', region_name=region_name,  endpoint_url=endpoint_url)
+    #     return boto3.client('s3', region_name=region_name)
+
+    @cache_on_self
     def s3(self):                               # todo replace usages below with this method
         return self.client()
 
-    @cache
+    @cache_on_self
     def s3_resource(self):                                      # todo refactor this method to be called resource()
-        return Session().resource('s3')
+        return self.session().resource('s3')
+
+    @cache_on_self
+    def session(self):
+        return Session()
 
     def bucket_notification(self, bucket_name):
         #if self.boto_notification is None : self.boto_notification = self.s3_resource().BucketNotification(bucket_name=bucket_name)
@@ -137,6 +181,19 @@ class S3:
         obj = self.s3().get_object(Bucket=bucket, Key=key)                      # get object data from s3
         return obj['Body'].read()                                               # returns all bytes
 
+    def file_content_type(self, bucket, key):
+        return self.file_details(bucket, key).get('ContentType')
+
+    def file_content_type_update(self, bucket, key, metadata, content_type):
+        file_copy_kwargs = dict(bucket_source      = bucket      ,
+                                key_source         = key         ,
+                                bucket_destination = bucket      ,
+                                key_destination    = key         ,
+                                metadata           = metadata    ,      # in S3 we can't update the content type with also updating the metadata
+                                content_type       = content_type)      # i guess this is related to the fact that the content_type is stored as a metadata item
+        return self.file_copy(**file_copy_kwargs)
+
+
     def file_contents(self, bucket, key, encoding='utf-8'):
         return self.file_bytes(bucket,key).decode(encoding)                      # extract body and decode it
 
@@ -172,8 +229,18 @@ class S3:
         except ClientError:                                     # when file not found
             return False
 
-    def file_copy(self, src_bucket, src_key, dest_bucket, dest_key):
-        return self.s3().copy({'Bucket': src_bucket, 'Key': src_key}, dest_bucket,dest_key )
+    @remove_return_value('ResponseMetadata')
+    def file_copy(self, bucket_source, key_source, bucket_destination, key_destination, metadata=None,
+                  content_type=None):
+        kwargs_file_copy = dict(CopySource={'Bucket': bucket_source, 'Key': key_source},
+                                Bucket=bucket_destination,
+                                Key=key_destination)
+        if metadata is not None:
+            kwargs_file_copy['Metadata'] = metadata
+            kwargs_file_copy['MetadataDirective'] = 'REPLACE'
+        if content_type is not None:
+            kwargs_file_copy['ContentType'] = content_type
+        return self.client().copy_object(**kwargs_file_copy)
 
     def file_create_from_bytes(self, file_bytes, bucket, key):
         return self.file_upload_from_bytes(file_bytes, bucket, key)
@@ -187,20 +254,29 @@ class S3:
         os.remove(tmp_path)                                         # delete tmp file
         return True
 
-    def file_create_from_string (self, file_contents, bucket, key, use_threads=True):
-        with tempfile.NamedTemporaryFile() as temp:                     # use tempfile api to create temp file
-            temp.write(str.encode(file_contents))                       # write contents
-            temp.flush()                                                # flush contents to make sure everything has been written
 
-            self.s3().upload_file(temp.name, bucket,key, Config=self.transfer_config())                # upload file using s3 api
-            return True
+    def file_create_from_string (self, file_contents, bucket, key):
+        with Temp_File(contents=file_contents, extension=file_extension(key)) as temp_file:
+            return self.file_upload_to_key(temp_file.file_path, bucket,key)
+
 
     def file_delete(self, bucket, key):
-        result = self.s3().delete_object(Bucket=bucket, Key=key)              # delete file from s3
+        result = self.client().delete_object(Bucket=bucket, Key=key)              # delete file from s3
         return result.get('ResponseMetadata').get('HTTPStatusCode') == 204
 
     def file_details(self, bucket, key):
-        return self.s3().head_object(Bucket = bucket, Key= key)
+        return self.client().head_object(Bucket = bucket, Key= key)
+
+    def file_metadata(self, bucket, key):
+        return self.file_details(bucket, key).get('Metadata')
+
+    def file_metadata_update(self, bucket, key, metadata):
+        file_copy_kwargs = dict(bucket_source      = bucket  ,
+                                key_source         = key     ,
+                                bucket_destination = bucket  ,
+                                key_destination    = key     ,
+                                metadata           = metadata)
+        return self.file_copy(**file_copy_kwargs)
 
     def file_size_in_Mb(self, bucket, key):
         details = self.file_details(bucket,key)
@@ -234,9 +310,22 @@ class S3:
         self.s3().put_object(Body=file_body, Bucket=bucket, Key=key)
         return True
 
-    def file_upload_to_key(self, file, bucket, key):
-        self.s3().upload_file(file, bucket, key)                                # upload file
-        return True                                                             # return true (if succeeded)
+    # def file_upload_to_key(self, file, bucket, key):
+    #     self.s3().upload_file(file, bucket, key)                                # upload file
+    #     return True                                                             # return true (if succeeded)
+
+    def file_upload_to_key(self, file, bucket, key, set_content_type=True):
+        extra_args   = None
+        if set_content_type:
+            extension = file_extension(file)
+            if extension:
+                content_type = S3_FILES_CONTENT_TYPES.get(extension)
+                if content_type:
+                    extra_args = {'ContentType': content_type}
+        upload_args   = [file, bucket, key, extra_args]
+        upload_kwargs =  dict(Config=self.transfer_config())
+        self.client().upload_file(*upload_args, **upload_kwargs)      # upload file
+        return True
 
     def file_upload_as_temp_file(self, file, bucket):
         key = '{0}/{1}'.format(self.tmp_file_folder, Files.temp_filename(Files.file_extension(file)))

@@ -23,7 +23,7 @@ class test_Amazon_Titan_Text_Lite_V1(TestCase__Bedrock):
         assert self.model.__locals__() == expected_vars
 
     #@cache_bedrock_response
-    #@print_boto3_calls()
+    
     def test_model_invoke(self):
         #self.cache.force_request = True
         prompt = "Hello"

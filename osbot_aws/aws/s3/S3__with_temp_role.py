@@ -34,7 +34,7 @@ class S3__with_temp_role(S3):
         iam_assume_role.create_role(recreate=role_recreate, create_credentials=create_credentials)
         return iam_assume_role
 
-    #@print_boto3_calls()
+    
     @cache
     def client(self):
         iam_assume_role = self.create_role()
