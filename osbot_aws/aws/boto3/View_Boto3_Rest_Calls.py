@@ -27,7 +27,6 @@ def print_boto3_calls(show=True, show_args=True, show_calls= False, show_return=
     def decorator(function):
         @wraps(function)
         def wrapper(*args, **kwargs):
-            aaaa.aaaa()
             with View_Boto3_Rest_Calls(**decorator_kwargs):         # Pass decorator_kwargs to the View_Boto3_Rest_Calls class
                 return function(*args, **kwargs)
         return wrapper
