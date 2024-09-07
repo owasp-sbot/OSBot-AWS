@@ -149,6 +149,10 @@ class S3:
         return sorted(data)
         #return sorted(list({ bucket['Name'] for bucket in self.s3().list_buckets().get('Buckets')}))
 
+    def create_pre_signed_url(self, bucket_name, object_name, operation='get_object', expiration=3600):     # 3600 is one hour (60 seconds * 60 minutes)
+        response = self.client().generate_presigned_url(operation, Params={'Bucket': bucket_name, 'Key': object_name}, ExpiresIn=expiration)
+        return response
+
     def dont_use_threads(self):
         self.use_threads = False
         return self
