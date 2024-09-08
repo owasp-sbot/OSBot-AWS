@@ -1,6 +1,6 @@
-from osbot_aws.AWS_Config import AWS_Config
-from osbot_aws.apis.S3 import S3
-from osbot_aws.helpers.Lambda_Package import Lambda_Package
+from osbot_aws.AWS_Config               import AWS_Config
+from osbot_aws.aws.s3.S3                import S3
+from osbot_aws.helpers.Lambda_Package   import Lambda_Package
 
 # todo: add support for running these tests in different accounts, but for now use this to make sure we are always in the correct AWS account
 CURRENT__OSBOT_AWS__TESTS__ACCOUNT_ID     = '381492182978'

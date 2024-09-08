@@ -1,7 +1,7 @@
-from osbot_aws.apis.S3 import S3
-from osbot_aws.testing.TestCase__Minio import TestCase__Minio, TEST__AWS_DEFAULT_REGION, TEST__AWS_ACCOUNT_ID
-from osbot_utils.utils.Env import get_env
-from osbot_utils.utils.Functions import function_name
+from osbot_aws.aws.s3.S3                import S3
+from osbot_aws.testing.TestCase__Minio  import TestCase__Minio, TEST__AWS_DEFAULT_REGION, TEST__AWS_ACCOUNT_ID
+from osbot_utils.utils.Env              import get_env
+from osbot_utils.utils.Functions        import function_name
 
 
 class test_TestCase__Minio(TestCase__Minio):

@@ -1,4 +1,4 @@
-from osbot_aws.apis.S3 import S3
+from osbot_aws.aws.s3.S3           import S3
 from osbot_utils.helpers.Zip_Bytes import Zip_Bytes
 
 

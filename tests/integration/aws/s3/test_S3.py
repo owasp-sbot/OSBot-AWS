@@ -4,7 +4,7 @@ from osbot_aws.helpers.Test_Helper import Test_Helper
 import os
 import unittest
 
-from osbot_aws.apis.S3 import S3
+from osbot_aws.aws.s3.S3    import S3
 from osbot_utils.utils.Misc import random_text
 
 @pytest.mark.skip('Fix tests')

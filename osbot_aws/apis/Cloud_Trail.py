@@ -1,14 +1,12 @@
 import datetime
 import json
 
-from osbot_utils.decorators.lists.group_by import group_by
-
-from osbot_utils.decorators.lists.index_by import index_by
-from osbot_utils.utils.Json import json_parse
-
-from osbot_aws.apis.Boto_Helpers import Boto_Helpers
-from osbot_aws.apis.S3 import S3
-from osbot_aws.apis.Session import Session
+from osbot_utils.decorators.lists.group_by  import group_by
+from osbot_utils.decorators.lists.index_by  import index_by
+from osbot_utils.utils.Json                 import json_parse
+from osbot_aws.apis.Boto_Helpers            import Boto_Helpers
+from osbot_aws.aws.s3.S3                    import S3
+from osbot_aws.apis.Session                 import Session
 
 
 class Cloud_Trail(Boto_Helpers):                # todo write tests for this class (which was lost in a past refactor)

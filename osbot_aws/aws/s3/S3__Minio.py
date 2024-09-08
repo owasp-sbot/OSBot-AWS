@@ -1,11 +1,10 @@
 import boto3
 import requests
-from botocore.config import Config
-
-from osbot_utils.base_classes.Type_Safe import Type_Safe
-from osbot_utils.decorators.methods.cache_on_self import cache_on_self
-from osbot_utils.utils.Env import get_env
-from osbot_utils.utils.Status import status_ok, status_error
+from botocore.config                                import Config
+from osbot_utils.base_classes.Type_Safe             import Type_Safe
+from osbot_utils.decorators.methods.cache_on_self   import cache_on_self
+from osbot_utils.utils.Env                          import get_env
+from osbot_utils.utils.Status                       import status_ok, status_error
 
 ENV_NAME__MINIO__SERVER     = 'MINIO__SERVER'
 ENV_NAME__MINIO__ACCESS_KEY = 'MINIO__ACCESS_KEY'

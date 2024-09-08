@@ -1,5 +1,5 @@
-from osbot_aws.apis.S3                  import S3
-from osbot_aws.aws.s3.S3__Minio import S3__Minio
+from osbot_aws.aws.s3.S3                import S3
+from osbot_aws.aws.s3.S3__Minio         import S3__Minio
 from osbot_utils.testing.Temp_Env_Vars  import Temp_Env_Vars
 from unittest                           import TestCase
 from osbot_utils.testing.Hook_Method    import Hook_Method
