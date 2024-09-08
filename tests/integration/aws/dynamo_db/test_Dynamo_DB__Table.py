@@ -1,4 +1,7 @@
+import datetime
+
 import pytest
+from dateutil.tz import tzlocal
 
 from osbot_aws.AWS_Config import AWS_Config
 from osbot_utils.utils.Dev import pprint
@@ -57,19 +60,21 @@ class test_Dynamo_DB__Table(TestCase__Temp_Dynamo_DB_Table):
         assert self.table.exists() == {'data': True, 'status': 'ok'}
 
     def test_info(self):
-        aws_config  = AWS_Config()
-        account_id  = aws_config.account_id()
-        region_name = aws_config.region_name()
+        #aws_config  = AWS_Config()
+        #account_id  = aws_config.account_id()
+        #region_name = aws_config.region_name()
+        account_id = '000000000000'                 # minio
+        region_name = 'ddblocal'                    # minio
         result      =  self.table.info()
         data        = result.get('data'  )
-        status      = result.get('status')
-        table_id    = data.get('TableId')
+        #status      = result.get('status')
+        #table_id    = data.get('TableId')
         del data['CreationDateTime']
         del data['BillingModeSummary']['LastUpdateToPayPerRequestDateTime']
 
         assert list_set(result)  == ['data', 'status']
-        assert list_set(data)    == ['AttributeDefinitions', 'BillingModeSummary', 'DeletionProtectionEnabled', 'ItemCount', 'KeySchema', 'ProvisionedThroughput', 'TableArn', 'TableId', 'TableName', 'TableSizeBytes', 'TableStatus']
-        assert is_guid(table_id) is True
+        assert list_set(data)    == ['AttributeDefinitions', 'BillingModeSummary', 'DeletionProtectionEnabled', 'ItemCount', 'KeySchema', 'ProvisionedThroughput', 'TableArn', 'TableName', 'TableSizeBytes', 'TableStatus']
+        #assert is_guid(table_id) is True
 
         assert data == {  'AttributeDefinitions'     : [{'AttributeName': self.key_name, 'AttributeType': 'S'}]              ,
                            'BillingModeSummary'      : {'BillingMode': 'PAY_PER_REQUEST'},
@@ -77,11 +82,13 @@ class test_Dynamo_DB__Table(TestCase__Temp_Dynamo_DB_Table):
                           'DeletionProtectionEnabled': False                                                                 ,
                           'ItemCount'                : data.get('ItemCount')                                                                     ,
                           'KeySchema'                : [{'AttributeName': self.key_name, 'KeyType': 'HASH'}]                 ,
-                          'ProvisionedThroughput'    : { 'NumberOfDecreasesToday': 0 ,
+                          'ProvisionedThroughput'    : { 'LastDecreaseDateTime': datetime.datetime(1970, 1, 1, 0, 0, tzinfo=tzlocal()),         # only in minio
+                                                         'LastIncreaseDateTime': datetime.datetime(1970, 1, 1, 0, 0, tzinfo=tzlocal()),         # only in minio
+                                                         'NumberOfDecreasesToday': 0 ,
                                                          'ReadCapacityUnits'     : 0 ,
                                                          'WriteCapacityUnits'    : 0 }                                       ,
                           'TableArn'                 : f'arn:aws:dynamodb:{region_name}:{account_id}:table/{self.table_name}',
-                          'TableId'                  : table_id                                                              ,
+                          #'TableId'                  : table_id                                                              ,
                           'TableName'                : self.table_name                                                       ,
                           'TableSizeBytes'           : data.get('TableSizeBytes')                                                                     ,
                           'TableStatus'              : 'ACTIVE'                                                              }
