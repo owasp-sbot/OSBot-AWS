@@ -24,7 +24,7 @@ class DyDB__Table_With_GSI(DyDB__Table):
                       sort_key_type   = sort_key_type   ,
                       sort_key_schema = sort_key_schema ,
                       projection_type = projection_type )
-        result = self.gsi_create(**kwargs).get('data')
+        result = self.gsi_create(**kwargs).get('data')              # todo: add check for status =='ok'
         return result                                               # todo improve the data returned by this method
         # table_description = result.get('TableDescription'      , {})
         # table_status      = table_description.get('TableStatus')

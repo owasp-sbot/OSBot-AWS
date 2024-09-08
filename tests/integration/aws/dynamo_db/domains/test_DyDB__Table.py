@@ -1,9 +1,13 @@
+import datetime
 from decimal import Decimal
+
+from dateutil.tz import tzlocal
 
 from osbot_aws.AWS_Config                           import AWS_Config
 from osbot_aws.aws.dynamo_db.Dynamo_DB__Table       import Dynamo_DB__Table
 from osbot_aws.aws.dynamo_db.domains.DyDB__Table    import DyDB__Table
 from osbot_aws.testing.TestCase__Dynamo_DB          import TestCase__Dynamo_DB
+from osbot_aws.testing.TestCase__Dynamo_DB__Local import TestCase__Dynamo_DB__Local
 from osbot_utils.base_classes.Kwargs_To_Self        import Kwargs_To_Self
 from osbot_utils.utils.Env                          import in_github_action
 from osbot_utils.utils.Lists                        import list_index_by
@@ -11,8 +15,8 @@ from osbot_utils.utils.Misc                         import random_int, list_set,
 from osbot_utils.utils.Objects                      import base_types
 
 
-class test_DyDB__Table(TestCase__Dynamo_DB):
-    delete_on_exit: bool        = in_github_action()
+class test_DyDB__Table(TestCase__Dynamo_DB__Local):
+    delete_on_exit: bool        = True
     aws_config    : AWS_Config
     dydb_table    : DyDB__Table
     table_name    : str         = f'pytest__dydb__table__auto_delete_{delete_on_exit}'
@@ -24,18 +28,19 @@ class test_DyDB__Table(TestCase__Dynamo_DB):
         super().setUpClass()
         cls.dydb_table   = DyDB__Table(table_name=cls.table_name, dynamo_db=cls.dynamo_db)      # set dynamo_db to version of dynamo_db from TestCase__Dynamo_DB (which has the correct IAM permissions)
         cls.aws_config   = AWS_Config()
-        cls.region_name  = cls.aws_config.region_name()
-        cls.account_id   = cls.aws_config.account_id()
+        cls.region_name  = "ddblocal"           # (minio) cls.aws_config.region_name()
+        cls.account_id   = "000000000000"       # (minio) cls.aws_config.account_id()
 
         cls.dydb_table.create_table()  # create if it doesn't exist
 
     @classmethod
     def tearDownClass(cls):
-        if cls.delete_on_exit:
-            assert cls.dydb_table.delete_table(wait_for_deletion=False) is True
+        assert cls.dydb_table.delete_table(wait_for_deletion=True) is True
+        super().tearDownClass()
+
 
     def test__init__(self):
-        assert self.region_name == 'eu-west-1'
+        #assert self.region_name == 'eu-west-1'
         expected_var = { 'dynamo_db'                : self.dynamo_db    ,
                          'key_name'                 : 'id'              ,
                          'key_type'                 : 'S'           ,
@@ -142,11 +147,13 @@ class test_DyDB__Table(TestCase__Dynamo_DB):
                                   'DeletionProtectionEnabled': False            ,
                                   'ItemCount'                : table_info.get('ItemCount')                 ,
                                   'KeySchema'                : [{'AttributeName': 'id', 'KeyType': 'HASH'}],
-                                  'ProvisionedThroughput'    : {'NumberOfDecreasesToday': 0               ,
-                                                                'ReadCapacityUnits': 0                    ,
-                                                                'WriteCapacityUnits': 0                   },
+                                  'ProvisionedThroughput'    : { 'LastDecreaseDateTime': datetime.datetime(1970, 1, 1, 0, 0, tzinfo=tzlocal()),
+                                                                 'LastIncreaseDateTime': datetime.datetime(1970, 1, 1, 0, 0, tzinfo=tzlocal()),
+                                                                 'NumberOfDecreasesToday': 0               ,
+                                                                 'ReadCapacityUnits': 0                    ,
+                                                                 'WriteCapacityUnits': 0                   },
                                   'TableArn'                 : f'arn:aws:dynamodb:{self.region_name}:{self.account_id}:table/{self.table_name}',
-                                  'TableId'                  : TableId                                     ,
+                                  #'TableId'                  : TableId                                     ,
                                   'TableName'                : self.table_name                             ,
                                   'TableSizeBytes'           : table_info.get('TableSizeBytes')            ,
                                   'TableStatus'              : 'ACTIVE'                                    }
