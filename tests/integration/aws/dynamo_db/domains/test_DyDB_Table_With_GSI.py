@@ -11,6 +11,7 @@ from osbot_aws.aws.dynamo_db.domains.DyDB__Table_With_GSI   import DyDB__Table_W
 from osbot_aws.testing.TestCase__Dynamo_DB__Local           import TestCase__Dynamo_DB__Local
 from osbot_utils.base_classes.Kwargs_To_Self                import Kwargs_To_Self
 from osbot_utils.utils.Dev                                  import pprint
+from osbot_utils.utils.Env import not_in_github_action
 from osbot_utils.utils.Misc                                 import random_number, timestamp_utc_now_less_delta, list_set
 from osbot_utils.utils.Objects                              import base_types
 
@@ -75,8 +76,9 @@ class test_DyDB__Table(TestCase__Dynamo_DB__Local):
                                      'IndexStatus'  : 'CREATING',
                                      'KeySchema'    : [ { 'AttributeName': 'user_id', 'KeyType': 'HASH'},
                                                         { 'AttributeName': 'timestamp', 'KeyType': 'RANGE'}],
-                                     'OnDemandThroughput': { 'MaxReadRequestUnits': -1, 'MaxWriteRequestUnits': -1},
                                      'Projection'   : { 'ProjectionType': 'ALL'}}]
+                if not_in_github_action():
+                    expected_gsi[0]['OnDemandThroughput'] = { 'MaxReadRequestUnits': -1, 'MaxWriteRequestUnits': -1}
                 assert result.get('TableDescription').get('GlobalSecondaryIndexes') == expected_gsi
                 assert _.gsi_wait_for_status().get('status') == 'ok'
 
