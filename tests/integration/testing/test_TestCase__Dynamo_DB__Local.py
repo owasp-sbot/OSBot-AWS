@@ -26,8 +26,8 @@ class test_TestCase__Dynamo_DB__Local(TestCase__Dynamo_DB__Local):
         assert function_name(self.hook_method.target)         == 'client'
         assert function_name(self.hook_method.wrapper_method) == 'wrapper_method'
         assert function_name(getattr(Dynamo_DB, 'client')   ) == 'wrapper_method'
-        #assert self.hook_method.target        == getattr(S3, 'client')
 
     def test__check_that_we_are_connected_to_docker_version(self):
-        client = Dynamo_DB().client()
-        assert client.meta.endpoint_url == URL_DOCKER__DYNAMODB__LOCAL
+        dynamo_db = Dynamo_DB()
+        assert dynamo_db.client().meta.endpoint_url == URL_DOCKER__DYNAMODB__LOCAL
+        assert dynamo_db.tables() == []
