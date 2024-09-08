@@ -12,12 +12,29 @@ from osbot_utils.utils.Objects import obj_info
     #         assert _.account_id()                == CURRENT__OSBOT_AWS__TESTS__ACCOUNT_ID
     #         assert _.aws_session_region_name()   == CURRENT__OSBOT_AWS__TESTS__DEFAULT_REGION
     #         assert _.sts__caller_identity_user() == CURRENT__OSBOT_AWS__TESTS__IAM_USER
+# todo: fix the fact that the EC2__with_temp_role (i.e. ROLE__temp_osbot__Full_Access__ec2)  role needs this Trust Relationship added manually
+# {
+#     "Version": "2012-10-17",
+#     "Statement": [
+#         {
+#             "Effect": "Allow",
+#             "Principal": {
+#                 "AWS": [
+#                     "arn:aws:iam::470426667096:user/OSBot-AWS-Dev__Only-IAM",
+#                     "arn:aws:iam::470426667096:user/dinis.cruz+aws@owasp.org"
+#                 ]
+#             },
+#             "Action": "sts:AssumeRole"
+#         }
+#     ]
+# }
 
 
 class test_EC2__with_temp_role(TestCase):
 
     def setUp(self):
         self.ec2__with_temp_role = EC2__with_temp_role()
+        #self.ec2__with_temp_role._temp_role__iam_reset_credentials()
 
 
     def test___init__(self):
@@ -28,7 +45,6 @@ class test_EC2__with_temp_role(TestCase):
 
     def test__iam_assume_role(self):
         with self.ec2__with_temp_role as _:
-
             iam_assume_policy = _._iam_assume_role()
             assert iam_assume_policy.role_name == 'ROLE__temp_osbot__Full_Access__ec2'
 

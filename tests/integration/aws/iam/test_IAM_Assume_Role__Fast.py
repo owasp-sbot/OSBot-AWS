@@ -5,6 +5,23 @@ from osbot_utils.utils.Misc                         import list_set
 from tests.integration.aws.iam.test_IAM_Assume_Role import TEMP_ROLE_NAME__ASSUME_ROLE
 
 
+# todo: fix the fact that the role TEMP_ROLE_NAME__ASSUME_ROLE (i.e. osbot_aws_temp_role__assume_role) needs this Trust Relationship added manually
+# {
+#     "Version": "2012-10-17",
+#     "Statement": [
+#         {
+#             "Effect": "Allow",
+#             "Principal": {
+#                 "AWS": [
+#                     "arn:aws:iam::470426667096:user/OSBot-AWS-Dev__Only-IAM",
+#                     "arn:aws:iam::470426667096:user/dinis.cruz+aws@owasp.org"
+#                 ]
+#             },
+#             "Action": "sts:AssumeRole"
+#         }
+#     ]
+# }
+
 class test_IAM_Assume_Role__Fast(TestCase):
     iam_assume_role : IAM_Assume_Role
 
