@@ -1,7 +1,7 @@
 import uuid
-from functools                                          import cache
 from boto3.dynamodb.types                               import TypeDeserializer, TypeSerializer
 from osbot_aws.apis.Session                             import Session
+from osbot_utils.decorators.methods.cache_on_self       import cache_on_self
 from osbot_utils.decorators.methods.remove_return_value import remove_return_value
 
 DEFAULT_DOCUMENTS_MAX_ITEMS_TO_FETCH = 100000
@@ -13,11 +13,11 @@ class Dynamo_DB:
     def __exit__ (self, exc_type, exc_val, exc_tb): pass
 
     # helpers
-    @cache
+    @cache_on_self
     def client(self):
         return Session().client('dynamodb')
 
-    @cache
+    @cache_on_self
     def client__dynamo_streams(self):
         return Session().client('dynamodbstreams')
 
