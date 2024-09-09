@@ -14,7 +14,7 @@ from osbot_utils.utils.Objects import obj_info, base_types
 
 
 
-class test_DyDB__Table__Registry(TestCase__Dynamo_DB__Local):
+class test_DyDB__Table__Resources(TestCase__Dynamo_DB__Local):
     temp_dydb_table_resources: DyDB__Table__Resources
     table_name               : str                    = 'temp_dydb_table_resources'
 

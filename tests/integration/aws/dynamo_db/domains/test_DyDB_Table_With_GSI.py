@@ -1,9 +1,5 @@
 import random
-from datetime import datetime, timedelta, UTC
 from decimal import Decimal
-
-import pytest
-
 from osbot_aws.AWS_Config                                   import AWS_Config
 from osbot_aws.aws.dynamo_db.Dynamo_DB__Table               import Dynamo_DB__Table
 from osbot_aws.aws.dynamo_db.domains.DyDB__Table            import DyDB__Table
@@ -11,12 +7,12 @@ from osbot_aws.aws.dynamo_db.domains.DyDB__Table_With_GSI   import DyDB__Table_W
 from osbot_aws.testing.TestCase__Dynamo_DB__Local           import TestCase__Dynamo_DB__Local
 from osbot_utils.base_classes.Kwargs_To_Self                import Kwargs_To_Self
 from osbot_utils.utils.Dev                                  import pprint
-from osbot_utils.utils.Env import not_in_github_action
+from osbot_utils.utils.Env                                  import not_in_github_action
 from osbot_utils.utils.Misc                                 import random_number, timestamp_utc_now_less_delta, list_set
 from osbot_utils.utils.Objects                              import base_types
 
 
-class test_DyDB__Table(TestCase__Dynamo_DB__Local):
+class test_DyDB_Table_With_GSI(TestCase__Dynamo_DB__Local):
     delete_on_exit     : bool                   = True
     aws_config         : AWS_Config
     dydb_table_with_gsi: DyDB__Table_With_GSI
@@ -50,7 +46,7 @@ class test_DyDB__Table(TestCase__Dynamo_DB__Local):
                 return
             time_groups = [0, 10, 20, 30]
             for user_id in ['user_a', 'user_b', 'user_c', 'user_d']:
-                for i in range(0, 10):
+                for i in range(0, 5):
                     delta_days = random.choice(time_groups)
                     timestamp = timestamp_utc_now_less_delta(days=delta_days)
                     document  = dict(user_id    = user_id                 ,
@@ -58,7 +54,7 @@ class test_DyDB__Table(TestCase__Dynamo_DB__Local):
                                      an_random  = Decimal(random_number()),
                                      timestamp  = timestamp               )
                     _.add_document(document)
-            pprint(f'there are {_.size()} documents')
+            assert _.size() == 20
 
     def test_AAA_index_create(self):
         with self.dydb_table_with_gsi as _:
@@ -125,9 +121,10 @@ class test_DyDB__Table(TestCase__Dynamo_DB__Local):
                                'ItemCount'      : index_info.get('ItemCount'     )  ,
                                'KeySchema'      : [{'AttributeName': self.gsi_index_name, 'KeyType': 'HASH'},
                                                    {'AttributeName': self.gsi_sort_key  , 'KeyType': self.gsi_sort_key_schema}],
-                               'Projection'     : {'ProjectionType': 'ALL'},
-                               'OnDemandThroughput': {'MaxReadRequestUnits': -1, 'MaxWriteRequestUnits': -1}}
+                               'Projection'     : {'ProjectionType': 'ALL'}}
 
+            if not_in_github_action():
+                expected_index['OnDemandThroughput'] = {'MaxReadRequestUnits': -1, 'MaxWriteRequestUnits': -1}
             assert index_info == expected_index
 
 
@@ -155,7 +152,7 @@ class test_DyDB__Table(TestCase__Dynamo_DB__Local):
                                 index_value   = user_id            )
 
             items = _.query_index(**query_kwargs)
-            assert len(items) == 10
+            assert len(items) == 5
             for item in items:
                 assert list_set(item) == ['an_random', 'an_str', 'id', 'timestamp', 'user_id']
                 assert item.get('an_str') == '42'
