@@ -3,7 +3,7 @@ from osbot_utils.decorators.methods.cache_on_self       import cache_on_self
 from osbot_utils.decorators.methods.remove_return_value import remove_return_value
 from osbot_utils.decorators.methods.required_fields     import required_fields
 from osbot_aws.AWS_Config                               import AWS_Config
-from osbot_aws.apis.S3                                  import S3
+from osbot_aws.aws.s3.S3                                import S3
 from osbot_aws.apis.Session                             import Session
 from osbot_utils.testing.Temp_Folder                    import Temp_Folder
 from osbot_utils.testing.Temp_Zip                       import Temp_Zip

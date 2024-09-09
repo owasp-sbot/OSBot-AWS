@@ -1,9 +1,9 @@
 import os
-from osbot_aws.apis.S3          import S3
-from osbot_aws.AWS_Config       import AWS_Config
-from osbot_utils.decorators.methods.cache_on_self import cache_on_self
-from osbot_utils.utils.Files    import Files, folder_exists, folder_not_exists, folder_create, file_not_exists
-from osbot_utils.utils.Process  import Process
+from osbot_aws.aws.s3.S3                            import S3
+from osbot_aws.AWS_Config                           import AWS_Config
+from osbot_utils.decorators.methods.cache_on_self   import cache_on_self
+from osbot_utils.utils.Files                        import Files, folder_exists, folder_not_exists, folder_create, file_not_exists
+from osbot_utils.utils.Process                      import Process
 
 # todo: move to lambdas_ section (since this is used by lambdas to dynamically load dependencies from zip files in s3)
 

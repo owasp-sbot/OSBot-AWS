@@ -1,42 +1,35 @@
 import base64
-import json
-import os
-import unittest
-from contextlib import contextmanager
-from decimal import Decimal
-from functools import cache
-from unittest import TestCase
-
-from dotenv import load_dotenv
-
+from decimal                                            import Decimal
 from osbot_aws.aws.dynamo_db.Dynamo_DB                  import Dynamo_DB
-from osbot_aws.aws.dynamo_db.Dynamo_DB__with_temp_role  import Dynamo_DB__with_temp_role
-from osbot_aws.testing.Pytest                           import skip_pytest___aws_pytest_user_name__is_not_set
+from osbot_aws.testing.TestCase__Dynamo_DB__Local       import TestCase__Dynamo_DB__Local
 from osbot_utils.utils.Misc                             import random_string
 
-class test_Dynamo_DB(TestCase):
+class test_Dynamo_DB(TestCase__Dynamo_DB__Local):
     dynamo_db       : Dynamo_DB
     table_name      : str
     table_key       : str
-    remove_on_exit  : bool = False
+    remove_on_exit  : bool = True
 
     @classmethod
     def setUpClass(cls) -> None:
-        skip_pytest___aws_pytest_user_name__is_not_set()
-        cls.dynamo_db = Dynamo_DB__with_temp_role()
-        cls.table_name = 'temp-table'
-        cls.table_key = 'an_key'
+        super().setUpClass()
+        cls.dynamo_db   = Dynamo_DB()
+        cls.table_name  = 'temp-table'
+        cls.table_key   = 'an_key'
         cls.dynamo_db.table_create(table_name=cls.table_name, key_name=cls.table_key)        # usually takes about 5 seconds to create
+        assert cls.dynamo_db.table_exists(cls.table_name) is True
 
 
     @classmethod
     def tearDownClass(cls) -> None:
         if cls.remove_on_exit:
-            cls.dynamo_db.table_delete(table_name=cls.table_name, wait_for_deletion=False)
+            cls.dynamo_db.table_delete(table_name=cls.table_name, wait_for_deletion=True)
+            assert cls.dynamo_db.table_exists(cls.table_name) is False
+        super().tearDownClass()
 
 
-    def test__init__(self):
-        assert self.dynamo_db.client().meta.region_name == 'eu-west-1'   # make sure all temp tables are in this region
+    def test__setUpClass(self):
+        assert self.table_name in self.dynamo_db.tables()
 
     # main methods
 

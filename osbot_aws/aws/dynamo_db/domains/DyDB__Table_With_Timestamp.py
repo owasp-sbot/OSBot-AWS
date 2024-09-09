@@ -62,7 +62,8 @@ class DyDB__Table_With_Timestamp(DyDB__Table_With_GSI):
             create_index_config = gsi_update.get('Create')
             global_secondary_indexes.append(create_index_config)
 
-        create_table_kwargs['GlobalSecondaryIndexes'] = global_secondary_indexes
+        if global_secondary_indexes:
+            create_table_kwargs['GlobalSecondaryIndexes'] = global_secondary_indexes
 
         return create_table_kwargs
 

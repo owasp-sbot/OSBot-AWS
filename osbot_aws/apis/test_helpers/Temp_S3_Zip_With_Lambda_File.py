@@ -1,12 +1,10 @@
 from osbot_utils.utils.Dev import pprint
 
-from osbot_aws.AWS_Config import AWS_Config
-from osbot_utils.utils.Files import Files, file_create, path_combine, folder_create_temp, file_delete, \
-    folder_delete_recursively
-from osbot_utils.utils.Misc  import random_string_and_numbers
-
-from osbot_aws.apis.S3 import S3
-from osbot_utils.utils.Zip import zip_folder
+from osbot_aws.AWS_Config       import AWS_Config
+from osbot_utils.utils.Files    import Files, file_create, path_combine, folder_create_temp, file_delete, folder_delete_recursively
+from osbot_utils.utils.Misc     import random_string_and_numbers
+from osbot_aws.aws.s3.S3        import S3
+from osbot_utils.utils.Zip      import zip_folder
 
 
 class Temp_S3_Zip_With_Lambda_File:

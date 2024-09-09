@@ -173,12 +173,14 @@ class DyDB__Document(Kwargs_To_Self):
     def print(self):
         pprint(self.document)
         return self
+
     def print_field(self, field_name, new_line_before=True):
         value = self.field(field_name)
         if new_line_before:
             print()
         pprint(value)
         return value
+
     def reset_document(self):
         new_document  = {'id': self.document_id()}
         self.document =  self.table.add_document(new_document).get('document')

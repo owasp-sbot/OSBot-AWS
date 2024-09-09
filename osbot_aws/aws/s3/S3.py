@@ -85,6 +85,7 @@ class S3:
     def session(self):
         return Session()
 
+    @remove_return_value(field_name='ResponseMetadata')
     def bucket_notification(self, bucket_name):
         #if self.boto_notification is None : self.boto_notification = self.s3_resource().BucketNotification(bucket_name=bucket_name)
         #return self.boto_notification
@@ -99,16 +100,19 @@ class S3:
         aws_lambda.permission_delete(lambda_arn, statement_id)
         return aws_lambda.permission_add(lambda_arn, statement_id, action, principal, )
 
-    def bucket_notification_create(self, s3_bucket, lambda_arn, events, prefix):
+    def bucket_notification_create(self, s3_bucket, notification_config):
         try:
-            self.bucket_notification_set_lambda_permission(s3_bucket, lambda_arn)  # configure permissions
-            params = { 'Bucket' : s3_bucket,
-                       'NotificationConfiguration': {
-                            'LambdaFunctionConfigurations': [{
-                                                              'LambdaFunctionArn': lambda_arn,
-                                                              'Events'           : events,
-                                                              'Filter'           : { 'Key': { 'FilterRules': [ {'Name' : 'prefix',
-                                                                                                               'Value': prefix }]}}}]}}
+
+            params = { 'Bucket'                   : s3_bucket,
+                       'NotificationConfiguration': notification_config }
+            # todo: refactor code bellow to an Lambda specific class and tests
+            # self.bucket_notification_set_lambda_permission(s3_bucket, lambda_arn)  # configure permissions
+               # {
+               #  'LambdaFunctionConfigurations': [{
+               #                                    'LambdaFunctionArn': lambda_arn,
+               #                                    'Events'           : events,
+               #                                    'Filter'           : { 'Key': { 'FilterRules': [ {'Name' : 'prefix',
+               #                                                                                     'Value': prefix }]}}}]}}
             return self.s3().put_bucket_notification_configuration(**params)
         except Exception as error:
             return {'error': f'{error}'}
@@ -268,6 +272,7 @@ class S3:
         result = self.client().delete_object(Bucket=bucket, Key=key)              # delete file from s3
         return result.get('ResponseMetadata').get('HTTPStatusCode') == 204
 
+    @remove_return_value('ResponseMetadata')
     def file_details(self, bucket, key):
         return self.client().head_object(Bucket = bucket, Key= key)
 

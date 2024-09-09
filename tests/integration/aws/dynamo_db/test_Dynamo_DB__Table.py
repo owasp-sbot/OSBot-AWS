@@ -1,8 +1,8 @@
-import pytest
+import datetime
 
-from osbot_aws.AWS_Config import AWS_Config
-from osbot_utils.utils.Dev import pprint
-from osbot_utils.utils.Misc import list_set, is_guid
+import pytest
+from dateutil.tz                                                    import tzlocal
+from osbot_utils.utils.Misc                                         import list_set, is_guid
 from tests.integration.aws.dynamo_db.TestCase__Temp_Dynamo_DB_Table import TestCase__Temp_Dynamo_DB_Table
 
 
@@ -37,17 +37,13 @@ class test_Dynamo_DB__Table(TestCase__Temp_Dynamo_DB_Table):
 
             assert _.delete_document(document_key) == {'data': True, 'status': 'ok'}
 
-    @pytest.mark.skip('to: fix test that started to fail after some refactoring')
+    #@pytest.mark.skip('to: fix test that started to fail after some refactoring')
     def test_clear_table(self):
         with self.table as _:
             clear_result = _.clear_table()
             assert list_set(clear_result            ) == ['data', 'status']
             assert list_set(clear_result.get('data')) == ['delete_result', 'delete_status','deleted_keys']
-            document_key = _.add_document({}).get('data').get('key_value')
-            # todo: this test started failing in a non deterministic way (mainly in GitHub Actions)
-            #       weirdly after some refactoring (namely when moved some tests to test_Dynamo_DB__Cached)
-            #       see error at (https://github.com/owasp-sbot/OSBot-AWS/actions/runs/8704376479/job/23873194458)
-            #       it not picking up the document just added (maybe we need to add a delay here?)
+            document_key = _.add_document({}).get('data').get('document').get('el-key')
             assert _.clear_table() == {'data'  : {'delete_result': [{'UnprocessedItems': {}}],
                                                   'deleted_keys' : [document_key]           ,
                                                   'delete_status': True                     },
@@ -57,19 +53,21 @@ class test_Dynamo_DB__Table(TestCase__Temp_Dynamo_DB_Table):
         assert self.table.exists() == {'data': True, 'status': 'ok'}
 
     def test_info(self):
-        aws_config  = AWS_Config()
-        account_id  = aws_config.account_id()
-        region_name = aws_config.region_name()
+        #aws_config  = AWS_Config()
+        #account_id  = aws_config.account_id()
+        #region_name = aws_config.region_name()
+        account_id = '000000000000'                 # minio
+        region_name = 'ddblocal'                    # minio
         result      =  self.table.info()
         data        = result.get('data'  )
-        status      = result.get('status')
-        table_id    = data.get('TableId')
+        #status      = result.get('status')
+        #table_id    = data.get('TableId')
         del data['CreationDateTime']
         del data['BillingModeSummary']['LastUpdateToPayPerRequestDateTime']
 
         assert list_set(result)  == ['data', 'status']
-        assert list_set(data)    == ['AttributeDefinitions', 'BillingModeSummary', 'DeletionProtectionEnabled', 'ItemCount', 'KeySchema', 'ProvisionedThroughput', 'TableArn', 'TableId', 'TableName', 'TableSizeBytes', 'TableStatus']
-        assert is_guid(table_id) is True
+        assert list_set(data)    == ['AttributeDefinitions', 'BillingModeSummary', 'DeletionProtectionEnabled', 'ItemCount', 'KeySchema', 'ProvisionedThroughput', 'TableArn', 'TableName', 'TableSizeBytes', 'TableStatus']
+        #assert is_guid(table_id) is True
 
         assert data == {  'AttributeDefinitions'     : [{'AttributeName': self.key_name, 'AttributeType': 'S'}]              ,
                            'BillingModeSummary'      : {'BillingMode': 'PAY_PER_REQUEST'},
@@ -77,11 +75,13 @@ class test_Dynamo_DB__Table(TestCase__Temp_Dynamo_DB_Table):
                           'DeletionProtectionEnabled': False                                                                 ,
                           'ItemCount'                : data.get('ItemCount')                                                                     ,
                           'KeySchema'                : [{'AttributeName': self.key_name, 'KeyType': 'HASH'}]                 ,
-                          'ProvisionedThroughput'    : { 'NumberOfDecreasesToday': 0 ,
+                          'ProvisionedThroughput'    : { 'LastDecreaseDateTime': datetime.datetime(1970, 1, 1, 0, 0, tzinfo=tzlocal()),         # only in minio
+                                                         'LastIncreaseDateTime': datetime.datetime(1970, 1, 1, 0, 0, tzinfo=tzlocal()),         # only in minio
+                                                         'NumberOfDecreasesToday': 0 ,
                                                          'ReadCapacityUnits'     : 0 ,
                                                          'WriteCapacityUnits'    : 0 }                                       ,
                           'TableArn'                 : f'arn:aws:dynamodb:{region_name}:{account_id}:table/{self.table_name}',
-                          'TableId'                  : table_id                                                              ,
+                          #'TableId'                  : table_id                                                              ,
                           'TableName'                : self.table_name                                                       ,
                           'TableSizeBytes'           : data.get('TableSizeBytes')                                                                     ,
                           'TableStatus'              : 'ACTIVE'                                                              }

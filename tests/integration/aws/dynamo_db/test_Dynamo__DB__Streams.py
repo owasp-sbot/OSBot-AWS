@@ -1,23 +1,16 @@
-import pytest
-
-from osbot_aws.aws.dynamo_db.Dynamo_DB import Dynamo_DB
-from osbot_aws.aws.dynamo_db.Dynamo_DB__Streams import Dynamo_DB__Streams
-from osbot_aws.aws.dynamo_db.Dynamo_DB__Table import Dynamo_DB__Table
-from osbot_aws.aws.dynamo_db.domains.DyDB__Table import DyDB__Table
-from osbot_aws.testing.TestCase__Dynamo_DB import TestCase__Dynamo_DB
-from osbot_utils.utils.Dev import pprint
-from osbot_utils.utils.Misc import wait_for
+from osbot_aws.aws.dynamo_db.Dynamo_DB__Streams     import Dynamo_DB__Streams
+from osbot_aws.aws.dynamo_db.domains.DyDB__Table    import DyDB__Table
+from osbot_aws.testing.TestCase__Dynamo_DB__Local   import TestCase__Dynamo_DB__Local
 
 
-@pytest.mark.skip("Needs AWS environment setup")
-class test_Dynamo__DB__Streams(TestCase__Dynamo_DB):
+class test_Dynamo__DB__Streams(TestCase__Dynamo_DB__Local):
 
     dynamo_db_streams: Dynamo_DB__Streams
     dynamo_db_table  : DyDB__Table
     table_name       : str
     table_key_name   : str
     table_key_type   : str
-    remove_on_exit   : bool = False
+    #remove_on_exit   : bool = True
 
     @classmethod
     def setUpClass(cls) -> None:
@@ -33,12 +26,13 @@ class test_Dynamo__DB__Streams(TestCase__Dynamo_DB):
 
         cls.dynamo_db_streams = Dynamo_DB__Streams(dynamo_db_table=cls.dynamo_db_table)
         #cls.dynamo_db_table.delete_table()
-        #cls.dynamo_db_table.create_table()
+        cls.dynamo_db_table.create_table()
 
     @classmethod
     def tearDownClass(cls) -> None:
-        if cls.remove_on_exit:
-            cls.dynamo_db.table_delete(table_name=cls.table_name, wait_for_deletion=False)
+        #if cls.remove_on_exit:
+        assert cls.dynamo_db.table_delete(table_name=cls.table_name, wait_for_deletion=True) is True
+        super().tearDownClass()
 
     def test_setup(self):
         with self.dynamo_db_table as _:

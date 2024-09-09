@@ -110,7 +110,7 @@ class test_Deploy_OSBot_AWS__To_EC2(TestCase):
 
             def test_osbot_aws():
                 from osbot_aws.aws.sts.STS import STS
-                from osbot_aws.apis.S3 import S3
+                from osbot_aws.aws.s3.S3   import S3
                 sts = STS()
                 s3  = S3()
                 return f'iam details : {sts.caller_identity()}\ns3 buckets : {s3.buckets()}'
@@ -126,7 +126,7 @@ class test_Deploy_OSBot_AWS__To_EC2(TestCase):
             aws_config = AWS_Config()
             aws_config.set_aws_session_region_name('eu-west-1')
 
-            from osbot_aws.apis.S3 import S3
+            from osbot_aws.aws.s3.S3 import S3
             s3 = S3()
             return f's3 buckets : {s3.buckets()}'
             #return f'iam details : {ec2_instance.info()}'

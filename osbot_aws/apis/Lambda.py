@@ -11,16 +11,14 @@ from osbot_utils.testing.Duration import Duration
 
 from osbot_utils.decorators.methods.cache_on_self import cache_on_self
 
-from osbot_aws.apis.Logs import Logs
-from osbot_utils.decorators.lists.index_by import index_by
-from osbot_utils.decorators.methods.cache import cache
-from osbot_utils.decorators.methods.catch import catch
+from osbot_aws.apis.Logs                                import Logs
+from osbot_utils.decorators.lists.index_by              import index_by
+from osbot_utils.decorators.methods.catch               import catch
 from osbot_utils.decorators.methods.remove_return_value import remove_return_value
-
-from osbot_aws.apis.Session import Session
-from osbot_aws.apis.S3 import S3
-from osbot_utils.utils.Misc import wait, random_string, base64_to_str, list_set, wait_for
-from osbot_utils.utils.Status import status_ok, status_error, status_warning
+from osbot_aws.apis.Session                             import Session
+from osbot_aws.aws.s3.S3                                import S3
+from osbot_utils.utils.Misc                             import wait, random_string, base64_to_str, list_set, wait_for
+from osbot_utils.utils.Status                           import status_ok, status_error, status_warning
 
 
 class Lambda:

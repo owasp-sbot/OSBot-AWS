@@ -1,10 +1,7 @@
-from functools import cache
-
-from dotenv import load_dotenv
-
-from osbot_aws.apis.S3 import S3
-from osbot_aws.aws.apigateway.API_Gateway_V2 import API_Gateway_V2
-from osbot_aws.aws.iam.IAM_Assume_Role import IAM_Assume_Role
+from functools                          import cache
+from osbot_aws.aws.s3.S3                import S3
+from osbot_aws.aws.iam.IAM_Assume_Role  import IAM_Assume_Role
+from osbot_utils.utils.Env import load_dotenv
 
 
 class S3__with_temp_role(S3):

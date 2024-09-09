@@ -5,7 +5,7 @@ from osbot_aws.aws.dynamo_db.Dynamo_DB__Record import Dynamo_DB__Record
 from osbot_utils.base_classes.Kwargs_To_Self import Kwargs_To_Self
 from osbot_utils.decorators.methods.capture_status import capture_status, apply_capture_status
 from osbot_utils.utils.Dev import pprint
-from osbot_utils.utils.Misc import timestamp_utc_now
+from osbot_utils.utils.Misc import timestamp_utc_now, wait_for
 
 PRIMARY_KEY_NAME = 'id'
 PRIMARY_KEY_TYPE = 'S'
@@ -99,8 +99,8 @@ class Dynamo_DB__Table(Kwargs_To_Self):
                                                    sort_key        = sort_key          ,
                                                    sort_key_type   = sort_key_type     ,
                                                    sort_key_schema = sort_key_schema   ,
-                                                   projection_type = projection_type   )
-        return self.gsi_create_index(**gsi_create_kwargs)
+                                                   projection_type = projection_type   ).get('data')
+        return self.gsi_create_index(**gsi_create_kwargs).get('data')               # todo: add check for status =='ok'
 
     def gsi_create_index(self, attribute_definitions, gsi_update):
         gsi_updates = [gsi_update]
@@ -132,3 +132,23 @@ class Dynamo_DB__Table(Kwargs_To_Self):
         gsi_update  = {'Delete': { 'IndexName' : index_name }}
         gsi_updates = [gsi_update]
         return self.update_table(gsi_updates=gsi_updates).get('data')
+
+    def gsi_wait_for_status(self, status='ACTIVE', max_attempts=20, delay=0.05):        # todo: see if these values need to be higher when dealing with AWS DynamoDB (vs the dynamodb-local)
+        for i in range(max_attempts):
+            all_match = False
+            for gsi in self.gsis().get('data'):
+                if gsi.get('IndexStatus') == status:
+                    all_match = True
+                else:
+                    all_match = False
+                    break
+
+            if all_match:
+                return True
+            else:
+                wait_for(delay)
+        raise ValueError("expected status not found")
+
+
+    def gsis(self):
+        return self.info().get('GlobalSecondaryIndexes')

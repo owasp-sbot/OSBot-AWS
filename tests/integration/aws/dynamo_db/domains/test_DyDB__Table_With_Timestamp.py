@@ -4,14 +4,15 @@ from osbot_aws.aws.dynamo_db.domains.DyDB__Table                import DyDB__Tab
 from osbot_aws.aws.dynamo_db.domains.DyDB__Table_With_GSI       import DyDB__Table_With_GSI
 from osbot_aws.aws.dynamo_db.domains.DyDB__Table_With_Timestamp import DyDB__Table_With_Timestamp
 from osbot_aws.testing.TestCase__Dynamo_DB                      import TestCase__Dynamo_DB
+from osbot_aws.testing.TestCase__Dynamo_DB__Local               import TestCase__Dynamo_DB__Local
 from osbot_utils.base_classes.Kwargs_To_Self                    import Kwargs_To_Self
 from osbot_utils.utils.Objects                                  import base_types
 
 
-class test_DyDB__Table_With_Timestamp(TestCase__Dynamo_DB):
-    delete_on_exit            : bool = False  # in_github_action() # can't really do this since it takes ages (like several minutes for the GSIs to be created)
+class test_DyDB__Table_With_Timestamp(TestCase__Dynamo_DB__Local):
+    delete_on_exit            : bool = True
     aws_config                : AWS_Config
-    dydb_table_with_timestamp : DyDB__Table_With_Timestamp
+    dydb_table_with_timestamp : DyDB__Table_With_Timestamp                  = None
     table_name                : str = f'pytest__dydb__table_with_timestamp'
     account_id                : str
     region_name               : str
@@ -19,22 +20,26 @@ class test_DyDB__Table_With_Timestamp(TestCase__Dynamo_DB):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        cls.dydb_table_with_timestamp = DyDB__Table_With_Timestamp(table_name=cls.table_name,
-                                                                   dynamo_db=cls.dynamo_db)  # set dynamo_db to version of dynamo_db from TestCase__Dynamo_DB (which has the correct IAM permissions)
+        cls.dydb_table_with_timestamp = DyDB__Table_With_Timestamp(dynamo_db=cls.dynamo_db, table_name=cls.table_name)  # set dynamo_db to version of dynamo_db from TestCase__Dynamo_DB (which has the correct IAM permissions)
         cls.aws_config  = AWS_Config()
         cls.region_name = cls.aws_config.region_name()
         cls.account_id  = cls.aws_config.account_id()
-        #cls.dydb_table_with_timestamp.create_table()           # create if it doesn't exist
+        cls.dydb_table_with_timestamp.create_table()           # create if it doesn't exist
         with cls.dydb_table_with_timestamp as _:
             _.table_indexes = ['user_id', 'role', 'path']       # default table indexes
 
     @classmethod
     def tearDownClass(cls):
-        if cls.delete_on_exit:
-            assert cls.dydb_table_with_timestamp.delete_table(wait_for_deletion=False) is True
+        assert cls.dydb_table_with_timestamp.delete_table(wait_for_deletion=False) is True
+        super().tearDownClass()
+
+    def test_AAA_setup(self):
+        with self.dydb_table_with_timestamp as _:
+            _.setup()
+            assert _.exists() is True
 
     def test__init__(self):
-        assert self.region_name == 'eu-west-1'
+        #assert self.region_name == 'eu-west-1'
         expected_var = {'dynamo_db'    : self.dynamo_db ,
                         'key_name'     : 'id'           ,
                         'key_type'     : 'S'            ,
@@ -47,11 +52,6 @@ class test_DyDB__Table_With_Timestamp(TestCase__Dynamo_DB):
                                        Dynamo_DB__Table     ,
                                        Kwargs_To_Self       ,
                                        object               ]
-
-    def test_AAA_setup(self):
-        with self.dydb_table_with_timestamp as _:
-            _.setup()
-            assert _.exists() is True
 
 
     def test_indexes_create_kwargs(self):

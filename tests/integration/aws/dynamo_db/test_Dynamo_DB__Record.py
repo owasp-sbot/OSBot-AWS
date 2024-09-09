@@ -1,6 +1,5 @@
-from osbot_aws.aws.dynamo_db.Dynamo_DB__Record import Dynamo_DB__Record, Dynamo_DB__Record__Metadata
-from osbot_utils.utils.Dev import pprint
-from osbot_utils.utils.Misc import str_to_bytes
+from osbot_aws.aws.dynamo_db.Dynamo_DB__Record                      import Dynamo_DB__Record, Dynamo_DB__Record__Metadata
+from osbot_utils.utils.Misc                                         import str_to_bytes
 from tests.integration.aws.dynamo_db.TestCase__Temp_Dynamo_DB_Table import TestCase__Temp_Dynamo_DB_Table
 
 TEST_TABLE_NAME = 'temp_table__test_Dynamo_DB__Record'
@@ -9,14 +8,18 @@ class test_Dynamo_DB__Record(TestCase__Temp_Dynamo_DB_Table):
 
     @classmethod
     def setUpClass(cls):
-        cls.remove_on_exit = False
-        cls.table_name     = TEST_TABLE_NAME
+        cls.table_name = TEST_TABLE_NAME
         super().setUpClass()
 
     def setUp(self):
         self.db_record = Dynamo_DB__Record()
 
     def test__init__(self):
+        table_info = self.dynamo_db.table_info(TEST_TABLE_NAME)
+        assert table_info.get('TableArn'  ) == 'arn:aws:dynamodb:ddblocal:000000000000:table/temp_table__test_Dynamo_DB__Record'
+        assert table_info.get('TableName'  ) =='temp_table__test_Dynamo_DB__Record'
+        assert table_info.get('TableStatus') == 'ACTIVE'
+
         assert self.table.table_name == TEST_TABLE_NAME
         expected_locals = dict(data={}, data_binary=b'', key_value='',metadata=self.db_record.metadata)
         assert type(self.db_record.metadata) is Dynamo_DB__Record__Metadata
