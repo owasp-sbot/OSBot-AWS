@@ -43,6 +43,7 @@ class test_DyDB__Document(TestCase__Dynamo_DB__Local):
             assert _.delete_document(cls.document_id) is True
             cls.temp_db_table.clear_table()                    # todo: fix test that is adding a new item
             assert _.documents_all() == []
+        assert cls.temp_db_table.delete_table() is True
         super().tearDownClass()
 
     def test__setUpClass(self):
