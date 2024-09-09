@@ -1,9 +1,6 @@
-from osbot_aws.aws.dynamo_db.Dynamo_DB                  import Dynamo_DB
-from osbot_aws.aws.dynamo_db.Dynamo_DB__with_temp_role  import Dynamo_DB__with_temp_role
-from osbot_aws.testing.TestCase__Boto3_Cache            import TestCase__Boto3_Cache
 from osbot_aws.testing.TestCase__Dynamo_DB__Local import TestCase__Dynamo_DB__Local
-from osbot_utils.utils.Misc                             import list_set
-from osbot_utils.utils.Objects                          import type_full_name
+from osbot_utils.utils.Misc                       import list_set
+from osbot_utils.utils.Objects                    import type_full_name
 
 
 #class test_Dynamo_DB(TestCase__Boto3_Cache):

@@ -1,10 +1,5 @@
-from unittest import TestCase
-
-from osbot_aws.aws.dynamo_db.Dynamo_DB__Table import Dynamo_DB__Table
-from osbot_aws.aws.dynamo_db.Dynamo_DB__with_temp_role import Dynamo_DB__with_temp_role
-from osbot_aws.testing.Pytest import skip_pytest___aws_pytest_user_name__is_not_set
-from osbot_aws.testing.TestCase__Dynamo_DB__Local import TestCase__Dynamo_DB__Local, URL_DOCKER__DYNAMODB__LOCAL
-from osbot_utils.utils.Dev import pprint
+from osbot_aws.aws.dynamo_db.Dynamo_DB__Table       import Dynamo_DB__Table
+from osbot_aws.testing.TestCase__Dynamo_DB__Local   import TestCase__Dynamo_DB__Local, URL_DOCKER__DYNAMODB__LOCAL
 
 
 class TestCase__Temp_Dynamo_DB_Table(TestCase__Dynamo_DB__Local):
@@ -12,7 +7,6 @@ class TestCase__Temp_Dynamo_DB_Table(TestCase__Dynamo_DB__Local):
     table          : Dynamo_DB__Table   = None
     key_name       : str                = 'el-key'
     table_name     : str                = 'temp_table__TestCase__Temp_Dynamo_DB_Table'
-    #remove_on_exit : bool             = True
 
     @classmethod
     def setUpClass(cls):
@@ -24,6 +18,5 @@ class TestCase__Temp_Dynamo_DB_Table(TestCase__Dynamo_DB__Local):
 
     @classmethod
     def tearDownClass(cls):
-        #if cls.remove_on_exit:
         cls.table.delete_table()
         super().tearDownClass()

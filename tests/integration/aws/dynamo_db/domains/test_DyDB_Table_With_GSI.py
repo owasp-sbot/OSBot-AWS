@@ -6,7 +6,6 @@ from osbot_aws.aws.dynamo_db.domains.DyDB__Table            import DyDB__Table
 from osbot_aws.aws.dynamo_db.domains.DyDB__Table_With_GSI   import DyDB__Table_With_GSI
 from osbot_aws.testing.TestCase__Dynamo_DB__Local           import TestCase__Dynamo_DB__Local
 from osbot_utils.base_classes.Kwargs_To_Self                import Kwargs_To_Self
-from osbot_utils.utils.Dev                                  import pprint
 from osbot_utils.utils.Env                                  import not_in_github_action
 from osbot_utils.utils.Misc                                 import random_number, timestamp_utc_now_less_delta, list_set
 from osbot_utils.utils.Objects                              import base_types

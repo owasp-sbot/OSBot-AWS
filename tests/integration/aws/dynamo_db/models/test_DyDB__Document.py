@@ -4,8 +4,7 @@ from boto3.dynamodb.types                           import Binary
 from osbot_aws.aws.boto3.Capture_Boto3_Error        import capture_boto3_error
 from osbot_aws.aws.dynamo_db.domains.DyDB__Table    import DyDB__Table
 from osbot_aws.aws.dynamo_db.models.DyDB__Document  import DyDB__Document
-from osbot_aws.testing.TestCase__Dynamo_DB          import TestCase__Dynamo_DB
-from osbot_utils.utils.Dev import pprint
+from osbot_aws.testing.TestCase__Dynamo_DB__Local   import TestCase__Dynamo_DB__Local
 from osbot_utils.utils.Json                         import to_json_str
 from osbot_utils.utils.Misc                         import is_guid, random_text
 
@@ -14,7 +13,7 @@ from osbot_utils.utils.Misc                         import is_guid, random_text
 class Temp_DyDB_Table(DyDB__Table):
     table_name = 'temp_table_for__dydb_updates'
 
-class test_DyDB__Document(TestCase__Dynamo_DB):
+class test_DyDB__Document(TestCase__Dynamo_DB__Local):
 
     temp_db_table: Temp_DyDB_Table
     document     : dict
@@ -44,6 +43,7 @@ class test_DyDB__Document(TestCase__Dynamo_DB):
             assert _.delete_document(cls.document_id) is True
             cls.temp_db_table.clear_table()                    # todo: fix test that is adding a new item
             assert _.documents_all() == []
+        super().tearDownClass()
 
     def test__setUpClass(self):
         with self.temp_db_table as _:
