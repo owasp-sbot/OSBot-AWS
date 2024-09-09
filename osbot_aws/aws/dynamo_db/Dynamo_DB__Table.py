@@ -1,11 +1,10 @@
 import uuid
 
-from osbot_aws.aws.dynamo_db.Dynamo_DB import Dynamo_DB
-from osbot_aws.aws.dynamo_db.Dynamo_DB__Record import Dynamo_DB__Record
-from osbot_utils.base_classes.Kwargs_To_Self import Kwargs_To_Self
-from osbot_utils.decorators.methods.capture_status import capture_status, apply_capture_status
-from osbot_utils.utils.Dev import pprint
-from osbot_utils.utils.Misc import timestamp_utc_now, wait_for
+from osbot_aws.aws.dynamo_db.Dynamo_DB                  import Dynamo_DB
+from osbot_aws.aws.dynamo_db.Dynamo_DB__Record          import Dynamo_DB__Record
+from osbot_utils.base_classes.Kwargs_To_Self            import Kwargs_To_Self
+from osbot_utils.decorators.methods.capture_status      import apply_capture_status
+from osbot_utils.utils.Misc                             import timestamp_utc_now, wait_for
 
 PRIMARY_KEY_NAME = 'id'
 PRIMARY_KEY_TYPE = 'S'
@@ -16,7 +15,6 @@ class Dynamo_DB__Table(Kwargs_To_Self):
     key_name   : str
     key_type   : str
     table_name : str
-
 
     def __init__(self, **kwargs):
         self.key_name = PRIMARY_KEY_NAME
