@@ -16,10 +16,10 @@ class TestCase__Dynamo_DB__Local(TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.aws_account_id          = get_env('AWS_ACCOUNT_ID'       , TEST__AWS_ACCOUNT_ID    )         # use existing values if they already exist
-        cls.aws_default_region      = get_env('AWS_DEFAULT_REGION'   , TEST__AWS_DEFAULT_REGION)
-        cls.aws_access_key_id       = get_env('AWS_ACCESS_KEY_ID'    , TEST__AWS_DEFAULT_REGION)         # this is neeed by create table
-        cls.aws_secret_access_key   = get_env('AWS_SECRET_ACCESS_KEY', TEST__AWS_DEFAULT_REGION)
+        cls.aws_account_id          = get_env('AWS_ACCOUNT_ID'       , TEST__AWS_ACCOUNT_ID       )         # use existing values if they already exist
+        cls.aws_default_region      = get_env('AWS_DEFAULT_REGION'   , TEST__AWS_DEFAULT_REGION   )
+        cls.aws_access_key_id       = get_env('AWS_ACCESS_KEY_ID'    , TEST__AWS_ACCESS_KEY_ID    )         # this is neeed by create table
+        cls.aws_secret_access_key   = get_env('AWS_SECRET_ACCESS_KEY', TEST__AWS_SECRET_ACCESS_KEY)
         tmp_vars_values             = dict(AWS_ACCOUNT_ID        = cls.aws_account_id       ,           # todo: find better way to do this, since this will impact all code executed in the current test
                                            AWS_DEFAULT_REGION    = cls.aws_default_region   ,
                                            AWS_ACCESS_KEY_ID     = cls.aws_account_id       ,
