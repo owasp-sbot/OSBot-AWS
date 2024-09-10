@@ -41,14 +41,14 @@ class AWS_Config(Type_Safe):
     def set_bot_name                (self, value): os.environ['OSBOT_NAME'                      ] = value ; return value
 
     def sts__session_account_id(self):                   # to handle when the AWS_ACCOUNT_ID is not set
-        if self.aws_configured():
-            from osbot_aws.aws.sts.STS import STS           #   the use of this method is not advised
-            return STS().current_account_id()               #   since this is quite an expensive method
+        #if self.aws_configured():                      # todo: find an efficient way to handle this since this doesn't work when a role is attached to a lambda function or EC2 instance
+        from osbot_aws.aws.sts.STS import STS           #   the use of this method is not advised
+        return STS().current_account_id()               #   since this is quite an expensive method
 
     def sts__caller_identity_user(self):
-        if self.aws_configured():
-            from osbot_aws.aws.sts.STS import STS           #
-            return STS().caller_identity_user()                  #
+        #if self.aws_configured():                      # todo: find an efficient way to handle this since this doesn't work when a role is attached to a lambda function or EC2 instance
+        from osbot_aws.aws.sts.STS import STS           #
+        return STS().caller_identity_user()                  #
 
     # helper methods
     def account_id (self):
