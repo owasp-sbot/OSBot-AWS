@@ -2,22 +2,21 @@ import  gzip
 import  json
 import  os
 import  tempfile
-from    io                                    import BytesIO
-from    gzip                                  import GzipFile
-from    boto3.s3.transfer                     import TransferConfig
-from    botocore.errorfactory                 import ClientError
+from    io                                                  import BytesIO
+from    gzip                                                import GzipFile
+from    boto3.s3.transfer                                   import TransferConfig
+from    botocore.errorfactory                               import ClientError
 
-from osbot_aws.AWS_Config import aws_config
-from    osbot_utils.decorators.lists.group_by import group_by
-from    osbot_utils.decorators.lists.index_by import index_by
-from    osbot_utils.decorators.methods.cache  import cache
-
-from    osbot_aws.apis.Session                import Session
-from osbot_utils.decorators.methods.cache_on_self import cache_on_self
-from osbot_utils.decorators.methods.remove_return_value import remove_return_value
-from osbot_utils.testing.Temp_File import Temp_File
-from osbot_utils.utils.Files import Files, file_extension
-from osbot_utils.utils.Zip import zip_folder
+from osbot_aws.aws.boto3.View_Boto3_Rest_Calls import print_boto3_calls
+from    osbot_utils.base_classes.Type_Safe                  import Type_Safe
+from    osbot_utils.decorators.lists.group_by               import group_by
+from    osbot_utils.decorators.lists.index_by               import index_by
+from    osbot_aws.apis.Session                              import Session
+from    osbot_utils.decorators.methods.cache_on_self        import cache_on_self
+from    osbot_utils.decorators.methods.remove_return_value  import remove_return_value
+from    osbot_utils.testing.Temp_File                       import Temp_File
+from    osbot_utils.utils.Files                             import Files, file_extension
+from    osbot_utils.utils.Zip                               import zip_folder
 
 S3_DEFAULT_FILE_CONTENT_TYPE = 'binary/octet-stream'
 S3_HTML_PAGE_CONTENT_TYPE    = 'text/html; charset=utf-8'
@@ -50,14 +49,24 @@ def s3_file_download_to(s3_bucket, s3_key, target_file, use_cache = False):
     return S3().file_download_to(s3_bucket, s3_key,target_file, use_cache)
 
 
-class S3:
-    def __init__(self):
-        self.tmp_file_folder = 's3_temp_files'
-        self.use_threads     = True
+class S3(Type_Safe):
+    aws_access_key_id       : str = None                                # todo: refactor these client setup details into a common base class since (this is should be usable by all osbot-aws boto3 wrapper classes)
+    aws_secret_access_key   : str = None
+    endpoint_url            : str = None
+    region_name             : str = None
+    service_name            : str = 's3'
+    tmp_file_folder         : str = 's3_temp_files'
+    use_threads             : bool = True
+
 
     @cache_on_self
     def client(self):
-        return self.session().client('s3')
+        kwargs = dict(aws_access_key_id     = self.aws_access_key_id    ,
+                      aws_secret_access_key = self.aws_secret_access_key,
+                      endpoint_url          = self.endpoint_url         ,
+                      region_name           = self.region_name          ,
+                      service_name          = self.service_name         )
+        return self.session().client(**kwargs)
 
     # todo: see if we still need this code below to set the region, since the session.client_boto3 should do it
     # @cache_on_self

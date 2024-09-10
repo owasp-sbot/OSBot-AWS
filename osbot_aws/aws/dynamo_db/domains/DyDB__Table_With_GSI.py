@@ -5,6 +5,7 @@ from osbot_utils.utils.Misc import list_set
 
 
 class DyDB__Table_With_GSI(DyDB__Table):
+
     def attribute_definitions(self):
         return self.info().get('AttributeDefinitions', [])
 

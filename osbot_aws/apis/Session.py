@@ -1,7 +1,6 @@
 import  boto3
-from    boto3                   import Session
-from botocore.config import Config
-from botocore.exceptions import ClientError
+from botocore.config            import Config
+from botocore.exceptions        import ClientError
 from    botocore.session        import get_session
 
 from osbot_utils.base_classes.Kwargs_To_Self            import Kwargs_To_Self
@@ -16,10 +15,12 @@ from osbot_aws.exceptions.Session_No_Credentials        import Session_No_Creden
 
 class Session(Kwargs_To_Self):                  # todo: refactor to AWS_Session so it doesn't clash with boto3.Session object
     account_id      = None
+    config          = None
     profile_name    = None
-    region_name     = None
+    region_name     = None                      # keep a copy of this value
 
-    def boto_session(self) -> Session:
+
+    def boto_session(self) -> boto3.Session:
         return get_session()
 
     @cache
@@ -27,17 +28,10 @@ class Session(Kwargs_To_Self):                  # todo: refactor to AWS_Session 
         kwargs = {  "aws_access_key_id"     : aws_access_key_id     ,
                     "aws_secret_access_key" : aws_secret_access_key ,
                     "aws_session_token"     : aws_session_token     ,
-                    "region_name"           : region_name           ,                   # todo: I don't think we need this
+                    "region_name"           : region_name           ,
                     "botocore_session"      : botocore_session      ,
                     "profile_name"          : profile_name          }
         session = boto3.Session(**kwargs)
-
-        # todo, move this into a different workflow, since this was adding 300ms 500ms to every creation of an botocore_session object
-        #self.credentials(session)                                                       # confirm credentials were found
-        #status_ok("[botocore_session] found credentials created base session object")   # todo: after refactoring is done, see if this is still needed
-
-        #self.caller_identity(session)                                                   # confirm credentials are least active (i.e. not expired)
-        #status_ok("[botocore_session] credentials are valid and can be used")           # todo: after refactoring is done, see if this is still needed
         return session
 
     def credentials(self, session=None):
@@ -77,26 +71,32 @@ class Session(Kwargs_To_Self):                  # todo: refactor to AWS_Session 
     def session_default(self):
         return get_session()
 
-    def client(self, service_name, region_name=None,config=None):
-        status = self.client_boto3(service_name, region_name=region_name,config=config)
+    def client(self, service_name, **kwargs):
+        status = self.client_boto3(service_name, **kwargs)
         if status.get('status') == 'ok':
             client = status.get('data',{}).get('client')
             return client
         else:
             raise Session_Client_Creation_Fail(status=status)
 
-    def client_boto3(self,service_name, region_name=None, config=None):                   # todo: refactor with resource_boto3
+    def client_boto3(self,service_name, aws_access_key_id=None, aws_secret_access_key=None, region_name=None, config=None, endpoint_url=None, profile_name=None):                   # todo: refactor add this to resource_boto3
         try:
-            if config is None:
-                config = self.config()
-            self.region_name  = region_name or self.region_name  or aws_config.aws_session_region_name()        # todo: figure out better way todo do this
-            self.profile_name = self.profile_name or aws_config.aws_session_profile_name()
+            self.config       = config       or self.config       or self.default_config                ()
+            self.region_name  = region_name  or self.region_name  or aws_config.aws_session_region_name ()
+            self.profile_name = profile_name or self.profile_name or aws_config.aws_session_profile_name()
+
+            client_kwargs = dict( aws_access_key_id     = aws_access_key_id     ,
+                                  config                = self.config           ,
+                                  aws_secret_access_key = aws_secret_access_key ,
+                                  endpoint_url          = endpoint_url          ,
+                                  region_name           = self.region_name      ,
+                                  service_name          = service_name          )
             if self.profile_name and self.profile_name in self.profiles():                                                  # seeing if this is a more efficient way to get the data
                 session = boto3.Session(profile_name=self.profile_name, region_name=self.region_name)      # tried to pass this params but had side effects: , botocore_session=self.boto_session()
-                client  = session.client(service_name=service_name,config=config)
+                client  = session.client(**client_kwargs)
                 message = f"Created client_boto3 session using profile: {self.profile_name}"
             else:
-                client = boto3.client(service_name=service_name, region_name=self.region_name,config=config)
+                client = boto3.client(**client_kwargs)
                 session = None
                 message = "Created client_boto3 session using environment variables"             # todo: see if this is 100% correct, or if there are other ways credentials can be found inside boto3 client
 
@@ -108,12 +108,12 @@ class Session(Kwargs_To_Self):                  # todo: refactor to AWS_Session 
             return status_error(message=message, data=None, error=error)
 
     @cache_on_self
-    def config(self):
+    def default_config(self):
         retries = {
-            'max_attempts': 1,  # set retry to 1
+            'max_attempts': 1,  # set retry to 1  (when used 0 it was causing some side effects)
             'mode': 'standard'  # Standard retry mode
         }
-        kwargs = dict(retries=retries)
+        kwargs = dict(retries=retries, signature_version='s3v4')
         return Config(**kwargs)
 
     def profiles(self):

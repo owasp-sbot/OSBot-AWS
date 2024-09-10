@@ -18,11 +18,19 @@ class test_Minio_As_S3(TestCase):
                                               'status'  : 'ok'                                      }
             assert _.server_online    () is True
 
+    def test_s3(self):
+        with self.minio_as_s3 as _:
+            s3  = _.s3()
+            assert type(s3) == S3
+            assert s3.client().meta.service_model.service_name == 's3'
+            assert s3.client().meta.endpoint_url               == DEFAULT__MINIO__SERVER
+            assert type(list(s3.buckets()))                    is list
+
     def test_s3_client(self):
         with self.minio_as_s3 as _:
-            s3  = _.s3_client()
-            assert s3.meta.service_model.service_name == 's3'
-            assert list_set(s3.list_buckets()) == ['Buckets', 'Owner', 'ResponseMetadata']
+            s3_client  = _.s3_client()
+            assert s3_client.meta.service_model.service_name == 's3'
+            assert list_set(s3_client.list_buckets()) == ['Buckets', 'Owner', 'ResponseMetadata']
 
 
     def test_using_hook_method(self):
