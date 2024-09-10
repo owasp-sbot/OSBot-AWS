@@ -4,6 +4,7 @@ from botocore.exceptions        import ClientError
 from    botocore.session        import get_session
 
 from osbot_utils.base_classes.Kwargs_To_Self            import Kwargs_To_Self
+from osbot_utils.context_managers.capture_duration import print_duration
 from osbot_utils.decorators.methods.cache               import cache
 from osbot_utils.decorators.methods.cache_on_self       import cache_on_self
 from osbot_utils.utils.Status                           import status_ok, status_error
@@ -85,12 +86,13 @@ class Session(Kwargs_To_Self):                  # todo: refactor to AWS_Session 
             self.region_name  = region_name  or self.region_name  or aws_config.aws_session_region_name ()
             self.profile_name = profile_name or self.profile_name or aws_config.aws_session_profile_name()
 
-            client_kwargs = dict( aws_access_key_id     = aws_access_key_id     ,
-                                  config                = self.config           ,
-                                  aws_secret_access_key = aws_secret_access_key ,
-                                  endpoint_url          = endpoint_url          ,
-                                  region_name           = self.region_name      ,
-                                  service_name          = service_name          )
+            client_kwargs = dict( service_name = service_name , config = self.config)
+
+            if aws_access_key_id    : client_kwargs['aws_access_key_id'    ] = aws_access_key_id
+            if aws_secret_access_key: client_kwargs['aws_secret_access_key'] = aws_secret_access_key
+            if endpoint_url         : client_kwargs['endpoint_url'         ] = endpoint_url
+            if self.region_name     : client_kwargs['region_name'          ] = self.region_name
+
             if self.profile_name and self.profile_name in self.profiles():                                                  # seeing if this is a more efficient way to get the data
                 session = boto3.Session(profile_name=self.profile_name, region_name=self.region_name)      # tried to pass this params but had side effects: , botocore_session=self.boto_session()
                 client  = session.client(**client_kwargs)
@@ -105,6 +107,7 @@ class Session(Kwargs_To_Self):                  # todo: refactor to AWS_Session 
         except Exception as error:
 
             message = f"client_boto3 failed with error: {error}"
+            print(message)
             return status_error(message=message, data=None, error=error)
 
     @cache_on_self
