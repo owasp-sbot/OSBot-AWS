@@ -1,21 +1,23 @@
 import uuid
 from boto3.dynamodb.types                               import TypeDeserializer, TypeSerializer
 from osbot_aws.apis.Session                             import Session
+from osbot_utils.base_classes.Type_Safe                 import Type_Safe
 from osbot_utils.decorators.methods.cache_on_self       import cache_on_self
 from osbot_utils.decorators.methods.remove_return_value import remove_return_value
 
 DEFAULT_DOCUMENTS_MAX_ITEMS_TO_FETCH = 100000
 DEFAULT_DOCUMENTS_FETCH_BATCH_SIZE   = 20000
 
-class Dynamo_DB:
-
-    def __enter__(self                           ): return self
-    def __exit__ (self, exc_type, exc_val, exc_tb): pass
+class Dynamo_DB(Type_Safe):
+    region_name : str = None
+    endpoint_url: str = None
+    # def __enter__(self                           ): return self
+    # def __exit__ (self, exc_type, exc_val, exc_tb): pass
 
     # helpers
     @cache_on_self
     def client(self):
-        return Session().client('dynamodb')
+        return Session().client(service_name='dynamodb', region_name=self.region_name, endpoint_url=self.endpoint_url)
 
     @cache_on_self
     def client__dynamo_streams(self):
