@@ -1,6 +1,8 @@
 import boto3
 import requests
 from botocore.config                                import Config
+
+from osbot_aws.aws.s3.S3 import S3
 from osbot_utils.base_classes.Type_Safe             import Type_Safe
 from osbot_utils.decorators.methods.cache_on_self   import cache_on_self
 from osbot_utils.utils.Env                          import get_env
@@ -31,6 +33,15 @@ class S3__Minio(Type_Safe):
         access_key = get_env(ENV_NAME__MINIO__ACCESS_KEY, DEFAULT__MINIO__ACCESS_KEY)
         secret_key = get_env(ENV_NAME__MINIO__SECRET_KEY, DEFAULT__MINIO__SECRET_KEY)
         return server, access_key, secret_key
+
+    def s3(self):
+        server, aws_access_key_id, aws_secret_access_key = self.connection_details()
+
+        kwargs = dict(endpoint_url          = server                ,
+                      aws_access_key_id     = aws_access_key_id     ,
+                      aws_secret_access_key = aws_secret_access_key )
+        s3 = S3(**kwargs)
+        return s3
 
     def s3_client(self):
         server, access_key, secret_key = self.connection_details()
