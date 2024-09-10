@@ -77,15 +77,15 @@ class Session(Kwargs_To_Self):                  # todo: refactor to AWS_Session 
     def session_default(self):
         return get_session()
 
-    def client(self, service_name, region_name=None,config=None):
-        status = self.client_boto3(service_name, region_name=region_name,config=config)
+    def client(self, service_name, region_name=None,config=None, endpoint_url=None):
+        status = self.client_boto3(service_name, region_name=region_name,config=config, endpoint_url=endpoint_url)
         if status.get('status') == 'ok':
             client = status.get('data',{}).get('client')
             return client
         else:
             raise Session_Client_Creation_Fail(status=status)
 
-    def client_boto3(self,service_name, region_name=None, config=None):                   # todo: refactor with resource_boto3
+    def client_boto3(self,service_name, region_name=None, config=None, endpoint_url=None):                   # todo: refactor with resource_boto3
         try:
             if config is None:
                 config = self.config()
@@ -93,10 +93,10 @@ class Session(Kwargs_To_Self):                  # todo: refactor to AWS_Session 
             self.profile_name = self.profile_name or aws_config.aws_session_profile_name()
             if self.profile_name and self.profile_name in self.profiles():                                                  # seeing if this is a more efficient way to get the data
                 session = boto3.Session(profile_name=self.profile_name, region_name=self.region_name)      # tried to pass this params but had side effects: , botocore_session=self.boto_session()
-                client  = session.client(service_name=service_name,config=config)
+                client  = session.client(service_name=service_name,config=config, endpoint_url=endpoint_url)
                 message = f"Created client_boto3 session using profile: {self.profile_name}"
             else:
-                client = boto3.client(service_name=service_name, region_name=self.region_name,config=config)
+                client = boto3.client(service_name=service_name, region_name=self.region_name,config=config,endpoint_url=endpoint_url)
                 session = None
                 message = "Created client_boto3 session using environment variables"             # todo: see if this is 100% correct, or if there are other ways credentials can be found inside boto3 client
 
