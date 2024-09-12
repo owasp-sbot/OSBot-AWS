@@ -94,6 +94,13 @@ class S3(Type_Safe):
     def session(self):
         return Session()
 
+    def bucket_delete_all_files(self, bucket):
+        s3_keys = self.find_files(bucket)
+        if s3_keys:
+            result = self.files_delete(bucket, s3_keys)
+            return result
+        return True
+
     @remove_return_value(field_name='ResponseMetadata')
     def bucket_notification(self, bucket_name):
         #if self.boto_notification is None : self.boto_notification = self.s3_resource().BucketNotification(bucket_name=bucket_name)
@@ -280,6 +287,11 @@ class S3(Type_Safe):
     def file_delete(self, bucket, key):
         result = self.client().delete_object(Bucket=bucket, Key=key)              # delete file from s3
         return result.get('ResponseMetadata').get('HTTPStatusCode') == 204
+
+    def files_delete(self, bucket, keys):
+        delete_keys = {'Objects': [{'Key': key } for key  in keys]}
+        result      = self.client().delete_objects(Bucket=bucket, Delete=delete_keys)     # todo: see if there is a way to get feedback on the delete status
+        return result.get('ResponseMetadata').get('HTTPStatusCode') == 200  #       since we also get 200 when the key value is wrong
 
     @remove_return_value('ResponseMetadata')
     def file_details(self, bucket, key):
