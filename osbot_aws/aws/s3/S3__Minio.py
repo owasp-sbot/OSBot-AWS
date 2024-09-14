@@ -13,8 +13,8 @@ ENV_NAME__MINIO__ACCESS_KEY = 'MINIO__ACCESS_KEY'
 ENV_NAME__MINIO__SECRET_KEY = 'MINIO__SECRET_KEY'
 
 DEFAULT__MINIO__SERVER     = 'http://localhost:9000'
-DEFAULT__MINIO__ACCESS_KEY = 'minioadmin'
-DEFAULT__MINIO__SECRET_KEY = 'minioadmin'
+DEFAULT__MINIO__ACCESS_KEY = 'minioadmin'                       # todo: change this to a random value
+DEFAULT__MINIO__SECRET_KEY = 'minioadmin'                       #       (from env vars, that are also used by minio docker image)
 
 class S3__Minio(Type_Safe):
 

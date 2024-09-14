@@ -2,7 +2,7 @@ import re
 from unittest                                        import TestCase
 from osbot_aws.testing.Temp__Random__AWS_Credentials import Temp__Random__AWS_Credentials
 from osbot_utils.utils.Env                           import get_env, set_env, del_env
-from osbot_utils.utils.Misc                          import random_text
+from osbot_utils.utils.Misc                          import random_text, list_set
 
 
 class test_Temp__Random__AWS_Credentials(TestCase):
@@ -32,12 +32,20 @@ class test_Temp__Random__AWS_Credentials(TestCase):
             assert re.match(r'^[A-Za-z0-9/+=]{40}$', aws_secret_access_key)             # Validate the generated AWS_SECRET_ACCESS_KEY format (40 characters, mixed case, digits, special chars)
             assert re.match(r'^\d{12}$', aws_account_id)                                # Validate the generated AWS_ACCOUNT_ID format (12 digits)
 
-
             assert aws_default_region in [ 'us-east-1'     , 'us-west-1'   , 'us-west-2'     ,  # Validate the generated AWS_DEFAULT_REGION is one of the common AWS regions
                                            'eu-west-1'     , 'eu-central-1', 'ap-southeast-1',
                                            'ap-northeast-1', 'ap-south-1'  , 'sa-east-1'     ]
 
-
+            assert list_set(_.env_vars) == ['AWS_ACCESS_KEY_ID', 'AWS_ACCOUNT_ID', 'AWS_DEFAULT_REGION', 'AWS_SECRET_ACCESS_KEY']
         assert get_env('AWS_ACCESS_KEY_ID') == self.temp_value__AWS_ACCESS_KEY_ID
 
+    def test__ability_to_provide_extra_temp_env_vars(self):
+        temp_env_var_name  = random_text()
+        temp_env_var_value = random_text()
+        env_vars           = { temp_env_var_name : temp_env_var_value}
+        assert get_env(temp_env_var_name) is None
+        with Temp__Random__AWS_Credentials(env_vars=env_vars) as _:
+            assert get_env(temp_env_var_name) == temp_env_var_value
+            assert list_set(_.env_vars) == ['AWS_ACCESS_KEY_ID','AWS_ACCOUNT_ID','AWS_DEFAULT_REGION','AWS_SECRET_ACCESS_KEY', temp_env_var_name]
+        assert get_env(temp_env_var_name) is None
 
