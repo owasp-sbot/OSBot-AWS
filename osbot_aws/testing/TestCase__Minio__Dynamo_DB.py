@@ -7,7 +7,7 @@ from unittest                           import TestCase
 from osbot_utils.testing.Hook_Method    import Hook_Method
 from osbot_utils.utils.Env              import get_env
 
-TEST__AWS_ACCOUNT_ID     = '111122223333'
+TEST__AWS_ACCOUNT_ID     = '000011110000'
 TEST__AWS_DEFAULT_REGION = 'eu-west-1'
 
 
