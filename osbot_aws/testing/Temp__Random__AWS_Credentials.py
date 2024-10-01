@@ -31,3 +31,6 @@ class Temp__Random__AWS_Credentials(Temp_Env_Vars):
                     'eu-west-1'     , 'eu-central-1', 'ap-southeast-1',
                     'ap-northeast-1', 'ap-south-1'  , 'sa-east-1'     ]
         return random.choice(regions)                                                               # Randomly select from a list of common AWS regions
+
+
+Temp_AWS_Credentials = Temp__Random__AWS_Credentials
