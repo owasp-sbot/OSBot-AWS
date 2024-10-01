@@ -18,6 +18,8 @@ from    osbot_utils.testing.Temp_File                       import Temp_File
 from    osbot_utils.utils.Files                             import Files, file_extension
 from    osbot_utils.utils.Zip                               import zip_folder
 
+from osbot_aws.aws.session.Session__Kwargs__S3 import Session__Kwargs__S3
+
 S3_DEFAULT_FILE_CONTENT_TYPE = 'binary/octet-stream'
 S3_HTML_PAGE_CONTENT_TYPE    = 'text/html; charset=utf-8'
 S3_FILES_CONTENT_TYPES       = { '.js'  : 'application/javascript; charset=utf-8',
@@ -50,23 +52,14 @@ def s3_file_download_to(s3_bucket, s3_key, target_file, use_cache = False):
 
 
 class S3(Type_Safe):
-    aws_access_key_id       : str = None                                # todo: refactor these client setup details into a common base class since (this is should be usable by all osbot-aws boto3 wrapper classes)
-    aws_secret_access_key   : str = None
-    endpoint_url            : str = None
-    region_name             : str = None
-    service_name            : str = 's3'
     tmp_file_folder         : str = 's3_temp_files'
     use_threads             : bool = True
+    session_kwargs__s3      : Session__Kwargs__S3
 
 
     @cache_on_self
     def client(self):
-        kwargs = dict(aws_access_key_id     = self.aws_access_key_id    ,
-                      aws_secret_access_key = self.aws_secret_access_key,
-                      endpoint_url          = self.endpoint_url         ,
-                      region_name           = self.region_name          ,
-                      service_name          = self.service_name         )
-        return self.session().client(**kwargs)
+        return self.session().client(**self.session_kwargs__s3.__locals__())
 
     # todo: see if we still need this code below to set the region, since the session.client_boto3 should do it
     # @cache_on_self
@@ -83,12 +76,12 @@ class S3(Type_Safe):
     #     return boto3.client('s3', region_name=region_name)
 
     @cache_on_self
-    def s3(self):                               # todo replace usages below with this method
+    def s3(self):                                               # todo replace usages below with this method self.client(). is what should be used
         return self.client()
 
     @cache_on_self
     def s3_resource(self):                                      # todo refactor this method to be called resource()
-        return self.session().resource('s3')
+        return Session().resource('s3')
 
     @cache_on_self
     def session(self):

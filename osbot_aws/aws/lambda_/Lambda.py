@@ -1,16 +1,11 @@
 import json
 
-import botocore
-from osbot_utils.utils.Lists import unique
 
-from osbot_utils.utils.Json import json_loads, json_parse
-
-from osbot_utils.decorators.lists.group_by import group_by
-
-from osbot_utils.testing.Duration import Duration
-
-from osbot_utils.decorators.methods.cache_on_self import cache_on_self
-
+from osbot_utils.base_classes.Type_Safe                 import Type_Safe
+from osbot_utils.utils.Lists                            import unique
+from osbot_utils.utils.Json                             import json_loads, json_parse
+from osbot_utils.decorators.lists.group_by              import group_by
+from osbot_utils.decorators.methods.cache_on_self       import cache_on_self
 from osbot_aws.apis.Logs                                import Logs
 from osbot_utils.decorators.lists.index_by              import index_by
 from osbot_utils.decorators.methods.catch               import catch
@@ -19,11 +14,18 @@ from osbot_aws.apis.Session                             import Session
 from osbot_aws.aws.s3.S3                                import S3
 from osbot_utils.utils.Misc                             import wait, random_string, base64_to_str, list_set, wait_for
 from osbot_utils.utils.Status                           import status_ok, status_error, status_warning
+from osbot_aws.aws.session.Session__Kwargs__Lambda      import Session__Kwargs__Lambda
+from osbot_aws.aws.session.Session__Kwargs__S3          import Session__Kwargs__S3
 
 
-class Lambda:
-    def __init__(self, name=''):
-        self.architecture   = 'x86_64'                      # other option is 'arm64'
+class Lambda(Type_Safe):
+    session_kwargs__lambda: Session__Kwargs__Lambda
+    session_kwargs__s3    : Session__Kwargs__S3
+
+
+    def __init__(self, name='', **kwargs):
+        super().__init__(**kwargs)
+        self.architecture   = 'x86_64'                          # other option is 'arm64'
         self.runtime        = 'python3.11'
         self.memory         = 512                               # default to 512Mb max is 10,000 Mb (current AWS limit in Dec 2020)
         self.timeout        = 60                                # default to 60 secs (1m) max is 900 secs (15m)
@@ -40,18 +42,15 @@ class Lambda:
         self.env_variables  = None
         self.tags           = {}
 
-    def __enter__(self): return self
-    def __exit__ (self, exc_type, exc_val, exc_tb): pass
-
     # cached dependencies
 
     @cache_on_self
     def client(self):
-        return Session().client('lambda')
+        return Session().client(**self.session_kwargs__lambda.__locals__())
 
     @cache_on_self
     def s3(self):
-        return S3()
+        return S3(session_kwargs__s3=self.session_kwargs__s3.__locals__())
 
     # helper methods
 

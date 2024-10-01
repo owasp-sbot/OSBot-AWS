@@ -1,10 +1,8 @@
 import  boto3
-from botocore.config            import Config
-from botocore.exceptions        import ClientError
-from    botocore.session        import get_session
-
+from botocore.config                                    import Config
+from botocore.exceptions                                import ClientError
+from botocore.session                                   import get_session
 from osbot_utils.base_classes.Kwargs_To_Self            import Kwargs_To_Self
-from osbot_utils.context_managers.capture_duration import print_duration
 from osbot_utils.decorators.methods.cache               import cache
 from osbot_utils.decorators.methods.cache_on_self       import cache_on_self
 from osbot_utils.utils.Status                           import status_ok, status_error
