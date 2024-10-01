@@ -1,10 +1,7 @@
-from functools import cache
-
-from dotenv import load_dotenv
-
-from osbot_aws.apis.Lambda import Lambda
-from osbot_aws.aws.apigateway.API_Gateway_V2 import API_Gateway_V2
-from osbot_aws.aws.iam.IAM_Assume_Role import IAM_Assume_Role
+from functools                          import cache
+from dotenv                             import load_dotenv
+from osbot_aws.aws.lambda_.Lambda       import Lambda
+from osbot_aws.aws.iam.IAM_Assume_Role  import IAM_Assume_Role
 
 # todo add this permission to this role (required to create a lambda function
 # {

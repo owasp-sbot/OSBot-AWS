@@ -1,4 +1,4 @@
-from osbot_aws.apis.Lambda import Lambda
+from osbot_aws.aws.lambda_.Lambda import Lambda
 
 LOG_TO_ELK_ENABLED=False
 

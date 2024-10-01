@@ -8,6 +8,8 @@ from osbot_utils.decorators.methods.cache_on_self   import cache_on_self
 from osbot_utils.utils.Env                          import get_env
 from osbot_utils.utils.Status                       import status_ok, status_error
 
+from osbot_aws.aws.session.Session__Kwargs__S3 import Session__Kwargs__S3
+
 ENV_NAME__MINIO__SERVER     = 'MINIO__SERVER'
 ENV_NAME__MINIO__ACCESS_KEY = 'MINIO__ACCESS_KEY'
 ENV_NAME__MINIO__SECRET_KEY = 'MINIO__SECRET_KEY'
@@ -37,10 +39,10 @@ class S3__Minio(Type_Safe):
     def s3(self):
         server, aws_access_key_id, aws_secret_access_key = self.connection_details()
 
-        kwargs = dict(endpoint_url          = server                ,
-                      aws_access_key_id     = aws_access_key_id     ,
-                      aws_secret_access_key = aws_secret_access_key )
-        s3 = S3(**kwargs)
+        session_kwargs__s3 = Session__Kwargs__S3(endpoint_url          = server                ,
+                                                aws_access_key_id     = aws_access_key_id     ,
+                                                aws_secret_access_key = aws_secret_access_key )
+        s3 = S3(session_kwargs__s3=session_kwargs__s3)
         return s3
 
     def s3_client(self):
