@@ -11,6 +11,7 @@ from osbot_aws.exceptions.Session_Bad_Credentials       import Session_Bad_Crede
 from osbot_aws.exceptions.Session_Client_Creation_Fail  import Session_Client_Creation_Fail
 from osbot_aws.exceptions.Session_No_Credentials        import Session_No_Credentials
 
+#ENV_NAME__OSBOT_AWS__SESSION__SET_SIGNATURE_VERSION = 'OSBOT_AWS__SESSION__SET_SIGNATURE_VERSION'      # todo: see if this needed (see comments in default_config method)
 
 class Session(Kwargs_To_Self):                  # todo: refactor to AWS_Session so it doesn't clash with boto3.Session object
     account_id      = None
@@ -114,7 +115,9 @@ class Session(Kwargs_To_Self):                  # todo: refactor to AWS_Session 
             'max_attempts': 1,  # set retry to 1  (when used 0 it was causing some side effects)
             'mode': 'standard'  # Standard retry mode
         }
-        kwargs = dict(retries=retries, signature_version='s3v4')
+        kwargs = dict(retries=retries)
+        # if get_env('ENV_NAME__OSBOT_AWS__SESSION__SET_SIGNATURE_VERSION', 'True') == 'True':      # this was causing issues in other clients like lambda # todo: move this to only the S3
+        #     kwargs['signature_version'] = 's3v4'                                                  # todo: also document where this is needed
         return Config(**kwargs)
 
     def profiles(self):

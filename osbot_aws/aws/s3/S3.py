@@ -259,8 +259,8 @@ class S3(Type_Safe):
             kwargs_file_copy['ContentType'] = content_type
         return self.client().copy_object(**kwargs_file_copy)
 
-    def file_create_from_bytes(self, file_bytes, bucket, key):
-        return self.file_upload_from_bytes(file_bytes, bucket, key)
+    def file_create_from_bytes(self, file_bytes, bucket, key, metadata=None):
+        return self.file_upload_from_bytes(file_body=file_bytes,  bucket=bucket, key=key, metadata=metadata)
 
     def file_create_from_string_as_gzip(self, file_contents, bucket, key):
         tmp_path = tempfile.NamedTemporaryFile().name
@@ -329,8 +329,11 @@ class S3(Type_Safe):
         self.file_upload_to_key(file, bucket, key)                                # upload file
         return key                                                              # return path to file uploaded (if succeeded)
 
-    def file_upload_from_bytes(self, file_body, bucket, key):
-        self.s3().put_object(Body=file_body, Bucket=bucket, Key=key)
+    def file_upload_from_bytes(self, file_body, bucket, key, metadata=None):
+        if type(metadata) is not dict:
+            metadata = {}
+        metadata['created_by'] = 'osbot_aws.aws.s3.S3.file_upload_from_bytes'
+        self.s3().put_object(Body=file_body, Bucket=bucket, Key=key, Metadata=metadata)
         return True
 
     # def file_upload_to_key(self, file, bucket, key):
