@@ -4,7 +4,7 @@ from unittest import TestCase
 
 from osbot_aws.AWS_Config import AWS_Config
 
-from osbot_aws.apis.Lambda import Lambda
+from osbot_aws.aws.lambda_.Lambda import Lambda
 from osbot_aws.apis.test_helpers.Temp_Aws_Roles import Temp_Aws_Roles
 from osbot_aws.apis.test_helpers.Temp_Folder_With_Lambda_File import Temp_Folder_With_Lambda_File
 from osbot_aws.aws.sts.STS import STS

@@ -1,5 +1,5 @@
 from typing                             import Callable
-from osbot_aws.apis.Lambda              import Lambda
+from osbot_aws.aws.lambda_.Lambda              import Lambda
 from osbot_aws.deploy.Deploy_Lambda     import Deploy_Lambda
 from osbot_aws.helpers.Lambda_Upload_Package import Lambda_Upload_Package
 from osbot_aws.testing.TestCase__Lambda import TestCase__Lambda

@@ -1,7 +1,7 @@
 from os import getenv
 from unittest import TestCase
 
-from osbot_aws.apis.Lambda import Lambda
+from osbot_aws.aws.lambda_.Lambda import Lambda
 from osbot_aws.apis.shell.Lambda_Shell import Lambda_Shell, SHELL__ENV_VAR__AUTH_KEY
 from osbot_aws.apis.shell.Shell_Client import Shell_Client
 from osbot_utils.utils.Dev import pprint
