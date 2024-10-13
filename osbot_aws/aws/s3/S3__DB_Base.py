@@ -14,13 +14,11 @@ from osbot_utils.utils.Files                        import file_extension
 from osbot_utils.utils.Json                         import json_dumps, json_parse, gz_to_json, json_to_gz
 from osbot_utils.utils.Misc                         import random_guid, timestamp_utc_now
 
-ENV_NAME__USE_MINIO_AS_S3       = 'USE_MINIO_AS_S3'
-
-S3_DB_BASE__BUCKET_NAME__SUFFIX = "osbot-aws"
+ENV_NAME__USE_MINIO_AS_S3            = 'USE_MINIO_AS_S3'
+S3_DB_BASE__BUCKET_NAME__SUFFIX      = "osbot-aws"
 S3_DB_BASE__BUCKET_NAME__PREFIX: str = 'unknown-service'
-S3_DB_BASE__SERVER_NAME         = 'unknown-server'
-
-S3_FOLDER__TEMP_FILE_UPLOADS    = 'temp_file_uploads'
+S3_DB_BASE__SERVER_NAME              = 'unknown-server'
+S3_FOLDER__TEMP_FILE_UPLOADS         = 'temp_file_uploads'
 
 
 
@@ -53,6 +51,9 @@ class S3__DB_Base(Type_Safe):
             bucket_name += f'{account_id}{separator}'
         bucket_name += self.bucket_name__suffix
         return str_to_valid_s3_bucket_name(bucket_name)                                           # make sure it is a valid s3 bucket name
+
+    def s3_bucket__temp_data(self):                                                               # override to control the bucket used for temp data (note that it is the caller responsibility to make sure the bucket exists)
+        return self.s3_bucket()
 
     def s3_file_bytes(self, s3_key):
         return self.s3().file_bytes(self.s3_bucket(), s3_key)
@@ -123,6 +124,7 @@ class S3__DB_Base(Type_Safe):
             kwargs["file_contents"] = data_as_str                   # todo: add support for capturing metadata
             return self.s3().file_create_from_string(**kwargs)
 
+    # todo: refactor these s3_temp_folder__pre_signed_urls_* into a separate class (focused on pre_signed_urls)
     def s3_temp_folder__pre_signed_urls_for_object(self, source='NA', reason='NA', who='NA', expiration=3600):
         s3_bucket          = self.s3_bucket__temp_data()
         s3_temp_folder     = self.s3_folder_temp_file_uploads()
@@ -146,13 +148,13 @@ class S3__DB_Base(Type_Safe):
         pre_signed_url = self.s3().create_pre_signed_url(**create_kwargs)
         return pre_signed_url
 
-    def s3_temp_folder__download_string(self, pre_signed_url):
+    def s3_temp_folder__pre_signed_url__download_string(self, pre_signed_url):
         response = requests.get(pre_signed_url)
         if response.status_code == 200:
             return response.text
         #pprint(response)                   # todo: add a better way to handle the we dont' get an 200 status_code
 
-    def s3_temp_folder__upload_string(self, pre_signed_url, file_contents):
+    def s3_s3_temp_folder__pre_signed_url__upload_string(self, pre_signed_url, file_contents):
         response = requests.put(pre_signed_url, data=file_contents)
         if response.status_code == 200:
             return True

@@ -1,3 +1,7 @@
+from osbot_utils.context_managers.print_duration import print_duration
+
+from osbot_utils.utils.Misc import random_text
+
 from osbot_aws.utils.AWS_Sanitization                       import str_to_valid_s3_bucket_name
 from osbot_utils.testing.Temp_Env_Vars                      import Temp_Env_Vars
 from osbot_utils.utils.Env                                  import get_env
@@ -146,7 +150,16 @@ class test_S3__DB__Base(TestCase__S3_Minio__Temp_S3_Bucket):
 
     def test_s3_temp_folder__pre_signed_urls_for_object(self):
         with self.s3_db_base as _:
-            #signed_url_data = _.s3_temp_folder__pre_signed_urls_for_object()
-            #pprint(signed_url_data)
-            #pprint(_.s3().obj())
-            pass
+            signed_url_data       = dict_to_obj(_.s3_temp_folder__pre_signed_urls_for_object())
+            pre_signed_url__put = signed_url_data.pre_signed_url__put
+            pre_signed_url__get = signed_url_data.pre_signed_url__get
+            file_contents__for_put = random_text("some file contents")
+
+            result = _.s3_s3_temp_folder__pre_signed_url__upload_string(pre_signed_url=pre_signed_url__put,
+                                                                        file_contents=file_contents__for_put)
+            assert result is True
+
+            file_contents__on_get = _.s3_temp_folder__pre_signed_url__download_string(pre_signed_url=pre_signed_url__get)
+            assert file_contents__on_get == file_contents__for_put
+
+
