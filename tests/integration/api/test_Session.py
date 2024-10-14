@@ -22,8 +22,8 @@ class test_Session(TestCase):
         #botocore.set_stream_logger(level=10)
 
     def test___init__(self):
-        assert self.session.__default_kwargs__() == {'account_id': None, 'config': None, 'profile_name': None, 'region_name': None}
-        assert self.session.__kwargs__        () == {'account_id': None, 'config': None, 'profile_name': None, 'region_name': None}
+        assert self.session.__default_kwargs__() == {'account_id': None, 'config': None, 'endpoint_url': None, 'profile_name': None, 'region_name': None}
+        assert self.session.__kwargs__        () == {'account_id': None, 'config': None, 'endpoint_url': None, 'profile_name': None, 'region_name': None}
 
     def test_boto_session(self):
         boto_session = self.session.boto_session()
