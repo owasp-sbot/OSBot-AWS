@@ -5,6 +5,8 @@ from osbot_utils.utils.Env import load_dotenv
 
 DEFAULT__AWS_DEFAULT_REGION = 'eu-west-1'
 
+ENV_NAME__AWS_ENDPOINT_URL = 'AWS_ENDPOINT_URL'
+
 class AWS_Config(Type_Safe):
 
     def __init__(self):
@@ -19,6 +21,7 @@ class AWS_Config(Type_Safe):
 
     def aws_access_key_id           (self): return os.getenv('AWS_ACCESS_KEY_ID'              )
     def aws_secret_access_key       (self): return os.getenv('AWS_SECRET_ACCESS_KEY'          )
+    def aws_endpoint_url            (self): return os.getenv(ENV_NAME__AWS_ENDPOINT_URL       )
     def aws_session_profile_name    (self): return os.getenv('AWS_PROFILE_NAME'               )
     def aws_session_region_name     (self): return os.getenv('AWS_DEFAULT_REGION'             ) or DEFAULT__AWS_DEFAULT_REGION
     def aws_session_account_id      (self): return os.getenv('AWS_ACCOUNT_ID'                 ) or  self.sts__session_account_id()

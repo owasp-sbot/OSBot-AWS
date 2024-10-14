@@ -15,6 +15,7 @@ from osbot_aws.exceptions.Session_No_Credentials        import Session_No_Creden
 
 class Session(Kwargs_To_Self):                  # todo: refactor to AWS_Session so it doesn't clash with boto3.Session object
     account_id      = None
+    endpoint_url    = None
     config          = None
     profile_name    = None
     region_name     = None                      # keep a copy of this value
@@ -84,12 +85,14 @@ class Session(Kwargs_To_Self):                  # todo: refactor to AWS_Session 
             self.config       = config       or self.config       or self.default_config                ()
             self.region_name  = region_name  or self.region_name  or aws_config.aws_session_region_name ()
             self.profile_name = profile_name or self.profile_name or aws_config.aws_session_profile_name()
+            self.endpoint_url = endpoint_url or self.endpoint_url or aws_config.aws_endpoint_url()
+
 
             client_kwargs = dict( service_name = service_name , config = self.config)
 
             if aws_access_key_id    : client_kwargs['aws_access_key_id'    ] = aws_access_key_id
             if aws_secret_access_key: client_kwargs['aws_secret_access_key'] = aws_secret_access_key
-            if endpoint_url         : client_kwargs['endpoint_url'         ] = endpoint_url
+            if self.endpoint_url    : client_kwargs['endpoint_url'         ] = self.endpoint_url
             if self.region_name     : client_kwargs['region_name'          ] = self.region_name
 
             if self.profile_name and self.profile_name in self.profiles():                                                  # seeing if this is a more efficient way to get the data
