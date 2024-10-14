@@ -54,6 +54,11 @@ class Deploy_Lambda(Type_Safe):
         self.package.add_module(module_name)
         return self
 
+    def add_modules(self, module_names):
+        for module_name in module_names:
+            self.package.add_module(module_name)
+        return self
+
     def add_osbot_aws    (self):    self.package.add_osbot_aws    () ; return self
     def add_osbot_browser(self):    self.package.add_osbot_browser() ; return self
     def add_osbot_utils  (self):    self.package.add_osbot_utils  () ; return self
