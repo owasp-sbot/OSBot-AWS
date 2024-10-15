@@ -100,7 +100,7 @@ class S3(Type_Safe):
         #return self.boto_notification
         return self.s3().get_bucket_notification_configuration(Bucket=bucket_name)
 
-    def bucket_notification_set_lambda_permission(self, s3_bucket, lambda_arn):
+    def bucket_notification_set_lambda_permission(self, lambda_arn):
         from osbot_aws.aws.lambda_.Lambda import Lambda
         statement_id = 'allow_s3_notifications_to_invoke_function'
         action       = 'lambda:InvokeFunction'
