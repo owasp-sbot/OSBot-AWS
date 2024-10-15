@@ -1,9 +1,7 @@
-from functools import cache
-
-from dotenv import load_dotenv
-
-from osbot_aws.aws.dynamo_db.Dynamo_DB import Dynamo_DB
-from osbot_aws.aws.iam.IAM_Assume_Role import IAM_Assume_Role
+from functools                          import cache
+from osbot_utils.utils.Env              import load_dotenv
+from osbot_aws.aws.dynamo_db.Dynamo_DB  import Dynamo_DB
+from osbot_aws.aws.iam.IAM_Assume_Role  import IAM_Assume_Role
 
 
 class Dynamo_DB__with_temp_role(Dynamo_DB):

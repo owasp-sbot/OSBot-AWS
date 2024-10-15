@@ -8,10 +8,10 @@ from osbot_aws.aws.s3.S3__with_temp_role import S3__with_temp_role
 from osbot_aws.aws.sts.STS import STS
 from osbot_aws.helpers.EC2_Instance import EC2_Instance
 from osbot_utils.base_classes.Kwargs_To_Self import Kwargs_To_Self
-from osbot_utils.utils.Dev import pprint
-from osbot_utils.utils.Env import load_dotenv
-from osbot_utils.utils.Files import path_combine, file_exists
-from osbot_utils.utils.Status import status_error
+from osbot_utils.utils.Dev          import pprint
+from osbot_utils.utils.Env          import load_dotenv
+from osbot_utils.utils.Files        import path_combine, file_exists
+from osbot_utils.utils.Status       import status_error
 
 AMIS_PER_REGION = {'eu-west-1': 'ami-0136026a91d5f4151', # AMI created with python installed
                    'eu-west-2': 'ami-008ea0202116dbc56' }

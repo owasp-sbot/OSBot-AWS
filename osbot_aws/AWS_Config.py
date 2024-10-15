@@ -1,7 +1,6 @@
 import os
-
 from osbot_utils.base_classes.Type_Safe import Type_Safe
-from osbot_utils.utils.Env import load_dotenv
+from osbot_utils.utils.Env              import load_dotenv
 
 DEFAULT__AWS_DEFAULT_REGION = 'eu-west-1'
 

@@ -1,9 +1,8 @@
-from os import environ
-from unittest import TestCase
-
 import pytest
+from os                                                                 import environ
+from unittest                                                           import TestCase
 from botocore.client                                                    import BaseClient
-from dotenv                                                             import load_dotenv
+from osbot_utils.utils.Env                                              import load_dotenv
 from osbot_aws.aws.boto3.Cache_Boto3_Requests                           import Cache_Boto3_Requests, SQLITE_DB_NAME__BOTO3_REQUESTS_CACHE, SQLITE_TABLE_NAME__BOTO3_REQUESTS
 from osbot_aws.aws.sts.STS                                              import STS
 from osbot_utils.base_classes.Kwargs_To_Self                            import Kwargs_To_Self

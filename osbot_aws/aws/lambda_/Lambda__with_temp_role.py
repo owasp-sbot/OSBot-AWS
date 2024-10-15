@@ -1,5 +1,5 @@
 from functools                          import cache
-from dotenv                             import load_dotenv
+from osbot_utils.utils.Env              import load_dotenv
 from osbot_aws.aws.lambda_.Lambda       import Lambda
 from osbot_aws.aws.iam.IAM_Assume_Role  import IAM_Assume_Role
 
