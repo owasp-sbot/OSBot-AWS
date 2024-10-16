@@ -24,7 +24,7 @@ jobs:
         uses: owasp-sbot/OSBot-GitHub-Actions/.github/actions/docker__minio@dev
 
       - name: Start DynamoDB Local Server
-        uses: owasp-sbot/OSBot-GitHub-Actions/.github/actions/docker__dynamo_db@dev
+        uses: owasp-sbot/OSBot-GitHub-Actions/.github/actions/docker__dynamo-db@dev
 
       - name: Poetry - Install Dependencies
         uses: owasp-sbot/OSBot-GitHub-Actions/.github/actions/poetry__install@dev
