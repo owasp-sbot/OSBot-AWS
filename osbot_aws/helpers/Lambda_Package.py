@@ -2,8 +2,9 @@ import os
 import importlib
 import site
 
+from osbot_aws.aws.lambda_.Lambda_Layer         import Lambda_Layer
 from osbot_utils.testing.Temp_Folder            import Temp_Folder
-from osbot_utils.testing.Temp_Zip import Temp_Zip
+from osbot_utils.testing.Temp_Zip               import Temp_Zip
 from osbot_utils.utils.Process                  import Process
 from osbot_aws.AWS_Config                       import AWS_Config
 from osbot_aws.apis.test_helpers.Temp_Aws_Roles import Temp_Aws_Roles
