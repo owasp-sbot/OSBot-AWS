@@ -85,7 +85,7 @@ class Session(Kwargs_To_Self):                  # todo: refactor to AWS_Session 
             self.config       = config       or self.config       or self.default_config                ()
             self.region_name  = region_name  or self.region_name  or aws_config.aws_session_region_name ()
             self.profile_name = profile_name or self.profile_name or aws_config.aws_session_profile_name()
-            self.endpoint_url = endpoint_url or self.endpoint_url or aws_config.aws_endpoint_url()
+            self.endpoint_url = endpoint_url or self.endpoint_url or self.resolve_endpoint_url_for_service(service_name)
 
 
             client_kwargs = dict( service_name = service_name , config = self.config)
@@ -128,8 +128,18 @@ class Session(Kwargs_To_Self):                  # todo: refactor to AWS_Session 
 
     def profiles_map(self):
         return get_session()._build_profile_map()
-
         #return self.boto_session()._build_profile_map()
+
+    def resolve_endpoint_url_for_service(self, service_name):                                   # todo: find a better way to do this mapping to the local_stack services that are supported
+        supported_local_stack_services = ['s3']                                                 # for now only s3 is supported
+        endpoint_url = aws_config.aws_endpoint_url()
+        if endpoint_url == 'http://localhost:4566':
+            if service_name in supported_local_stack_services:
+                return endpoint_url
+            else:
+                return None
+        else:
+            return endpoint_url
 
     def resource_boto3(self,service_name, profile_name=None, region_name=None):                 # todo: refactor with client_boto3
         try:
@@ -146,6 +156,7 @@ class Session(Kwargs_To_Self):                  # todo: refactor to AWS_Session 
 
     def resource(self, service_name,profile_name=None, region_name=None):
         return self.resource_boto3(service_name,profile_name,region_name).get('resource')
+
 
     # client helpers
 
