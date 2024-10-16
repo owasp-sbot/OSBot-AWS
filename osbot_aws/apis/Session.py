@@ -87,7 +87,6 @@ class Session(Kwargs_To_Self):                  # todo: refactor to AWS_Session 
             self.profile_name = profile_name or self.profile_name or aws_config.aws_session_profile_name()
             self.endpoint_url = endpoint_url or self.endpoint_url or self.resolve_endpoint_url_for_service(service_name)
 
-
             client_kwargs = dict( service_name = service_name , config = self.config)
 
             if aws_access_key_id    : client_kwargs['aws_access_key_id'    ] = aws_access_key_id
@@ -130,14 +129,18 @@ class Session(Kwargs_To_Self):                  # todo: refactor to AWS_Session 
         return get_session()._build_profile_map()
         #return self.boto_session()._build_profile_map()
 
-    def resolve_endpoint_url_for_service(self, service_name):                                   # todo: find a better way to do this mapping to the local_stack services that are supported
+    def resolve_endpoint_url_for_service(self, service):                                   # todo: find a better way to do this mapping to the local_stack services that are supported
         supported_local_stack_services = ['s3']                                                 # for now only s3 is supported
         endpoint_url = aws_config.aws_endpoint_url()
         if endpoint_url == 'http://localhost:4566':
-            if service_name in supported_local_stack_services:
+            if service in supported_local_stack_services:
                 return endpoint_url
             else:
-                return None
+                region = aws_config.aws_session_region_name()
+                if region:
+                    return f'https://{service}.{region}.amazonaws.com'
+                else:
+                    return None
         else:
             return endpoint_url
 
