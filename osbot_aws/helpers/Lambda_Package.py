@@ -84,7 +84,6 @@ class Lambda_Package:
         self.add_module('osbot_elastic')
 
     def add_osbot_utils(self):
-        self.add_module('dotenv')
         self.add_module('osbot_utils')
         return self
 
