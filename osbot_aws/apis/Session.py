@@ -130,7 +130,7 @@ class Session(Kwargs_To_Self):                  # todo: refactor to AWS_Session 
         #return self.boto_session()._build_profile_map()
 
     def resolve_endpoint_url_for_service(self, service):                                   # todo: find a better way to do this mapping to the local_stack services that are supported
-        supported_local_stack_services = ['s3']                                                 # for now only s3 is supported
+        supported_local_stack_services = ['s3', 'lambda','logs']                           # for now only these 3 services have been tested with local stack , all others will ahve the default
         endpoint_url = aws_config.aws_endpoint_url()
         if endpoint_url == 'http://localhost:4566':
             if service in supported_local_stack_services:
