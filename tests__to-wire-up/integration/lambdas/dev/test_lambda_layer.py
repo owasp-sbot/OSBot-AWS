@@ -4,7 +4,7 @@ from unittest import skip
 import pytest
 
 from osbot_aws.helpers.Test_Helper import Test_Helper
-from osbot_aws.apis.Lambda import Lambda
+from osbot_aws.aws.lambda_.Lambda import Lambda
 from osbot_aws.apis.Lambda_Layer import Lambda_Layer
 
 @pytest.mark.skip('Fix tests')

@@ -27,7 +27,7 @@ class Temp__Random__AWS_Credentials(Temp_Env_Vars):
         return ''.join(random.choices(string.digits, k=12))                                         # AWS account IDs are typically 12 digits long
 
     def random_aws_region(self):
-        regions = [ 'us-east-1'     , 'us-west-1'   , 'us-west-2'     ,
+        regions = [ 'us-west-1'     , 'us-west-2'   ,                       # 'us-east-1' # note: not using us-east-1 since it was causing some side effects with Local_Stack bucket creation (InvalidLocationConstraint error)
                     'eu-west-1'     , 'eu-central-1', 'ap-southeast-1',
                     'ap-northeast-1', 'ap-south-1'  , 'sa-east-1'     ]
         return random.choice(regions)                                                               # Randomly select from a list of common AWS regions

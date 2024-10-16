@@ -2,7 +2,7 @@ from unittest                           import TestCase
 
 from osbot_aws.aws.sts.STS import STS
 from osbot_aws.lambdas.dev.hello_world  import run
-from osbot_aws.apis.Lambda              import Lambda
+from osbot_aws.aws.lambda_.Lambda              import Lambda
 from osbot_aws.deploy.Deploy_Lambda     import Deploy_Lambda
 
 class test_hello_world(TestCase):

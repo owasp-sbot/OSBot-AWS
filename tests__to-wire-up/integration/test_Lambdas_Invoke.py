@@ -12,7 +12,7 @@ from osbot_aws.aws.s3.S3                  import S3
 from osbot_aws.apis.Logs                import Logs
 from osbot_aws.helpers.SQS_Queue        import SQS_Queue
 from osbot_aws.helpers.Lambda_Package   import Lambda_Package
-from osbot_aws.apis.Lambda              import Lambda
+from osbot_aws.aws.lambda_.Lambda              import Lambda
 from unittest                           import TestCase
 
 # these tests require lambdas to already exist in AWS

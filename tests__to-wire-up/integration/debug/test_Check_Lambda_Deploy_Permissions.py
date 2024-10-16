@@ -8,7 +8,7 @@ from osbot_aws.lambdas.dev.hello_world      import run
 from osbot_utils.utils.Misc                 import random_string, list_set
 from osbot_aws.AWS_Config                   import AWS_Config
 from osbot_aws.aws.s3.S3                    import S3
-from osbot_aws.apis.Lambda                  import Lambda
+from osbot_aws.aws.lambda_.Lambda                  import Lambda
 from osbot_utils.utils.Dev                  import pprint
 
 

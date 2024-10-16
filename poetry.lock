@@ -54,13 +54,13 @@ files = [
 
 [[package]]
 name = "osbot-utils"
-version = "1.43.0"
+version = "1.62.0"
 description = "OWASP Security Bot - Utils"
 optional = false
 python-versions = "<4.0,>=3.7"
 files = [
-    {file = "osbot_utils-1.43.0-py3-none-any.whl", hash = "sha256:52d4722c446b9826940cf9195380f8f48a82c6d517a173187649614149fcbd01"},
-    {file = "osbot_utils-1.43.0.tar.gz", hash = "sha256:970c98d5d1015763f3386a58b2ce15349803abdc37e450b884d0bc2b9b771b6e"},
+    {file = "osbot_utils-1.62.0-py3-none-any.whl", hash = "sha256:1a64a4aefeed4f9182b0ed8326f7785ce72db515acf2c634996d5308c7f88638"},
+    {file = "osbot_utils-1.62.0.tar.gz", hash = "sha256:af265c7b0a9500ec0af01a587840f8b50ae25f7b79467f39cae1697675878aeb"},
 ]
 
 [[package]]
@@ -76,20 +76,6 @@ files = [
 
 [package.dependencies]
 six = ">=1.5"
-
-[[package]]
-name = "python-dotenv"
-version = "0.21.1"
-description = "Read key-value pairs from a .env file and set them as environment variables"
-optional = false
-python-versions = ">=3.7"
-files = [
-    {file = "python-dotenv-0.21.1.tar.gz", hash = "sha256:1c93de8f636cde3ce377292818d0e440b6e45a82f215c3744979151fa8151c49"},
-    {file = "python_dotenv-0.21.1-py3-none-any.whl", hash = "sha256:41e12e0318bebc859fcc4d97d4db8d20ad21721a6aa5047dd59f090391cb549a"},
-]
-
-[package.extras]
-cli = ["click (>=5.0)"]
 
 [[package]]
 name = "s3transfer"
@@ -155,4 +141,4 @@ zstd = ["zstandard (>=0.18.0)"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.7"
-content-hash = "32087c8e87086b066511c525cdcb253144f3ab642fff701975c6c6946d5bc713"
+content-hash = "e058bb9ee8241e02e6ac1340592dd12391f61b404be1305225a6c6858a555b60"

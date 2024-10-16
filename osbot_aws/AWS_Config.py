@@ -1,9 +1,13 @@
 import os
-
 from osbot_utils.base_classes.Type_Safe import Type_Safe
-from osbot_utils.utils.Env import load_dotenv
+from osbot_utils.utils.Env              import load_dotenv
 
 DEFAULT__AWS_DEFAULT_REGION = 'eu-west-1'
+
+ENV_NAME__AWS_ACCOUNT_ID     = "AWS_ACCOUNT_ID"
+ENV_NAME__AWS_ENDPOINT_URL   = 'AWS_ENDPOINT_URL'
+ENV_NAME__AWS_DEFAULT_REGION = 'AWS_DEFAULT_REGION'                 # todo: change use of AWS_DEFAULT_REGION to AWS_REGION_NAME
+ENV_NAME__AWS_REGION_NAME    = 'AWS_REGION_NAME'
 
 class AWS_Config(Type_Safe):
 
@@ -19,9 +23,10 @@ class AWS_Config(Type_Safe):
 
     def aws_access_key_id           (self): return os.getenv('AWS_ACCESS_KEY_ID'              )
     def aws_secret_access_key       (self): return os.getenv('AWS_SECRET_ACCESS_KEY'          )
+    def aws_endpoint_url            (self): return os.getenv(ENV_NAME__AWS_ENDPOINT_URL       )
     def aws_session_profile_name    (self): return os.getenv('AWS_PROFILE_NAME'               )
-    def aws_session_region_name     (self): return os.getenv('AWS_DEFAULT_REGION'             ) or DEFAULT__AWS_DEFAULT_REGION
-    def aws_session_account_id      (self): return os.getenv('AWS_ACCOUNT_ID'                 ) or  self.sts__session_account_id()
+    def aws_session_region_name     (self): return os.getenv(ENV_NAME__AWS_DEFAULT_REGION     ) or DEFAULT__AWS_DEFAULT_REGION
+    def aws_session_account_id      (self): return os.getenv(ENV_NAME__AWS_ACCOUNT_ID         ) or  self.sts__session_account_id()
 
     def dev_skip_aws_key_check      (self): return os.getenv('DEV_SKIP_AWS_KEY_CHECK'        , False              )     # use to not have the 500ms check that happens during this check
     def bot_name                    (self): return os.getenv('OSBOT_NAME'                                         )     # todo: refactor variable to osbot_name (need to check for side effects)
@@ -32,8 +37,8 @@ class AWS_Config(Type_Safe):
     def set_aws_access_key_id       (self, value): os.environ['AWS_ACCESS_KEY_ID'               ] = value ; return value
     def set_aws_secret_access_key   (self, value): os.environ['AWS_SECRET_ACCESS_KEY'           ] = value ; return value
     def set_aws_session_profile_name(self, value): os.environ['AWS_PROFILE_NAME'                ] = value ; return value
-    def set_aws_session_region_name (self, value): os.environ['AWS_DEFAULT_REGION'              ] = value ; return value
-    def set_aws_session_account_id  (self, value): os.environ['AWS_ACCOUNT_ID'                  ] = value ; return value
+    def set_aws_session_region_name (self, value): os.environ[ENV_NAME__AWS_DEFAULT_REGION      ] = value ; return value
+    def set_aws_session_account_id  (self, value): os.environ[ENV_NAME__AWS_ACCOUNT_ID          ] = value ; return value
     def set_lambda_s3_bucket        (self, value): os.environ['OSBOT_LAMBDA_S3_BUCKET'          ] = value ; return value
     def set_lambda_s3_folder_layers (self, value): os.environ['OSBOT_LAMBDA_S3_FOLDER_LAYERS'   ] = value ; return value
     def set_lambda_s3_folder_lambdas(self, value): os.environ['OSBOT_LAMBDA_S3_FOLDER_LAMBDAS'  ] = value ; return value

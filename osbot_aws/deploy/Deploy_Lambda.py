@@ -1,20 +1,15 @@
-from dotenv import load_dotenv
-from osbot_aws.apis.shell.Shell_Client import Shell_Client
-
-from osbot_aws.AWS_Config import AWS_Config
-
-from osbot_utils.testing.Duration import Duration
-
-from osbot_aws.helpers.Lambda_Layer_Create import Lambda_Layer_Create
-from osbot_utils.utils.Misc import wait_for
-
-from osbot_aws.OSBot_Setup import OSBot_Setup
+from osbot_utils.utils.Env                      import load_dotenv
+from osbot_utils.base_classes.Type_Safe         import Type_Safe
+from osbot_aws.apis.shell.Shell_Client          import Shell_Client
+from osbot_aws.helpers.Lambda_Layer_Create      import Lambda_Layer_Create
+from osbot_aws.OSBot_Setup                      import OSBot_Setup
 from osbot_aws.apis.test_helpers.Temp_Aws_Roles import Temp_Aws_Roles
-from osbot_aws.helpers.Lambda_Package import Lambda_Package
+from osbot_aws.helpers.Lambda_Package           import Lambda_Package
 
-class Deploy_Lambda:
+class Deploy_Lambda(Type_Safe):
 
-    def __init__(self, handler, stage=None):
+    def __init__(self, handler, stage=None, **kwargs):
+        super().__init__(**kwargs)
         load_dotenv()
         self.osbot_setup          = OSBot_Setup()
         self.aws_config           = self.osbot_setup.aws_config
@@ -49,6 +44,11 @@ class Deploy_Lambda:
 
     def add_module(self, module_name):
         self.package.add_module(module_name)
+        return self
+
+    def add_modules(self, module_names):
+        for module_name in module_names:
+            self.package.add_module(module_name)
         return self
 
     def add_osbot_aws    (self):    self.package.add_osbot_aws    () ; return self

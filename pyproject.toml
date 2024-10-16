@@ -1,6 +1,6 @@
 [tool.poetry]
 name        = "osbot_aws"
-version     = "v2.36.2"
+version     = "v2.36.13"
 description = "OWASP Security Bot - AWS"
 authors     = ["Dinis Cruz <dinis.cruz@owasp.org>"]
 license     = "MIT"
@@ -10,15 +10,8 @@ repository  = "https://github.com/owasp-sbot/OSBot-AWS"
 
 [tool.poetry.dependencies]
 python          = "^3.7"
-python-dotenv   = "*"
 boto3           = "*"
 osbot-utils     = "*"
-
-#[tool.poetry.dev-dependencies]
-#pytest          = "*"
-#pytest-cov      = "*"
-#coveralls       = "*"
-#setuptools      = "*"
 
 [build-system]
 requires        = ["poetry-core>=1.0.0"]

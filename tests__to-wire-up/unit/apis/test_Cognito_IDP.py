@@ -1,12 +1,8 @@
 import os
-from unittest import TestCase
-
-from dotenv import load_dotenv
-
-from osbot_utils.utils.Misc import list_set, random_string
-
-from osbot_utils.utils.Dev import pprint
-
+from unittest                   import TestCase
+from osbot_utils.utils.Env      import load_dotenv
+from osbot_utils.utils.Misc     import list_set, random_string
+from osbot_utils.utils.Dev      import pprint
 from osbot_aws.apis.Cognito_IDP import Cognito_IDP
 
 

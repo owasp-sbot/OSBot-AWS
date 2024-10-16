@@ -1,7 +1,7 @@
 from unittest import TestCase
 from osbot_aws.apis.shell.Shell_Client import Shell_Client
 from osbot_aws.apis.shell.Lambda_Shell import lambda_shell, Lambda_Shell, add_lambda_shell_decorator
-from osbot_aws.apis.Lambda import Lambda
+from osbot_aws.aws.lambda_.Lambda import Lambda
 from osbot_aws.helpers.S3_Zip_From_Files import S3_Zip_From_Files
 from osbot_aws.apis.test_helpers.Temp_Lambda                  import Temp_Lambda
 from osbot_aws.helpers.Lambda_Layers_OSBot import Lambda_Layers_OSBot
