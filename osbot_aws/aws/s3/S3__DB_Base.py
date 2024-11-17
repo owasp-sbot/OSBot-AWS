@@ -19,7 +19,7 @@ S3_DB_BASE__BUCKET_NAME__SUFFIX      = "osbot-aws"
 S3_DB_BASE__BUCKET_NAME__PREFIX: str = 'unknown-service'
 S3_DB_BASE__SERVER_NAME              = 'unknown-server'
 S3_FOLDER__TEMP_FILE_UPLOADS         = 'temp_file_uploads'
-
+DEFAULT__LOCAL_STACK__TARGET_SERVER = 'http://localhost:4566'
 
 
 class S3__DB_Base(Type_Safe):
@@ -197,3 +197,6 @@ class S3__DB_Base(Type_Safe):
 
     def using_minio(self):
         return self.use_minio and self.s3().client().meta.endpoint_url == DEFAULT__MINIO__SERVER
+
+    def using_local_stack(self):
+        return self.s3().client().meta.endpoint_url == DEFAULT__LOCAL_STACK__TARGET_SERVER

@@ -33,7 +33,7 @@ class Test_S3(TestCase):
         cls.test_s3_key            = f"{cls.test_folder}/{cls.temp_file_name}"
         if cls.s3.bucket_not_exists(cls.test_bucket):
             pprint(f"***** target region: : {cls.test_region}")
-            create_bucket_result = cls.s3.bucket_create(cls.test_bucket, cls.test_region)
+            create_bucket_result = cls.s3.bucket_create(cls.test_bucket)  # , cls.test_region
             pprint(create_bucket_result)
             assert create_bucket_result.get('status') == 'ok'
         assert cls.s3.file_create_from_string(file_contents=cls.temp_file_contents, bucket=cls.test_bucket, key=cls.test_s3_key) is True
