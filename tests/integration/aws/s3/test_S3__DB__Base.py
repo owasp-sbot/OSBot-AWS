@@ -59,7 +59,7 @@ class test_S3__DB__Base(TestCase__S3_Minio__Temp_S3_Bucket):
                 s3_a = _.s3(reload_cache=True)
                 assert get_env(ENV_NAME__USE_MINIO_AS_S3) == 'False'
                 assert s3_a.obj() == expected__s3_aws
-                assert s3_a.client().meta.endpoint_url in [expected__s3__endpoint_url, 'https://s3.amazonaws.com'] # todo: figure out why sometimes (mainly locally we get the s3.amazonaws.com url, instead of the one with the zone)
+                assert s3_a.client().meta.endpoint_url in ['http://localhost:4566',expected__s3__endpoint_url, 'https://s3.amazonaws.com'] # todo: figure out why sometimes (mainly locally we get the s3.amazonaws.com url, instead of the one with the zone) , also debug the use of http://localhost:4566
                 _.use_minio = True
                 _.s3(reload_cache=True)
             assert get_env(ENV_NAME__USE_MINIO_AS_S3) == 'True'

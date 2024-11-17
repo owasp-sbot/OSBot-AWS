@@ -25,6 +25,7 @@ class Test_S3(TestCase):
         cls.local_stack = Local_Stack().activate()
         assert cls.local_stack.is_local_stack_configured_and_available() is True
         cls.s3 = S3()
+        assert cls.s3.client().meta.endpoint_url == 'http://localhost:4566'
         cls.temp_file_name         = "aaa.txt"  # todo: fix test that is leaving this file in the file system
         cls.temp_file_contents     = "some contents"
         cls.test_bucket            = "osbot-temp-bucket"
@@ -33,6 +34,7 @@ class Test_S3(TestCase):
         cls.test_s3_key            = f"{cls.test_folder}/{cls.temp_file_name}"
         if cls.s3.bucket_not_exists(cls.test_bucket):
             pprint(f"***** target region: : {cls.test_region}")
+            pprint(cls.s3.buckets())
             create_bucket_result = cls.s3.bucket_create(cls.test_bucket)  # , cls.test_region
             pprint(create_bucket_result)
             assert create_bucket_result.get('status') == 'ok'
