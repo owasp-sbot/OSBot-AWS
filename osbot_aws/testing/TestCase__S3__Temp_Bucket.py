@@ -1,11 +1,10 @@
 from unittest                                           import TestCase
 from osbot_local_stack.local_stack.Local_Stack          import Local_Stack
-from osbot_aws.aws.s3.S3__DB_Base                       import ENV_NAME__USE_MINIO_AS_S3, S3__DB_Base
+from osbot_aws.aws.s3.S3__DB_Base                       import S3__DB_Base
 from osbot_aws.testing.Temp__Random__AWS_Credentials    import Temp__Random__AWS_Credentials
-from osbot_utils.utils.Env                              import get_env
 
 
-class TestCase__S3__Temp_S3_Bucket(TestCase):
+class TestCase__S3__Temp_Bucket(TestCase):
 
     @classmethod
     def setUpClass(cls):
