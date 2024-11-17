@@ -4,6 +4,7 @@ from unittest import TestCase
 import pytest
 from osbot_local_stack.local_stack.Local_Stack import Local_Stack
 
+from osbot_aws.AWS_Config import aws_config
 from osbot_aws.aws.s3.S3                             import S3
 from osbot_aws.testing.TestCase__Minio               import TestCase__Minio
 from osbot_utils.testing.Temp_File                   import Temp_File
@@ -28,9 +29,10 @@ class Test_S3(TestCase):
         cls.temp_file_contents     = "some contents"
         cls.test_bucket            = "osbot-temp-bucket"
         cls.test_folder            = "unit_tests"
-        cls.test_region            = 'eu-west-2'
+        cls.test_region            = aws_config.region_name() or  'eu-west-2'
         cls.test_s3_key            = f"{cls.test_folder}/{cls.temp_file_name}"
         if cls.s3.bucket_not_exists(cls.test_bucket):
+            pprint(f"***** target region: : {cls.test_region}")
             create_bucket_result = cls.s3.bucket_create(cls.test_bucket, cls.test_region)
             pprint(create_bucket_result)
             assert create_bucket_result.get('status') == 'ok'
@@ -45,7 +47,7 @@ class Test_S3(TestCase):
         assert cls.s3.bucket_delete(cls.test_bucket                            ) is True
         assert cls.s3.file_exists  (bucket=cls.test_bucket, key=cls.test_s3_key) is False
         assert cls.local_stack.is_local_stack_configured_and_available() is True
-        cls.local_stack.deactivate()         # for now deactivate # todo remove other classes dependency on Minio
+        cls.local_stack.deactivate()                                      # for now deactivate # todo remove other classes dependency on Minio
         assert cls.local_stack.is_local_stack_configured_and_available() is False
         #super().tearDownClass()
 
