@@ -10,7 +10,6 @@ from osbot_utils.utils.Misc                         import random_text
 TEST__AWS_ACCOUNT_ID              = '000011110000'
 LOCAL_STACK__BUCKET_NAME__POSTFIX = '.s3.localhost.localstack.cloud:4566/'
 
-#@pytest.mark.skip("Temp skip to make sure all other tests are working")
 class Test_S3(TestCase):
 
 
