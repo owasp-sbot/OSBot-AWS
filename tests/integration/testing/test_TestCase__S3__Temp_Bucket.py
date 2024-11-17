@@ -1,5 +1,3 @@
-from osbot_aws.AWS_Config                        import aws_config
-from osbot_aws.aws.s3.S3__DB_Base                import S3__DB_Base, S3_DB_BASE__BUCKET_NAME__PREFIX, S3_DB_BASE__SERVER_NAME, S3_DB_BASE__BUCKET_NAME__SUFFIX
 from osbot_aws.testing.TestCase__S3__Temp_Bucket import TestCase__S3__Temp_Bucket
 
 
@@ -12,15 +10,10 @@ class test_TestCase__S3__Temp_S3_Bucket(TestCase__S3__Temp_Bucket):
     @classmethod
     def tearDownClass(cls):
         super().tearDownClass()
-        assert cls.s3_db_base.bucket_exists()    is False
+        assert cls.s3.bucket_exists(cls.temp_bucket_name)    is False
 
     def test__setUpClass(self):
-
-        assert type(self.s3_db_base)               is S3__DB_Base
-        assert self.s3_db_base.using_local_stack() is True
-        assert self.s3_db_base.bucket_exists()     is True
-        #assert aws_config.account_id()           == self.random_aws_creds.env_vars['AWS_ACCOUNT_ID']
-        assert self.s3_db_base.s3_bucket()         == f'{S3_DB_BASE__BUCKET_NAME__PREFIX}-{aws_config.account_id()}-{S3_DB_BASE__BUCKET_NAME__SUFFIX}'
-        assert self.s3_db_base.server_name         == S3_DB_BASE__SERVER_NAME
+        assert self.local_stack.is_local_stack_configured_and_available() is True
+        assert self.s3.bucket_exists(self.temp_bucket_name)               is True
 
 
