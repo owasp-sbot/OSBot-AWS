@@ -14,7 +14,7 @@ from osbot_utils.utils.Misc                          import random_text
 TEST__AWS_ACCOUNT_ID              = '000011110000'
 LOCAL_STACK__BUCKET_NAME__POSTFIX = '.s3.localhost.localstack.cloud:4566/'
 
-@pytest.mark.skip("Temp skip to make sure all other tests are working")
+#@pytest.mark.skip("Temp skip to make sure all other tests are working")
 class Test_S3(TestCase):
 
 
@@ -30,8 +30,8 @@ class Test_S3(TestCase):
         cls.test_folder            = "unit_tests"
         cls.test_region            = 'eu-west-2'
         cls.test_s3_key            = f"{cls.test_folder}/{cls.temp_file_name}"
-
-        assert cls.s3.bucket_create(cls.test_bucket, cls.test_region).get('status') == 'ok'
+        if cls.s3.bucket_not_exists(cls.test_bucket):
+            assert cls.s3.bucket_create(cls.test_bucket, cls.test_region).get('status') == 'ok'
         assert cls.s3.file_create_from_string(file_contents=cls.temp_file_contents, bucket=cls.test_bucket, key=cls.test_s3_key) is True
 
 
