@@ -31,7 +31,9 @@ class Test_S3(TestCase):
         cls.test_region            = 'eu-west-2'
         cls.test_s3_key            = f"{cls.test_folder}/{cls.temp_file_name}"
         if cls.s3.bucket_not_exists(cls.test_bucket):
-            assert cls.s3.bucket_create(cls.test_bucket, cls.test_region).get('status') == 'ok'
+            create_bucket_result = cls.s3.bucket_create(cls.test_bucket, cls.test_region)
+            pprint(create_bucket_result)
+            assert create_bucket_result.get('status') == 'ok'
         assert cls.s3.file_create_from_string(file_contents=cls.temp_file_contents, bucket=cls.test_bucket, key=cls.test_s3_key) is True
 
 
@@ -42,7 +44,9 @@ class Test_S3(TestCase):
         cls.s3.bucket_delete_all_files(cls.test_bucket)
         assert cls.s3.bucket_delete(cls.test_bucket                            ) is True
         assert cls.s3.file_exists  (bucket=cls.test_bucket, key=cls.test_s3_key) is False
+        assert cls.local_stack.is_local_stack_configured_and_available() is True
         cls.local_stack.deactivate()         # for now deactivate # todo remove other classes dependency on Minio
+        assert cls.local_stack.is_local_stack_configured_and_available() is False
         #super().tearDownClass()
 
     def test__ctor__(self):
