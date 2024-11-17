@@ -155,6 +155,15 @@ class S3(Type_Safe):
     def bucket_not_exists(self, bucket_name):
         return self.bucket_exists(bucket_name) is False
 
+    def bucket_versioning__enable(self, bucket_name):
+        self.client().put_bucket_versioning(Bucket=bucket_name,
+                                            VersioningConfiguration={'Status': 'Enabled'})
+        return self.bucket_versioning__status(bucket_name) == 'Enabled'
+
+    def bucket_versioning__status(self, bucket_name):
+        response = self.client().get_bucket_versioning(Bucket=bucket_name)
+        return response.get('Status') or 'Not Enabled'
+
     def buckets(self):
         data = []
         buckets = self.s3().list_buckets()

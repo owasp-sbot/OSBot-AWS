@@ -23,6 +23,5 @@ class TestCase__S3__Temp_Bucket(TestCase):
     def tearDownClass(cls):
         assert cls.local_stack.is_local_stack_configured_and_available() is True
         assert cls.s3.bucket_delete(cls.temp_bucket_name)                is True
-
         cls.random_aws_creds.restore_vars()
         cls.local_stack.deactivate()
