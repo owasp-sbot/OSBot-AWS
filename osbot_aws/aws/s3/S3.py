@@ -360,13 +360,13 @@ class S3(Type_Safe):
     def file_not_exists(self,bucket, key):
         return self.file_exists(bucket=bucket, key=key) is False
 
-    def file_delete_markers(self, bucket, key):
-        response = self.client().list_object_versions(Bucket=bucket, Prefix=key)
-        return response.get('DeleteMarkers')
-
     def file_versions(self, bucket, key):
         response = self.client().list_object_versions(Bucket=bucket, Prefix=key)
         return response.get('Versions')
+
+    def file_versions__delete_markers(self, bucket, key):
+        response = self.client().list_object_versions(Bucket=bucket, Prefix=key)
+        return response.get('DeleteMarkers')
 
     def file_upload(self,file , bucket, folder):
         if not os.path.isfile(file):                                            # check that file to upload exists locally

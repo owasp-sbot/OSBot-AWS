@@ -57,25 +57,25 @@ class S3__DB_Base(Type_Safe):
     def s3_bucket__temp_data(self):                                                               # override to control the bucket used for temp data (note that it is the caller responsibility to make sure the bucket exists)
         return self.s3_bucket()
 
-    def s3_file_bytes(self, s3_key):
-        return self.s3().file_bytes(self.s3_bucket(), s3_key)
+    def s3_file_bytes(self, s3_key, version_id=None):
+        return self.s3().file_bytes(self.s3_bucket(), s3_key, version_id)
 
-    def s3_file_contents(self, s3_key):
-        return self.s3().file_contents(self.s3_bucket(), s3_key)
+    def s3_file_contents(self, s3_key, version_id=None):
+        return self.s3().file_contents(self.s3_bucket(), s3_key, version_id=version_id)
 
-    def s3_file_contents_json(self, s3_key):
-        return json_parse(self.s3_file_contents(s3_key))
+    def s3_file_contents_json(self, s3_key, version_id=None):
+        return json_parse(self.s3_file_contents(s3_key, version_id=version_id))
 
-    def s3_file_contents_obj(self, s3_key):                                                     # Convert S3 file contents to a Python object using str_to_obj
-        return str_to_obj(self.s3_file_contents(s3_key))
+    def s3_file_contents_obj(self, s3_key, version_id=None):                                                     # Convert S3 file contents to a Python object using str_to_obj
+        return str_to_obj(self.s3_file_contents(s3_key, version_id=version_id))
 
-    def s3_file_data(self, s3_key):
+    def s3_file_data(self, s3_key, version_id=None):
         if self.s3_file_exists(s3_key):
             if self.save_as_gz and file_extension(s3_key) == '.gz':
-                data_gz = self.s3_file_bytes(s3_key)
+                data_gz = self.s3_file_bytes(s3_key,version_id=version_id)
                 data    = gz_to_json(data_gz)
             else:
-                data = self.s3_file_contents_json(s3_key)
+                data = self.s3_file_contents_json(s3_key,version_id=version_id)
             return data
 
     def s3_file_delete(self, s3_key):
@@ -210,8 +210,12 @@ class S3__DB_Base(Type_Safe):
                             
                             { pformat(result) }
                             """
-                raise Exception(message)                                    # todo: find a better way to handle these 'catastrophic' errors
+                raise Exception(message)                                                                # todo: find a better way to handle these 'catastrophic' errors
             assert result.get('status') == 'ok'
+
+        if self.bucket_versioning and self.s3().bucket_versioning__enabled(bucket_name) is False:       # make sure version is enabled on this bucket (in case it has been setup without)
+            self.s3().bucket_versioning__enable(bucket_name)                                            # todo: see if we need to have this on this base class
+
         return self
 
     def using_minio(self):
