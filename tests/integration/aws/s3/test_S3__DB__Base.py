@@ -158,7 +158,7 @@ class test_S3__DB__Base(TestCase__S3__Temp_DB):
             pre_signed_url__get = signed_url_data.pre_signed_url__get
             file_contents__for_put = random_text("some file contents")
 
-            result = _.s3_s3_temp_folder__pre_signed_url__upload_string(pre_signed_url=pre_signed_url__put,
+            result = _.s3_temp_folder__pre_signed_url__upload_string(pre_signed_url=pre_signed_url__put,
                                                                         file_contents=file_contents__for_put)
             assert result is True
 

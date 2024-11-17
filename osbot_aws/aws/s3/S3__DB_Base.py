@@ -1,5 +1,5 @@
 import requests
-from osbot_utils.utils.Objects import dict_to_obj
+from osbot_utils.utils.Objects import dict_to_obj, str_to_obj
 
 from osbot_aws.AWS_Config                           import aws_config
 from osbot_aws.aws.s3.S3                            import S3
@@ -66,6 +66,9 @@ class S3__DB_Base(Type_Safe):
     def s3_file_contents_json(self, s3_key):
         return json_parse(self.s3_file_contents(s3_key))
 
+    def s3_file_contents_obj(self, s3_key):                                                     # Convert S3 file contents to a Python object using str_to_obj
+        return str_to_obj(self.s3_file_contents(s3_key))
+
     def s3_file_data(self, s3_key):
         if self.s3_file_exists(s3_key):
             if self.save_as_gz and file_extension(s3_key) == '.gz':
@@ -93,6 +96,12 @@ class S3__DB_Base(Type_Safe):
     def s3_file_set_metadata(self, s3_key, metadata):
         return self.s3().file_metadata_update(self.s3_bucket(), s3_key, metadata)
 
+    def s3_files_delete(self, s3_keys):                             # Delete multiple S3 files, returning True only if all deletions succeed
+        result = True
+        for s3_key in s3_keys:
+            if not self.s3_file_delete(s3_key):
+                result = False
+        return result
 
     def s3_folder_contents(self, folder, return_full_path=False):
         return self.s3().folder_contents(s3_bucket=self.s3_bucket(), parent_folder=folder, return_full_path=return_full_path)
@@ -102,6 +111,13 @@ class S3__DB_Base(Type_Safe):
             return self.s3().find_files(bucket=self.s3_bucket(), prefix=folder)
         else:
             return self.s3().folder_files(s3_bucket=self.s3_bucket(), parent_folder=folder, return_full_path=return_full_path)
+
+    def s3_folder_files__all(self, folder='', full_path=True):                                      # Get all files in a folder, with option to return full paths or relative paths
+        all_files = self.s3().find_files(bucket=self.s3_bucket(), prefix=folder)
+        if full_path:
+            return all_files
+        else:
+            return [file.replace(folder, '')[1:] for file in all_files]
 
     def s3_folder_list(self, folder='', return_full_path=False):
         return self.s3().folder_list(s3_bucket=self.s3_bucket(), parent_folder=folder, return_full_path=return_full_path)
@@ -156,7 +172,7 @@ class S3__DB_Base(Type_Safe):
             return response.text
         #pprint(response)                   # todo: add a better way to handle the we dont' get an 200 status_code
 
-    def s3_s3_temp_folder__pre_signed_url__upload_string(self, pre_signed_url, file_contents):
+    def s3_temp_folder__pre_signed_url__upload_string(self, pre_signed_url, file_contents):
         response = requests.put(pre_signed_url, data=file_contents)
         if response.status_code == 200:
             return True
