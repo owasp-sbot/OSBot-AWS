@@ -130,12 +130,11 @@ class S3(Type_Safe):
     def bucket_arn(self,bucket):
         return 'arn:aws:s3:::{0}'.format(bucket)
 
-    def bucket_create(self, bucket, region=None):
+    def bucket_create(self, bucket, region):
         try:
-            kwargs = { 'Bucket': bucket}
-            if region:
-                kwargs['CreateBucketConfiguration'] = {'LocationConstraint': region}
-            location=self.s3().create_bucket(**kwargs).get('Location')
+            kwargs   = dict(Bucket                    = bucket                         ,
+                            CreateBucketConfiguration = {'LocationConstraint': region })
+            location = self.s3().create_bucket(**kwargs).get('Location')
             return { 'status':'ok', 'data':location}
         except Exception as error:
             return {'status': 'error', 'data': '{0}'.format(error)}
