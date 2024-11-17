@@ -33,10 +33,7 @@ class Test_S3(TestCase):
         cls.test_region            = aws_config.region_name() or  'eu-west-1'
         cls.test_s3_key            = f"{cls.test_folder}/{cls.temp_file_name}"
         if cls.s3.bucket_not_exists(cls.test_bucket):
-            pprint(f"***** target region: : {cls.test_region}")
-            pprint(cls.s3.buckets())
             create_bucket_result = cls.s3.bucket_create(cls.test_bucket, cls.test_region)
-            pprint(create_bucket_result)
             assert create_bucket_result.get('status') == 'ok'
         assert cls.s3.file_create_from_string(file_contents=cls.temp_file_contents, bucket=cls.test_bucket, key=cls.test_s3_key) is True
 
@@ -58,12 +55,11 @@ class Test_S3(TestCase):
 
     def test_bucket_create_delete(self):
         bucket_name = random_text('temp_bucket').lower().replace('_','-')
-        region      = 'eu-west-2'
-        assert self.s3.bucket_exists(bucket_name) is False
-        assert self.s3.bucket_create(bucket_name, region) == { 'status':'ok', 'data':f'http://{bucket_name + LOCAL_STACK__BUCKET_NAME__POSTFIX}'}
-        assert self.s3.bucket_exists(bucket_name) is True
-        assert self.s3.bucket_delete(bucket_name) is True
-        assert self.s3.bucket_exists(bucket_name) is False
+        assert self.s3.bucket_exists(bucket_name                  ) is False
+        assert self.s3.bucket_create(bucket_name, self.test_region) == { 'status':'ok', 'data':f'http://{bucket_name + LOCAL_STACK__BUCKET_NAME__POSTFIX}'}
+        assert self.s3.bucket_exists(bucket_name                  ) is True
+        assert self.s3.bucket_delete(bucket_name                  ) is True
+        assert self.s3.bucket_exists(bucket_name                  ) is False
 
     def test_bucket_notification(self):
         assert self.s3.bucket_notification(self.test_bucket) == {}      # todo: add test when bucket_notification returns values
