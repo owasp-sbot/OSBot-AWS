@@ -34,7 +34,7 @@ class S3__DB_Base(Type_Safe):
     @cache_on_self
     def s3(self):
         if self.use_minio or get_env(ENV_NAME__USE_MINIO_AS_S3) == 'True':
-            self.use_minio = True
+            self.use_minio = True                                               # todo: remove this hardcoded minio dependency, since in most cases we are using LocalStack
             s3 = S3__Minio().s3()
         else:
             s3 = S3(session_kwargs__s3=self.session_kwargs__s3)

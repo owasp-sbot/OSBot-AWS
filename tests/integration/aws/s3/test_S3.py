@@ -1,15 +1,10 @@
 import os
-from unittest import TestCase
-
-import pytest
-from osbot_local_stack.local_stack.Local_Stack import Local_Stack
-
-from osbot_aws.AWS_Config import aws_config
-from osbot_aws.aws.s3.S3                             import S3
-from osbot_aws.testing.TestCase__Minio               import TestCase__Minio
-from osbot_utils.testing.Temp_File                   import Temp_File
-from osbot_utils.utils.Dev import pprint
-from osbot_utils.utils.Misc                          import random_text
+from unittest                                       import TestCase
+from osbot_local_stack.local_stack.Local_Stack      import Local_Stack
+from osbot_aws.AWS_Config                           import aws_config
+from osbot_aws.aws.s3.S3                            import S3
+from osbot_utils.testing.Temp_File                  import Temp_File
+from osbot_utils.utils.Misc                         import random_text
 
 
 TEST__AWS_ACCOUNT_ID              = '000011110000'
@@ -21,7 +16,6 @@ class Test_S3(TestCase):
 
     @classmethod
     def setUpClass(cls):
-        #super().setUpClass()
         cls.local_stack = Local_Stack().activate()
         assert cls.local_stack.is_local_stack_configured_and_available() is True
         cls.s3 = S3()
@@ -30,7 +24,7 @@ class Test_S3(TestCase):
         cls.temp_file_contents     = "some contents"
         cls.test_bucket            = "osbot-temp-bucket"
         cls.test_folder            = "unit_tests"
-        cls.test_region            = aws_config.region_name() or  'eu-west-1'
+        cls.test_region            = aws_config.region_name() or  'eu-west-1'       # todo: figure out why other regions like 'eu-west-2' trigger an localstack's "IllegalLocationConstraintException error (when calling the CreateBucket operation: The unspecified location constraint is incompatible for the region specific endpoint this request was sent to)",
         cls.test_s3_key            = f"{cls.test_folder}/{cls.temp_file_name}"
         if cls.s3.bucket_not_exists(cls.test_bucket):
             create_bucket_result = cls.s3.bucket_create(cls.test_bucket, cls.test_region)
