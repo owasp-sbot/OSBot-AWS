@@ -19,14 +19,15 @@ class Test_S3(TestCase):
         assert cls.local_stack.is_local_stack_configured_and_available() is True
         cls.s3 = S3()
         assert cls.s3.client().meta.endpoint_url == 'http://localhost:4566'
-        cls.temp_file_name         = "aaa.txt"  # todo: fix test that is leaving this file in the file system
-        cls.temp_file_contents     = "some contents"
-        cls.test_bucket            = "osbot-temp-bucket"
-        cls.test_folder            = "unit_tests"
-        cls.test_region            = aws_config.region_name() or  'eu-west-1'       # todo: figure out why other regions like 'eu-west-2' trigger an localstack's "IllegalLocationConstraintException error (when calling the CreateBucket operation: The unspecified location constraint is incompatible for the region specific endpoint this request was sent to)",
-        cls.test_s3_key            = f"{cls.test_folder}/{cls.temp_file_name}"
+        cls.temp_file_name       = "aaa.txt"  # todo: fix test that is leaving this file in the file system
+        cls.temp_file_contents   = "some contents"
+        cls.test_bucket          = "osbot-temp-bucket"
+        cls.test_folder          = "unit_tests"
+        cls.test_region          = aws_config.region_name() or  'eu-west-1'       # todo: figure out why other regions like 'eu-west-2' trigger an localstack's "IllegalLocationConstraintException error (when calling the CreateBucket operation: The unspecified location constraint is incompatible for the region specific endpoint this request was sent to)",
+        cls.test_s3_key          = f"{cls.test_folder}/{cls.temp_file_name}"
+        cls.versioning           = True
         if cls.s3.bucket_not_exists(cls.test_bucket):
-            create_bucket_result = cls.s3.bucket_create(cls.test_bucket, cls.test_region)
+            create_bucket_result = cls.s3.bucket_create(cls.test_bucket, cls.test_region, versioning=cls.versioning)
             assert create_bucket_result.get('status') == 'ok'
         assert cls.s3.file_create_from_string(file_contents=cls.temp_file_contents, bucket=cls.test_bucket, key=cls.test_s3_key) is True
 
@@ -35,7 +36,7 @@ class Test_S3(TestCase):
     def tearDownClass(cls):
         assert cls.s3.file_delete  (bucket=cls.test_bucket, key=cls.test_s3_key) is True
 
-        cls.s3.bucket_delete_all_files(cls.test_bucket)
+        assert cls.s3.bucket_delete_all_files(cls.test_bucket                  ) is True
         assert cls.s3.bucket_delete(cls.test_bucket                            ) is True
         assert cls.s3.file_exists  (bucket=cls.test_bucket, key=cls.test_s3_key) is False
         assert cls.local_stack.is_local_stack_configured_and_available() is True
@@ -128,7 +129,8 @@ class Test_S3(TestCase):
                                    'ETag'                 : file_details.get('ETag')        ,
                                    'LastModified'         : file_details.get('LastModified'),
                                    'Metadata'             : {}                              ,
-                                    'ServerSideEncryption': 'AES256'                        }
+                                    'ServerSideEncryption': 'AES256'                        ,
+                                    'VersionId'           : file_details.get('VersionId')   }         # this exists because we have versioning enabled in this test bucket
 
 
             assert self.s3.file_delete(s3_bucket, s3_key                        ) is True             # delete file

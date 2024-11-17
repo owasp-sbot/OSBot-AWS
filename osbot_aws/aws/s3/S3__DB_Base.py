@@ -27,9 +27,11 @@ class S3__DB_Base(Type_Safe):
     bucket_name__suffix            : str  = S3_DB_BASE__BUCKET_NAME__SUFFIX
     bucket_name__prefix            : str  = S3_DB_BASE__BUCKET_NAME__PREFIX
     bucket_name__insert_account_id : bool = True
+    bucket_versioning              : bool = True
     save_as_gz                     : bool = False
     server_name                    : str  = S3_DB_BASE__SERVER_NAME
     session_kwargs__s3             : Session__Kwargs__S3
+
 
     @cache_on_self
     def s3(self):
@@ -179,8 +181,9 @@ class S3__DB_Base(Type_Safe):
 
     def setup(self):
         bucket_name = self.s3_bucket()
-        kwargs = dict(bucket=bucket_name,
-                      region=aws_config.region_name())
+        kwargs = dict(bucket     = bucket_name              ,
+                      region     = aws_config.region_name() ,
+                      versioning = self.bucket_versioning   )
 
         if self.s3().bucket_not_exists(bucket_name):
             result = self.s3().bucket_create(**kwargs)

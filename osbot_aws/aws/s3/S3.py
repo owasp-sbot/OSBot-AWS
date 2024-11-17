@@ -88,10 +88,27 @@ class S3(Type_Safe):
         return Session()
 
     def bucket_delete_all_files(self, bucket):
-        s3_keys = self.find_files(bucket)
-        if s3_keys:
-            result = self.files_delete(bucket, s3_keys)
-            return result
+        if self.bucket_versioning__enabled(bucket):
+            return self.bucket_delete_all_files__with_versioning(bucket)
+        else:
+            s3_keys = self.find_files(bucket)
+            if s3_keys:
+                result = self.files_delete(bucket, s3_keys)
+                return result
+            return True
+
+    def bucket_delete_all_files__with_versioning(self, bucket):
+        response          = self.client().list_object_versions(Bucket=bucket)            # List all object versions
+        objects_to_delete = []                                                  # Collect all version IDs and delete markers
+        if 'Versions' in response:
+            for version in response['Versions']:
+                objects_to_delete.append({'Key': version['Key'], 'VersionId': version['VersionId']})
+        if 'DeleteMarkers' in response:
+            for marker in response['DeleteMarkers']:
+                objects_to_delete.append({'Key': marker['Key'], 'VersionId': marker['VersionId']})
+
+        if objects_to_delete:                                           # Delete all collected objects
+            self.files_delete_objects(bucket, objects_to_delete)
         return True
 
     @remove_return_value(field_name='ResponseMetadata')
@@ -130,11 +147,13 @@ class S3(Type_Safe):
     def bucket_arn(self,bucket):
         return 'arn:aws:s3:::{0}'.format(bucket)
 
-    def bucket_create(self, bucket, region):
+    def bucket_create(self, bucket, region, versioning=False):
         try:
             kwargs   = dict(Bucket                    = bucket                         ,
                             CreateBucketConfiguration = {'LocationConstraint': region })
-            location = self.s3().create_bucket(**kwargs).get('Location')
+            location = self.client().create_bucket(**kwargs).get('Location')
+            if versioning:
+                self.bucket_versioning__enable(bucket)
             return { 'status':'ok', 'data':location}
         except Exception as error:
             return {'status': 'error', 'data': '{0}'.format(error)}
@@ -158,6 +177,9 @@ class S3(Type_Safe):
     def bucket_versioning__enable(self, bucket_name):
         self.client().put_bucket_versioning(Bucket=bucket_name,
                                             VersioningConfiguration={'Status': 'Enabled'})
+        return self.bucket_versioning__enabled(bucket_name)
+
+    def bucket_versioning__enabled(self, bucket_name):
         return self.bucket_versioning__status(bucket_name) == 'Enabled'
 
     def bucket_versioning__status(self, bucket_name):
@@ -205,9 +227,12 @@ class S3(Type_Safe):
     def find_files(self, bucket, prefix='', filter=''):
         return list({ item['Key'] for item in self.files_raw(bucket, prefix, filter) })
 
-    def file_bytes(self, bucket, key):
-        obj = self.s3().get_object(Bucket=bucket, Key=key)                      # get object data from s3
-        return obj['Body'].read()                                               # returns all bytes
+    def file_bytes(self, bucket, key, version_id=None):
+        kwargs = dict(Bucket=bucket, Key=key)
+        if version_id:
+            kwargs['VersionId'] = version_id
+        obj = self.s3().get_object(**kwargs)    # get object data from s3
+        return obj['Body'].read()                                                   # returns all bytes
 
     def file_content_type(self, bucket, key):
         return self.file_details(bucket, key).get('ContentType')
@@ -222,8 +247,8 @@ class S3(Type_Safe):
         return self.file_copy(**file_copy_kwargs)
 
 
-    def file_contents(self, bucket, key, encoding='utf-8'):
-        return self.file_bytes(bucket,key).decode(encoding)                      # extract body and decode it
+    def file_contents(self, bucket, key, encoding='utf-8', version_id=None):
+        return self.file_bytes(bucket,key, version_id).decode(encoding)                      # extract body and decode it
 
     def file_contents_from_gzip(self, bucket, key):
         obj = self.s3().get_object(Bucket=bucket, Key=key)                    # get object data from s3
@@ -293,9 +318,13 @@ class S3(Type_Safe):
         return result.get('ResponseMetadata').get('HTTPStatusCode') == 204
 
     def files_delete(self, bucket, keys):
-        delete_keys = {'Objects': [{'Key': key } for key  in keys]}
-        result      = self.client().delete_objects(Bucket=bucket, Delete=delete_keys)     # todo: see if there is a way to get feedback on the delete status
-        return result.get('ResponseMetadata').get('HTTPStatusCode') == 200  #       since we also get 200 when the key value is wrong
+        objects =  [{'Key': key } for key  in keys]
+        return self.files_delete_objects(bucket, objects)
+
+
+    def files_delete_objects(self, bucket, objects):
+        result = self.client().delete_objects(Bucket=bucket,Delete={'Objects': objects})  # todo: see if there is a way to get feedback on the delete status
+        return result.get('ResponseMetadata').get('HTTPStatusCode') == 200   #       since we also get 200 when the key value is wrong
 
     @remove_return_value('ResponseMetadata')
     def file_details(self, bucket, key):
@@ -331,6 +360,14 @@ class S3(Type_Safe):
     def file_not_exists(self,bucket, key):
         return self.file_exists(bucket=bucket, key=key) is False
 
+    def file_delete_markers(self, bucket, key):
+        response = self.client().list_object_versions(Bucket=bucket, Prefix=key)
+        return response.get('DeleteMarkers')
+
+    def file_versions(self, bucket, key):
+        response = self.client().list_object_versions(Bucket=bucket, Prefix=key)
+        return response.get('Versions')
+
     def file_upload(self,file , bucket, folder):
         if not os.path.isfile(file):                                            # check that file to upload exists locally
             return None                                                         # if not return None
@@ -344,12 +381,8 @@ class S3(Type_Safe):
         if type(metadata) is not dict:
             metadata = {}
         metadata['created_by'] = 'osbot_aws.aws.s3.S3.file_upload_from_bytes'
-        self.s3().put_object(Body=file_body, Bucket=bucket, Key=key, Metadata=metadata)
+        self.s3().put_object(Body=file_body, Bucket=bucket, Key=key, Metadata=metadata)             # todo: see if there are use cases that need the version_Id, since at moment we only return True (which basically represents a lack of an error/exception)
         return True
-
-    # def file_upload_to_key(self, file, bucket, key):
-    #     self.s3().upload_file(file, bucket, key)                                # upload file
-    #     return True                                                             # return true (if succeeded)
 
     def file_upload_to_key(self, file, bucket, key, set_content_type=True):
         extra_args   = None

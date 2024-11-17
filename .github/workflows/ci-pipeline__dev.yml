@@ -47,7 +47,6 @@ jobs:
 
 
   increment-tag:
-    if: False
     name: Increment Tag - DEV
     runs-on: ubuntu-latest
     steps:
@@ -60,7 +59,6 @@ jobs:
       - run-unit-tests
 
   publish-to-pypi:
-    if: False
     permissions:
       id-token: write
     name: "Publish to PYPI"
