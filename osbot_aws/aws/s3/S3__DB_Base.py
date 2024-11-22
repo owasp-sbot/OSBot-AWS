@@ -211,10 +211,11 @@ class S3__DB_Base(Type_Safe):
                             { pformat(result) }
                             """
                 raise Exception(message)                                                                # todo: find a better way to handle these 'catastrophic' errors
+            if self.bucket_versioning:                                                                  # if bucket versioning is enabled
+                self.s3().bucket_versioning__enable(bucket_name)                                        #    configure it
             assert result.get('status') == 'ok'
 
-        if self.bucket_versioning and self.s3().bucket_versioning__enabled(bucket_name) is False:       # make sure version is enabled on this bucket (in case it has been setup without)
-            self.s3().bucket_versioning__enable(bucket_name)                                            # todo: see if we need to have this on this base class
+
 
         return self
 

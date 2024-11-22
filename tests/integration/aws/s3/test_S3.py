@@ -3,6 +3,7 @@ from unittest                                       import TestCase
 from osbot_local_stack.local_stack.Local_Stack      import Local_Stack
 from osbot_aws.AWS_Config                           import aws_config
 from osbot_aws.aws.s3.S3                            import S3
+from osbot_utils.context_managers.capture_duration  import capture_duration
 from osbot_utils.testing.Temp_File                  import Temp_File
 from osbot_utils.utils.Misc                         import random_text
 
@@ -54,6 +55,20 @@ class Test_S3(TestCase):
         assert self.s3.bucket_exists(bucket_name                  ) is True
         assert self.s3.bucket_delete(bucket_name                  ) is True
         assert self.s3.bucket_exists(bucket_name                  ) is False
+
+    def test_bucket_exists(self):
+        bucket_name = random_text('temp_bucket').lower().replace('_', '-')
+        with capture_duration() as duration_1:
+            assert self.s3.bucket_exists(bucket_name) is False
+
+        with capture_duration() as duration_2:
+            assert S3().bucket_exists(bucket_name) is False
+
+        assert duration_1.seconds < 0.01  # reusing object should take less than 20ms           (it is usually about 0.004)
+        assert duration_2.seconds < 0.04  # craeting new object should take less than 40ms      (it is usually about 0.013)
+
+
+
 
     def test_bucket_notification(self):
         assert self.s3.bucket_notification(self.test_bucket) == {}      # todo: add test when bucket_notification returns values
