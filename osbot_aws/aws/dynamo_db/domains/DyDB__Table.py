@@ -1,6 +1,4 @@
 from osbot_aws.aws.dynamo_db.Dynamo_DB__Table       import Dynamo_DB__Table
-from osbot_utils.utils.Misc                         import list_set
-
 
 class DyDB__Table(Dynamo_DB__Table):
 
@@ -105,6 +103,8 @@ class DyDB__Table(Dynamo_DB__Table):
             return [self.dynamo_db.document_deserialize(item) for item in items]
 
     def query_index_between_range(self, index_name, index_type, index_value, sort_key, sort_key_type, start_value, end_value, query_filter=None):
+        from osbot_utils.utils.Misc import list_set
+
         query_kwargs = dict( TableName                 = self.table_name                        ,
                              IndexName                 = index_name                 ,
                              KeyConditionExpression    =  f'#{index_name} = :{index_name} AND #{sort_key} BETWEEN :start AND :end',

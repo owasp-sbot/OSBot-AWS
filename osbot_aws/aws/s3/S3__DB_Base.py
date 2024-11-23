@@ -1,18 +1,6 @@
-import requests
-from osbot_utils.utils.Objects import dict_to_obj, str_to_obj
-
-from osbot_aws.AWS_Config                           import aws_config
-from osbot_aws.aws.s3.S3                            import S3
-from osbot_aws.aws.s3.S3__Minio                     import S3__Minio, DEFAULT__MINIO__SERVER
 from osbot_aws.aws.session.Session__Kwargs__S3      import Session__Kwargs__S3
-from osbot_aws.utils.AWS_Sanitization               import str_to_valid_s3_bucket_name
 from osbot_utils.base_classes.Type_Safe             import Type_Safe
 from osbot_utils.decorators.methods.cache_on_self   import cache_on_self
-from osbot_utils.utils.Dev                          import pformat
-from osbot_utils.utils.Env                          import get_env
-from osbot_utils.utils.Files                        import file_extension
-from osbot_utils.utils.Json                         import json_dumps, json_parse, gz_to_json, json_to_gz
-from osbot_utils.utils.Misc                         import random_guid, timestamp_utc_now
 
 ENV_NAME__USE_MINIO_AS_S3            = 'USE_MINIO_AS_S3'
 S3_DB_BASE__BUCKET_NAME__SUFFIX      = "osbot-aws"
@@ -20,7 +8,6 @@ S3_DB_BASE__BUCKET_NAME__PREFIX: str = 'unknown-service'
 S3_DB_BASE__SERVER_NAME              = 'unknown-server'
 S3_FOLDER__TEMP_FILE_UPLOADS         = 'temp_file_uploads'
 DEFAULT__LOCAL_STACK__TARGET_SERVER = 'http://localhost:4566'
-
 
 class S3__DB_Base(Type_Safe):
     use_minio                      : bool = False
@@ -35,7 +22,12 @@ class S3__DB_Base(Type_Safe):
 
     @cache_on_self
     def s3(self):
+        from osbot_aws.aws.s3.S3   import S3
+        from osbot_utils.utils.Env import get_env
+
         if self.use_minio or get_env(ENV_NAME__USE_MINIO_AS_S3) == 'True':
+            from osbot_aws.aws.s3.S3__Minio import S3__Minio
+
             self.use_minio = True                                               # todo: remove this hardcoded minio dependency, since in most cases we are using LocalStack
             s3 = S3__Minio().s3()
         else:
@@ -44,6 +36,9 @@ class S3__DB_Base(Type_Safe):
 
     @cache_on_self
     def s3_bucket(self):
+        from osbot_aws.AWS_Config             import aws_config
+        from osbot_aws.utils.AWS_Sanitization import str_to_valid_s3_bucket_name
+
         separator  = '-'
         bucket_name = ''
         if self.bucket_name__prefix:
@@ -64,12 +59,18 @@ class S3__DB_Base(Type_Safe):
         return self.s3().file_contents(self.s3_bucket(), s3_key, version_id=version_id)
 
     def s3_file_contents_json(self, s3_key, version_id=None):
+        from osbot_utils.utils.Json import json_parse
+
         return json_parse(self.s3_file_contents(s3_key, version_id=version_id))
 
     def s3_file_contents_obj(self, s3_key, version_id=None):                                                     # Convert S3 file contents to a Python object using str_to_obj
+        from osbot_utils.utils.Objects import str_to_obj
         return str_to_obj(self.s3_file_contents(s3_key, version_id=version_id))
 
     def s3_file_data(self, s3_key, version_id=None):
+        from osbot_utils.utils.Files import file_extension
+        from osbot_utils.utils.Json  import gz_to_json
+
         if self.s3_file_exists(s3_key):
             if self.save_as_gz and file_extension(s3_key) == '.gz':
                 data_gz = self.s3_file_bytes(s3_key,version_id=version_id)
@@ -130,6 +131,8 @@ class S3__DB_Base(Type_Safe):
         return self.s3().file_upload_from_bytes(**kwargs)
 
     def s3_save_data(self, data, s3_key, metadata=None):
+        from osbot_utils.utils.Json import json_dumps, json_to_gz
+
         if self.save_as_gz:
             data      = json_to_gz(data)
         kwargs = dict(bucket=self.s3_bucket(), key=s3_key)
@@ -144,6 +147,8 @@ class S3__DB_Base(Type_Safe):
 
     # todo: refactor these s3_temp_folder__pre_signed_urls_* into a separate class (focused on pre_signed_urls)
     def s3_temp_folder__pre_signed_urls_for_object(self, source='NA', reason='NA', who='NA', expiration=3600):
+        from osbot_utils.utils.Misc import random_guid, timestamp_utc_now
+
         s3_bucket          = self.s3_bucket__temp_data()
         s3_temp_folder     = self.s3_folder_temp_file_uploads()
         s3_object_name     = random_guid()
@@ -167,12 +172,15 @@ class S3__DB_Base(Type_Safe):
         return pre_signed_url
 
     def s3_temp_folder__pre_signed_url__download_string(self, pre_signed_url):
+        import requests
         response = requests.get(pre_signed_url)
         if response.status_code == 200:
             return response.text
         #pprint(response)                   # todo: add a better way to handle the we dont' get an 200 status_code
 
     def s3_temp_folder__pre_signed_url__upload_string(self, pre_signed_url, file_contents):
+        import requests
+
         response = requests.put(pre_signed_url, data=file_contents)
         if response.status_code == 200:
             return True
@@ -196,7 +204,12 @@ class S3__DB_Base(Type_Safe):
         return self.s3().bucket_exists(bucket_name)
 
     def setup(self):
+
+        from osbot_aws.AWS_Config  import aws_config
+        from osbot_utils.utils.Dev import pformat
+
         bucket_name = self.s3_bucket()
+
         kwargs = dict(bucket     = bucket_name              ,
                       region     = aws_config.region_name() ,
                       versioning = self.bucket_versioning   )
@@ -220,6 +233,8 @@ class S3__DB_Base(Type_Safe):
         return self
 
     def using_minio(self):
+        from osbot_aws.aws.s3.S3__Minio import DEFAULT__MINIO__SERVER
+
         return self.use_minio and self.s3().client().meta.endpoint_url == DEFAULT__MINIO__SERVER
 
     def using_local_stack(self):
