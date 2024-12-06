@@ -1,7 +1,6 @@
 from unittest                               import TestCase
 from datetime                               import datetime
-
-from osbot_utils.helpers.Safe_Id import Safe_Id
+from osbot_utils.helpers.Safe_Id            import Safe_Id
 from osbot_utils.utils.Misc                 import utc_now, date_today
 from osbot_aws.aws.s3.S3__Key_Generator     import S3__Key_Generator
 
@@ -158,14 +157,15 @@ class test_S3__Key_Generator(TestCase):
 
             # Test split_when parameter
             _.split_when = True
-            expected = ['root', 'server1', 'test-area', '2021-01-01', '12', '00']
+            expected = ['root', 'server1', 'test-area', '2021','01','01/12/00']
             result = _.create_path_elements__from_when(when=when, area=area)
+
             assert result == expected
 
             # Test with no area but split_when
             _.split_when = True
             area = None
-            expected = ['root', 'server1', '2021-01-01', '12', '00']
+            expected = ['root', 'server1', '2021','01','01/12/00']
             result = _.create_path_elements__from_when(when=when, area=area)
             assert result == expected
 
@@ -185,3 +185,60 @@ class test_S3__Key_Generator(TestCase):
             assert result[0] == 'root'
             assert result[1] == 'server1'
             assert result[2] == 'test-area'
+
+    def test_create__for_area_and_file_id(self):
+        with S3__Key_Generator() as _:
+            # Basic test with all components
+            _.root_folder = 'root'
+            _.server_name = 'server1'
+            _.use_when = True
+            area = Safe_Id('test-area')
+            file_id = Safe_Id('test-file')
+
+            result = _.create__for_area_and_file_id(area=area, file_id=file_id)
+            assert 'root/server1/test-area' in result
+            assert result.endswith('test-file.json')
+
+            # Test with gzip
+            _.save_as_gz = True
+            result = _.create__for_area_and_file_id(area=area, file_id=file_id)
+            assert result.endswith('test-file.json.gz')
+
+            # Test with split_when
+            _.split_when = True
+            _.save_as_gz = False
+            result = _.create__for_area_and_file_id(area=area, file_id=file_id)
+            path_parts = result.split('/')
+            assert path_parts[0] == 'root'
+            assert path_parts[1] == 'server1'
+            assert path_parts[2] == 'test-area'
+            assert len(path_parts) >= 6  # root/server1/area/date/hour/minute/file
+            assert path_parts[-1] == 'test-file.json'
+
+            # Test without when
+            _.use_when = False
+            result = _.create__for_area_and_file_id(area=area, file_id=file_id)
+            assert result == 'root/server1/test-area/test-file.json'
+
+            # Test minimal configuration
+            _.root_folder = ''
+            _.server_name = ''
+            result = _.create__for_area_and_file_id(area=area, file_id=file_id)
+            assert result == 'test-area/test-file.json'
+
+    def test_s3_key(self):
+        with S3__Key_Generator() as _:
+            _.root_folder = 'root'
+            _.server_name = 'server1'
+            area = Safe_Id('test-area')
+            file_id = Safe_Id('test-file')
+
+            result = _.s3_key(area=area, file_id=file_id)
+            assert result == _.create__for_area_and_file_id(area=area, file_id=file_id)
+
+            # Test with different configurations
+            _.save_as_gz = True
+            assert _.s3_key(area=area, file_id=file_id) == _.create__for_area_and_file_id(area=area, file_id=file_id)
+
+            _.split_when = True
+            assert _.s3_key(area=area, file_id=file_id) == _.create__for_area_and_file_id(area=area, file_id=file_id)

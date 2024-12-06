@@ -1,6 +1,7 @@
-from osbot_utils.base_classes.Type_Safe import Type_Safe
-from osbot_utils.helpers.Safe_Id        import Safe_Id
-from osbot_utils.utils.Misc             import utc_now, date_today
+from osbot_utils.base_classes.Type_Safe         import Type_Safe
+from osbot_utils.decorators.methods.type_safe   import type_safe
+from osbot_utils.helpers.Safe_Id                import Safe_Id
+from osbot_utils.utils.Misc                     import utc_now, date_today
 
 S3_PATH__WHEN_BLOCK_SIZE   = 5
 
@@ -20,6 +21,12 @@ class S3__Key_Generator(Type_Safe):
         minute_block = f"{(int(minute) // block_size) * block_size:02d}"        # Calculate the block using the configurable block size
         return minute_block
 
+    @type_safe
+    def create__for_area_and_file_id(self, area: Safe_Id, file_id: Safe_Id):
+        path_elements = self.create_path_elements__from_when(area=area)
+        s3_key = self.create_s3_key(path_elements=path_elements, file_id=file_id)
+        return s3_key
+
     def create_path_elements__for_server(self):
         path_elements = []
         if self.root_folder: path_elements.append(self.root_folder)
@@ -35,7 +42,7 @@ class S3__Key_Generator(Type_Safe):
                 when = self.path__for_date_time__now_utc()
             if when:                                            # for the cases when path__for_date_time__now_utc returns and empty value
                 if self.split_when:
-                    path_elements.extend(when.split('/'))
+                    path_elements.extend(when.split('-'))
                 else:
                     path_elements.append(when)
 
@@ -71,6 +78,10 @@ class S3__Key_Generator(Type_Safe):
             path_components.append(minute_block)
         s3_path = '/'.join(path_components)
         return s3_path
+
+    def s3_key(self, area: Safe_Id, file_id: Safe_Id):
+        s3_key = self.create__for_area_and_file_id(area=area,file_id=file_id)
+        return s3_key
 
     def s3_folder__for_day(self, day=None):
         path_elements = self.create_path_elements__for_server()
