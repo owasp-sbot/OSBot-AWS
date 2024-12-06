@@ -1,5 +1,7 @@
 from unittest                               import TestCase
 from datetime                               import datetime
+
+from osbot_utils.helpers.Safe_Id import Safe_Id
 from osbot_utils.utils.Misc                 import utc_now, date_today
 from osbot_aws.aws.s3.S3__Key_Generator     import S3__Key_Generator
 
@@ -139,3 +141,47 @@ class test_S3__Key_Generator(TestCase):
             expected      = 'root/server1/2020-12-31'
             result        = _.s3_folder__for_day(day)
             assert result == expected
+
+    def test_create_path_elements__from_when__with_area_and_split(self):
+        with S3__Key_Generator() as _:
+            # Test with area parameter
+            _.use_when = True
+            _.root_folder = 'root'
+            _.server_name = 'server1'
+            when = '2021-01-01/12/00'
+            area = Safe_Id('test-area')
+
+            # Test area parameter
+            expected = ['root', 'server1', 'test-area', when]
+            result = _.create_path_elements__from_when(when=when, area=area)
+            assert result == expected
+
+            # Test split_when parameter
+            _.split_when = True
+            expected = ['root', 'server1', 'test-area', '2021-01-01', '12', '00']
+            result = _.create_path_elements__from_when(when=when, area=area)
+            assert result == expected
+
+            # Test with no area but split_when
+            _.split_when = True
+            area = None
+            expected = ['root', 'server1', '2021-01-01', '12', '00']
+            result = _.create_path_elements__from_when(when=when, area=area)
+            assert result == expected
+
+            # Test with use_when=False
+            _.use_when = False
+            area = Safe_Id('test-area')
+            expected = ['root', 'server1', 'test-area']
+            result = _.create_path_elements__from_when(when=when, area=area)
+            assert result == expected
+
+            # Test with actual datetime path generation
+            _.use_when = True
+            _.split_when = True
+            now_path = _.path__for_date_time__now_utc()
+            result = _.create_path_elements__from_when(area=area)
+            assert len(result) == len(now_path.split('/')) + 3  # root, server1, area + split path
+            assert result[0] == 'root'
+            assert result[1] == 'server1'
+            assert result[2] == 'test-area'

@@ -1,4 +1,5 @@
 from osbot_utils.base_classes.Type_Safe import Type_Safe
+from osbot_utils.helpers.Safe_Id        import Safe_Id
 from osbot_utils.utils.Misc             import utc_now, date_today
 
 S3_PATH__WHEN_BLOCK_SIZE   = 5
@@ -11,6 +12,7 @@ class S3__Key_Generator(Type_Safe):
     use_hours          : bool = True
     use_minutes        : bool = True
     save_as_gz         : bool = False
+    split_when         : bool = False
     s3_path_block_size : int = S3_PATH__WHEN_BLOCK_SIZE
 
     def calculate_minute_block(self, minute):
@@ -24,13 +26,20 @@ class S3__Key_Generator(Type_Safe):
         if self.server_name: path_elements.append(self.server_name)
         return path_elements
 
-    def create_path_elements__from_when(self, when=None):
+    def create_path_elements__from_when(self, when=None, area: Safe_Id = None):
         path_elements = self.create_path_elements__for_server()
+        if area:
+            path_elements.append(area)
         if self.use_when:
             if not when:
                 when = self.path__for_date_time__now_utc()
             if when:                                            # for the cases when path__for_date_time__now_utc returns and empty value
-                path_elements.append(when)
+                if self.split_when:
+                    path_elements.extend(when.split('/'))
+                else:
+                    path_elements.append(when)
+
+
 
         return path_elements
 
