@@ -89,3 +89,9 @@ class S3__Key_Generator(Type_Safe):
             day = date_today()
         path_elements.append(day)
         return self.create_s3_folder(path_elements)
+
+    @type_safe
+    def s3_folder__for_area(self, area: Safe_Id):
+        path_elements = self.create_path_elements__for_server()
+        path_elements.append(area)
+        return self.create_s3_folder(path_elements)

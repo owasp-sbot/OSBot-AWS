@@ -120,7 +120,10 @@ class S3__DB_Base(Type_Safe):
         if full_path:
             return all_files
         else:
-            return [file.replace(folder, '')[1:] for file in all_files]
+            if folder:
+                return [file.replace(folder, '')[1:] for file in all_files]
+        return []
+
 
     def s3_folder_list(self, folder='', return_full_path=False):
         return self.s3().folder_list(s3_bucket=self.s3_bucket(), parent_folder=folder, return_full_path=return_full_path)
