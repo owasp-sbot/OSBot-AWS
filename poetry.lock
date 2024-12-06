@@ -54,13 +54,13 @@ files = [
 
 [[package]]
 name = "osbot-utils"
-version = "1.62.0"
+version = "1.85.0"
 description = "OWASP Security Bot - Utils"
 optional = false
 python-versions = "<4.0,>=3.7"
 files = [
-    {file = "osbot_utils-1.62.0-py3-none-any.whl", hash = "sha256:1a64a4aefeed4f9182b0ed8326f7785ce72db515acf2c634996d5308c7f88638"},
-    {file = "osbot_utils-1.62.0.tar.gz", hash = "sha256:af265c7b0a9500ec0af01a587840f8b50ae25f7b79467f39cae1697675878aeb"},
+    {file = "osbot_utils-1.85.0-py3-none-any.whl", hash = "sha256:82332c9e4f15c173fe0aa466693251d7876a414f0c73a90ca0f1f9736ea504ec"},
+    {file = "osbot_utils-1.85.0.tar.gz", hash = "sha256:c8fbd8ccb8f5fc68f96801cff9180f1847935876aa8e0896a9de6fec59bc0554"},
 ]
 
 [[package]]
@@ -96,13 +96,13 @@ crt = ["botocore[crt] (>=1.33.2,<2.0a.0)"]
 
 [[package]]
 name = "six"
-version = "1.16.0"
+version = "1.17.0"
 description = "Python 2 and 3 compatibility utilities"
 optional = false
-python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*"
+python-versions = "!=3.0.*,!=3.1.*,!=3.2.*,>=2.7"
 files = [
-    {file = "six-1.16.0-py2.py3-none-any.whl", hash = "sha256:8abb2f1d86890a2dfb989f9a77cfcfd3e47c2a354b01111771326f8aa26e0254"},
-    {file = "six-1.16.0.tar.gz", hash = "sha256:1e61c37477a1626458e36f7b1d82aa5c9b094fa4802892072e49de9c60c4c926"},
+    {file = "six-1.17.0-py2.py3-none-any.whl", hash = "sha256:4721f391ed90541fddacab5acf947aa0d3dc7d27b2e1e8eda2be8970586c3274"},
+    {file = "six-1.17.0.tar.gz", hash = "sha256:ff70335d468e7eb6ec65b95b99d3a2836546063f63acc5171de367e834932a81"},
 ]
 
 [[package]]
