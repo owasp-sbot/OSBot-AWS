@@ -19,6 +19,8 @@ class S3__DB_Base(Type_Safe):
     server_name                    : str  = S3_DB_BASE__SERVER_NAME
     session_kwargs__s3             : Session__Kwargs__S3
 
+    def bucket_name(self):
+        return self.s3_bucket()
 
     @cache_on_self
     def s3(self):
