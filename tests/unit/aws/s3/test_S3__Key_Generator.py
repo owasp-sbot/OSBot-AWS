@@ -157,7 +157,7 @@ class test_S3__Key_Generator(TestCase):
 
             # Test split_when parameter
             _.split_when = True
-            expected = ['root', 'server1', 'test-area', '2021','01','01/12/00']
+            expected = ['root', 'server1', 'test-area', '2021-01-01/12/00']
             result = _.create_path_elements__from_when(when=when, area=area)
 
             assert result == expected
@@ -165,23 +165,23 @@ class test_S3__Key_Generator(TestCase):
             # Test with no area but split_when
             _.split_when = True
             area = None
-            expected = ['root', 'server1', '2021','01','01/12/00']
+            expected = ['root', 'server1', '2021-01-01/12/00']
             result = _.create_path_elements__from_when(when=when, area=area)
             assert result == expected
 
             # Test with use_when=False
             _.use_when = False
-            area = Safe_Id('test-area')
+            area     = Safe_Id('test-area')
             expected = ['root', 'server1', 'test-area']
-            result = _.create_path_elements__from_when(when=when, area=area)
+            result   = _.create_path_elements__from_when(when=when, area=area)
             assert result == expected
 
             # Test with actual datetime path generation
-            _.use_when = True
+            _.use_when   = True
             _.split_when = True
             now_path = _.path__for_date_time__now_utc()
             result = _.create_path_elements__from_when(area=area)
-            assert len(result) == len(now_path.split('/')) + 3  # root, server1, area + split path
+            assert len(result) == len(now_path.split('/')) - 1
             assert result[0] == 'root'
             assert result[1] == 'server1'
             assert result[2] == 'test-area'

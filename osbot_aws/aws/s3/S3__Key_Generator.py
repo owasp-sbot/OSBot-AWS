@@ -41,10 +41,7 @@ class S3__Key_Generator(Type_Safe):
             if not when:
                 when = self.path__for_date_time__now_utc()
             if when:                                            # for the cases when path__for_date_time__now_utc returns and empty value
-                if self.split_when:
-                    path_elements.extend(when.split('-'))
-                else:
-                    path_elements.append(when)
+                path_elements.append(when)
 
 
 
@@ -71,7 +68,10 @@ class S3__Key_Generator(Type_Safe):
         minute_block = self.calculate_minute_block(minute)
         path_components = []
         if self.use_date:
-            path_components.append(date_path   )
+            if self.split_when:
+                path_components.extend(date_path.split('-'))
+            else:
+                path_components.append(date_path   )
         if self.use_hours:
             path_components.append(hour_path   )
         if self.use_minutes:
