@@ -69,5 +69,5 @@ class test_Dynamo_DB__Record(TestCase__Temp_Dynamo_DB_Table):
                                             'timestamp_updated': 0,
                                             'updated_by': ''}}
 
-        new_obj = Dynamo_DB__Record().deserialize_from_dict(json_data)
-        assert self.db_record.serialize_to_dict() ==  new_obj.serialize_to_dict()
+        new_obj = Dynamo_DB__Record().from_json(json_data)
+        assert self.db_record.json() ==  new_obj.json()
