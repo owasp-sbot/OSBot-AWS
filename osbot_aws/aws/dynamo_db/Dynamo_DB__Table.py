@@ -1,4 +1,4 @@
-from osbot_utils.base_classes.Type_Safe                 import Type_Safe
+from osbot_utils.type_safe.Type_Safe                 import Type_Safe
 from osbot_aws.aws.dynamo_db.Dynamo_DB                  import Dynamo_DB
 from osbot_utils.decorators.methods.capture_status      import apply_capture_status
 

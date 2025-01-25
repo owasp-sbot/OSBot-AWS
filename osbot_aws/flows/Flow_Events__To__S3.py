@@ -5,7 +5,7 @@ from osbot_utils.utils.Json                             import  to_json_str
 from osbot_utils.decorators.methods.cache_on_self       import cache_on_self
 from osbot_aws.aws.s3.S3                                import S3
 from osbot_utils.helpers.flows.models.Flow_Run__Event   import Flow_Run__Event
-from osbot_utils.base_classes.Type_Safe                 import Type_Safe
+from osbot_utils.type_safe.Type_Safe                 import Type_Safe
 from osbot_utils.helpers.flows.Flow__Events             import flow_events
 
 S3_Folder_NAME__EVENTS_TO_PROCESS = 'events_to_process'

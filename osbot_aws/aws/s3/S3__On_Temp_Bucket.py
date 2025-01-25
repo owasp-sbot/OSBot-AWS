@@ -1,6 +1,6 @@
 from osbot_aws.AWS_Config               import AWS_Config
 from osbot_aws.aws.s3.S3                import S3
-from osbot_utils.base_classes.Type_Safe import Type_Safe
+from osbot_utils.type_safe.Type_Safe import Type_Safe
 from osbot_utils.utils.Files import is_file
 
 FORMAT__TEMP_BUCKET_NAME = S3_TEMP_BUCK = '{account_id}--osbot--temp--{region_name}'

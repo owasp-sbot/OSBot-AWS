@@ -1,7 +1,7 @@
 from osbot_aws.AWS_Config import AWS_Config
 from osbot_aws.aws.ec2.EC2 import EC2
 from osbot_aws.aws.sts.STS import STS
-from osbot_utils.base_classes.Type_Safe import Type_Safe
+from osbot_utils.type_safe.Type_Safe import Type_Safe
 from osbot_utils.decorators.methods.cache_on_self import cache_on_self
 from osbot_utils.helpers.Local_Cache import Local_Cache
 

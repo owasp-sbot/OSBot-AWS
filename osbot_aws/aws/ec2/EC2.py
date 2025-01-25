@@ -3,7 +3,7 @@ from os import chmod
 import boto3
 from botocore.exceptions import ClientError
 
-from osbot_utils.base_classes.Type_Safe import Type_Safe
+from osbot_utils.type_safe.Type_Safe import Type_Safe
 from osbot_utils.utils.Dev import pprint
 from osbot_utils.utils.Lists import list_index_by, list_get
 

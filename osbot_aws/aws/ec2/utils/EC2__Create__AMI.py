@@ -3,7 +3,7 @@ from osbot_aws.aws.ec2.EC2 import EC2
 from osbot_aws.aws.ec2.EC2_Instance import EC2_Instance
 from osbot_aws.aws.ec2.utils.EC2__Create__Instance import EC2__Create__Instance
 from osbot_aws.utils.Version import Version
-from osbot_utils.base_classes.Type_Safe import Type_Safe
+from osbot_utils.type_safe.Type_Safe import Type_Safe
 from osbot_utils.utils.Misc import random_id, random_uuid_short
 
 # todo , add methods to wait for the ami to be created and then stop the instance

@@ -1,4 +1,4 @@
-from osbot_utils.base_classes.Type_Safe                  import Type_Safe
+from osbot_utils.type_safe.Type_Safe                  import Type_Safe
 from osbot_utils.decorators.lists.group_by               import group_by
 from osbot_utils.decorators.lists.index_by               import index_by
 from osbot_utils.decorators.methods.cache_on_self        import cache_on_self
