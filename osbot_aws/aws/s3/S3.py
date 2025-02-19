@@ -290,8 +290,8 @@ class S3(Type_Safe):
             kwargs_file_copy['ContentType'] = content_type
         return self.client().copy_object(**kwargs_file_copy)
 
-    def file_create_from_bytes(self, file_bytes, bucket, key, metadata=None):
-        return self.file_upload_from_bytes(file_body=file_bytes,  bucket=bucket, key=key, metadata=metadata)
+    def file_create_from_bytes(self, file_bytes, bucket, key, metadata=None, content_type=None):
+        return self.file_upload_from_bytes(file_body=file_bytes,  bucket=bucket, key=key, metadata=metadata, content_type=content_type)
 
     def file_create_from_string_as_gzip(self, file_contents, bucket, key):
         import gzip
@@ -381,11 +381,11 @@ class S3(Type_Safe):
         self.file_upload_to_key(file, bucket, key)                                # upload file
         return key                                                              # return path to file uploaded (if succeeded)
 
-    def file_upload_from_bytes(self, file_body, bucket, key, metadata=None):
-        if type(metadata) is not dict:
-            metadata = {}
+    def file_upload_from_bytes(self, file_body, bucket, key, metadata=None, content_type=None):
+        if type(metadata) is not dict: metadata = {}
+        if content_type   is None    : content_type = S3_DEFAULT_FILE_CONTENT_TYPE
         metadata['created_by'] = 'osbot_aws.aws.s3.S3.file_upload_from_bytes'
-        self.s3().put_object(Body=file_body, Bucket=bucket, Key=key, Metadata=metadata)             # todo: see if there are use cases that need the version_Id, since at moment we only return True (which basically represents a lack of an error/exception)
+        self.s3().put_object(Body=file_body, Bucket=bucket, Key=key, Metadata=metadata, ContentType=content_type)             # todo: see if there are use cases that need the version_Id, since at moment we only return True (which basically represents a lack of an error/exception)
         return True
 
     def file_upload_to_key(self, file, bucket, key, set_content_type=True):
