@@ -1,3 +1,4 @@
+from datetime                                   import datetime
 from osbot_utils.type_safe.decorators.type_safe import type_safe
 from osbot_utils.type_safe.Type_Safe            import Type_Safe
 from osbot_utils.helpers.Safe_Id                import Safe_Id
@@ -61,7 +62,7 @@ class S3__Key_Generator(Type_Safe):
     def path__for_date_time__now_utc(self):
         return self.path__for_date_time(utc_now())
 
-    def path__for_date_time(self, date_time):
+    def path__for_date_time(self, date_time: datetime):
         minute       = date_time.minute
         date_path    = date_time.strftime('%Y-%m-%d')                          # Format the date as YYYY-MM-DD
         hour_path    = date_time.strftime('%H')                                # Format the hour
@@ -95,3 +96,7 @@ class S3__Key_Generator(Type_Safe):
         path_elements = self.create_path_elements__for_server()
         path_elements.append(area)
         return self.create_s3_folder(path_elements)
+
+    @type_safe
+    def s3_folder__for_date_time(self, date_time: datetime):
+        return self.path__for_date_time(date_time)
