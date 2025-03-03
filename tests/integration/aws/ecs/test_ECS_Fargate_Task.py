@@ -1,6 +1,7 @@
 import pytest
 from unittest                           import TestCase
-from osbot_utils.testing.Duration       import Duration
+
+from osbot_utils.helpers.duration.Duration import Duration
 from osbot_utils.utils.Misc             import wait
 from osbot_aws.aws.ecs.ECS_Fargate_Task import ECS_Fargate_Task
 from osbot_aws.aws.iam.IAM              import IAM
