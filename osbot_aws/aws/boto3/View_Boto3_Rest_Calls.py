@@ -1,9 +1,9 @@
 from functools                                  import wraps
 from botocore.client                            import BaseClient
 from osbot_utils.helpers.Print_Table            import Print_Table
+from osbot_utils.helpers.duration.Duration      import Duration
 from osbot_utils.utils.Dev                      import pformat
 from osbot_utils.base_classes.Kwargs_To_Self    import Kwargs_To_Self
-from osbot_utils.testing.Duration               import Duration
 from osbot_utils.testing.Hook_Method            import Hook_Method
 from osbot_utils.utils.Objects                  import obj_data
 

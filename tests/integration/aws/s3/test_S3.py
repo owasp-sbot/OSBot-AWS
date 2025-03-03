@@ -1,11 +1,12 @@
 import os
-from unittest                                       import TestCase
-from osbot_local_stack.local_stack.Local_Stack      import Local_Stack
-from osbot_aws.AWS_Config                           import aws_config
-from osbot_aws.aws.s3.S3                            import S3
-from osbot_utils.context_managers.capture_duration  import capture_duration
-from osbot_utils.testing.Temp_File                  import Temp_File
-from osbot_utils.utils.Misc                         import random_text
+from unittest                                                 import TestCase
+from osbot_local_stack.local_stack.Local_Stack                import Local_Stack
+from osbot_aws.AWS_Config                                     import aws_config
+from osbot_aws.aws.s3.S3                                      import S3
+from osbot_utils.helpers.duration.decorators.capture_duration import capture_duration
+
+from osbot_utils.testing.Temp_File                            import Temp_File
+from osbot_utils.utils.Misc                                   import random_text
 
 
 TEST__AWS_ACCOUNT_ID              = '000011110000'
