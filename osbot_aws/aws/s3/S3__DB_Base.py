@@ -129,11 +129,11 @@ class S3__DB_Base(Type_Safe):
         return self.s3().folder_list(s3_bucket=self.s3_bucket(), parent_folder=folder, return_full_path=return_full_path)
 
     def s3_save_bytes(self,data, s3_key, metadata=None , content_type=None):
-        kwargs = dict(bucket       = self.s3_bucket(),
-                      key          = s3_key        ,
-                      file_body    = data          ,
-                      metadata     = metadata      ,
-                      content_type = content_type  )
+        kwargs = dict(bucket       = self.s3_bucket()                           ,
+                      key          = s3_key                                     ,
+                      file_body    = data                                       ,
+                      metadata     = metadata                                   ,
+                      content_type = str(content_type) if content_type else None)
         return self.s3().file_upload_from_bytes(**kwargs)
 
     def s3_save_data(self, data, s3_key, metadata=None, content_type=None):
@@ -145,7 +145,7 @@ class S3__DB_Base(Type_Safe):
         if type(data) == bytes:
             kwargs['file_body'   ] = data
             kwargs['metadata'    ] = metadata
-            kwargs['content_type'] = content_type
+            kwargs['content_type'] = str(content_type) if content_type else None
             return self.s3().file_upload_from_bytes(**kwargs)
         else:
             data_as_str = json_dumps(data)
