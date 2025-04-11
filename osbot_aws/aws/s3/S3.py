@@ -1,24 +1,10 @@
-import  gzip
-import  json
-import  os
-import  tempfile
-from    io                                                  import BytesIO
-from    gzip                                                import GzipFile
-from    boto3.s3.transfer                                   import TransferConfig
-from    botocore.errorfactory                               import ClientError
+from osbot_utils.type_safe.Type_Safe                     import Type_Safe
+from osbot_utils.decorators.lists.group_by               import group_by
+from osbot_utils.decorators.lists.index_by               import index_by
+from osbot_utils.decorators.methods.cache_on_self        import cache_on_self
+from osbot_utils.decorators.methods.remove_return_value  import remove_return_value
+from osbot_aws.aws.session.Session__Kwargs__S3           import Session__Kwargs__S3
 
-from osbot_aws.aws.boto3.View_Boto3_Rest_Calls import print_boto3_calls
-from    osbot_utils.base_classes.Type_Safe                  import Type_Safe
-from    osbot_utils.decorators.lists.group_by               import group_by
-from    osbot_utils.decorators.lists.index_by               import index_by
-from    osbot_aws.apis.Session                              import Session
-from    osbot_utils.decorators.methods.cache_on_self        import cache_on_self
-from    osbot_utils.decorators.methods.remove_return_value  import remove_return_value
-from    osbot_utils.testing.Temp_File                       import Temp_File
-from    osbot_utils.utils.Files                             import Files, file_extension
-from    osbot_utils.utils.Zip                               import zip_folder
-
-from osbot_aws.aws.session.Session__Kwargs__S3 import Session__Kwargs__S3
 
 S3_DEFAULT_FILE_CONTENT_TYPE = 'binary/octet-stream'
 S3_HTML_PAGE_CONTENT_TYPE    = 'text/html; charset=utf-8'
@@ -81,17 +67,36 @@ class S3(Type_Safe):
 
     @cache_on_self
     def s3_resource(self):                                      # todo refactor this method to be called resource()
+        from osbot_aws.apis.Session import Session
         return Session().resource('s3')
 
     @cache_on_self
     def session(self):
+        from osbot_aws.apis.Session import Session
         return Session()
 
     def bucket_delete_all_files(self, bucket):
-        s3_keys = self.find_files(bucket)
-        if s3_keys:
-            result = self.files_delete(bucket, s3_keys)
-            return result
+        if self.bucket_versioning__enabled(bucket):
+            return self.bucket_delete_all_files__with_versioning(bucket)
+        else:
+            s3_keys = self.find_files(bucket)
+            if s3_keys:
+                result = self.files_delete(bucket, s3_keys)
+                return result
+            return True
+
+    def bucket_delete_all_files__with_versioning(self, bucket):
+        response          = self.client().list_object_versions(Bucket=bucket)            # List all object versions
+        objects_to_delete = []                                                  # Collect all version IDs and delete markers
+        if 'Versions' in response:
+            for version in response['Versions']:
+                objects_to_delete.append({'Key': version['Key'], 'VersionId': version['VersionId']})
+        if 'DeleteMarkers' in response:
+            for marker in response['DeleteMarkers']:
+                objects_to_delete.append({'Key': marker['Key'], 'VersionId': marker['VersionId']})
+
+        if objects_to_delete:                                           # Delete all collected objects
+            self.files_delete_objects(bucket, objects_to_delete)
         return True
 
     @remove_return_value(field_name='ResponseMetadata')
@@ -130,9 +135,13 @@ class S3(Type_Safe):
     def bucket_arn(self,bucket):
         return 'arn:aws:s3:::{0}'.format(bucket)
 
-    def bucket_create(self, bucket, region):
+    def bucket_create(self, bucket, region, versioning=False):
         try:
-            location=self.s3().create_bucket(Bucket=bucket,CreateBucketConfiguration={'LocationConstraint': region }).get('Location')
+            kwargs   = dict(Bucket                    = bucket                         ,
+                            CreateBucketConfiguration = {'LocationConstraint': region })
+            location = self.client().create_bucket(**kwargs).get('Location')
+            if versioning:
+                self.bucket_versioning__enable(bucket)
             return { 'status':'ok', 'data':location}
         except Exception as error:
             return {'status': 'error', 'data': '{0}'.format(error)}
@@ -152,6 +161,18 @@ class S3(Type_Safe):
 
     def bucket_not_exists(self, bucket_name):
         return self.bucket_exists(bucket_name) is False
+
+    def bucket_versioning__enable(self, bucket_name):
+        self.client().put_bucket_versioning(Bucket=bucket_name,
+                                            VersioningConfiguration={'Status': 'Enabled'})
+        return self.bucket_versioning__enabled(bucket_name)
+
+    def bucket_versioning__enabled(self, bucket_name):
+        return self.bucket_versioning__status(bucket_name) == 'Enabled'
+
+    def bucket_versioning__status(self, bucket_name):
+        response = self.client().get_bucket_versioning(Bucket=bucket_name)
+        return response.get('Status') or 'Not Enabled'
 
     def buckets(self):
         data = []
@@ -194,9 +215,12 @@ class S3(Type_Safe):
     def find_files(self, bucket, prefix='', filter=''):
         return list({ item['Key'] for item in self.files_raw(bucket, prefix, filter) })
 
-    def file_bytes(self, bucket, key):
-        obj = self.s3().get_object(Bucket=bucket, Key=key)                      # get object data from s3
-        return obj['Body'].read()                                               # returns all bytes
+    def file_bytes(self, bucket, key, version_id=None):
+        kwargs = dict(Bucket=bucket, Key=key)
+        if version_id:
+            kwargs['VersionId'] = version_id
+        obj = self.s3().get_object(**kwargs)    # get object data from s3
+        return obj['Body'].read()                                                   # returns all bytes
 
     def file_content_type(self, bucket, key):
         return self.file_details(bucket, key).get('ContentType')
@@ -211,10 +235,14 @@ class S3(Type_Safe):
         return self.file_copy(**file_copy_kwargs)
 
 
-    def file_contents(self, bucket, key, encoding='utf-8'):
-        return self.file_bytes(bucket,key).decode(encoding)                      # extract body and decode it
+    def file_contents(self, bucket, key, encoding='utf-8', version_id=None):
+        return self.file_bytes(bucket,key, version_id).decode(encoding)                      # extract body and decode it
 
     def file_contents_from_gzip(self, bucket, key):
+        from gzip import GzipFile
+
+        from io import BytesIO
+
         obj = self.s3().get_object(Bucket=bucket, Key=key)                    # get object data from s3
         bytestream = BytesIO(obj['Body'].read())
         return GzipFile(None, 'rb', fileobj=bytestream).read().decode('utf-8')
@@ -234,6 +262,9 @@ class S3(Type_Safe):
         return None
 
     def file_download_to(self, bucket, key, target_file, use_cache = False):
+        import os
+        from botocore.errorfactory import ClientError
+
         try:
             if use_cache is True:
                 if os.path.exists(target_file):
@@ -259,10 +290,14 @@ class S3(Type_Safe):
             kwargs_file_copy['ContentType'] = content_type
         return self.client().copy_object(**kwargs_file_copy)
 
-    def file_create_from_bytes(self, file_bytes, bucket, key, metadata=None):
-        return self.file_upload_from_bytes(file_body=file_bytes,  bucket=bucket, key=key, metadata=metadata)
+    def file_create_from_bytes(self, file_bytes, bucket, key, metadata=None, content_type=None):
+        return self.file_upload_from_bytes(file_body=file_bytes,  bucket=bucket, key=key, metadata=metadata, content_type=content_type)
 
     def file_create_from_string_as_gzip(self, file_contents, bucket, key):
+        import gzip
+        import os
+        import tempfile
+
         tmp_path = tempfile.NamedTemporaryFile().name
 
         with gzip.open(tmp_path,'w') as file:                       # create gzip on tmp_file
@@ -273,6 +308,9 @@ class S3(Type_Safe):
 
 
     def file_create_from_string (self, file_contents, bucket, key):
+        from osbot_utils.utils.Files       import file_extension
+        from osbot_utils.testing.Temp_File import Temp_File
+
         with Temp_File(contents=file_contents, extension=file_extension(key)) as temp_file:
             return self.file_upload_to_key(temp_file.file_path, bucket,key)
 
@@ -282,9 +320,13 @@ class S3(Type_Safe):
         return result.get('ResponseMetadata').get('HTTPStatusCode') == 204
 
     def files_delete(self, bucket, keys):
-        delete_keys = {'Objects': [{'Key': key } for key  in keys]}
-        result      = self.client().delete_objects(Bucket=bucket, Delete=delete_keys)     # todo: see if there is a way to get feedback on the delete status
-        return result.get('ResponseMetadata').get('HTTPStatusCode') == 200  #       since we also get 200 when the key value is wrong
+        objects =  [{'Key': key } for key  in keys]
+        return self.files_delete_objects(bucket, objects)
+
+
+    def files_delete_objects(self, bucket, objects):
+        result = self.client().delete_objects(Bucket=bucket,Delete={'Objects': objects})  # todo: see if there is a way to get feedback on the delete status
+        return result.get('ResponseMetadata').get('HTTPStatusCode') == 200   #       since we also get 200 when the key value is wrong
 
     @remove_return_value('ResponseMetadata')
     def file_details(self, bucket, key):
@@ -320,7 +362,17 @@ class S3(Type_Safe):
     def file_not_exists(self,bucket, key):
         return self.file_exists(bucket=bucket, key=key) is False
 
+    def file_versions(self, bucket, key):
+        response = self.client().list_object_versions(Bucket=bucket, Prefix=key)
+        return response.get('Versions')
+
+    def file_versions__delete_markers(self, bucket, key):
+        response = self.client().list_object_versions(Bucket=bucket, Prefix=key)
+        return response.get('DeleteMarkers')
+
     def file_upload(self,file , bucket, folder):
+        import os
+
         if not os.path.isfile(file):                                            # check that file to upload exists locally
             return None                                                         # if not return None
 
@@ -329,18 +381,16 @@ class S3(Type_Safe):
         self.file_upload_to_key(file, bucket, key)                                # upload file
         return key                                                              # return path to file uploaded (if succeeded)
 
-    def file_upload_from_bytes(self, file_body, bucket, key, metadata=None):
-        if type(metadata) is not dict:
-            metadata = {}
+    def file_upload_from_bytes(self, file_body, bucket, key, metadata=None, content_type=None):
+        if type(metadata) is not dict: metadata = {}
+        if content_type   is None    : content_type = S3_DEFAULT_FILE_CONTENT_TYPE
         metadata['created_by'] = 'osbot_aws.aws.s3.S3.file_upload_from_bytes'
-        self.s3().put_object(Body=file_body, Bucket=bucket, Key=key, Metadata=metadata)
+        self.s3().put_object(Body=file_body, Bucket=bucket, Key=key, Metadata=metadata, ContentType=content_type)             # todo: see if there are use cases that need the version_Id, since at moment we only return True (which basically represents a lack of an error/exception)
         return True
 
-    # def file_upload_to_key(self, file, bucket, key):
-    #     self.s3().upload_file(file, bucket, key)                                # upload file
-    #     return True                                                             # return true (if succeeded)
-
     def file_upload_to_key(self, file, bucket, key, set_content_type=True):
+        from osbot_utils.utils.Files import file_extension
+
         extra_args   = None
         if set_content_type:
             extension = file_extension(file)
@@ -354,6 +404,8 @@ class S3(Type_Safe):
         return True
 
     def file_upload_as_temp_file(self, file, bucket):
+        from osbot_utils.utils.Files import Files
+
         key = '{0}/{1}'.format(self.tmp_file_folder, Files.temp_filename(Files.file_extension(file)))
         self.file_upload_to_key(file, bucket, key)
         return key
@@ -444,12 +496,17 @@ class S3(Type_Safe):
         return folders
 
     def folder_upload (self, folder, s3_bucket, s3_key):
+        import os
+        from osbot_utils.utils.Zip import zip_folder
+
         file = zip_folder(folder)
         self.file_upload_to_key(file, s3_bucket, s3_key)
         os.remove(file)
         return self
 
     def policy(self, s3_bucket):
+        import json
+
         try:
             return json.loads(self.s3().get_bucket_policy(Bucket=s3_bucket).get('Policy'))
         except:
@@ -478,6 +535,8 @@ class S3(Type_Safe):
         return new_list
 
     def policy_create(self, s3_bucket, statements):
+        import json
+
         #if (type(statements) is str) is False:
         #    statements = json.dumps(statements)
 
@@ -487,4 +546,6 @@ class S3(Type_Safe):
         #return policy
 
     def transfer_config(self):
+        from boto3.s3.transfer import TransferConfig
+
         return TransferConfig(use_threads=self.use_threads)

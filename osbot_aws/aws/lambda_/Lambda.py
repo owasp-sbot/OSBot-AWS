@@ -1,7 +1,7 @@
 import json
 
 
-from osbot_utils.base_classes.Type_Safe                 import Type_Safe
+from osbot_utils.type_safe.Type_Safe                 import Type_Safe
 from osbot_utils.utils.Lists                            import unique
 from osbot_utils.utils.Json                             import json_loads, json_parse
 from osbot_utils.decorators.lists.group_by              import group_by

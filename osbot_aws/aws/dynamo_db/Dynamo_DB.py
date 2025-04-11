@@ -1,7 +1,4 @@
-import uuid
-from boto3.dynamodb.types                               import TypeDeserializer, TypeSerializer
-from osbot_aws.apis.Session                             import Session
-from osbot_utils.base_classes.Type_Safe                 import Type_Safe
+from osbot_utils.type_safe.Type_Safe                 import Type_Safe
 from osbot_utils.decorators.methods.cache_on_self       import cache_on_self
 from osbot_utils.decorators.methods.remove_return_value import remove_return_value
 
@@ -17,10 +14,14 @@ class Dynamo_DB(Type_Safe):
     # helpers
     @cache_on_self
     def client(self):
+        from osbot_aws.apis.Session import Session
+
         return Session().client(service_name='dynamodb', region_name=self.region_name, endpoint_url=self.endpoint_url)
 
     @cache_on_self
     def client__dynamo_streams(self):
+        from osbot_aws.apis.Session import Session
+
         return Session().client('dynamodbstreams')
 
     # main methods
@@ -43,6 +44,7 @@ class Dynamo_DB(Type_Safe):
         return True                                                #       so unless there was an exception thrown, assume it did
 
     def document_deserialize(self, item):
+        from boto3.dynamodb.types import TypeDeserializer
         if item:
             deserializer = TypeDeserializer()
             return {k: deserializer.deserialize(v) for k, v in item.items()}
@@ -50,6 +52,8 @@ class Dynamo_DB(Type_Safe):
 
     @remove_return_value('ResponseMetadata')
     def document_update(self, table_name, key_name, key_value, update_data):
+        from boto3.dynamodb.types import TypeSerializer
+
         # Initialize TypeSerializer to convert Python types to DynamoDB types
         serializer = TypeSerializer()
 
@@ -89,6 +93,8 @@ class Dynamo_DB(Type_Safe):
         return response
 
     def document_serialize(self, document):
+        from boto3.dynamodb.types import TypeSerializer
+
         serializer = TypeSerializer()
         return {k: serializer.serialize(v) for k, v in document.items()}
 
@@ -290,4 +296,5 @@ class Dynamo_DB(Type_Safe):
         return self.client__dynamo_streams().list_streams().get('Streams')
 
     def random_id(self):
+        import uuid
         return str(uuid.uuid4())

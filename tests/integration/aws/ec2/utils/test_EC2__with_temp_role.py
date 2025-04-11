@@ -57,7 +57,7 @@ class test_EC2__with_temp_role(TestCase):
 
             assert client.meta.service_model.service_name == 'ec2'
 
-            assert type(_.key_pairs()) is list
+            assert type(_.key_pairs()) is list   # todo fix LocalStack issue that is happening here: (InternalFailure) when calling the DescribeKeyPairs operation: Service 'ec2' is not enabled. Please check your 'SERVICES' configuration variable.
 
 
 

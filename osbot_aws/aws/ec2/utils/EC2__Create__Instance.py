@@ -2,7 +2,7 @@ from os import chmod
 
 from osbot_aws.aws.ec2.AMI import AMI
 from osbot_aws.aws.ec2.EC2                          import EC2
-from osbot_utils.base_classes.Type_Safe             import Type_Safe
+from osbot_utils.type_safe.Type_Safe             import Type_Safe
 from osbot_utils.decorators.methods.cache_on_self   import cache_on_self
 from osbot_utils.utils.Files import current_temp_folder, folder_create, parent_folder, file_exists, file_create, \
     file_not_exists

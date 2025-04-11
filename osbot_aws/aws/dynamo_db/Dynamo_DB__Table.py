@@ -1,16 +1,17 @@
-import uuid
-
+from osbot_utils.type_safe.Type_Safe                 import Type_Safe
 from osbot_aws.aws.dynamo_db.Dynamo_DB                  import Dynamo_DB
-from osbot_aws.aws.dynamo_db.Dynamo_DB__Record          import Dynamo_DB__Record
-from osbot_utils.base_classes.Kwargs_To_Self            import Kwargs_To_Self
 from osbot_utils.decorators.methods.capture_status      import apply_capture_status
-from osbot_utils.utils.Misc                             import timestamp_utc_now, wait_for
+
 
 PRIMARY_KEY_NAME = 'id'
 PRIMARY_KEY_TYPE = 'S'
 
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from osbot_aws.aws.dynamo_db.Dynamo_DB__Record          import Dynamo_DB__Record
+
 @apply_capture_status
-class Dynamo_DB__Table(Kwargs_To_Self):
+class Dynamo_DB__Table(Type_Safe):
     dynamo_db  : Dynamo_DB
     key_name   : str
     key_type   : str
@@ -32,12 +33,13 @@ class Dynamo_DB__Table(Kwargs_To_Self):
         documents_to_add = []
         for document in documents:
             if self.key_name not in document:                               # If key is present,
-                document = {self.key_name: self.dynamo_db.random_id(),      # add it as a generate a random UUID as the key
+                document = {self.key_name: self.dynamo_db.random_id(),      # add random UUID as the key
                             **document}                                     # to the current document object
             documents_to_add.append(document)
         return self.dynamo_db.documents_add(table_name=self.table_name, documents=documents_to_add)
 
-    def add_record(self, record : Dynamo_DB__Record):
+    def add_record(self, record : 'Dynamo_DB__Record'):
+        from osbot_utils.utils.Misc import timestamp_utc_now
         metadata = record.metadata
         metadata.timestamp_created = timestamp_utc_now()
         document   = record.serialize_to_dict()
@@ -132,6 +134,8 @@ class Dynamo_DB__Table(Kwargs_To_Self):
         return self.update_table(gsi_updates=gsi_updates).get('data')
 
     def gsi_wait_for_status(self, status='ACTIVE', max_attempts=20, delay=0.05):        # todo: see if these values need to be higher when dealing with AWS DynamoDB (vs the dynamodb-local)
+        from osbot_utils.utils.Misc import wait_for
+
         for i in range(max_attempts):
             all_match = False
             for gsi in self.gsis().get('data'):

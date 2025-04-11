@@ -1,16 +1,10 @@
-import pytest
-
-from osbot_aws.aws.dynamo_db.domains.DyDB__Table__Resources import DyDB__Table__Resources, KEY_NAME__TABLE__RESOURCES, \
-    Resource__Config
-from osbot_aws.aws.dynamo_db.models.DyDB__Document import DyDB__Document
-from osbot_aws.aws.dynamo_db.models.DyDB__Resource import DyDB__Resource
-from osbot_aws.testing.TestCase__Dynamo_DB import TestCase__Dynamo_DB
-from osbot_aws.testing.TestCase__Dynamo_DB__Local import TestCase__Dynamo_DB__Local
-from osbot_utils.base_classes.Kwargs_To_Self import Kwargs_To_Self
-from osbot_utils.testing.Duration import Duration
-from osbot_utils.utils.Dev import pprint
-from osbot_utils.utils.Misc import list_set
-from osbot_utils.utils.Objects import obj_info, base_types
+from osbot_aws.aws.dynamo_db.domains.DyDB__Table__Resources import DyDB__Table__Resources, KEY_NAME__TABLE__RESOURCES, Resource__Config
+from osbot_aws.aws.dynamo_db.models.DyDB__Document          import DyDB__Document
+from osbot_aws.aws.dynamo_db.models.DyDB__Resource          import DyDB__Resource
+from osbot_aws.testing.TestCase__Dynamo_DB__Local           import TestCase__Dynamo_DB__Local
+from osbot_utils.base_classes.Kwargs_To_Self                import Kwargs_To_Self
+from osbot_utils.utils.Misc                                 import list_set
+from osbot_utils.utils.Objects                              import base_types
 
 
 

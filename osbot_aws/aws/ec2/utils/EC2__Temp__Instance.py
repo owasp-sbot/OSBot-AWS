@@ -1,7 +1,7 @@
 from osbot_aws.aws.ec2.EC2 import EC2
 from osbot_aws.aws.ec2.EC2_Instance import EC2_Instance
 from osbot_aws.aws.ec2.utils.EC2__Create__Instance import EC2__Create__Instance
-from osbot_utils.base_classes.Type_Safe import Type_Safe
+from osbot_utils.type_safe.Type_Safe import Type_Safe
 
 
 class EC2__Temp__Instance(Type_Safe):

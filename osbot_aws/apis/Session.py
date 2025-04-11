@@ -11,7 +11,6 @@ from osbot_aws.exceptions.Session_Bad_Credentials       import Session_Bad_Crede
 from osbot_aws.exceptions.Session_Client_Creation_Fail  import Session_Client_Creation_Fail
 from osbot_aws.exceptions.Session_No_Credentials        import Session_No_Credentials
 
-#ENV_NAME__OSBOT_AWS__SESSION__SET_SIGNATURE_VERSION = 'OSBOT_AWS__SESSION__SET_SIGNATURE_VERSION'      # todo: see if this needed (see comments in default_config method)
 
 class Session(Kwargs_To_Self):                  # todo: refactor to AWS_Session so it doesn't clash with boto3.Session object
     account_id      = None
@@ -26,6 +25,7 @@ class Session(Kwargs_To_Self):                  # todo: refactor to AWS_Session 
 
     @cache
     def botocore_session(self, aws_access_key_id=None , aws_secret_access_key=None , aws_session_token= None, region_name= None, botocore_session=None, profile_name=None ):
+        import boto3
         kwargs = {  "aws_access_key_id"     : aws_access_key_id     ,
                     "aws_secret_access_key" : aws_secret_access_key ,
                     "aws_session_token"     : aws_session_token     ,
@@ -67,6 +67,7 @@ class Session(Kwargs_To_Self):                  # todo: refactor to AWS_Session 
 
     @cache_on_self
     def session(self) -> boto3.Session:
+        import boto3
         return boto3.Session()
 
     def session_default(self):
@@ -81,12 +82,12 @@ class Session(Kwargs_To_Self):                  # todo: refactor to AWS_Session 
             raise Session_Client_Creation_Fail(status=status)
 
     def client_boto3(self,service_name, aws_access_key_id=None, aws_secret_access_key=None, region_name=None, config=None, endpoint_url=None, profile_name=None):                   # todo: refactor add this to resource_boto3
+        import boto3
         try:
             self.config       = config       or self.config       or self.default_config                ()
             self.region_name  = region_name  or self.region_name  or aws_config.aws_session_region_name ()
             self.profile_name = profile_name or self.profile_name or aws_config.aws_session_profile_name()
-            self.endpoint_url = endpoint_url or self.endpoint_url or aws_config.aws_endpoint_url()
-
+            self.endpoint_url = endpoint_url or self.endpoint_url or self.resolve_endpoint_url_for_service(service_name)
 
             client_kwargs = dict( service_name = service_name , config = self.config)
 
@@ -128,10 +129,25 @@ class Session(Kwargs_To_Self):                  # todo: refactor to AWS_Session 
 
     def profiles_map(self):
         return get_session()._build_profile_map()
-
         #return self.boto_session()._build_profile_map()
 
+    def resolve_endpoint_url_for_service(self, service):                                   # todo: find a better way to do this mapping to the local_stack services that are supported
+        supported_local_stack_services = ['s3', 'lambda','logs']                           # for now only these 3 services have been tested with local stack , all others will ahve the default
+        endpoint_url = aws_config.aws_endpoint_url()
+        if endpoint_url == 'http://localhost:4566':
+            if service in supported_local_stack_services:
+                return endpoint_url
+            else:
+                region = aws_config.aws_session_region_name()
+                if region:
+                    return f'https://{service}.{region}.amazonaws.com'
+                else:
+                    return None
+        else:
+            return endpoint_url
+
     def resource_boto3(self,service_name, profile_name=None, region_name=None):                 # todo: refactor with client_boto3
+        import boto3
         try:
             profile_name = profile_name or aws_config.aws_session_profile_name()
             region_name  = region_name  or aws_config.aws_session_region_name()
@@ -146,6 +162,7 @@ class Session(Kwargs_To_Self):                  # todo: refactor to AWS_Session 
 
     def resource(self, service_name,profile_name=None, region_name=None):
         return self.resource_boto3(service_name,profile_name,region_name).get('resource')
+
 
     # client helpers
 

@@ -1,5 +1,5 @@
 from osbot_utils.utils.Env                      import load_dotenv
-from osbot_utils.base_classes.Type_Safe         import Type_Safe
+from osbot_utils.type_safe.Type_Safe         import Type_Safe
 from osbot_aws.apis.shell.Shell_Client          import Shell_Client
 from osbot_aws.helpers.Lambda_Layer_Create      import Lambda_Layer_Create
 from osbot_aws.OSBot_Setup                      import OSBot_Setup

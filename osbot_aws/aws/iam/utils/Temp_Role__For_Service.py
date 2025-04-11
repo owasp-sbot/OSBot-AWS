@@ -1,7 +1,7 @@
 from osbot_aws.AWS_Config import AWS_Config
 from osbot_aws.aws.iam.IAM_Assume_Role              import IAM_Assume_Role
 from osbot_aws.aws.iam.utils.Temp_Role__For_Service__Config import Temp_Role__For_Service__Config
-from osbot_utils.base_classes.Type_Safe             import Type_Safe
+from osbot_utils.type_safe.Type_Safe             import Type_Safe
 from osbot_utils.decorators.methods.cache_on_self   import cache_on_self
 from osbot_utils.utils.Env                          import load_dotenv
 

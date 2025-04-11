@@ -1,12 +1,7 @@
-from unittest import TestCase
-
 import pytest
-
-from osbot_aws.AWS_Config import AWS_Config
-from osbot_aws.testing.Pytest import skip_pytest___aws_pytest_user_name__is_not_set
-from osbot_utils.utils.Dev import pprint
-from osbot_utils.utils.Misc import list_set
-
+from unittest                                        import TestCase
+from osbot_aws.AWS_Config                            import AWS_Config
+from osbot_aws.testing.Pytest                        import skip_pytest___aws_pytest_user_name__is_not_set
 from tests.integration._caches.OSBot__Unit_Test_User import OSBot__Unit_Test_User, OSBOT__TEST__USER_NAME
 
 

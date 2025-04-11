@@ -1,7 +1,7 @@
 from osbot_aws.aws.dynamo_db.domains.DyDB__Table import DyDB__Table
-from osbot_utils.decorators.lists.group_by import group_by
-from osbot_utils.decorators.lists.index_by import index_by
-from osbot_utils.utils.Misc import list_set
+from osbot_utils.decorators.lists.group_by       import group_by
+from osbot_utils.decorators.lists.index_by       import index_by
+
 
 
 class DyDB__Table_With_GSI(DyDB__Table):
@@ -49,9 +49,13 @@ class DyDB__Table_With_GSI(DyDB__Table):
         return self.indexes(index_by='IndexName')
 
     def indexes_names(self):
+        from osbot_utils.utils.Misc import list_set
+
         return list_set(self.indexes__by_index_name())
 
     def indexes_status(self):
+        from osbot_utils.utils.Misc import list_set
+
         return list_set(self.indexes(index_by='IndexStatus'))
 
     def table_status(self):

@@ -80,6 +80,7 @@ jobs:
 
 
   publish-to-docker-hub:
+    if: False
     runs-on: ubuntu-latest
 
     steps:

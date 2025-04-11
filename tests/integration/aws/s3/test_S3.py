@@ -1,54 +1,80 @@
-import pytest
-
-from osbot_aws.helpers.Test_Helper import Test_Helper
 import os
-import unittest
+from unittest                                                 import TestCase
+from osbot_local_stack.local_stack.Local_Stack                import Local_Stack
+from osbot_aws.AWS_Config                                     import aws_config
+from osbot_aws.aws.s3.S3                                      import S3
+from osbot_utils.helpers.duration.decorators.capture_duration import capture_duration
 
-from osbot_aws.aws.s3.S3                import S3
-from osbot_aws.testing.TestCase__Minio  import TestCase__Minio
-from osbot_utils.testing.Temp_File import Temp_File
-from osbot_utils.utils.Dev import pprint
-from osbot_utils.utils.Misc             import random_text
+from osbot_utils.testing.Temp_File                            import Temp_File
+from osbot_utils.utils.Misc                                   import random_text
 
-#@pytest.mark.skip('Fix tests')
-class Test_S3(TestCase__Minio):
+
+TEST__AWS_ACCOUNT_ID              = '000011110000'
+LOCAL_STACK__BUCKET_NAME__POSTFIX = '.s3.localhost.localstack.cloud:4566/'
+
+class Test_S3(TestCase):
+
 
     @classmethod
     def setUpClass(cls):
-        super().setUpClass()
+        cls.local_stack = Local_Stack().activate()
+        assert cls.local_stack.is_local_stack_configured_and_available() is True
         cls.s3 = S3()
-        cls.temp_file_name         = "aaa.txt"  # todo: fix test that is leaving this file in the file system
-        cls.temp_file_contents     = "some contents"
-        cls.test_bucket            = "osbot-temp-bucket"
-        cls.test_folder            = "unit_tests"
-        cls.test_s3_key            = f"/{cls.test_folder}/{cls.temp_file_name}"
-        assert cls.s3.bucket_create(cls.test_bucket, cls.aws_default_region).get('status') == 'ok'
+        assert cls.s3.client().meta.endpoint_url == 'http://localhost:4566'
+        cls.temp_file_name       = "aaa.txt"  # todo: fix test that is leaving this file in the file system
+        cls.temp_file_contents   = "some contents"
+        cls.test_bucket          = "osbot-temp-bucket"
+        cls.test_folder          = "unit_tests"
+        cls.test_region          = aws_config.region_name() or  'eu-west-1'       # todo: figure out why other regions like 'eu-west-2' trigger an localstack's "IllegalLocationConstraintException error (when calling the CreateBucket operation: The unspecified location constraint is incompatible for the region specific endpoint this request was sent to)",
+        cls.test_s3_key          = f"{cls.test_folder}/{cls.temp_file_name}"
+        cls.versioning           = True
+        if cls.s3.bucket_not_exists(cls.test_bucket):
+            create_bucket_result = cls.s3.bucket_create(cls.test_bucket, cls.test_region, versioning=cls.versioning)
+            assert create_bucket_result.get('status') == 'ok'
         assert cls.s3.file_create_from_string(file_contents=cls.temp_file_contents, bucket=cls.test_bucket, key=cls.test_s3_key) is True
 
 
     @classmethod
     def tearDownClass(cls):
         assert cls.s3.file_delete  (bucket=cls.test_bucket, key=cls.test_s3_key) is True
+
+        assert cls.s3.bucket_delete_all_files(cls.test_bucket                  ) is True
         assert cls.s3.bucket_delete(cls.test_bucket                            ) is True
         assert cls.s3.file_exists  (bucket=cls.test_bucket, key=cls.test_s3_key) is False
-        super().tearDownClass()
+        assert cls.local_stack.is_local_stack_configured_and_available() is True
+        cls.local_stack.deactivate()                                      # for now deactivate # todo remove other classes dependency on Minio
+        assert cls.local_stack.is_local_stack_configured_and_available() is False
+        #super().tearDownClass()
 
     def test__ctor__(self):
         assert self.s3.__class__.__name__ == 'S3'
 
     def test_bucket_create_delete(self):
         bucket_name = random_text('temp_bucket').lower().replace('_','-')
-        region      = 'eu-west-2'
-        assert self.s3.bucket_exists(bucket_name) is False
-        assert self.s3.bucket_create(bucket_name, region) == { 'status':'ok', 'data':f'/{bucket_name}'}
-        assert self.s3.bucket_exists(bucket_name) is True
-        assert self.s3.bucket_delete(bucket_name) is True
-        assert self.s3.bucket_exists(bucket_name) is False
+        assert self.s3.bucket_exists(bucket_name                  ) is False
+        assert self.s3.bucket_create(bucket_name, self.test_region) == { 'status':'ok', 'data':f'http://{bucket_name + LOCAL_STACK__BUCKET_NAME__POSTFIX}'}
+        assert self.s3.bucket_exists(bucket_name                  ) is True
+        assert self.s3.bucket_delete(bucket_name                  ) is True
+        assert self.s3.bucket_exists(bucket_name                  ) is False
+
+    def test_bucket_exists(self):
+        bucket_name = random_text('temp_bucket').lower().replace('_', '-')
+        with capture_duration() as duration_1:
+            assert self.s3.bucket_exists(bucket_name) is False
+
+        with capture_duration() as duration_2:
+            assert S3().bucket_exists(bucket_name) is False
+
+        assert duration_1.seconds < 0.01  # reusing object should take less than 20ms           (it is usually about 0.004)
+        assert duration_2.seconds < 0.04  # craeting new object should take less than 40ms      (it is usually about 0.013)
+
+
+
 
     def test_bucket_notification(self):
         assert self.s3.bucket_notification(self.test_bucket) == {}      # todo: add test when bucket_notification returns values
 
-    def test_bucket_notification_create(self):                          # todo: add test that checks this funcionality in S3 and find one notification that works in Minio
+    def test_bucket_notification_create(self):                          # todo: add test that uses a temp lambda so that we can test the full workflow
         bucket_name = self.test_bucket
         lambda_arn  = 'arn:aws:lambda:eu-west-1:311800962295:function:gw_bot_lambdas_aws_on_s3_event'
         events      = ['s3:ObjectCreated:*']
@@ -60,9 +86,9 @@ class Test_S3(TestCase__Minio):
                                 'Filter'           : { 'Key': { 'FilterRules': [ {'Name' : 'prefix',
                                                                                   'Value': prefix }]}}}]}
         result = self.s3.bucket_notification_create(bucket_name, notification_config)
-        assert result == { 'error': 'An error occurred (UnsupportedNotification) when calling the '
-                           'PutBucketNotificationConfiguration operation: MinIO server does '
-                           'not support Topic or Cloud Function based notifications.'}
+        assert result == {'error': 'An error occurred (InvalidArgument) when calling the '
+                                   'PutBucketNotificationConfiguration operation: Unable to validate '
+                                    'the following destination configurations'}
 
         # todo: add test that implements the full event raise workflow below
         # 'LambdaFunctionConfigurations': [ { 'Events': ['s3:ObjectCreated:*'],
@@ -113,12 +139,14 @@ class Test_S3(TestCase__Minio):
             assert self.s3.file_exists(s3_bucket, s3_key                        ) is True             # confirm file exists (in s3)
             assert self.s3.file_contents(s3_bucket, s3_key                      ) == file_contents    # confirm file contents are expected
             file_details = self.s3.file_details(s3_bucket, s3_key )
-            assert file_details== { 'AcceptRanges': 'bytes'                         ,
-                                   'ContentLength': 105                             ,
-                                   'ContentType'  : 'binary/octet-stream'           ,
-                                   'ETag'         : file_details.get('ETag')        ,
-                                   'LastModified' : file_details.get('LastModified'),
-                                   'Metadata'     : {}                              }
+            assert file_details== { 'AcceptRanges'        : 'bytes'                         ,
+                                   'ContentLength'        : 105                             ,
+                                   'ContentType'          : 'binary/octet-stream'           ,
+                                   'ETag'                 : file_details.get('ETag')        ,
+                                   'LastModified'         : file_details.get('LastModified'),
+                                   'Metadata'             : {}                              ,
+                                    'ServerSideEncryption': 'AES256'                        ,
+                                    'VersionId'           : file_details.get('VersionId')   }         # this exists because we have versioning enabled in this test bucket
 
 
             assert self.s3.file_delete(s3_bucket, s3_key                        ) is True             # delete file

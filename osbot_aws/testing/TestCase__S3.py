@@ -3,7 +3,7 @@ from osbot_aws.aws.s3.S3                            import S3
 from osbot_aws.aws.s3.S3__with_temp_role            import S3__with_temp_role
 from osbot_aws.testing.Pytest                       import skip_pytest___aws_pytest_user_name__is_not_set
 from osbot_aws.testing.TestCase__Boto3_Cache        import TestCase__Boto3_Cache
-from osbot_utils.base_classes.Type_Safe             import Type_Safe
+from osbot_utils.type_safe.Type_Safe             import Type_Safe
 
 
 class TestCase__S3(TestCase__Boto3_Cache, Type_Safe):
