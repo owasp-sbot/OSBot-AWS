@@ -1,14 +1,11 @@
 import time
 from typing                                     import List
-
+from osbot_utils.type_safe.Type_Safe            import Type_Safe
 from osbot_utils.type_safe.decorators.type_safe import type_safe
-
 from osbot_aws.apis.Session                     import Session
-from osbot_utils.base_classes.Kwargs_To_Self    import Kwargs_To_Self
 
 
-
-class Cloud_Front(Kwargs_To_Self):
+class Cloud_Front(Type_Safe):
 
     def client(self):
         return Session().client('cloudfront',region_name='us-east-1')
