@@ -1,6 +1,5 @@
 from osbot_utils.type_safe.decorators.type_safe import type_safe
 from osbot_utils.utils.Env                      import load_dotenv
-from osbot_utils.type_safe.Type_Safe         import Type_Safe
 from osbot_aws.apis.shell.Shell_Client          import Shell_Client
 from osbot_aws.helpers.Lambda_Layer_Create      import Lambda_Layer_Create
 from osbot_aws.OSBot_Setup                      import OSBot_Setup
@@ -10,7 +9,7 @@ from osbot_aws.helpers.Lambda_Package           import Lambda_Package
 # todo: refactor lambda_name to be a Type_Safe variable, but that will clash with the current lambda_name() function (which is used in other projects)
 #       stage and the other self.* vars set in the __init__ should also be Type_Safe variables
 
-class Deploy_Lambda(Type_Safe):
+class Deploy_Lambda:
 
     def __init__(self, handler, stage=None, lambda_name=None, **kwargs):
         super().__init__(**kwargs)
@@ -34,6 +33,9 @@ class Deploy_Lambda(Type_Safe):
 
         if len(self.lambda_name()) > 64:
             raise ValueError(f'Lambda name too long, it was f{len(self.lambda_name())} and the max is 64: {self.lambda_name()}')
+
+    def __enter__(self                        ): return self
+    def __exit__ (self, type, value, traceback): pass
 
     def add_function_source_code(self):
         root_module_name = self.handler.__module__.split(".").pop(0)
