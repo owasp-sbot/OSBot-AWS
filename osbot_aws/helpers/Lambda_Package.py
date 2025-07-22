@@ -2,6 +2,8 @@ import os
 import importlib
 import site
 
+from osbot_utils.type_safe.decorators.type_safe import type_safe
+
 from osbot_aws.aws.lambda_.Lambda_Layer         import Lambda_Layer
 from osbot_utils.testing.Temp_Folder            import Temp_Folder
 from osbot_utils.testing.Temp_Zip               import Temp_Zip
@@ -42,10 +44,12 @@ class Lambda_Package:
     def reset (self             ): return self.aws_lambda.update_lambda_code()              # this will trigger a reset and force cold start on next execution
 
     # main methods
-    def add_layer(self, layer_arn):
+    @type_safe
+    def add_layer(self, layer_arn: str):
         self.aws_lambda.add_layer(layer_arn)
 
-    def add_layers(self, layers_arn):
+    @type_safe
+    def add_layers(self, layers_arn: list):
         for layer_arn in layers_arn:
             self.aws_lambda.add_layer(layer_arn)
         return self

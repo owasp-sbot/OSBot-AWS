@@ -1,27 +1,50 @@
-from osbot_utils.utils.Misc             import list_set
-from osbot_utils.utils.Json             import json_save_file, json_load_file
-from osbot_aws.aws.lambda_.Lambda_Layer import Lambda_Layer
-from osbot_utils.utils.Process          import Process
-from osbot_utils.utils.Files            import path_combine, folder_create, folder_sub_folders, folders_names, \
-    folder_exists, folder_delete_recursively, file_exists
+import os
+
+from osbot_utils.type_safe.Type_Safe        import Type_Safe
+from osbot_utils.utils.Misc                 import list_set
+from osbot_utils.utils.Json                 import json_save_file, json_load_file
+from osbot_aws.aws.lambda_.Lambda_Layer     import Lambda_Layer
+from osbot_utils.utils.Process              import Process
+from osbot_utils.utils.Files                import path_combine, folder_create, folder_sub_folders, folders_names, folder_exists, folder_delete_recursively, file_exists
 
 from osbot_aws.helpers.Lambda_Layers_Local import Lambda_Layers_Local
 
-class Lambda_Layer_Create:
+LAMBDA_PREINSTALLED_PACKAGES = ['awslambdaric'       ,                  # these are packages that already exist in lambdas
+                                'boto3'              ,                  #     see test test_6__invoke__lambda_shell__list_python_packages for how to get this list
+                                'botocore'           ,
+                                'dateutil'           ,                  # alias for python-dateutil
+                                'jmespath'           ,
+                                'pip'                ,
+                                'python_dateutil'    ,
+                                's3transfer'         ,
+                                'setuptools'         ,
+                                'simplejson'         ,
+                                'six'                ,
+                                'snapshot-restore-py',
+                                'urllib3'            ]
 
-    FILE_INSTALLED_PACKAGES = '_osbot_installed_packages.json'
+FILE_INSTALLED_PACKAGES = '_osbot_installed_packages.json'
 
-    def __init__(self, layer_name):
-        self.layer_name          = layer_name
+class Lambda_Layer_Create(Type_Safe):
+    layer_name          : str
+    lambda_layer        : Lambda_Layer = None
+    lambda_layers_local : Lambda_Layers_Local
+    target_aws_lambda   : bool = True
+
+
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        #self.layer_name          = layer_name
         self.lambda_layer        = Lambda_Layer(self.layer_name)
-        self.lambda_layers_local = Lambda_Layers_Local()
-        self.target_aws_lambda   = True
+        #self.lambda_layers_local = Lambda_Layers_Local()
+        #self.target_aws_lambda   = True
 
-    def __enter__(self):
-        return self
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        pass
+    # def __enter__(self):
+    #     return self
+    #
+    # def __exit__(self, exc_type, exc_val, exc_tb):
+    #     pass
 
     def add_package(self, package):
         if type(package) is dict:
@@ -49,10 +72,15 @@ class Lambda_Layer_Create:
         error       = result.get('stderr')
         exists      = result.get('status') == 'ok' and  ('ERROR' in error)  # todo: add better detection to see if package was installed ok
         installed   = True
+        removed     = self.remove_preinstalled_packages_in_lambda_environment()
+        if removed:
+            output += f"\nRemoved pre-installed packages: {', '.join(removed)}"
+
         result      = dict(exists            = exists           ,
                            installed         = installed        ,
                            name              = package_name     ,
                            output            = output           ,
+                           removed           = removed          ,
                            error             = error            ,
                            target_aws_lambda = target_aws_lambda)
 
@@ -135,7 +163,7 @@ class Lambda_Layer_Create:
         return folder_exists(self.path_layer_folder())
 
     def path_installed_packages(self):
-        return path_combine(self.path_layer_folder(), self.FILE_INSTALLED_PACKAGES)
+        return path_combine(self.path_layer_folder(), FILE_INSTALLED_PACKAGES)
 
     def path_lambda_dependencies(self):
         return self.lambda_layers_local.path_lambda_dependencies()
@@ -154,3 +182,21 @@ class Lambda_Layer_Create:
         folder_create(path_layer_folder)                                        # make sure folder_exists
         json_save_file(installed_packages, path_installed_packages, pretty=True)             # save data into path_installed_packages file
         return installed_packages
+
+    def remove_preinstalled_packages_in_lambda_environment(self): # Remove packages that are pre-installed in Lambda from the layer folder
+        removed_packages = []
+        layer_folder = self.path_layer_folder()
+
+        if not folder_exists(layer_folder):
+            return removed_packages
+
+        for folder_name in os.listdir(layer_folder):                                    # Get all folders in the layer directory
+            folder_path = path_combine(layer_folder, folder_name)
+
+            package_name = folder_name.split('-')[0].lower()                            # Check if it's a package folder (either package name or .dist-info)
+
+            if package_name in [pkg.lower() for pkg in LAMBDA_PREINSTALLED_PACKAGES]:
+                folder_delete_recursively(folder_path)                                  # Remove the folder
+                removed_packages.append(folder_name)
+
+        return removed_packages

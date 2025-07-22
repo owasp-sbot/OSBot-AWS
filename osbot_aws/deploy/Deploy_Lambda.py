@@ -1,3 +1,4 @@
+from osbot_utils.type_safe.decorators.type_safe import type_safe
 from osbot_utils.utils.Env                      import load_dotenv
 from osbot_utils.type_safe.Type_Safe         import Type_Safe
 from osbot_aws.apis.shell.Shell_Client          import Shell_Client
@@ -6,9 +7,12 @@ from osbot_aws.OSBot_Setup                      import OSBot_Setup
 from osbot_aws.apis.test_helpers.Temp_Aws_Roles import Temp_Aws_Roles
 from osbot_aws.helpers.Lambda_Package           import Lambda_Package
 
+# todo: refactor lambda_name to be a Type_Safe variable, but that will clash with the current lambda_name() function (which is used in other projects)
+#       stage and the other self.* vars set in the __init__ should also be Type_Safe variables
+
 class Deploy_Lambda(Type_Safe):
 
-    def __init__(self, handler, stage=None, **kwargs):
+    def __init__(self, handler, stage=None, lambda_name=None, **kwargs):
         super().__init__(**kwargs)
         load_dotenv()
         self.osbot_setup          = OSBot_Setup()
@@ -22,9 +26,14 @@ class Deploy_Lambda(Type_Safe):
 
         self.stage                = stage
         self.role_arn             = Temp_Aws_Roles().for_lambda_invocation__role_arn()
-        # self.layers               = []
-        # self.env_variables        = {}
+
         self.package              = self.get_package()
+        if lambda_name:                                        # if we have provided a name, use it internally
+            self.package.aws_lambda.name = lambda_name
+            self.module_name             = lambda_name
+
+        if len(self.lambda_name()) > 64:
+            raise ValueError(f'Lambda name too long, it was f{len(self.lambda_name())} and the max is 64: {self.lambda_name()}')
 
     def add_function_source_code(self):
         root_module_name = self.handler.__module__.split(".").pop(0)
@@ -37,7 +46,8 @@ class Deploy_Lambda(Type_Safe):
         self.package.add_layer(layer_arn)
         return self
 
-    def add_layers(self, layers_arn):
+    @type_safe
+    def add_layers(self, layers_arn: list):
         for layer_arn in layers_arn:
             self.package.add_layer(layer_arn)
         return self
