@@ -137,8 +137,9 @@ class S3(Type_Safe):
 
     def bucket_create(self, bucket, region, versioning=False):
         try:
-            kwargs   = dict(Bucket                    = bucket                         ,
-                            CreateBucketConfiguration = {'LocationConstraint': region })
+            kwargs   = dict(Bucket = bucket)
+            if region != 'us-east-1':                                                   # handle weird behaviour in AWS S3 where the
+                kwargs['CreateBucketConfiguration'] = {'LocationConstraint': region}    #      location contraint should not be set when the region target is us-east-1
             location = self.client().create_bucket(**kwargs).get('Location')
             if versioning:
                 self.bucket_versioning__enable(bucket)

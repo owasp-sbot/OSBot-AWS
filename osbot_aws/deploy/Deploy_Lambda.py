@@ -28,6 +28,7 @@ class Deploy_Lambda:
 
         self.package              = self.get_package()
         if lambda_name:                                        # if we have provided a name, use it internally
+            self.package.lambda_name     = lambda_name
             self.package.aws_lambda.name = lambda_name
             self.module_name             = lambda_name
 
