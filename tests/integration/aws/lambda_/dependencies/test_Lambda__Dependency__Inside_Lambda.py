@@ -15,8 +15,6 @@ from osbot_aws.aws.lambda_.dependencies.Lambda__Dependency__Inside_Lambda       
 from tests.integration.aws.lambda_.dependencies.test_Lambda__Dependency__Local  import LAMBDA_DEPENDENCY__SMALL_TEST__PACKAGE
 from tests.integration.osbot_aws__objs_for__integration_tests                   import setup__osbot_aws__integration_tests
 
-from osbot_utils.utils.Dev import pprint
-
 class test_Lambda__Dependency__Inside_Lambda(TestCase):
 
     @classmethod
@@ -32,7 +30,7 @@ class test_Lambda__Dependency__Inside_Lambda(TestCase):
             assert base_types(_)                == [Lambda__Dependency__Base, Type_Safe, object]
             assert type(_.lambda_dependency_s3) is Lambda__Dependency__S3
 
-    def test_1__setup__install_and_upload(self):
+    def test_01__setup__install_and_upload(self):
         with self.lambda_dependency.dependency__local as _:                 #
             _.setup  ()
             _.install()
@@ -46,23 +44,14 @@ class test_Lambda__Dependency__Inside_Lambda(TestCase):
             assert _.exists() is True
             assert _.files__paths() == installed_files
 
-    def test_2__load(self):
+    def test_02__load(self):
         with self.lambda_dependency_inside_lambda as _:
             result = _.load()
             assert _.exists()     is True
             assert len(_.files()) == 32
             assert result         == True
 
-    def test_dependencies_folder(self):
-        with self.lambda_dependency_inside_lambda as _:
-            assert _.dependencies_folder() == f'{current_temp_folder()}/osbot-aws__lambda-dependencies__inside-lambda'
-            assert _.dependencies_folder() == f'{current_temp_folder()}/{FOLDER_NAME__LAMBDA_DEPENDENCIES__INSIDE_LAMBDA}'
-
-    def test_folder(self):
-        with self.lambda_dependency_inside_lambda as _:
-            assert _.folder() == f'{_.dependencies_folder()}/colorama==0.4.6'
-
-    def test_3__temp_lambda__with_no_dependencies(self):
+    def test_03__temp_lambda__with_no_dependencies(self):
         def run(event, context):
             return 'this has no dependencies'
 
@@ -77,7 +66,7 @@ class test_Lambda__Dependency__Inside_Lambda(TestCase):
         assert _.tmp_folder.exists() is False
         assert _.exists           () is False
 
-    def test_4__temp_lambda__boto_3__list_buckets(self):
+    def test_04__temp_lambda__boto_3__list_buckets(self):
         def run(event, context):
             import boto3
             s3       = boto3.client('s3')
@@ -91,7 +80,7 @@ class test_Lambda__Dependency__Inside_Lambda(TestCase):
         with Temp_Lambda(wait_max_attempts=100, lambda_code=lambda_code) as _:
             assert _.invoke() == self.lambda_dependency.dependency__s3.s3.buckets()
 
-    def test_5__temp_lambda__boto_3__get_dependency_bytes(self):
+    def test_05__temp_lambda__boto_3__get_dependency_bytes(self):
         with self.lambda_dependency.dependency__s3 as _:
             assert _.bucket__name() == '000000000000--osbot-lambdas--us-east-1'
             assert  _.path       () == 'lambdas-dependencies/colorama==0.4.6.zip'
@@ -117,7 +106,7 @@ class test_Lambda__Dependency__Inside_Lambda(TestCase):
 
             assert zipped_bytes == self.lambda_dependency.dependency__s3.bytes()        # confirm it matches the zipped dependency bytes
 
-    def test_6__temp_lambda__boto_3__import_dependency(self):
+    def test_06__temp_lambda__boto_3__import_dependency(self):
         def run(event, context):
             import os
             import boto3
@@ -180,7 +169,7 @@ class test_Lambda__Dependency__Inside_Lambda(TestCase):
             assert _.delete()                              is True
             assert _.exists()                              is False
 
-    def test_8__using_lambda_deploy__run_function_code(self):
+    def test_08__using_lambda_deploy__run_function_code(self):
 
         def run(event, context):
             return 'hello from inside lambda in test_8'
@@ -205,7 +194,7 @@ class test_Lambda__Dependency__Inside_Lambda(TestCase):
                 assert _.exists()                                    is False
 
 
-    def test_9__using_lambda_deploy__load_dependency__using__osbot_aws(self):
+    def test_09__using_lambda_deploy__load_dependency__using__osbot_aws(self):
         def run(event, context):
             from osbot_aws.aws.lambda_.dependencies.Lambda__Dependency__Inside_Lambda import Lambda__Dependency__Inside_Lambda
             package_name                     = 'colorama==0.4.6'
@@ -229,3 +218,85 @@ class test_Lambda__Dependency__Inside_Lambda(TestCase):
                 assert _.invoke() == ("<module 'colorama' from "
                                       "'/tmp/osbot-aws__lambda-dependencies__inside-lambda/colorama==0.4.6/colorama/__init__.py'>")
                 assert _.delete() is True
+
+    def test_10__using_lambda_deploy__load_dependency__using__osbot_aws__load_dependencies(self):
+        def run(event, context):
+            from osbot_aws.aws.lambda_.dependencies.Lambda__Dependencies import load_dependency
+            package_name                     = 'colorama==0.4.6'
+
+            load_dependency(package_name)
+            # noinspection PyUnresolvedReferences
+            import colorama
+            return f'{colorama}'
+
+        source_code = function_source_code(run)
+        module_name = 'test_Lambda__Dependency__Inside_Lambda'
+        file_name   = module_name + '.py'
+
+        with Temp_File(file_name=file_name, contents=source_code, return_file_path=True) as temp_file:
+            with Deploy_Lambda(handler=run) as _:
+                _.add_file     (temp_file)
+                _.add_osbot_aws()
+                assert _.deploy() is True
+                assert _.invoke() == ("<module 'colorama' from "
+                                      "'/tmp/osbot-aws__lambda-dependencies__inside-lambda/colorama==0.4.6/colorama/__init__.py'>")
+                #assert _.delete() is True
+
+    def test_11__using_lambda_deploy__confirm_we_can_upload_file_with_only_boto3_code(self):
+
+        def run(event, context):                        # this runs inside the lambda environment
+            import os
+            import types
+            assert sorted(os.listdir('/var/task')) == [ 'boto3__lambda.py'                         ,             # confirm the files are added ok to the '/var/task' (which is the folder lambda deployment copies the files from the provided zip folder
+                                                        'test_Lambda__Dependency__Inside_Lambda.py']
+            # noinspection PyUnresolvedReferences
+            import boto3__lambda                                                   # confirm we can import the boto3__lambda module
+            assert type(boto3__lambda) is types.ModuleType                         # and that it is a module
+            return boto3__lambda.ping()
+
+        # the rest of this code runs locally
+        from osbot_aws.aws.lambda_ import boto3__lambda
+        source_code = function_source_code(run)
+        module_name = 'test_Lambda__Dependency__Inside_Lambda'
+        file_name   = module_name + '.py'
+        file_to_add = boto3__lambda.__file__
+
+
+        with Temp_File(file_name=file_name, contents=source_code, return_file_path=True) as lambda_handler:
+            with Deploy_Lambda(handler=run) as _:
+                _.add_file(file_to_add)
+                _.add_file     (lambda_handler)
+                assert _.files() == [ '/boto3__lambda.py'    ,
+                                      '/test_Lambda__Dependency__Inside_Lambda.py']
+                assert _.deploy() is True
+                assert _.invoke() == boto3__lambda.ping() == 'pong'
+                assert _.info().get('Configuration').get('CodeSize') < 1300                                              # confirm that size of the code uploaded is still very small
+                assert _.delete() is True
+
+    def test_12__using_lambda_deploy__load_dependency__using__only_boto_3_code(self):
+        def run(event, context):
+            # noinspection PyUnresolvedReferences
+            from boto3__lambda import load_dependency
+            return load_dependency('colorama==0.4.6')
+
+        source_code = function_source_code(run)
+        module_name = 'test_Lambda__Dependency__Inside_Lambda'
+        file_name   = module_name + '.py'
+
+        with Temp_File(file_name=file_name, contents=source_code, return_file_path=True) as lambda_handler:
+            with Deploy_Lambda(handler=run) as _:
+                _.add_file__boto3__lambda()
+                _.add_file     (lambda_handler)
+                assert _.deploy() is True
+                assert _.invoke() == 'colorama==0.4.6 (loaded from S3)'
+                assert _.info().get('Configuration').get('CodeSize') < 1300                                              # confirm that size of the code uploaded is still very small
+                assert _.delete() is True
+
+    def test_dependencies_folder(self):
+        with self.lambda_dependency_inside_lambda as _:
+            assert _.dependencies_folder() == f'{current_temp_folder()}/osbot-aws__lambda-dependencies__inside-lambda'
+            assert _.dependencies_folder() == f'{current_temp_folder()}/{FOLDER_NAME__LAMBDA_DEPENDENCIES__INSIDE_LAMBDA}'
+
+    def test_folder(self):
+        with self.lambda_dependency_inside_lambda as _:
+            assert _.folder() == f'{_.dependencies_folder()}/colorama==0.4.6'

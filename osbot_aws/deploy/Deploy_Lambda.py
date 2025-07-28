@@ -1,3 +1,4 @@
+from osbot_aws.aws.lambda_                      import boto3__lambda
 from osbot_utils.type_safe.decorators.type_safe import type_safe
 from osbot_utils.utils.Env                      import load_dotenv
 from osbot_aws.apis.shell.Shell_Client          import Shell_Client
@@ -41,12 +42,19 @@ class Deploy_Lambda:
     def add_function_source_code(self):
         root_module_name = self.handler.__module__.split(".").pop(0)
         self.package.add_module(root_module_name)
+        return self
 
     def add_file(self, file_path):
         self.package.add_file(source=file_path)
+        return self
+
+    def add_file__boto3__lambda(self):
+        self.add_file(boto3__lambda.__file__)
+        return self
 
     def add_folder(self, source, ignore=None):
         self.package.add_folder(source=source, ignore=ignore)
+        return self
 
     def add_layer(self, layer_arn):
         self.package.add_layer(layer_arn)
