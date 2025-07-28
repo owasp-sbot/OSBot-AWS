@@ -1,6 +1,8 @@
 from osbot_utils.type_safe.Type_Safe import Type_Safe
 
-DEFAULT__AWS_DEFAULT_REGION = 'eu-west-1'
+DEFAULT__AWS_DEFAULT_REGION         = 'eu-west-1'
+DEFAULT__BUCKET_NAME__INFIX__LAMBDA = 'osbot-lambdas'
+
 
 ENV_NAME__AWS_ACCOUNT_ID     = "AWS_ACCOUNT_ID"
 ENV_NAME__AWS_ENDPOINT_URL   = 'AWS_ENDPOINT_URL'
@@ -76,7 +78,7 @@ class AWS_Config(Type_Safe):
         import os
         bucket_name = os.getenv('OSBOT_LAMBDA_S3_BUCKET')
         if bucket_name is None:
-            bucket_name = f'{self.aws_session_account_id()}--osbot-lambdas--{self.region_name()}' # this is a needed breaking change
+            bucket_name = f'{self.aws_session_account_id()}--{DEFAULT__BUCKET_NAME__INFIX__LAMBDA}--{self.region_name()}'
         return bucket_name
 
     def resolve_temp_data_bucket_name(self):
