@@ -65,8 +65,10 @@ class Lambda_Package:
         return self
 
     def add_module(self,module_name):
-        module_path = importlib.import_module(module_name).__path__[0]     # get folder of module
-        self.add_folder(module_path)                                       # add module's folder
+        module = importlib.import_module(module_name)
+        if hasattr(module, '__path__'):                                         # if the module as a __path__
+            module_path = module.__path__[0]                                    # get folder of module
+            self.add_folder(module_path)                                        # add module's folder
         return self
 
     def add_modules(self, modules_names):

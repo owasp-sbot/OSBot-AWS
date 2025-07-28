@@ -42,6 +42,9 @@ class Deploy_Lambda:
         root_module_name = self.handler.__module__.split(".").pop(0)
         self.package.add_module(root_module_name)
 
+    def add_file(self, file_path):
+        self.package.add_file(source=file_path)
+
     def add_folder(self, source, ignore=None):
         self.package.add_folder(source=source, ignore=ignore)
 
@@ -77,6 +80,9 @@ class Deploy_Lambda:
 
     def exists(self):
         return self.package.aws_lambda.exists()
+
+    def info(self):
+        return self.lambda_function().info()
 
     def invoke(self, params=None):
         return self.lambda_function().invoke(params)

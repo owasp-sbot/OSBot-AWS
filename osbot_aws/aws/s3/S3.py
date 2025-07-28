@@ -8,7 +8,7 @@ from osbot_aws.aws.session.Session__Kwargs__S3           import Session__Kwargs_
 
 S3_DEFAULT_FILE_CONTENT_TYPE = 'binary/octet-stream'
 S3_HTML_PAGE_CONTENT_TYPE    = 'text/html; charset=utf-8'
-S3_FILES_CONTENT_TYPES       = { '.js'  : 'application/javascript; charset=utf-8',
+S3_FILES_CONTENT_TYPES       = { '.js'  : 'application/javascript; charset=utf-8',          # todo: add Enum version of these mappings
                                  '.jpg' : 'image/jpeg'                           ,
                                  '.jpeg': 'image/jpeg'                           ,
                                  '.png' : 'image/png'                            ,

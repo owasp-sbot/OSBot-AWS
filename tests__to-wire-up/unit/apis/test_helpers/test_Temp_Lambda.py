@@ -10,7 +10,7 @@ class test_Temp_Lambda(Test_Helper):
     def setup_test_enviroment():            # todo: refactor into separate class
         print()
         temp_aws_roles =  Temp_Aws_Roles()
-        if temp_aws_roles.for_lambda_invocation__not_exists():
+        if temp_aws_roles.for_lambda_invocation__not_exists():      # todo: this should not be needed when using LocalStack
             temp_aws_roles.for_lambda_invocation__create()
 
     @classmethod
@@ -21,6 +21,6 @@ class test_Temp_Lambda(Test_Helper):
         super().setUp()
 
     def test_simple_execution(self):
-        with Temp_Lambda() as _:
+        with Temp_Lambda(wait_max_attempts=100) as _:
             assert 'temp_lambda_' in _.aws_lambda.name
             assert _.invoke({'name':'world'}) == 'hello world'
