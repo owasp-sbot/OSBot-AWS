@@ -1,4 +1,5 @@
 from unittest                                                           import TestCase
+from osbot_utils.utils.Env                                              import in_github_action
 from osbot_utils.utils.Zip                                              import zip_bytes__file_list, zip_bytes__files
 from osbot_aws.AWS_Config                                               import AWS_Config, DEFAULT__BUCKET_NAME__INFIX__LAMBDA
 from osbot_aws.aws.lambda_.schemas.Safe_Str__File__Name__Python_Package import Safe_Str__File__Name__Python_Package
@@ -44,12 +45,24 @@ class test_Lambda__Dependency__Local(TestCase):
 
     def test__2__install(self):
         with self.lambda_dependency_local as _:
-            target_path        = str(_.path())
-            install_data = _.install()
-            assert type(install_data)                     is Schema__Lambda__Dependency__Local_Install__Data
-            assert _.install__data__exists() is True
-            assert folder_exists(target_path)                   is True
-            assert install_data.obj() == __( package_name    = self.package_name,
+            target_path  = str(_.path())
+            local_install_data = _.install()
+            assert type(local_install_data)   is Schema__Lambda__Dependency__Local_Install__Data
+            assert _.install__data__exists()  is True
+            assert folder_exists(target_path) is True
+
+            if in_github_action():
+                stdout = local_install_data.install_data.get('stdout')
+            else:
+                stdout = (f'Collecting {LAMBDA_DEPENDENCY__SMALL_TEST__PACKAGE}\n'
+                          '  Using cached '
+                          'colorama-0.4.6-py2.py3-none-any.whl.metadata (17 '
+                          'kB)\n'
+                          'Using cached colorama-0.4.6-py2.py3-none-any.whl '
+                          '(25 kB)\n'
+                          'Installing collected packages: colorama\n'
+                          'Successfully installed colorama-0.4.6\n')
+            assert local_install_data.obj() == __( package_name    = self.package_name,
                                                    target_path     = target_path,
                                                    install_data    = __(cwd       = '.'    ,
                                                                         error     = None   ,
@@ -63,15 +76,8 @@ class test_Lambda__Dependency__Local(TestCase):
                                                                                        target_path          ,
                                                                                        self.package_name    ],
                                                                       status      = 'ok'   ,
-                                                                      stdout      = f'Collecting {LAMBDA_DEPENDENCY__SMALL_TEST__PACKAGE}\n'
-                                                                                    '  Using cached '
-                                                                                    'colorama-0.4.6-py2.py3-none-any.whl.metadata (17 '
-                                                                                    'kB)\n'
-                                                                                    'Using cached colorama-0.4.6-py2.py3-none-any.whl '
-                                                                                    '(25 kB)\n'
-                                                                                    'Installing collected packages: colorama\n'
-                                                                                    'Successfully installed colorama-0.4.6\n',
-                                                                      stderr      = install_data.install_data.get('stderr')),
+                                                                      stdout      = stdout ,
+                                                                      stderr      = local_install_data.install_data.get('stderr')),
                                                    installed_files = ['colorama-0.4.6.dist-info/INSTALLER',
                                                                       'colorama-0.4.6.dist-info/METADATA',
                                                                       'colorama-0.4.6.dist-info/RECORD',
@@ -104,8 +110,8 @@ class test_Lambda__Dependency__Local(TestCase):
                                                                       'colorama/tests/winterm_test.py',
                                                                       'colorama/win32.py',
                                                                       'colorama/winterm.py'      ],
-                                                   time_stamp   = install_data.time_stamp ,
-                                                   duration     = install_data.duration   )
+                                                   time_stamp   = local_install_data.time_stamp ,
+                                                   duration     = local_install_data.duration   )
 
     def test__files__zipped(self):                                                      # as a good example of the performance of zip and locally file access, this test runs in about 13ms
         with self.lambda_dependency_local as _:

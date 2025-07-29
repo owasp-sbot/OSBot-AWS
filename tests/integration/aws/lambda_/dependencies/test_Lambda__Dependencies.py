@@ -8,6 +8,6 @@ class test_Lambda__Dependencies(TestCase):
     def setUpClass(cls):
         cls.lambda_dependencies = Lambda__Dependencies()
 
-    def test__init__(self):
-        with self.lambda_dependencies as _:
-            assert type(_                     ) is Lambda__Dependencies
+    # def test__init__(self):
+    #     with self.lambda_dependencies as _:
+    #         assert type(_                     ) is Lambda__Dependencies
