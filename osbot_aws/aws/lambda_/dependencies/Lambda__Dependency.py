@@ -13,3 +13,17 @@ class Lambda__Dependency(Type_Safe):
         super().__init__(package_name=package_name)
         self.dependency__local = Lambda__Dependency__Local(package_name=package_name)
         self.dependency__s3    = Lambda__Dependency__S3   (package_name=package_name)
+
+    def install_and_upload(self):
+        with self.dependency__local as _:
+            _.setup()
+            local_result = _.install()
+
+        with self.dependency__s3 as _:
+            _.setup()
+            if _.exists() is False:
+                file_bytes = self.dependency__local.files__zipped()
+                _.upload(file_bytes=file_bytes)
+            s3_exists = _.exists()
+
+        return dict(local_result=local_result, s3_exists=s3_exists)

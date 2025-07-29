@@ -1,9 +1,12 @@
+import boto3, zipfile, sys, io, os
+
 def ping():
     return 'pong'
 
 
 def load_dependency(package_name):                                              # Load a single dependency from S3
-    import boto3, zipfile, sys, io, os
+    if os.getenv('AWS_REGION') is None:                                         # skip if we are not running inside an AWS Lambda function
+        return
 
     sts         = boto3.client('sts')                                           # Get account and region for bucket name
     account_id  = sts.get_caller_identity()['Account']
