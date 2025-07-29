@@ -1,5 +1,6 @@
 import os
 from unittest                                                 import TestCase
+from osbot_utils.utils.Env                                    import in_github_action
 from osbot_aws.AWS_Config                                     import aws_config
 from osbot_aws.aws.s3.S3                                      import S3
 from osbot_utils.helpers.duration.decorators.capture_duration import capture_duration
@@ -66,7 +67,11 @@ class Test_S3(TestCase):
             assert S3().bucket_exists(bucket_name) is False
 
         assert duration_1.seconds < 0.01  # reusing object should take less than 20ms           (it is usually about 0.004)
-        assert duration_2.seconds < 0.04  # craeting new object should take less than 40ms      (it is usually about 0.013)
+
+        if in_github_action():
+            assert duration_2.seconds < 0.25    # the fist time this runs in GH Actions can take a bit longer
+        else:
+            assert duration_2.seconds < 0.04    # creating new object should take less than 40ms      (it is usually about 0.013)
 
 
 
