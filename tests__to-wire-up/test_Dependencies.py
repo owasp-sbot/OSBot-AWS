@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from osbot_aws.Dependencies import Dependencies
+from osbot_aws.aws.lambda_.Dependencies import Dependencies
 
 
 class test_Dependencies(TestCase):

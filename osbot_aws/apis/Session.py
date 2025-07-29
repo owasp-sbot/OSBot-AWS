@@ -11,6 +11,7 @@ from osbot_aws.exceptions.Session_Bad_Credentials       import Session_Bad_Crede
 from osbot_aws.exceptions.Session_Client_Creation_Fail  import Session_Client_Creation_Fail
 from osbot_aws.exceptions.Session_No_Credentials        import Session_No_Credentials
 
+URL__LOCAL_STACK__ENDPOINT_URL = 'http://localhost:4566'
 
 class Session(Kwargs_To_Self):                  # todo: refactor to AWS_Session so it doesn't clash with boto3.Session object
     account_id      = None
@@ -132,9 +133,9 @@ class Session(Kwargs_To_Self):                  # todo: refactor to AWS_Session 
         #return self.boto_session()._build_profile_map()
 
     def resolve_endpoint_url_for_service(self, service):                                   # todo: find a better way to do this mapping to the local_stack services that are supported
-        supported_local_stack_services = ['s3', 'lambda','logs']                           # for now only these 3 services have been tested with local stack , all others will ahve the default
+        supported_local_stack_services = ['s3', 'lambda','logs', 'dynamodb', 'ec2', 'iam', 'sts']                           # for now only these 3 services have been tested with local stack , all others will ahve the default
         endpoint_url = aws_config.aws_endpoint_url()
-        if endpoint_url == 'http://localhost:4566':
+        if endpoint_url == URL__LOCAL_STACK__ENDPOINT_URL:
             if service in supported_local_stack_services:
                 return endpoint_url
             else:

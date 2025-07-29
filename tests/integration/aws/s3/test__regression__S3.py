@@ -1,10 +1,11 @@
-from unittest import TestCase
+import pytest
+from unittest                                   import TestCase
+from osbot_aws.aws.s3.S3                        import S3
+from osbot_aws.aws.s3.S3__Minio                 import S3__Minio, DEFAULT__MINIO__SERVER
+from osbot_aws.aws.session.Session__Kwargs__S3  import Session__Kwargs__S3
 
-from osbot_aws.aws.s3.S3        import S3
-from osbot_aws.aws.s3.S3__Minio import S3__Minio, DEFAULT__MINIO__SERVER
-from osbot_aws.aws.session.Session__Kwargs__S3 import Session__Kwargs__S3
 
-
+@pytest.mark.skip("refactor since we are removing this kind of support for minio")
 class test__regression__S3(TestCase):
 
     @classmethod

@@ -16,7 +16,7 @@ class test_Dynamo_DB__Record(TestCase__Temp_Dynamo_DB_Table):
 
     def test__init__(self):
         table_info = self.dynamo_db.table_info(TEST_TABLE_NAME)
-        assert table_info.get('TableArn'  ) == 'arn:aws:dynamodb:ddblocal:000000000000:table/temp_table__test_Dynamo_DB__Record'
+        assert table_info.get('TableArn'  ) == 'arn:aws:dynamodb:us-east-1:000000000000:table/temp_table__test_Dynamo_DB__Record'
         assert table_info.get('TableName'  ) =='temp_table__test_Dynamo_DB__Record'
         assert table_info.get('TableStatus') == 'ACTIVE'
 

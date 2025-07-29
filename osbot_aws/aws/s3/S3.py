@@ -8,7 +8,7 @@ from osbot_aws.aws.session.Session__Kwargs__S3           import Session__Kwargs_
 
 S3_DEFAULT_FILE_CONTENT_TYPE = 'binary/octet-stream'
 S3_HTML_PAGE_CONTENT_TYPE    = 'text/html; charset=utf-8'
-S3_FILES_CONTENT_TYPES       = { '.js'  : 'application/javascript; charset=utf-8',
+S3_FILES_CONTENT_TYPES       = { '.js'  : 'application/javascript; charset=utf-8',          # todo: add Enum version of these mappings
                                  '.jpg' : 'image/jpeg'                           ,
                                  '.jpeg': 'image/jpeg'                           ,
                                  '.png' : 'image/png'                            ,
@@ -137,8 +137,9 @@ class S3(Type_Safe):
 
     def bucket_create(self, bucket, region, versioning=False):
         try:
-            kwargs   = dict(Bucket                    = bucket                         ,
-                            CreateBucketConfiguration = {'LocationConstraint': region })
+            kwargs   = dict(Bucket = bucket)
+            if region != 'us-east-1':                                                   # handle weird behaviour in AWS S3 where the
+                kwargs['CreateBucketConfiguration'] = {'LocationConstraint': region}    #      location contraint should not be set when the region target is us-east-1
             location = self.client().create_bucket(**kwargs).get('Location')
             if versioning:
                 self.bucket_versioning__enable(bucket)

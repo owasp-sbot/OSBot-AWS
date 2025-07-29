@@ -28,8 +28,8 @@ class test_DyDB__Table(TestCase__Dynamo_DB__Local):
         super().setUpClass()
         cls.dydb_table   = DyDB__Table(table_name=cls.table_name, dynamo_db=cls.dynamo_db)      # set dynamo_db to version of dynamo_db from TestCase__Dynamo_DB (which has the correct IAM permissions)
         cls.aws_config   = AWS_Config()
-        cls.region_name  = "ddblocal"           # (minio) cls.aws_config.region_name()
-        cls.account_id   = "000000000000"       # (minio) cls.aws_config.account_id()
+        cls.region_name  = cls.aws_config.region_name()  #"ddblocal"           # (minio) cls.aws_config.region_name()
+        cls.account_id   = cls.aws_config.account_id()   #"000000000000"       # (minio) cls.aws_config.account_id()
 
         cls.dydb_table.create_table()  # create if it doesn't exist
 
@@ -141,6 +141,7 @@ class test_DyDB__Table(TestCase__Dynamo_DB__Local):
             LastUpdateToPayPerRequestDateTime = table_info.get('BillingModeSummary').get('LastUpdateToPayPerRequestDateTime')
             CreationDateTime                  = table_info.get('CreationDateTime')
             TableId                           = table_info.get('TableId')
+
             assert table_info == {'AttributeDefinitions'     : [{'AttributeName': _.key_name, 'AttributeType': _.key_type}],
                                   'BillingModeSummary'       :  {'BillingMode': 'PAY_PER_REQUEST', 'LastUpdateToPayPerRequestDateTime': LastUpdateToPayPerRequestDateTime},
                                   'CreationDateTime'         : CreationDateTime ,
@@ -153,7 +154,7 @@ class test_DyDB__Table(TestCase__Dynamo_DB__Local):
                                                                  'ReadCapacityUnits': 0                    ,
                                                                  'WriteCapacityUnits': 0                   },
                                   'TableArn'                 : f'arn:aws:dynamodb:{self.region_name}:{self.account_id}:table/{self.table_name}',
-                                  #'TableId'                  : TableId                                     ,
+                                  'TableId'                  : TableId                                     ,
                                   'TableName'                : self.table_name                             ,
                                   'TableSizeBytes'           : table_info.get('TableSizeBytes')            ,
                                   'TableStatus'              : 'ACTIVE'                                    }

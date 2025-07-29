@@ -1,24 +1,27 @@
-from osbot_aws.AWS_Config import AWS_Config
+from osbot_utils.type_safe.Type_Safe                            import Type_Safe
+from osbot_aws.AWS_Config                                       import AWS_Config
 from osbot_aws.aws.lambda_.Lambda                               import Lambda
 from osbot_aws.apis.test_helpers.Temp_Aws_Roles                 import Temp_Aws_Roles
 from osbot_aws.apis.test_helpers.Temp_Folder_With_Lambda_File   import Temp_Folder_With_Lambda_File
 from osbot_utils.utils.Misc                                     import random_string_and_numbers
 
 
-class Temp_Lambda:
-    def __init__(self, lambda_name=None, lambda_code=None, with_layer=None, delete_on_exit=True):
-        self.aws_config        = AWS_Config()
+class Temp_Lambda(Type_Safe):
+    aws_config       : AWS_Config
+    delete_on_exit   : bool      = True
+    wait_max_attempts: int       = 40
+    with_layer       : str       = None
+
+    def __init__(self, lambda_name=None, lambda_code=None, **kwargs):               # todo: see what other vars we can move to the Type_Save's definition
+        super().__init__(**kwargs)
         self.lambda_name       = lambda_name or "temp_lambda_{0}".format(random_string_and_numbers())
         self.aws_lambda        = Lambda(self.lambda_name)
         self.tmp_folder        = Temp_Folder_With_Lambda_File(file_name=self.lambda_name, lambda_code=lambda_code).create_temp_file()
         self.role_arn          = Temp_Aws_Roles().for_lambda_invocation__role_arn() # todo: refactor to have option to create the role programatically (needs feature to wait for role to be available)
         self.create_log        = None
-        self.delete_on_exit    = delete_on_exit
-        self.wait_max_attempts = 40
         self.s3_bucket         = self.aws_config.lambda_s3_bucket()
         self.s3_key            = 'unit_tests/lambdas/{0}.zip'.format(self.lambda_name)
         self.s3                = self.aws_lambda.s3()
-        self.with_layer        = with_layer
 
 
 
@@ -48,8 +51,9 @@ class Temp_Lambda:
         return self.create_log
 
     def delete(self):
-        assert self.aws_lambda.delete()
-        self.delete_s3_file()
+        self.aws_lambda.delete()
+        self.delete_s3_file   ()
+        self.tmp_folder.delete()
 
     def exists(self):
         return self.aws_lambda.exists()

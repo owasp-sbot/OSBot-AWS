@@ -9,10 +9,13 @@ from osbot_aws.testing.Pytest import skip_pytest___aws_pytest_user_name__is_not_
 from osbot_utils.utils.Functions import method_params
 from osbot_aws.apis.Session import Session
 from tests.integration.aws.iam.test_IAM import IAM_USER_NAME__OSBOT_AWS
+from tests.integration.osbot_aws__objs_for__integration_tests import setup__osbot_aws__integration_tests
+
 
 class test_Session(TestCase):
 
     def setUp(self):
+        setup__osbot_aws__integration_tests()
         self.aws_config = AWS_Config()
         #STS().check_current_session_credentials()
         #log_to_console(level=20)

@@ -11,12 +11,12 @@ DEFAULT__LOCAL_STACK__TARGET_SERVER = 'http://localhost:4566'
 
 class S3__DB_Base(Type_Safe):
     use_minio                      : bool = False
-    bucket_name__suffix            : str  = S3_DB_BASE__BUCKET_NAME__SUFFIX
-    bucket_name__prefix            : str  = S3_DB_BASE__BUCKET_NAME__PREFIX
+    bucket_name__suffix            : str  = S3_DB_BASE__BUCKET_NAME__SUFFIX     # todo: change type from str to Safe_Str_*
+    bucket_name__prefix            : str  = S3_DB_BASE__BUCKET_NAME__PREFIX     # todo: change type from str to Safe_Str_*
     bucket_name__insert_account_id : bool = True
     bucket_versioning              : bool = True
     save_as_gz                     : bool = False
-    server_name                    : str  = S3_DB_BASE__SERVER_NAME
+    server_name                    : str  = S3_DB_BASE__SERVER_NAME             # todo: change type from str to Safe_Id (or equivalent)
     session_kwargs__s3             : Session__Kwargs__S3
 
     def bucket_name(self):
@@ -44,7 +44,7 @@ class S3__DB_Base(Type_Safe):
         separator  = '-'
         bucket_name = ''
         if self.bucket_name__prefix:
-            bucket_name += f'{self.bucket_name__prefix}{separator}'
+            bucket_name += f'{self.bucket_name__prefix}{separator}'                             # todo: see if creating a Safe_Str__Bucket_Name isn't going to be better here
         if self.bucket_name__insert_account_id:
             account_id  = aws_config.account_id()
             bucket_name += f'{account_id}{separator}'

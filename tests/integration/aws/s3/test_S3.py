@@ -1,12 +1,11 @@
 import os
 from unittest                                                 import TestCase
-from osbot_local_stack.local_stack.Local_Stack                import Local_Stack
 from osbot_aws.AWS_Config                                     import aws_config
 from osbot_aws.aws.s3.S3                                      import S3
 from osbot_utils.helpers.duration.decorators.capture_duration import capture_duration
-
 from osbot_utils.testing.Temp_File                            import Temp_File
 from osbot_utils.utils.Misc                                   import random_text
+from tests.integration.osbot_aws__objs_for__integration_tests import setup__osbot_aws__integration_tests
 
 
 TEST__AWS_ACCOUNT_ID              = '000011110000'
@@ -17,8 +16,9 @@ class Test_S3(TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.local_stack = Local_Stack().activate()
-        assert cls.local_stack.is_local_stack_configured_and_available() is True
+        #cls.local_stack = Local_Stack().activate()
+        #assert cls.local_stack.is_local_stack_configured_and_available() is True
+        setup__osbot_aws__integration_tests()
         cls.s3 = S3()
         assert cls.s3.client().meta.endpoint_url == 'http://localhost:4566'
         cls.temp_file_name       = "aaa.txt"  # todo: fix test that is leaving this file in the file system
@@ -41,9 +41,9 @@ class Test_S3(TestCase):
         assert cls.s3.bucket_delete_all_files(cls.test_bucket                  ) is True
         assert cls.s3.bucket_delete(cls.test_bucket                            ) is True
         assert cls.s3.file_exists  (bucket=cls.test_bucket, key=cls.test_s3_key) is False
-        assert cls.local_stack.is_local_stack_configured_and_available() is True
-        cls.local_stack.deactivate()                                      # for now deactivate # todo remove other classes dependency on Minio
-        assert cls.local_stack.is_local_stack_configured_and_available() is False
+        # assert cls.local_stack.is_local_stack_configured_and_available() is True
+        # cls.local_stack.deactivate()                                      # for now deactivate # todo remove other classes dependency on Minio
+        # assert cls.local_stack.is_local_stack_configured_and_available() is False
         #super().tearDownClass()
 
     def test__ctor__(self):
@@ -52,7 +52,7 @@ class Test_S3(TestCase):
     def test_bucket_create_delete(self):
         bucket_name = random_text('temp_bucket').lower().replace('_','-')
         assert self.s3.bucket_exists(bucket_name                  ) is False
-        assert self.s3.bucket_create(bucket_name, self.test_region) == { 'status':'ok', 'data':f'http://{bucket_name + LOCAL_STACK__BUCKET_NAME__POSTFIX}'}
+        assert self.s3.bucket_create(bucket_name, self.test_region) == { 'status':'ok', 'data':f'/{bucket_name}'}
         assert self.s3.bucket_exists(bucket_name                  ) is True
         assert self.s3.bucket_delete(bucket_name                  ) is True
         assert self.s3.bucket_exists(bucket_name                  ) is False

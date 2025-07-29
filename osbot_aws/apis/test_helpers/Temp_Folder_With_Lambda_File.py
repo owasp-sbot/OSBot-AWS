@@ -1,4 +1,4 @@
-from osbot_utils.utils.Files     import Files, file_write, file_exists
+from osbot_utils.utils.Files import Files, file_write, file_exists, folder_exists
 from osbot_utils.utils.Functions import function_source_code
 from osbot_utils.utils.Zip import folder_zip
 
@@ -9,7 +9,7 @@ class Temp_Folder_With_Lambda_File:
         self.folder       = None
         self.lambda_code  = lambda_code or "def run(event, context): print('OSBot inside an Lambda :)'); return 'hello {0}'.format(event.get('name'))"
         self.tmp_file     = None
-        self.create_temp_file()
+        #self.create_temp_file()            # todo: breaking change, but shouldn't have any major side effects
 
     def __enter__(self):
         return self.create_temp_file()
@@ -27,6 +27,9 @@ class Temp_Folder_With_Lambda_File:
 
     def delete(self):
         return Files.folder_delete_all(self.folder)
+
+    def exists(self):
+        return folder_exists(self.folder)
 
     def zip(self):
         return folder_zip(self.folder)

@@ -1,5 +1,3 @@
-import os
-
 import osbot_aws
 from osbot_utils.utils.Files import file_contents, path_combine
 

@@ -127,7 +127,8 @@ class IAM_Assume_Role:
             if type(expiration) is datetime:
                 return expiration
             if type(expiration) is str:
-                return  datetime.strptime(expiration, '%Y-%m-%d %H:%M:%S%z')
+                return datetime.fromisoformat(expiration)
+               # return  datetime.strptime(expiration, '%Y-%m-%d %H:%M:%S%z')
         return None
 
     def credentials_expired(self):
