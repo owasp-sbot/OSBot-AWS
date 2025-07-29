@@ -1,9 +1,11 @@
-from osbot_aws.aws.dynamo_db.Dynamo_DB import Dynamo_DB
-from osbot_aws.aws.s3.S3 import S3
-from osbot_aws.testing.TestCase__Minio__Dynamo_DB import TestCase__Minio__Dynamo_DB
-from osbot_utils.utils.Functions import function_name
+import pytest
 
+from osbot_aws.aws.dynamo_db.Dynamo_DB              import Dynamo_DB
+from osbot_aws.aws.s3.S3                            import S3
+from osbot_aws.testing.TestCase__Minio__Dynamo_DB   import TestCase__Minio__Dynamo_DB
+from osbot_utils.utils.Functions                    import function_name
 
+@pytest.mark.skip("refactor since we are removing this kind of support for minio")
 class test_TestCase__Minio__Dynamo_DB(TestCase__Minio__Dynamo_DB):
 
     @classmethod

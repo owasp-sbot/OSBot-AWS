@@ -1,5 +1,5 @@
-from osbot_aws.AWS_Config                                       import aws_config
-from osbot_aws.aws.s3.S3__DB_Base                               import S3__DB_Base, S3_DB_BASE__BUCKET_NAME__PREFIX, S3_DB_BASE__SERVER_NAME, S3_DB_BASE__BUCKET_NAME__SUFFIX
+from osbot_aws.AWS_Config                    import aws_config
+from osbot_aws.aws.s3.S3__DB_Base            import S3__DB_Base, S3_DB_BASE__BUCKET_NAME__PREFIX, S3_DB_BASE__SERVER_NAME, S3_DB_BASE__BUCKET_NAME__SUFFIX
 from osbot_aws.testing.TestCase__S3__Temp_DB import TestCase__S3__Temp_DB
 
 class test_TestCase__S3__Temp_DB(TestCase__S3__Temp_DB):

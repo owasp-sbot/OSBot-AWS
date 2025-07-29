@@ -1,11 +1,7 @@
-from osbot_utils.utils.Zip import zip_bytes__files, zip_bytes__files_paths
-
-from osbot_aws.aws.lambda_.dependencies.Lambda__Dependency__Base import Lambda__Dependency__Base
+from osbot_utils.utils.Zip                                              import zip_bytes__files, zip_bytes__files_paths
+from osbot_aws.aws.lambda_.dependencies.Lambda__Dependency__Base        import Lambda__Dependency__Base
 from osbot_aws.aws.lambda_.schemas.Safe_Str__File__Path__Python_Package import Safe_Str__File__Path__Python_Package
-from osbot_aws.AWS_Config                                               import AWS_Config
-from osbot_aws.aws.lambda_.schemas.Safe_Str__File__Name__Python_Package import Safe_Str__File__Name__Python_Package
 from osbot_aws.aws.s3.S3                                                import S3, S3_FILES_CONTENT_TYPES
-from osbot_utils.type_safe.Type_Safe                                    import Type_Safe
 
 FOLDER_NAME__LAMBDA_DEPENDENCIES = Safe_Str__File__Path__Python_Package('lambdas-dependencies')
 

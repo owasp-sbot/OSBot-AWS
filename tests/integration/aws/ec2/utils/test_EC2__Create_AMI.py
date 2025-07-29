@@ -1,9 +1,6 @@
 import pytest
-
-from osbot_aws.aws.ec2.EC2_Instance import EC2_Instance
 from osbot_aws.aws.ec2.utils.EC2__Create__AMI   import EC2__Create__AMI
 from osbot_aws.aws.ec2.utils.TestCase__EC2      import TestCase__EC2
-from osbot_utils.decorators.methods.capture_exception import capture_exception
 from osbot_utils.utils.Dev                      import pprint
 
 

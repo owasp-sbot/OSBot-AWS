@@ -1,5 +1,6 @@
 import base64
 from unittest                                                                   import TestCase
+from osbot_aws.testing.skip_tests                                               import skip__if_not__in_github_actions
 from osbot_utils.testing.Temp_File                                              import Temp_File
 from osbot_aws.lambdas.dev.hello_world                                          import run
 from osbot_aws.deploy.Deploy_Lambda                                             import Deploy_Lambda
@@ -19,6 +20,7 @@ class test_Lambda__Dependency__Inside_Lambda(TestCase):
 
     @classmethod
     def setUpClass(cls):
+        skip__if_not__in_github_actions()
         setup__osbot_aws__integration_tests()
         cls.package_name                    = LAMBDA_DEPENDENCY__SMALL_TEST__PACKAGE
         cls.lambda_dependency               = Lambda__Dependency               (package_name=cls.package_name)

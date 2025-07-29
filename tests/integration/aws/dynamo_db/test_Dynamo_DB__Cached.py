@@ -36,8 +36,7 @@ class test_Dynamo_DB(TestCase__Dynamo_DB__Local):           # todo: see if these
         assert self.dynamo_db.table_info(table_name='AAAA-Not-Exists') == {}
         table_info = self.dynamo_db.table_info(table_name=self.table_name)
         assert list_set(table_info) == ['AttributeDefinitions', 'BillingModeSummary', 'CreationDateTime', 'DeletionProtectionEnabled',
-                                        'ItemCount', 'KeySchema', 'ProvisionedThroughput', 'TableArn',
-                                        #'TableId',                     # doesn't exist in amazon/dynamodb-local
+                                        'ItemCount', 'KeySchema', 'ProvisionedThroughput', 'Replicas', 'TableArn', 'TableId',
                                         'TableName', 'TableSizeBytes', 'TableStatus']
 
     def test_table_status(self):

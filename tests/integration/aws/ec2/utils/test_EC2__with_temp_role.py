@@ -1,10 +1,9 @@
-from unittest import TestCase
+from unittest                                                   import TestCase
+from osbot_aws.apis.Session                                     import URL__LOCAL_STACK__ENDPOINT_URL
+from osbot_aws.aws.ec2.EC2                                      import EC2
+from osbot_aws.aws.ec2.utils.EC2__with_temp_role                import EC2__with_temp_role
+from tests.integration.osbot_aws__objs_for__integration_tests   import setup__osbot_aws__integration_tests
 
-from osbot_aws.OSBot_Setup import CURRENT__OSBOT_AWS__TESTS__ACCOUNT_ID, \
-    CURRENT__OSBOT_AWS__TESTS__DEFAULT_REGION, CURRENT__OSBOT_AWS__TESTS__IAM_USER
-from osbot_aws.aws.ec2.utils.EC2__with_temp_role import EC2__with_temp_role
-from osbot_utils.utils.Dev import pprint
-from osbot_utils.utils.Objects import obj_info
 
 # todo: wire this when OSBOT in GH is running with the new AWS account (and into another class)
     # def test___check_current_identity(self):
@@ -32,8 +31,11 @@ from osbot_utils.utils.Objects import obj_info
 
 class test_EC2__with_temp_role(TestCase):
 
-    def setUp(self):
+    @classmethod
+    def setUpClass(self):
+        setup__osbot_aws__integration_tests()
         self.ec2__with_temp_role = EC2__with_temp_role()
+        assert EC2().client().meta.endpoint_url == URL__LOCAL_STACK__ENDPOINT_URL
         #self.ec2__with_temp_role._temp_role__iam_reset_credentials()
 
 

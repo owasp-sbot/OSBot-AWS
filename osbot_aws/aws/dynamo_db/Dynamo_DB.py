@@ -1,4 +1,5 @@
-from osbot_utils.type_safe.Type_Safe                 import Type_Safe
+from osbot_aws.aws.session.Session__Kwargs              import Session__Kwargs
+from osbot_utils.type_safe.Type_Safe                    import Type_Safe
 from osbot_utils.decorators.methods.cache_on_self       import cache_on_self
 from osbot_utils.decorators.methods.remove_return_value import remove_return_value
 
@@ -6,23 +7,27 @@ DEFAULT_DOCUMENTS_MAX_ITEMS_TO_FETCH = 100000
 DEFAULT_DOCUMENTS_FETCH_BATCH_SIZE   = 20000
 
 class Dynamo_DB(Type_Safe):
-    region_name : str = None
-    endpoint_url: str = None
+    #region_name : str = None
+    #endpoint_url: str = None
     # def __enter__(self                           ): return self
     # def __exit__ (self, exc_type, exc_val, exc_tb): pass
+    session_kwargs : Session__Kwargs
 
     # helpers
     @cache_on_self
     def client(self):
-        from osbot_aws.apis.Session import Session
-
-        return Session().client(service_name='dynamodb', region_name=self.region_name, endpoint_url=self.endpoint_url)
+        return self.session().client(service_name='dynamodb', region_name=self.session_kwargs.region_name, endpoint_url=self.session_kwargs.endpoint_url)
 
     @cache_on_self
     def client__dynamo_streams(self):
         from osbot_aws.apis.Session import Session
 
-        return Session().client('dynamodbstreams')
+        return self.session().client('dynamodbstreams')
+
+    @cache_on_self
+    def session(self):
+        from osbot_aws.apis.Session import Session
+        return Session()
 
     # main methods
 

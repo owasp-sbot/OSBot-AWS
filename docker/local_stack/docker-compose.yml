@@ -1,0 +1,27 @@
+services:
+  localstack:
+    image: localstack/localstack:latest
+    container_name: localstack
+    ports:
+      - "4566:4566"               # Edge port for all services
+      - "4510-4559:4510-4559"     # Service-specific ports (Lambda uses some of these)
+      - "53:53"                   # see if this resolves an error message that we are getting on LocalStack logs "localstack.dns.server      : Unable to get DNS result: ()"
+      - "53:53/udp"
+
+
+    environment:
+      - SERVICES=s3,lambda,iam,cloudwatch,dynamodb,logs,sts,ec2
+      - AWS_ACCESS_KEY_ID=localstack
+      - AWS_SECRET_ACCESS_KEY=localstack
+      - DNS_ADDRESS=0.0.0.0                       # see if this resolves an error message that we are getting on LocalStack logs "localstack.dns.server      : Unable to get DNS result: ()"
+      - DNS_PORT=53
+    volumes:
+      - localstack_data:/var/lib/localstack
+      - /var/run/docker.sock:/var/run/docker.sock  # Required for Lambda Docker execution
+
+volumes:
+  localstack_data:
+
+networks:
+  localstack_network:
+    driver: bridge
