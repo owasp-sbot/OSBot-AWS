@@ -1,6 +1,6 @@
 # OSBot-AWS
 
-![Current Release](https://img.shields.io/badge/release-v2.38.8-blue)
+![Current Release](https://img.shields.io/badge/release-v2.38.9-blue)
 
 Large number of AWS apis and utils from the OWASP Security Bot (OSBot) which make
 the use of AWS's boto3 library easier and more intuitive.
