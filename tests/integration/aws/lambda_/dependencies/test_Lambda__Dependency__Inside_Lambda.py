@@ -57,7 +57,7 @@ class test_Lambda__Dependency__Inside_Lambda(TestCase):
 
         lambda_code = function_source_code(run)
 
-        with Temp_Lambda(wait_max_attempts=100, lambda_code=lambda_code) as _:
+        with Temp_Lambda(wait_max_attempts=400, lambda_code=lambda_code) as _:
             assert 'temp_lambda_'              in _.aws_lambda.name
             assert _.invoke({'name': 'world'}) == 'this has no dependencies'
             assert _.exists           ()       is True
