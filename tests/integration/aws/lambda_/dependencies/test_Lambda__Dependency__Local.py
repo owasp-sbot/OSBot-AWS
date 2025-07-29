@@ -1,4 +1,5 @@
 from unittest                                                           import TestCase
+from osbot_aws.testing.Temp__Random__AWS_Credentials                    import OSBOT_AWS__LOCAL_STACK__AWS_ACCOUNT_ID, OSBOT_AWS__LOCAL_STACK__AWS_DEFAULT_REGION
 from osbot_utils.utils.Env                                              import in_github_action
 from osbot_utils.utils.Zip                                              import zip_bytes__file_list, zip_bytes__files
 from osbot_aws.AWS_Config                                               import AWS_Config, DEFAULT__BUCKET_NAME__INFIX__LAMBDA
@@ -6,7 +7,7 @@ from osbot_aws.aws.lambda_.schemas.Safe_Str__File__Name__Python_Package import S
 from osbot_utils.utils.Objects                                          import __
 from osbot_utils.utils.Files                                            import file_exists, folder_exists, current_temp_folder, path_combine, file_bytes
 from osbot_aws.aws.lambda_.dependencies.Lambda__Dependency__Local       import Lambda__Dependency__Local, Schema__Lambda__Dependency__Local_Install__Data, FOLDER_NAME__LAMBDA_DEPENDENCIES_STORAGE
-from tests.integration.osbot_aws__objs_for__integration_tests           import setup__osbot_aws__integration_tests, OSBOT_AWS__TEST__AWS_ACCOUNT_ID, OSBOT_AWS__TEST__AWS_DEFAULT_REGION
+from tests.integration.osbot_aws__objs_for__integration_tests           import setup__osbot_aws__integration_tests
 
 LAMBDA_DEPENDENCY__SMALL_TEST__PACKAGE = 'colorama==0.4.6'
 
@@ -156,8 +157,8 @@ class test_Lambda__Dependency__Local(TestCase):
                                                  '/osbot-aws__lambda-dependencies-storage' +  # the FOLDER_NAME__LOCAL__DEPENDENCIES_STORAGE
                                                  '/000000000000--osbot-lambdas--us-east-1')        # using localstack default account-id and region_name and the AWS_Config.DEFAULT__BUCKET_NAME__INFIX__LAMBDA
 
-            assert _.folder__bucket() == (_.base_folder()                           + '/ ' +
-                                          FOLDER_NAME__LAMBDA_DEPENDENCIES_STORAGE  + '/' +
-                                          OSBOT_AWS__TEST__AWS_ACCOUNT_ID           + '--' +
-                                          DEFAULT__BUCKET_NAME__INFIX__LAMBDA       + '--' +
-                                          OSBOT_AWS__TEST__AWS_DEFAULT_REGION              )
+            assert _.folder__bucket() == (_.base_folder()                            + '/ ' +
+                                          FOLDER_NAME__LAMBDA_DEPENDENCIES_STORAGE   + '/' +
+                                          OSBOT_AWS__LOCAL_STACK__AWS_ACCOUNT_ID     + '--' +
+                                          DEFAULT__BUCKET_NAME__INFIX__LAMBDA        + '--' +
+                                          OSBOT_AWS__LOCAL_STACK__AWS_DEFAULT_REGION        )

@@ -1,12 +1,8 @@
 import boto3
-from osbot_aws.AWS_Config import AWS_Config
-
-from osbot_aws.apis.Session import URL__LOCAL_STACK__ENDPOINT_URL
-from osbot_aws.aws.dynamo_db.Dynamo_DB import Dynamo_DB
-from osbot_utils.testing.Temp_Env_Vars  import Temp_Env_Vars
-from unittest                           import TestCase
-from osbot_utils.testing.Hook_Method    import Hook_Method
-from osbot_utils.utils.Env              import get_env
+from osbot_aws.AWS_Config                                     import AWS_Config
+from osbot_aws.apis.Session                                   import URL__LOCAL_STACK__ENDPOINT_URL
+from osbot_aws.aws.dynamo_db.Dynamo_DB                        import Dynamo_DB
+from unittest                                                 import TestCase
 from tests.integration.osbot_aws__objs_for__integration_tests import setup__osbot_aws__integration_tests
 
 # TEST__AWS_ACCOUNT_ID        = '000011110000'

@@ -1,7 +1,7 @@
 from unittest                                                                   import TestCase
 from osbot_aws.aws.lambda_.dependencies.Lambda__Dependency                      import Lambda__Dependency
-from osbot_aws.aws.lambda_.dependencies.Lambda__Dependency__Local import Lambda__Dependency__Local
-from osbot_aws.aws.lambda_.dependencies.Lambda__Dependency__S3 import Lambda__Dependency__S3
+from osbot_aws.aws.lambda_.dependencies.Lambda__Dependency__Local               import Lambda__Dependency__Local
+from osbot_aws.aws.lambda_.dependencies.Lambda__Dependency__S3                  import Lambda__Dependency__S3
 from tests.integration.aws.lambda_.dependencies.test_Lambda__Dependency__Local  import LAMBDA_DEPENDENCY__SMALL_TEST__PACKAGE
 from tests.integration.osbot_aws__objs_for__integration_tests                   import setup__osbot_aws__integration_tests
 

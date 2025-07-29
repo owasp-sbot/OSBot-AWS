@@ -1,21 +1,48 @@
 import random
 import string
-from osbot_utils.testing.Temp_Env_Vars import Temp_Env_Vars
+from osbot_utils.utils.Env              import get_env
+from osbot_utils.testing.Temp_Env_Vars  import Temp_Env_Vars
+
+OSBOT_AWS__LOCAL_STACK__AWS_ACCOUNT_ID     = '000000000000'               # default local-stack account id for lambdas
+OSBOT_AWS__LOCAL_STACK__AWS_DEFAULT_REGION = 'us-east-1'                  # default local-stack region for lambdas
+
 
 class Temp__Random__AWS_Credentials(Temp_Env_Vars):
+    AWS_ACCESS_KEY_ID     : str = None
+    AWS_SECRET_ACCESS_KEY : str = None
+    AWS_ACCOUNT_ID        : str = None
+    AWS_DEFAULT_REGION    : str = None
 
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        random_aws_credentials = dict(                                           # Create the AWS credentials with realistic random values
-            AWS_ACCESS_KEY_ID       =   self.random_aws_access_key_id    (),
-            AWS_SECRET_ACCESS_KEY   =   self.random_aws_secret_access_key(),
-            AWS_ACCOUNT_ID          =   self.random_aws_account_id       (),
-            AWS_DEFAULT_REGION      =   self.random_aws_region           ()
-        )
-        self.env_vars.update(random_aws_credentials)                             # add temp aws vars to exiting env_vars (set in ctor)
+    def __enter__(self):
+        self.with_default_credentials()         # this will call the super().set_vars()
+        return self
 
 
-    # Helper functions to generate random values matching AWS schema
+    def with_localstack_credentials(self):
+        self.AWS_ACCOUNT_ID        = OSBOT_AWS__LOCAL_STACK__AWS_ACCOUNT_ID
+        self.AWS_DEFAULT_REGION    = OSBOT_AWS__LOCAL_STACK__AWS_DEFAULT_REGION
+        self.AWS_ACCESS_KEY_ID     = self.random_aws_access_key_id()
+        self.AWS_SECRET_ACCESS_KEY = self.random_aws_secret_access_key()
+        self.set_aws_env_vars()
+        return self
+
+    def with_default_credentials(self):         # Set default credentials, using existing values or generating new ones.
+        if not self.AWS_ACCESS_KEY_ID    : self.AWS_ACCESS_KEY_ID     = get_env('AWS_ACCESS_KEY_ID'    ) or self.random_aws_access_key_id    ()       # Generate new values only if not already set
+        if not self.AWS_SECRET_ACCESS_KEY: self.AWS_SECRET_ACCESS_KEY = get_env('AWS_SECRET_ACCESS_KEY') or self.random_aws_secret_access_key()
+        if not self.AWS_ACCOUNT_ID       : self.AWS_ACCOUNT_ID        = get_env('AWS_ACCOUNT_ID'       ) or self.random_aws_account_id       ()
+        if not self.AWS_DEFAULT_REGION   : self.AWS_DEFAULT_REGION    = get_env('AWS_DEFAULT_REGION'   ) or self.random_aws_region           ()
+
+        self.set_aws_env_vars()
+        return self
+
+    def set_aws_env_vars(self):                         # Update env_vars with the credentials
+        aws_credentials = { 'AWS_ACCESS_KEY_ID'     : self.AWS_ACCESS_KEY_ID    ,
+                            'AWS_SECRET_ACCESS_KEY' : self.AWS_SECRET_ACCESS_KEY,
+                            'AWS_ACCOUNT_ID'        : self.AWS_ACCOUNT_ID       ,
+                            'AWS_DEFAULT_REGION'    : self.AWS_DEFAULT_REGION   }
+        self.env_vars.update(aws_credentials)
+        self.set_vars()
+        return self
 
     def random_aws_access_key_id(self):
         return 'AKIA' + ''.join(random.choices(string.ascii_uppercase + string.digits, k=16))       # AWS access key IDs are typically 20 characters long, uppercase letters and digits

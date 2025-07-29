@@ -10,7 +10,7 @@ class TestCase__S3__Temp_DB(TestCase):
     def setUpClass(cls):
         setup__osbot_aws__integration_tests()
         #cls.local_stack = Local_Stack().activate()
-        cls.random_aws_creds  = Temp__Random__AWS_Credentials().set_vars()
+        cls.random_aws_creds  = Temp__Random__AWS_Credentials().with_default_credentials()
         cls.s3_db_base        = S3__DB_Base()
         cls.s3_db             = cls.s3_db_base                  # todo: see if this is a better name to use when using this class
         with cls.s3_db_base as _:

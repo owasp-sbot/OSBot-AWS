@@ -153,7 +153,6 @@ class test_DyDB__Table(TestCase__Dynamo_DB__Local):
                                                                  'NumberOfDecreasesToday': 0               ,
                                                                  'ReadCapacityUnits': 0                    ,
                                                                  'WriteCapacityUnits': 0                   },
-                                  'Replicas'                 : []                                           ,
                                   'TableArn'                 : f'arn:aws:dynamodb:{self.region_name}:{self.account_id}:table/{self.table_name}',
                                   'TableId'                  : TableId                                     ,
                                   'TableName'                : self.table_name                             ,

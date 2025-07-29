@@ -9,7 +9,7 @@ class test_Temp__Random__AWS_Credentials(TestCase):
 
     def setUp(self):
         self.current_value__AWS_ACCESS_KEY_ID = get_env('AWS_ACCESS_KEY_ID')
-        self.temp_value__AWS_ACCESS_KEY_ID    = random_text()
+        self.temp_value__AWS_ACCESS_KEY_ID    = Temp__Random__AWS_Credentials().random_aws_access_key_id()
 
         set_env('AWS_ACCESS_KEY_ID', self.temp_value__AWS_ACCESS_KEY_ID)
 
@@ -22,11 +22,11 @@ class test_Temp__Random__AWS_Credentials(TestCase):
     def test__context(self):
         assert get_env('AWS_ACCESS_KEY_ID') == self.temp_value__AWS_ACCESS_KEY_ID
 
-        with Temp__Random__AWS_Credentials() as _:
-            aws_access_key_id       = get_env('AWS_ACCESS_KEY_ID')
+        with Temp__Random__AWS_Credentials().with_default_credentials() as _:
+            aws_access_key_id       = get_env('AWS_ACCESS_KEY_ID'    )
             aws_secret_access_key   = get_env('AWS_SECRET_ACCESS_KEY')
-            aws_account_id          = get_env('AWS_ACCOUNT_ID')
-            aws_default_region      = get_env('AWS_DEFAULT_REGION')
+            aws_account_id          = get_env('AWS_ACCOUNT_ID'       )
+            aws_default_region      = get_env('AWS_DEFAULT_REGION'   )
 
             assert re.match(r'^AKIA[0-9A-Z]{16}$', aws_access_key_id)                   # Validate the generated AWS_ACCESS_KEY_ID format (AKIA followed by 16 uppercase letters/digits)
             assert re.match(r'^[A-Za-z0-9/+=]{40}$', aws_secret_access_key)             # Validate the generated AWS_SECRET_ACCESS_KEY format (40 characters, mixed case, digits, special chars)

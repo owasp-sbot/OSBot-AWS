@@ -1,6 +1,4 @@
 import datetime
-
-import pytest
 from dateutil.tz                                                    import tzlocal
 from osbot_utils.utils.Misc                                         import list_set, is_guid
 from tests.integration.aws.dynamo_db.TestCase__Temp_Dynamo_DB_Table import TestCase__Temp_Dynamo_DB_Table
@@ -60,10 +58,9 @@ class test_Dynamo_DB__Table(TestCase__Temp_Dynamo_DB_Table):
         table_id    = data.get('TableId')
         del data['CreationDateTime']
         del data['BillingModeSummary']['LastUpdateToPayPerRequestDateTime']
-
         assert list_set(result)  == ['data', 'status']
         assert list_set(data)    == ['AttributeDefinitions', 'BillingModeSummary', 'DeletionProtectionEnabled', 'ItemCount', 'KeySchema',
-                                     'ProvisionedThroughput', 'Replicas', 'TableArn', 'TableId', 'TableName', 'TableSizeBytes', 'TableStatus']
+                                     'ProvisionedThroughput', 'TableArn', 'TableId', 'TableName', 'TableSizeBytes', 'TableStatus']
         assert is_guid(table_id) is True
 
         assert data == {  'AttributeDefinitions'     : [{'AttributeName': self.key_name, 'AttributeType': 'S'}]              ,
@@ -77,7 +74,6 @@ class test_Dynamo_DB__Table(TestCase__Temp_Dynamo_DB_Table):
                                                          'NumberOfDecreasesToday': 0 ,
                                                          'ReadCapacityUnits'     : 0 ,
                                                          'WriteCapacityUnits'    : 0 }                                       ,
-                          'Replicas'                 : [],
                           'TableArn'                 : f'arn:aws:dynamodb:{region_name}:{account_id}:table/{self.table_name}',
                           'TableId'                  : table_id                                                              ,
                           'TableName'                : self.table_name                                                       ,
