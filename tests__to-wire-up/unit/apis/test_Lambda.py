@@ -1,16 +1,14 @@
 import pytest
-from time import sleep
-
-from osbot_utils.utils.Lists import list_contains
-
-from osbot_aws.aws.iam.IAM_Role import IAM_Role
-from osbot_aws.aws.iam.IAM_Utils import IAM_Utils
+from time                                        import sleep
+from osbot_utils.utils.Lists                     import list_contains
+from osbot_aws.aws.iam.IAM_Role                  import IAM_Role
+from osbot_aws.aws.iam.IAM_Utils                 import IAM_Utils
 from osbot_utils.utils                           import Misc
 from osbot_utils.utils.Files                     import file_exists, file_contents, Files
 from osbot_aws.AWS_Config                        import AWS_Config
 from osbot_aws.aws.s3.S3                         import S3
 from osbot_aws.helpers.Test_Helper               import Test_Helper
-from osbot_aws.aws.lambda_.Lambda                       import Lambda
+from osbot_aws.aws.lambda_.Lambda                import Lambda
 from osbot_aws.apis.test_helpers.Temp_Lambda     import Temp_Folder_With_Lambda_File, Temp_Lambda
 from osbot_aws.apis.test_helpers.Temp_SQS_Queue  import Temp_SQS_Queue
 from osbot_utils.utils.Assert                    import Assert

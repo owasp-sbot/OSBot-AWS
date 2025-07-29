@@ -1,3 +1,5 @@
+from osbot_aws.aws.lambda_.Lambda               import DEFAULT__LAMBDA__EPHEMERAL_STORAGE, DEFAULT__LAMBDA__MEMORY_SIZE
+from osbot_utils.type_safe.Type_Safe            import Type_Safe
 from osbot_aws.aws.lambda_                      import boto3__lambda
 from osbot_utils.type_safe.decorators.type_safe import type_safe
 from osbot_utils.utils.Env                      import load_dotenv
@@ -10,9 +12,12 @@ from osbot_aws.helpers.Lambda_Package           import Lambda_Package
 # todo: refactor lambda_name to be a Type_Safe variable, but that will clash with the current lambda_name() function (which is used in other projects)
 #       stage and the other self.* vars set in the __init__ should also be Type_Safe variables
 
-class Deploy_Lambda:
+class Deploy_Lambda(Type_Safe):
+    stage            : str = None
+    ephemeral_storage: int = DEFAULT__LAMBDA__EPHEMERAL_STORAGE
+    memory_size      : int = DEFAULT__LAMBDA__MEMORY_SIZE
 
-    def __init__(self, handler, stage=None, lambda_name=None, **kwargs):
+    def __init__(self, handler, lambda_name=None, **kwargs):
         super().__init__(**kwargs)
         load_dotenv()
         self.osbot_setup          = OSBot_Setup()
@@ -24,11 +29,13 @@ class Deploy_Lambda:
             self.handler          = handler
             self.module_name      = handler.__module__
 
-        self.stage                = stage
         self.role_arn             = Temp_Aws_Roles().for_lambda_invocation__role_arn()
 
         self.package              = self.get_package()
+
         if lambda_name:                                        # if we have provided a name, use it internally
+            if self.stage:                                      # todo: review this logic of setting lambda function name (with stage) and syncing it with others like module_name (which is quite messy at the moment)
+                lambda_name += f'__{self.stage}'
             self.package.lambda_name     = lambda_name
             self.package.aws_lambda.name = lambda_name
             self.module_name             = lambda_name
@@ -44,12 +51,14 @@ class Deploy_Lambda:
         self.package.add_module(root_module_name)
         return self
 
-    def add_file(self, file_path):
-        self.package.add_file(source=file_path)
+    def add_file(self, file_path, folder=None):
+        self.package.add_file(source=file_path, folder=folder)
         return self
 
+
     def add_file__boto3__lambda(self):
-        self.add_file(boto3__lambda.__file__)
+        folder = 'osbot_aws.aws.lambda_'.replace('.','/')
+        self.add_file(file_path = boto3__lambda.__file__, folder=folder)
         return self
 
     def add_folder(self, source, ignore=None):
@@ -109,14 +118,18 @@ class Deploy_Lambda:
 
     def get_package(self):
         package = Lambda_Package(self.lambda_name())
-        package.aws_lambda.set_s3_bucket(self.osbot_setup.s3_bucket_lambdas)
-        package.aws_lambda.set_role(self.role_arn)
+        with package.aws_lambda as _:
+            _.set_s3_bucket(self.osbot_setup.s3_bucket_lambdas)
+            _.set_role(self.role_arn)
+            _.ephemeral_storage = self.ephemeral_storage
+            _.memory_size       = self.memory_size
         return package
 
     def lambda_name(self):
-        if self.stage is None:
-            return self.module_name
-        return f"{self.module_name}-{self.stage}"
+        return self.module_name
+        # if self.stage is None:
+        #     return self.module_name
+        # return f"{self.module_name}__{self.stage}"          # breaking change was "-" , and now it is "__" (which is a beter separator)
 
     def lambda_function(self):
         return self.package.aws_lambda

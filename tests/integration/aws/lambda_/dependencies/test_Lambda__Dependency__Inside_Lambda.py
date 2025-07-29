@@ -277,8 +277,7 @@ class test_Lambda__Dependency__Inside_Lambda(TestCase):
 
     def test_12__using_lambda_deploy__load_dependency__using__only_boto_3_code(self):
         def run(event, context):
-            # noinspection PyUnresolvedReferences
-            from boto3__lambda import load_dependency
+            from osbot_aws.aws.lambda_.boto3__lambda import load_dependency                 # using the lightweight file (which only has the boto3 calls required to call load_dependency
             return load_dependency('colorama==0.4.6')
 
         source_code = function_source_code(run)
@@ -291,7 +290,7 @@ class test_Lambda__Dependency__Inside_Lambda(TestCase):
                 _.add_file     (lambda_handler)
                 assert _.deploy() is True
                 assert _.invoke() == 'colorama==0.4.6 (loaded from S3)'
-                assert _.info().get('Configuration').get('CodeSize') < 1300                                              # confirm that size of the code uploaded is still very small
+                assert _.info().get('Configuration').get('CodeSize') < 1500                                              # confirm that size of the code uploaded is still very small
                 assert _.delete() is True
 
     def test_dependencies_folder(self):

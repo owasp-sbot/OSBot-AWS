@@ -1,22 +1,21 @@
 import os
 import importlib
 import site
-
+from osbot_utils.type_safe.Type_Safe            import Type_Safe
 from osbot_utils.type_safe.decorators.type_safe import type_safe
-
 from osbot_aws.aws.lambda_.Lambda_Layer         import Lambda_Layer
 from osbot_utils.testing.Temp_Folder            import Temp_Folder
 from osbot_utils.testing.Temp_Zip               import Temp_Zip
 from osbot_utils.utils.Process                  import Process
 from osbot_aws.AWS_Config                       import AWS_Config
 from osbot_aws.apis.test_helpers.Temp_Aws_Roles import Temp_Aws_Roles
-from osbot_utils.utils.Files                    import folder_copy, Files, folder_not_exists, path_combine, folder_name
+from osbot_utils.utils.Files                    import folder_copy, Files, folder_not_exists, path_combine, folder_name, create_folder, path_combine_safe
+from osbot_aws.aws.lambda_.Lambda               import Lambda
 
-from osbot_aws.aws.lambda_.Lambda import Lambda
 
-
-class Lambda_Package:
-    def __init__(self,lambda_name):
+class Lambda_Package(Type_Safe):                            # todo: refactor to use full value of Type_Safe
+    def __init__(self,lambda_name, **kwargs):
+        super().__init__(**kwargs)
         self.lambda_name   = lambda_name
         self.aws_lambda    = Lambda(self.lambda_name)
         self.s3_bucket     = AWS_Config().lambda_s3_bucket()
@@ -54,8 +53,13 @@ class Lambda_Package:
             self.aws_lambda.add_layer(layer_arn)
         return self
 
-    def add_file(self, source):
-        Files.copy(source, self.tmp_folder)
+    def add_file(self, source, folder=None):
+        if folder is None:
+            target_folder = self.tmp_folder
+        else:                                                                       # if we have a folder path provider
+            target_folder = path_combine_safe(self.tmp_folder, folder)              # merge it with the self.tmp_folder (base folder to capture all files to deploy)
+            create_folder(target_folder)                                            # make sure folder exists
+        Files.copy(source, target_folder)
 
     def add_folder(self, source, ignore=None):
         destination = Files.path_combine(self.tmp_folder, folder_name(source))

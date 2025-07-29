@@ -1,5 +1,4 @@
 import json
-
 from osbot_utils.type_safe.Type_Safe                    import Type_Safe
 from osbot_utils.utils.Lists                            import unique
 from osbot_utils.utils.Json                             import json_loads, json_parse
@@ -17,16 +16,20 @@ from osbot_aws.aws.session.Session__Kwargs__Lambda      import Session__Kwargs__
 from osbot_aws.aws.session.Session__Kwargs__S3          import Session__Kwargs__S3
 
 
-class Lambda(Type_Safe):
+DEFAULT__LAMBDA__MEMORY_SIZE       = 512
+DEFAULT__LAMBDA__EPHEMERAL_STORAGE = 512
+class Lambda(Type_Safe):                                                # todo: refactor to use full value of Type_Safe (also this class is getting quite big)
+
     session_kwargs__lambda: Session__Kwargs__Lambda
     session_kwargs__s3    : Session__Kwargs__S3
-
+    memory_size           : int = DEFAULT__LAMBDA__MEMORY_SIZE              # default to 512Mb max is 10,000 Mb (current AWS limit in Dec 2020)
+    ephemeral_storage     : int = DEFAULT__LAMBDA__EPHEMERAL_STORAGE        # default to 512Mb
+    role                  : str = None
 
     def __init__(self, name='', **kwargs):
         super().__init__(**kwargs)
         self.architecture   = 'x86_64'                          # other option is 'arm64'
         self.runtime        = 'python3.11'
-        self.memory         = 512                               # default to 512Mb max is 10,000 Mb (current AWS limit in Dec 2020)
         self.timeout        = 60                                # default to 60 secs (1m) max is 900 secs (15m)
         self.trace_mode     = 'PassThrough'                     # x-rays disabled
         self.original_name  = name
@@ -122,13 +125,14 @@ class Lambda(Type_Safe):
             return {'status': 'error', 'error': '{0}'.format(error), 'data': kwargs}
 
     def create_kwargs(self):
-        kwargs = {  'Architectures' : [self.architecture]                                , # no idea why this is an array since we get an exception when there is more than one value
-                    'FunctionName'  : self.name or  random_string(prefix='temp_lambda_') ,
-                    'MemorySize'    : self.memory                                        ,
-                    'Role'          : self.role                                          ,
-                    'Timeout'       : self.timeout                                       ,
-                    'TracingConfig' : { 'Mode': self.trace_mode }                        ,
-                    'Tags'          : self.tags                                          }
+        kwargs = {  'Architectures'    : [self.architecture]                                , # no idea why this is an array since we get an exception when there is more than one value
+                    'FunctionName'     : self.name or  random_string(prefix='temp_lambda_') ,
+                    'MemorySize'       : self.memory_size                                   ,
+                    'EphemeralStorage' : { 'Size': self.ephemeral_storage }                 ,
+                    'Role'             : self.role                                          ,
+                    'Timeout'          : self.timeout                                       ,
+                    'TracingConfig'    : { 'Mode': self.trace_mode }                        ,
+                    'Tags'             : self.tags                                          }
 
         if self.env_variables:
             kwargs['Environment'] = {'Variables': self.env_variables}
