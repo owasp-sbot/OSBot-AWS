@@ -268,8 +268,8 @@ class test_Lambda__Dependency__Inside_Lambda(TestCase):
             with Deploy_Lambda(handler=run) as _:
                 _.add_file(file_to_add)
                 _.add_file     (lambda_handler)
-                assert _.files() == [ '/boto3__lambda.py'    ,
-                                      '/test_Lambda__Dependency__Inside_Lambda.py']
+                assert _.files() == sorted([ '/boto3__lambda.py'    ,
+                                             '/test_Lambda__Dependency__Inside_Lambda.py'])
                 assert _.deploy() is True
                 assert _.invoke() == boto3__lambda.ping() == 'pong'
                 assert _.info().get('Configuration').get('CodeSize') < 1300                                              # confirm that size of the code uploaded is still very small
