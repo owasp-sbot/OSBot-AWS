@@ -249,8 +249,8 @@ class test_Lambda__Dependency__Inside_Lambda(TestCase):
         def run(event, context):                        # this runs inside the lambda environment
             import os
             import types
-            assert sorted(os.listdir('/var/task')) == [ 'boto3__lambda.py'                         ,             # confirm the files are added ok to the '/var/task' (which is the folder lambda deployment copies the files from the provided zip folder
-                                                        'test_Lambda__Dependency__Inside_Lambda.py']
+            assert sorted(os.listdir('/var/task')) == sorted([ 'boto3__lambda.py'                         ,             # confirm the files are added ok to the '/var/task' (which is the folder lambda deployment copies the files from the provided zip folder
+                                                               'test_Lambda__Dependency__Inside_Lambda.py'])
             # noinspection PyUnresolvedReferences
             import boto3__lambda                                                   # confirm we can import the boto3__lambda module
             assert type(boto3__lambda) is types.ModuleType                         # and that it is a module
