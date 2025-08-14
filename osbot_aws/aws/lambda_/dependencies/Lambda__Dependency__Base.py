@@ -1,5 +1,5 @@
 from osbot_utils.utils.Files                                            import current_temp_folder
-from osbot_utils.helpers.safe_str.Safe_Str__File__Path                  import Safe_Str__File__Path
+from osbot_utils.type_safe.primitives.safe_str.filesystem.Safe_Str__File__Path                  import Safe_Str__File__Path
 from osbot_aws.AWS_Config                                               import AWS_Config
 from osbot_aws.aws.lambda_.schemas.Safe_Str__File__Name__Python_Package import Safe_Str__File__Name__Python_Package
 from osbot_utils.type_safe.Type_Safe                                    import Type_Safe

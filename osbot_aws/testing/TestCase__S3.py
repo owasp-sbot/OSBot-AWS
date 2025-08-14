@@ -7,9 +7,9 @@ from osbot_utils.type_safe.Type_Safe             import Type_Safe
 
 
 class TestCase__S3(TestCase__Boto3_Cache, Type_Safe):
-    type_S3          : type
-    client__s3       : object
-    s3               : S3
+    type_S3         : type
+    client__s3      : object
+    s3              : S3
     reset_iam_creds : bool = False
 
     @classmethod

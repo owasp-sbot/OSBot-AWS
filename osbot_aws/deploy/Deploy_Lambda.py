@@ -1,13 +1,13 @@
-from osbot_aws.aws.lambda_.Lambda               import DEFAULT__LAMBDA__EPHEMERAL_STORAGE, DEFAULT__LAMBDA__MEMORY_SIZE
-from osbot_utils.type_safe.Type_Safe            import Type_Safe
-from osbot_aws.aws.lambda_                      import boto3__lambda
-from osbot_utils.type_safe.decorators.type_safe import type_safe
-from osbot_utils.utils.Env                      import load_dotenv
-from osbot_aws.apis.shell.Shell_Client          import Shell_Client
-from osbot_aws.helpers.Lambda_Layer_Create      import Lambda_Layer_Create
-from osbot_aws.OSBot_Setup                      import OSBot_Setup
-from osbot_aws.apis.test_helpers.Temp_Aws_Roles import Temp_Aws_Roles
-from osbot_aws.helpers.Lambda_Package           import Lambda_Package
+from osbot_aws.aws.lambda_.Lambda                               import DEFAULT__LAMBDA__EPHEMERAL_STORAGE, DEFAULT__LAMBDA__MEMORY_SIZE
+from osbot_utils.type_safe.Type_Safe                            import Type_Safe
+from osbot_aws.aws.lambda_                                      import boto3__lambda
+from osbot_utils.type_safe.type_safe_core.decorators.type_safe  import type_safe
+from osbot_utils.utils.Env                                      import load_dotenv
+from osbot_aws.apis.shell.Shell_Client                          import Shell_Client
+from osbot_aws.helpers.Lambda_Layer_Create                      import Lambda_Layer_Create
+from osbot_aws.OSBot_Setup                                      import OSBot_Setup
+from osbot_aws.apis.test_helpers.Temp_Aws_Roles                 import Temp_Aws_Roles
+from osbot_aws.helpers.Lambda_Package                           import Lambda_Package
 
 # todo: refactor lambda_name to be a Type_Safe variable, but that will clash with the current lambda_name() function (which is used in other projects)
 #       stage and the other self.* vars set in the __init__ should also be Type_Safe variables

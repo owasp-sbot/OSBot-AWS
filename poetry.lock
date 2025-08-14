@@ -2,18 +2,18 @@
 
 [[package]]
 name = "boto3"
-version = "1.39.14"
+version = "1.40.9"
 description = "The AWS SDK for Python"
 optional = false
 python-versions = ">=3.9"
 groups = ["main"]
 files = [
-    {file = "boto3-1.39.14-py3-none-any.whl", hash = "sha256:82c6868cad18c3bd4170915e9525f9af5f83e9779c528417f8863629558fc2d0"},
-    {file = "boto3-1.39.14.tar.gz", hash = "sha256:fabb16360a93b449d5241006485bcc761c26694e75ac01009f4459f114acc06e"},
+    {file = "boto3-1.40.9-py3-none-any.whl", hash = "sha256:516f5e3f7552b2a7ca4d2c89b338fb4684998c676b11b906e2ab694c91716ba6"},
+    {file = "boto3-1.40.9.tar.gz", hash = "sha256:af3f77a548b3dd7db5046609598a28a9ad5d062437b1783da9b526cc67c38b79"},
 ]
 
 [package.dependencies]
-botocore = ">=1.39.14,<1.40.0"
+botocore = ">=1.40.9,<1.41.0"
 jmespath = ">=0.7.1,<2.0.0"
 s3transfer = ">=0.13.0,<0.14.0"
 
@@ -22,14 +22,14 @@ crt = ["botocore[crt] (>=1.21.0,<2.0a0)"]
 
 [[package]]
 name = "botocore"
-version = "1.39.14"
+version = "1.40.9"
 description = "Low-level, data-driven core of boto 3."
 optional = false
 python-versions = ">=3.9"
 groups = ["main"]
 files = [
-    {file = "botocore-1.39.14-py3-none-any.whl", hash = "sha256:4ed551c77194167b7e8063f33059bc2f9b2ead0ed4ee33dc7857273648ed4349"},
-    {file = "botocore-1.39.14.tar.gz", hash = "sha256:7fc44d4ad13b524e5d8a6296785776ef5898ac026ff74df9b35313831d507926"},
+    {file = "botocore-1.40.9-py3-none-any.whl", hash = "sha256:d4960a39aab9658bcd0272490003001cb4a8d12b89bb297ccef994ee023fb638"},
+    {file = "botocore-1.40.9.tar.gz", hash = "sha256:f4a9c6ed08e8637138e1b5534f89d38c02650974b6458a07690493130e295f68"},
 ]
 
 [package.dependencies]
@@ -57,14 +57,14 @@ files = [
 
 [[package]]
 name = "osbot-utils"
-version = "2.70.0"
+version = "2.74.0"
 description = "OWASP Security Bot - Utils"
 optional = false
 python-versions = "<4.0,>=3.7"
 groups = ["main"]
 files = [
-    {file = "osbot_utils-2.70.0-py3-none-any.whl", hash = "sha256:f9bcdbaf2a229c865fd1084a18359ab9dc8cb07f7491c66b38f5a6b0b6518e4c"},
-    {file = "osbot_utils-2.70.0.tar.gz", hash = "sha256:313a9a4c55c685ea92c3a55d85f4aa844d88262e1aa76d968304994aa6fa02c3"},
+    {file = "osbot_utils-2.74.0-py3-none-any.whl", hash = "sha256:9528ddcc0da69a37312f0117a178aee47d13beb28394933fbc605cf900d759be"},
+    {file = "osbot_utils-2.74.0.tar.gz", hash = "sha256:785602e07d7273f0cf9929e7ef25fe6dea839ac1283556416f72cb64083f416e"},
 ]
 
 [[package]]

@@ -1,7 +1,7 @@
 import time
 from typing                                     import List
 from osbot_utils.type_safe.Type_Safe            import Type_Safe
-from osbot_utils.type_safe.decorators.type_safe import type_safe
+from osbot_utils.type_safe.type_safe_core.decorators.type_safe import type_safe
 from osbot_aws.apis.Session                     import Session
 
 

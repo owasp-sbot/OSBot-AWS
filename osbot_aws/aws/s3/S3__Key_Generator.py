@@ -1,8 +1,8 @@
-from datetime                                   import datetime
-from osbot_utils.type_safe.decorators.type_safe import type_safe
-from osbot_utils.type_safe.Type_Safe            import Type_Safe
-from osbot_utils.helpers.Safe_Id                import Safe_Id
-from osbot_utils.utils.Misc                     import utc_now, date_today
+from datetime                                                       import datetime
+from osbot_utils.type_safe.type_safe_core.decorators.type_safe      import type_safe
+from osbot_utils.type_safe.Type_Safe                                import Type_Safe
+from osbot_utils.type_safe.primitives.safe_str.identifiers.Safe_Id  import Safe_Id
+from osbot_utils.utils.Misc                                         import utc_now, date_today
 
 S3_PATH__WHEN_BLOCK_SIZE   = 5
 

@@ -1,10 +1,10 @@
 from osbot_aws.aws.lambda_.dependencies.Lambda__Dependency__Base                    import Lambda__Dependency__Base
+from osbot_utils.type_safe.primitives.safe_str.identifiers.Safe_Id                  import Safe_Id
 from osbot_utils.utils.Zip                                                          import zip_folder_to_bytes
-from osbot_utils.helpers.Safe_Id                                                    import Safe_Id
 from osbot_aws.aws.lambda_.schemas.Safe_Str__File__Path__Python_Package             import Safe_Str__File__Path__Python_Package
 from osbot_aws.aws.lambda_.schemas.Schema__Lambda__Dependency__Local_Install__Data  import Schema__Lambda__Dependency__Local_Install__Data
 from osbot_utils.utils.Json                                                         import json_file_load, json_file_save
-from osbot_utils.helpers.safe_str.Safe_Str__File__Path                              import Safe_Str__File__Path
+from osbot_utils.type_safe.primitives.safe_str.filesystem.Safe_Str__File__Path      import Safe_Str__File__Path
 from osbot_utils.helpers.duration.decorators.capture_duration                       import capture_duration
 from osbot_utils.utils.Files                                                        import path_combine, files_list__virtual_paths, file_exists, file_delete, folder_delete_recursively, current_temp_folder, create_folder
 from osbot_utils.utils.Process                                                      import Process

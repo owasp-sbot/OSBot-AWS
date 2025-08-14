@@ -2,7 +2,7 @@ import os
 import importlib
 import site
 from osbot_utils.type_safe.Type_Safe            import Type_Safe
-from osbot_utils.type_safe.decorators.type_safe import type_safe
+from osbot_utils.type_safe.type_safe_core.decorators.type_safe import type_safe
 from osbot_aws.aws.lambda_.Lambda_Layer         import Lambda_Layer
 from osbot_utils.testing.Temp_Folder            import Temp_Folder
 from osbot_utils.testing.Temp_Zip               import Temp_Zip
