@@ -1,5 +1,4 @@
-from os import environ
-
+from os                                                         import environ
 from botocore.client                                            import BaseClient
 from osbot_aws.aws.boto3.Cache_Boto3_Requests                   import Cache_Boto3_Requests, SQLITE_DB_NAME__BOTO3_REQUESTS_CACHE, SQLITE_TABLE_NAME__BOTO3_REQUESTS
 from osbot_aws.testing.TestCase__Boto3_Cache                    import TestCase__Boto3_Cache
