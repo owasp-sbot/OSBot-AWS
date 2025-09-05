@@ -1,24 +1,17 @@
-from os import chmod
-
 import boto3
-from botocore.exceptions import ClientError
-
-from osbot_utils.type_safe.Type_Safe import Type_Safe
-from osbot_utils.utils.Dev import pprint
-from osbot_utils.utils.Lists import list_index_by, list_get
-
-from osbot_aws.AWS_Config import set_aws_region, AWS_Config
-from osbot_utils.decorators.methods.cache_on_self import cache_on_self
-from osbot_utils.utils.Files import file_name, temp_folder, path_combine, file_create
-
+from os                                                 import chmod
+from botocore.exceptions                                import ClientError
+from osbot_utils.type_safe.Type_Safe                    import Type_Safe
+from osbot_utils.utils.Lists                            import list_index_by, list_get
+from osbot_aws.AWS_Config                               import set_aws_region, AWS_Config
+from osbot_utils.decorators.methods.cache_on_self       import cache_on_self
+from osbot_utils.utils.Files                            import temp_folder, path_combine, file_create
 from osbot_utils.decorators.methods.remove_return_value import remove_return_value
-
-from osbot_utils.decorators.lists.group_by import group_by
-from osbot_utils.decorators.lists.index_by import index_by
-from osbot_utils.decorators.methods.cache import cache
-from osbot_aws.apis.Session import Session
-from osbot_utils.utils.Misc import list_set
-from osbot_utils.utils.Status import status_warning, status_ok
+from osbot_utils.decorators.lists.group_by              import group_by
+from osbot_utils.decorators.lists.index_by              import index_by
+from osbot_aws.apis.Session                             import Session
+from osbot_utils.utils.Misc                             import list_set
+from osbot_utils.utils.Status                           import status_warning, status_ok
 
 # todo: find good solution to capture/manage these config values
 EC2_WAITER_DELAY        = 1             # default was 15 seconds
@@ -54,7 +47,6 @@ class EC2(Type_Safe):
             filters.append({'Name': key, 'Values': [value]})
         describe_kwargs = {'Owners': [owner],
                            'Filters':filters }
-        pprint(describe_kwargs)
         return self.client().describe_images(**describe_kwargs).get('Images')
 
     def image(self, image_id):
