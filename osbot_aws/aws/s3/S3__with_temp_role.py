@@ -5,12 +5,17 @@ from osbot_utils.utils.Env              import load_dotenv
 
 
 class S3__with_temp_role(S3):
-    temp_service_name   : str = "s3"
-    temp_role__services : str = ["s3"]
-    temp_role__action   : str = "*"
-    temp_role__resource : str = "*"
-    temp_role__name     : str = 'osbot__temp_role_for__test_S3'
+    temp_service_name   : str  = "s3"
+    temp_role__services : list = None
+    temp_role__action   : str  = "*"
+    temp_role__resource : str  = "*"
+    temp_role__name     : str  = 'osbot__temp_role_for__test_S3'
     temp_role__recreate : bool = False
+
+    def __init__(self, **kwargs):
+        self.temp_role__services =  ["s3"]
+        super().__init__(**kwargs)
+
 
     def iam_assume_role(self):
         load_dotenv()

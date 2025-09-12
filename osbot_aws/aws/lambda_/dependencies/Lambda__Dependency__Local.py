@@ -1,5 +1,5 @@
 from osbot_aws.aws.lambda_.dependencies.Lambda__Dependency__Base                    import Lambda__Dependency__Base
-from osbot_utils.type_safe.primitives.safe_str.identifiers.Safe_Id                  import Safe_Id
+from osbot_utils.type_safe.primitives.domains.identifiers.Safe_Id                  import Safe_Id
 from osbot_utils.utils.Zip                                                          import zip_folder_to_bytes
 from osbot_aws.aws.lambda_.schemas.Safe_Str__File__Path__Python_Package             import Safe_Str__File__Path__Python_Package
 from osbot_aws.aws.lambda_.schemas.Schema__Lambda__Dependency__Local_Install__Data  import Schema__Lambda__Dependency__Local_Install__Data

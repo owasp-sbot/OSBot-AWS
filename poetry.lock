@@ -2,34 +2,34 @@
 
 [[package]]
 name = "boto3"
-version = "1.40.9"
+version = "1.40.29"
 description = "The AWS SDK for Python"
 optional = false
 python-versions = ">=3.9"
 groups = ["main"]
 files = [
-    {file = "boto3-1.40.9-py3-none-any.whl", hash = "sha256:516f5e3f7552b2a7ca4d2c89b338fb4684998c676b11b906e2ab694c91716ba6"},
-    {file = "boto3-1.40.9.tar.gz", hash = "sha256:af3f77a548b3dd7db5046609598a28a9ad5d062437b1783da9b526cc67c38b79"},
+    {file = "boto3-1.40.29-py3-none-any.whl", hash = "sha256:bb2871e9be0fe20e6605d3369d521f2079cef77df672c1ee13362746184969d6"},
+    {file = "boto3-1.40.29.tar.gz", hash = "sha256:3abdf649163ab86929cee9a6401e3ed1aaf8aef35c95e262a1b1c496d20f4168"},
 ]
 
 [package.dependencies]
-botocore = ">=1.40.9,<1.41.0"
+botocore = ">=1.40.29,<1.41.0"
 jmespath = ">=0.7.1,<2.0.0"
-s3transfer = ">=0.13.0,<0.14.0"
+s3transfer = ">=0.14.0,<0.15.0"
 
 [package.extras]
 crt = ["botocore[crt] (>=1.21.0,<2.0a0)"]
 
 [[package]]
 name = "botocore"
-version = "1.40.9"
+version = "1.40.29"
 description = "Low-level, data-driven core of boto 3."
 optional = false
 python-versions = ">=3.9"
 groups = ["main"]
 files = [
-    {file = "botocore-1.40.9-py3-none-any.whl", hash = "sha256:d4960a39aab9658bcd0272490003001cb4a8d12b89bb297ccef994ee023fb638"},
-    {file = "botocore-1.40.9.tar.gz", hash = "sha256:f4a9c6ed08e8637138e1b5534f89d38c02650974b6458a07690493130e295f68"},
+    {file = "botocore-1.40.29-py3-none-any.whl", hash = "sha256:69a180a027044ae01db80b4cce4b2f93b6e4731fd7a8393c54f708c5677af85f"},
+    {file = "botocore-1.40.29.tar.gz", hash = "sha256:4e5207acef693167bb99c08a4c24d3e9405cb9669999e272a473a04cf2ba9df9"},
 ]
 
 [package.dependencies]
@@ -41,7 +41,7 @@ urllib3 = [
 ]
 
 [package.extras]
-crt = ["awscrt (==0.23.8)"]
+crt = ["awscrt (==0.27.6)"]
 
 [[package]]
 name = "jmespath"
@@ -57,14 +57,14 @@ files = [
 
 [[package]]
 name = "osbot-utils"
-version = "2.74.0"
+version = "3.2.0"
 description = "OWASP Security Bot - Utils"
 optional = false
 python-versions = "<4.0,>=3.7"
 groups = ["main"]
 files = [
-    {file = "osbot_utils-2.74.0-py3-none-any.whl", hash = "sha256:9528ddcc0da69a37312f0117a178aee47d13beb28394933fbc605cf900d759be"},
-    {file = "osbot_utils-2.74.0.tar.gz", hash = "sha256:785602e07d7273f0cf9929e7ef25fe6dea839ac1283556416f72cb64083f416e"},
+    {file = "osbot_utils-3.2.0-py3-none-any.whl", hash = "sha256:c88e948148562d8b912f7fabc4413902bcc6f75c615e370c49538eb2aabf8c05"},
+    {file = "osbot_utils-3.2.0.tar.gz", hash = "sha256:e1dd75fde0cc12077e09ecd1d351bed0f64ea2768c6178aecf43320776d17328"},
 ]
 
 [[package]]
@@ -84,14 +84,14 @@ six = ">=1.5"
 
 [[package]]
 name = "s3transfer"
-version = "0.13.1"
+version = "0.14.0"
 description = "An Amazon S3 Transfer Manager"
 optional = false
 python-versions = ">=3.9"
 groups = ["main"]
 files = [
-    {file = "s3transfer-0.13.1-py3-none-any.whl", hash = "sha256:a981aa7429be23fe6dfc13e80e4020057cbab622b08c0315288758d67cabc724"},
-    {file = "s3transfer-0.13.1.tar.gz", hash = "sha256:c3fdba22ba1bd367922f27ec8032d6a1cf5f10c934fb5d68cf60fd5a23d936cf"},
+    {file = "s3transfer-0.14.0-py3-none-any.whl", hash = "sha256:ea3b790c7077558ed1f02a3072fb3cb992bbbd253392f4b6e9e8976941c7d456"},
+    {file = "s3transfer-0.14.0.tar.gz", hash = "sha256:eff12264e7c8b4985074ccce27a3b38a485bb7f7422cc8046fee9be4983e4125"},
 ]
 
 [package.dependencies]

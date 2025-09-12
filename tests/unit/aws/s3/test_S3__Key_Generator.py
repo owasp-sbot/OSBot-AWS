@@ -1,8 +1,8 @@
-from unittest                               import TestCase
-from datetime                               import datetime
-from osbot_utils.type_safe.primitives.safe_str.identifiers.Safe_Id            import Safe_Id
-from osbot_utils.utils.Misc                 import utc_now, date_today
-from osbot_aws.aws.s3.S3__Key_Generator     import S3__Key_Generator
+from unittest                                                       import TestCase
+from datetime                                                       import datetime
+from osbot_utils.type_safe.primitives.domains.identifiers.Safe_Id   import Safe_Id
+from osbot_utils.utils.Misc                                         import utc_now, date_today
+from osbot_aws.aws.s3.S3__Key_Generator                             import S3__Key_Generator
 
 
 class test_S3__Key_Generator(TestCase):
