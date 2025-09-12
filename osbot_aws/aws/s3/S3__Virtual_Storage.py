@@ -2,7 +2,7 @@ from typing                                                             import L
 from osbot_aws.aws.s3.S3__DB_Base                                       import S3__DB_Base
 from osbot_utils.decorators.methods.cache_on_self                       import cache_on_self
 from osbot_utils.helpers.llms.cache.Virtual_Storage__Local__Folder      import Virtual_Storage__Local__Folder
-from osbot_utils.type_safe.primitives.safe_str.filesystem.Safe_Str__File__Path                  import Safe_Str__File__Path
+from osbot_utils.type_safe.primitives.domains.files.safe_str.Safe_Str__File__Path                  import Safe_Str__File__Path
 from osbot_utils.utils.Files                                            import path_combine_safe
 
 VIRTUAL_STORAGE__DEFAULT__ROOT_FOLDER = Safe_Str__File__Path("s3-virtual-storage/")

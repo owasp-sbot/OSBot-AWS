@@ -1,9 +1,7 @@
-from osbot_aws.aws.bedrock.cache.html.Bedrock_Cache__Html import Bedrock_Cache__Html
-from osbot_utils.helpers.html.Tag__Base import Tag__Base
-from osbot_utils.helpers.html.Tag__H import Tag__H
-from osbot_utils.utils.Dev import pprint
-from osbot_utils.utils.Json import json_loads, json_dumps
-from osbot_utils.utils.Misc import list_set, word_wrap, timestamp_to_str_date
+from osbot_utils.helpers.html.tags.Tag__Base                import Tag__Base
+from osbot_aws.aws.bedrock.cache.html.Bedrock_Cache__Html   import Bedrock_Cache__Html
+from osbot_utils.utils.Json                                 import json_loads, json_dumps
+from osbot_utils.utils.Misc                                 import list_set, word_wrap, timestamp_to_str_date
 
 
 class Bedrock_Cache__Html_Table(Bedrock_Cache__Html):

@@ -1,11 +1,8 @@
-from os import environ
+import pytest
+from os                                                                 import environ
 from unittest                                                           import TestCase
 from unittest.mock                                                      import Mock
-
-import pytest
-
-from osbot_aws.aws.bedrock.cache.Bedrock__Cache                         import Bedrock__Cache, ENV_NAME_BEDROCK_DB_NAME, \
-    SQLITE_DB_NAME__SQLITE_BEDROCK, SQLITE_TABLE__BEDROCK_REQUESTS
+from osbot_aws.aws.bedrock.cache.Bedrock__Cache                         import Bedrock__Cache, ENV_NAME_BEDROCK_DB_NAME, SQLITE_DB_NAME__SQLITE_BEDROCK, SQLITE_TABLE__BEDROCK_REQUESTS
 from osbot_utils.base_classes.Kwargs_To_Self                            import Kwargs_To_Self
 from osbot_utils.helpers.sqlite.Sqlite__Database                        import Sqlite__Database
 from osbot_utils.helpers.sqlite.cache.Sqlite__Cache__Requests           import Sqlite__Cache__Requests

@@ -1,5 +1,6 @@
 import re
-from osbot_utils.type_safe.primitives.safe_str.filesystem.Safe_Str__File__Path import Safe_Str__File__Path
+from osbot_utils.type_safe.primitives.domains.files.safe_str.Safe_Str__File__Path import Safe_Str__File__Path
+
 
 TYPE_SAFE_STR__FILE_PATH__PYTHON_PACKAGE__REGEX      = re.compile(r'[^a-zA-Z0-9_\-./\\ =]')  # Allow alphanumerics, underscores, hyphens, dots, slashes, spaces and equal
 

@@ -1,8 +1,6 @@
-from unittest import TestCase
-
+from unittest                                                   import TestCase
 from osbot_aws.aws.bedrock.cache.html.Bedrock_Cache__Html_Table import Bedrock_Cache__Html_Table
-from osbot_utils.utils.Dev import pprint
-from osbot_utils.utils.Files import file_delete, file_exists
+from osbot_utils.utils.Files                                    import file_delete, file_exists
 
 
 class test_Bedrock_Cache__Html_Table(TestCase):

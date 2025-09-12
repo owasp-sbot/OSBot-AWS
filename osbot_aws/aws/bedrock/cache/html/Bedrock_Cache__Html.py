@@ -1,10 +1,11 @@
-from osbot_aws.aws.bedrock.cache.Bedrock__Cache import Bedrock__Cache
-from osbot_utils.helpers.html.Tag__Base import Tag__Base
-from osbot_utils.helpers.html.Tag__Div import Tag__Div
-from osbot_utils.helpers.html.Tag__H import Tag__H
-from osbot_utils.helpers.html.Tag__HR import Tag__HR
-from osbot_utils.helpers.html.Tag__Head import Tag__Head
-from osbot_utils.helpers.html.Tag__Html import Tag__Html
+from osbot_utils.helpers.html.tags.Tag__Head        import Tag__Head
+from osbot_utils.helpers.html.tags.Tag__Base        import Tag__Base
+from osbot_utils.helpers.html.tags.Tag__HR          import Tag__HR
+from osbot_utils.helpers.html.tags.Tag__H           import Tag__H
+from osbot_utils.helpers.html.tags.Tag__Div         import Tag__Div
+from osbot_utils.helpers.html.tags.Tag__Html        import Tag__Html
+from osbot_aws.aws.bedrock.cache.Bedrock__Cache     import Bedrock__Cache
+
 
 
 class Bedrock_Cache__Html:
