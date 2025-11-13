@@ -1,8 +1,7 @@
 import boto3
 import json
-from functools import cache
-
-from osbot_utils.helpers.duration.Duration import Duration
+from functools                                          import cache
+from osbot_utils.helpers.duration.Duration              import Duration
 from osbot_utils.utils.Objects                          import get_value
 from osbot_utils.decorators.methods.cache_on_self       import cache_on_self
 from osbot_utils.decorators.lists.group_by              import group_by

@@ -6,10 +6,8 @@ from dateutil.tz import tzlocal
 from osbot_aws.AWS_Config                           import AWS_Config
 from osbot_aws.aws.dynamo_db.Dynamo_DB__Table       import Dynamo_DB__Table
 from osbot_aws.aws.dynamo_db.domains.DyDB__Table    import DyDB__Table
-from osbot_aws.testing.TestCase__Dynamo_DB          import TestCase__Dynamo_DB
-from osbot_aws.testing.TestCase__Dynamo_DB__Local import TestCase__Dynamo_DB__Local
+from osbot_aws.testing.TestCase__Dynamo_DB__Local   import TestCase__Dynamo_DB__Local
 from osbot_utils.base_classes.Kwargs_To_Self        import Kwargs_To_Self
-from osbot_utils.utils.Env                          import in_github_action
 from osbot_utils.utils.Lists                        import list_index_by
 from osbot_utils.utils.Misc                         import random_int, list_set, is_guid
 from osbot_utils.utils.Objects                      import base_types

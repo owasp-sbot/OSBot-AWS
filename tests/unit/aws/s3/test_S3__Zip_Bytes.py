@@ -1,17 +1,7 @@
-from unittest import TestCase
-
-import boto3
-
-from osbot_aws.AWS_Config import AWS_Config
-from osbot_aws.aws.iam.IAM import IAM
-from osbot_aws.aws.s3.S3__On_Temp_Bucket import S3__On_Temp_Bucket
-from osbot_aws.aws.s3.S3__Zip_Bytes                     import S3__Zip_Bytes
-from osbot_aws.aws.sts.STS import STS
-from osbot_aws.testing.TestCase__S3                     import TestCase__S3
-from osbot_utils.decorators.methods.capture_exception   import capture_exception
-from osbot_utils.utils.Dev                              import pprint
-from osbot_utils.utils.Objects import obj_info
-from osbot_utils.utils.Zip import zip_bytes__files
+from osbot_aws.aws.s3.S3__On_Temp_Bucket    import S3__On_Temp_Bucket
+from osbot_aws.aws.s3.S3__Zip_Bytes         import S3__Zip_Bytes
+from osbot_aws.testing.TestCase__S3         import TestCase__S3
+from osbot_utils.utils.Zip                  import zip_bytes__files
 
 
 class test_S3__Zip_Bytes(TestCase__S3):

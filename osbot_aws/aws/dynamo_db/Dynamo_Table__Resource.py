@@ -1,8 +1,7 @@
-from boto3 import resource
-
-from osbot_aws.aws.dynamo_db.Dynamo_DB import Dynamo_DB
-from osbot_utils.utils.Lists import array_pop
-from osbot_utils.utils.Objects import get_value
+from boto3                              import resource
+from osbot_aws.aws.dynamo_db.Dynamo_DB  import Dynamo_DB
+from osbot_utils.utils.Lists            import array_pop
+from osbot_utils.utils.Objects          import get_value
 
 # todo: see if we can remove this class once the new Dynamo_DB__Table is implemented
 class Dynamo_Table__Resource:

@@ -25,17 +25,7 @@ class Safe_Str__Comprehend__Text(Safe_Str):
     - DetectSyntax: 5000 bytes max
     - DetectPiiEntities: 5000 bytes max
 
-    Why NOT use Safe_Str__Text or Safe_Str__Text__Dangerous?
-    - Safe_Str__Text: Sanitizes characters, max 4096 chars
-    - Safe_Str__Text__Dangerous: Still filters some chars, max 65536 chars
-    - This type: NO sanitization, lets AWS process raw text
+      """
 
-    Implementation Note:
-    - Sets regex = None to disable character filtering
-    - Sets max_length = 5000 (5KB = 5000 bytes)
-    - Character count is used as proxy for byte count (conservative)
-    - AWS will return TextSizeLimitExceededException if actual bytes exceed limit
-    """
-
-    regex           = re.compile('')        # ← CRITICAL: No regex = allow ALL characters
-    max_length      = 5000                  # AWS Comprehend 5KB limit (conservative char estimate)
+    regex           = re.compile(r'[\x00\x01-\x08\x0B\x0C\x0E-\x1F\x7F]')   # allow ALL characters except some control ones
+    max_length      = 5000                                                  # AWS Comprehend 5KB limit (conservative char estimate)

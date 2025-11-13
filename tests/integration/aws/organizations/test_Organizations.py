@@ -1,13 +1,6 @@
-from unittest import TestCase
-
-import botocore
+from unittest                       import TestCase
 import pytest
-
-from osbot_utils.utils.Dev import pprint
-
-from osbot_aws.AWS_Config import AWS_Config
-
-from osbot_utils.utils.Objects import type_full_name
+from osbot_utils.utils.Objects      import type_full_name
 
 from osbot_aws.aws.organizations.Organizations import Organizations
 
@@ -28,9 +21,9 @@ class test_Organizations(TestCase):
 
             account_id = _.aws_config.account_id()
             account    = _.account(account_id=account_id)
-            pprint(account)
+            #pprint(account)
 
     def test_accounts(self):
         with self.organisations as _:
             accounts = _.accounts()
-            pprint(accounts)
+            #pprint(accounts)

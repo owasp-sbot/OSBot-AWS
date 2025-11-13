@@ -1,8 +1,6 @@
-from unittest import TestCase
-
+from unittest                                        import TestCase
 from osbot_aws.aws.iam.roles.IAM_Policy__Full_Access import IAM__Policy__Service__Full_Access
-from osbot_utils.utils.Dev import pprint
-from osbot_utils.utils.Objects import obj_data
+from osbot_utils.utils.Objects                       import obj_data
 
 
 class test_IAM__Policy__Service__Full_Access(TestCase):

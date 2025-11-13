@@ -1,0 +1,41 @@
+from enum import Enum
+
+
+class Enum__Comprehend__Pii_Entity_Type(str, Enum):
+    BANK_ACCOUNT_NUMBER                       = "BANK_ACCOUNT_NUMBER"
+    BANK_ROUTING                              = "BANK_ROUTING"
+    CREDIT_DEBIT_NUMBER                       = "CREDIT_DEBIT_NUMBER"
+    CREDIT_DEBIT_CVV                          = "CREDIT_DEBIT_CVV"
+    CREDIT_DEBIT_EXPIRY                       = "CREDIT_DEBIT_EXPIRY"
+    EMAIL                                     = "EMAIL"
+    PHONE                                     = "PHONE"
+    NAME                                      = "NAME"
+    SSN                                       = "SSN"
+    ADDRESS                                   = "ADDRESS"
+    DATE_TIME                                 = "DATE_TIME"
+    PASSPORT_NUMBER                           = "PASSPORT_NUMBER"
+    DRIVER_ID                                 = "DRIVER_ID"
+    URL                                       = "URL"
+    USERNAME                                  = "USERNAME"
+    PASSWORD                                  = "PASSWORD"
+    AWS_ACCESS_KEY                            = "AWS_ACCESS_KEY"
+    AWS_SECRET_KEY                            = "AWS_SECRET_KEY"
+    IP_ADDRESS                                = "IP_ADDRESS"
+    MAC_ADDRESS                               = "MAC_ADDRESS"
+    LICENSE_PLATE                             = "LICENSE_PLATE"
+    VEHICLE_IDENTIFICATION_NUMBER             = "VEHICLE_IDENTIFICATION_NUMBER"
+    UK_NATIONAL_INSURANCE_NUMBER              = "UK_NATIONAL_INSURANCE_NUMBER"
+    CA_SOCIAL_INSURANCE_NUMBER                = "CA_SOCIAL_INSURANCE_NUMBER"
+    US_INDIVIDUAL_TAX_IDENTIFICATION_NUMBER   = "US_INDIVIDUAL_TAX_IDENTIFICATION_NUMBER"
+    UK_UNIQUE_TAXPAYER_REFERENCE_NUMBER       = "UK_UNIQUE_TAXPAYER_REFERENCE_NUMBER"
+    IN_PERMANENT_ACCOUNT_NUMBER               = "IN_PERMANENT_ACCOUNT_NUMBER"
+    IN_NREGA                                  = "IN_NREGA"
+    INTERNATIONAL_BANK_ACCOUNT_NUMBER         = "INTERNATIONAL_BANK_ACCOUNT_NUMBER"
+    SWIFT_CODE                                = "SWIFT_CODE"
+    UK_NATIONAL_HEALTH_SERVICE_NUMBER         = "UK_NATIONAL_HEALTH_SERVICE_NUMBER"
+    CA_HEALTH_NUMBER                          = "CA_HEALTH_NUMBER"
+    IN_AADHAAR                                = "IN_AADHAAR"
+    IN_VOTER_NUMBER                           = "IN_VOTER_NUMBER"
+
+
+

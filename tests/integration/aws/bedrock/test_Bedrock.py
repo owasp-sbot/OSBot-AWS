@@ -1,18 +1,13 @@
 import json
 
-import pytest
-
-from osbot_aws.aws.bedrock.Bedrock__with_temp_role                       import Bedrock__with_temp_role
-from osbot_aws.aws.bedrock.models.titan.Amazon_Titan_Text_Lite_V1 import Amazon_Titan_Text_Lite_V1
-from osbot_aws.aws.bedrock.models.titan.Amazon_Titan_Tg1_Large import Amazon_Titan_Tg1_Large
+from osbot_aws.aws.bedrock.models.titan.Amazon_Titan_Text_Lite_V1     import Amazon_Titan_Text_Lite_V1
+from osbot_aws.aws.bedrock.models.titan.Amazon_Titan_Tg1_Large        import Amazon_Titan_Tg1_Large
 from osbot_aws.aws.bedrock.models.claude.Anthropic__Claude_Instant_V1 import Anthropic__Claude_Instant_V1
-from osbot_aws.aws.bedrock.models.claude.Anthropic__Claude_V2_0 import Anthropic__Claude_V2_0
-from osbot_utils.utils.Dev import pprint
-from osbot_utils.utils.Json import json_dumps
-from osbot_utils.utils.Lists                                             import list_contains_list
-from osbot_utils.utils.Misc                                              import list_set
-from osbot_utils.utils.Objects                                           import type_full_name
-from osbot_aws.testing.TestCase__Bedrock import TestCase__Bedrock
+from osbot_aws.aws.bedrock.models.claude.Anthropic__Claude_V2_0       import Anthropic__Claude_V2_0
+from osbot_utils.utils.Lists                                          import list_contains_list
+from osbot_utils.utils.Misc                                           import list_set
+from osbot_utils.utils.Objects                                        import type_full_name
+from osbot_aws.testing.TestCase__Bedrock                              import TestCase__Bedrock
 
 
 class test_Bedrock(TestCase__Bedrock):

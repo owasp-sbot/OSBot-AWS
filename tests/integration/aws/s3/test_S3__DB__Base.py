@@ -1,7 +1,7 @@
+from osbot_utils.testing.__                  import __
 from osbot_aws.testing.TestCase__S3__Temp_DB import TestCase__S3__Temp_DB
 from osbot_utils.utils.Misc                  import random_text
 from osbot_aws.utils.AWS_Sanitization        import str_to_valid_s3_bucket_name
-from osbot_utils.utils.Objects               import __, dict_to_obj
 from osbot_aws.AWS_Config                    import aws_config
 from osbot_aws.aws.s3.S3__DB_Base            import S3_DB_BASE__BUCKET_NAME__PREFIX, S3_DB_BASE__BUCKET_NAME__SUFFIX, S3__DB_Base
 

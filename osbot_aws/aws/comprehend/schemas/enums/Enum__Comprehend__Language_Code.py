@@ -1,8 +1,7 @@
 from enum                                                import Enum
-from osbot_utils.type_safe.primitives.core.Safe_Str     import Safe_Str
 
 
-class Enum__Comprehend__Language_Code(Safe_Str, Enum):
+class Enum__Comprehend__Language_Code(str, Enum):
     """
     AWS Comprehend supported language codes (RFC 5646 format).
 

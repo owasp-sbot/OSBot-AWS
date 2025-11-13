@@ -4,7 +4,7 @@ from osbot_utils.utils.Env                                              import i
 from osbot_utils.utils.Zip                                              import zip_bytes__file_list, zip_bytes__files
 from osbot_aws.AWS_Config                                               import AWS_Config, DEFAULT__BUCKET_NAME__INFIX__LAMBDA
 from osbot_aws.aws.lambda_.schemas.Safe_Str__File__Name__Python_Package import Safe_Str__File__Name__Python_Package
-from osbot_utils.utils.Objects                                          import __
+from osbot_utils.testing.__                                             import __
 from osbot_utils.utils.Files                                            import file_exists, folder_exists, current_temp_folder, path_combine, file_bytes
 from osbot_aws.aws.lambda_.dependencies.Lambda__Dependency__Local       import Lambda__Dependency__Local, Schema__Lambda__Dependency__Local_Install__Data, FOLDER_NAME__LAMBDA_DEPENDENCIES_STORAGE
 from tests.integration.osbot_aws__objs_for__integration_tests           import setup__osbot_aws__integration_tests

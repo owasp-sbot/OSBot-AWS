@@ -66,7 +66,7 @@ class S3__DB_Base(Type_Safe):
         return json_parse(self.s3_file_contents(s3_key, version_id=version_id))
 
     def s3_file_contents_obj(self, s3_key, version_id=None):                                                     # Convert S3 file contents to a Python object using str_to_obj
-        from osbot_utils.utils.Objects import str_to_obj
+        from osbot_utils.testing.__helpers import str_to_obj
         return str_to_obj(self.s3_file_contents(s3_key, version_id=version_id))
 
     def s3_file_data(self, s3_key, version_id=None):

@@ -3,7 +3,6 @@ from osbot_aws.aws.dynamo_db.Dynamo_DB__Table                   import Dynamo_DB
 from osbot_aws.aws.dynamo_db.domains.DyDB__Table                import DyDB__Table
 from osbot_aws.aws.dynamo_db.domains.DyDB__Table_With_GSI       import DyDB__Table_With_GSI
 from osbot_aws.aws.dynamo_db.domains.DyDB__Table_With_Timestamp import DyDB__Table_With_Timestamp
-from osbot_aws.testing.TestCase__Dynamo_DB                      import TestCase__Dynamo_DB
 from osbot_aws.testing.TestCase__Dynamo_DB__Local               import TestCase__Dynamo_DB__Local
 from osbot_utils.base_classes.Kwargs_To_Self                    import Kwargs_To_Self
 from osbot_utils.utils.Objects                                  import base_types
