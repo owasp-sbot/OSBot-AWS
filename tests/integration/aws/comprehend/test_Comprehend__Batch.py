@@ -26,15 +26,12 @@ class test_Comprehend__Batch(TestCase):
     def test__init__(self):                                                 # Test basic initialization and inheritance
         with self.comprehend_batch as _:
             assert type(_)         is Comprehend__Batch__with_temp_role
-            assert base_types(_)   == [Comprehend__IAM__Temp_Role,
-                                       Comprehend__Batch         ,
-                                       Type_Safe                 , object,
-                                       Comprehend__Base          ,
+            assert base_types(_)   == [Comprehend__Batch         ,
                                        Type_Safe                 , object]
 
     def test_client(self):                                                  # Test client creation
         with self.comprehend_batch as _:
-            client = _.client()
+            client = _.client
             assert type_full_name(client) == 'botocore.client.Comprehend'
 
     # ============================================================================

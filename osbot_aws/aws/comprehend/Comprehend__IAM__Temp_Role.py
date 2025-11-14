@@ -41,8 +41,10 @@ class Comprehend__IAM__Temp_Role(Type_Safe):
 
 # todo: see if there is a way to create these class (and use-case) without needing to create these extra classes
 
-class Comprehend__Batch__with_temp_role(Comprehend__IAM__Temp_Role, Comprehend__Batch):
-    pass
-
 class Comprehend__with_temp_role(Comprehend__IAM__Temp_Role, Comprehend):
     pass
+
+class Comprehend__Batch__with_temp_role(Comprehend__Batch):
+    def __init__(self, **kwargs):
+        self.client = Comprehend__IAM__Temp_Role().client()
+        super().__init__(**kwargs)
