@@ -1,6 +1,6 @@
 # OSBot-AWS
 
-![Current Release](https://img.shields.io/badge/release-v2.39.5-blue)
+![Current Release](https://img.shields.io/badge/release-v2.39.7-blue)
 
 A comprehensive Python library for interacting with AWS services, providing simplified and type-safe wrappers around boto3.
 
