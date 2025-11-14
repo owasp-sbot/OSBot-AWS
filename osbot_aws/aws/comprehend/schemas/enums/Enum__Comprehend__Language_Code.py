@@ -5,15 +5,21 @@ class Enum__Comprehend__Language_Code(str, Enum):
     """
     AWS Comprehend supported language codes (RFC 5646 format).
 
+    IMPORTANT: AWS Comprehend has TWO different language lists:
+    1. Languages that can be DETECTED (100+) - via detect_dominant_language
+    2. Languages that can be ANALYZED (70+) - for sentiment, entities, etc.
+
+    This enum covers languages supported for ANALYSIS operations.
+
+    For detect_dominant_language results, use Safe_Str__RFC5646__Language_Code
+    which accepts ANY valid RFC 5646 code that AWS might return.
+
     Amazon Comprehend supports analysis in the following languages:
     - Uses ISO 639-1 2-letter codes when available
     - Falls back to ISO 639-2 3-letter codes when needed
-
-    Note: DetectDominantLanguage can detect 100+ languages but returns RFC 5646 codes.
-    This enum covers the languages supported for sentiment, entities, key phrases, and syntax.
     """
 
-    # Most commonly used languages
+    # Most commonly used languages (supported for all operations)
     ENGLISH            = "en"       # English
     SPANISH            = "es"       # Spanish
     FRENCH             = "fr"       # French
@@ -91,3 +97,6 @@ class Enum__Comprehend__Language_Code(str, Enum):
     UZBEK              = "uz"       # Uzbek
     VIETNAMESE         = "vi"       # Vietnamese
     WELSH              = "cy"       # Welsh
+
+    # Special marker for unsupported languages detected by AWS
+    UNSUPPORTED        = "unsupported"  # AWS detected a language not in this enum

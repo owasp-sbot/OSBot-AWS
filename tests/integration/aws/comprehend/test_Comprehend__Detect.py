@@ -1,17 +1,18 @@
 import pytest
 from unittest                                                                                       import TestCase
+from botocore.client                                                                                import BaseClient
 from osbot_utils.type_safe.primitives.domains.numerical.safe_float.Safe_Float__Probability_Score    import Safe_Float__Probability_Score
 from osbot_utils.testing.__                                                                         import __, __LESS_THAN__, __GREATER_THAN__, __BETWEEN__, __CLOSE_TO__, __SKIP__
 from osbot_utils.utils.Env                                                                          import in_github_action
-from osbot_aws.aws.comprehend.Comprehend                                                            import Comprehend
+from osbot_aws.aws.comprehend.Comprehend                                                            import Comprehend__Detect
 from osbot_aws.aws.comprehend.Comprehend__with_temp_role                                            import Comprehend__with_temp_role
-from osbot_aws.aws.comprehend.schemas.Schema__Comprehend__Detect_Sentiment                          import Schema__Comprehend__Detect_Sentiment
-from osbot_aws.aws.comprehend.schemas.Schema__Comprehend__Detect_Key_Phrases                        import Schema__Comprehend__Detect_Key_Phrases
-from osbot_aws.aws.comprehend.schemas.Schema__Comprehend__Detect_Entities                           import Schema__Comprehend__Detect_Entities
-from osbot_aws.aws.comprehend.schemas.Schema__Comprehend__Detect_Dominant_Language                  import Schema__Comprehend__Detect_Dominant_Language
-from osbot_aws.aws.comprehend.schemas.Schema__Comprehend__Detect_Pii_Entities                       import Schema__Comprehend__Detect_Pii_Entities
-from osbot_aws.aws.comprehend.schemas.Schema__Comprehend__Detect_Syntax                             import Schema__Comprehend__Detect_Syntax
-from osbot_aws.aws.comprehend.schemas.Schema__Comprehend__Detect_Toxic_Content                      import Schema__Comprehend__Detect_Toxic_Content
+from osbot_aws.aws.comprehend.schemas.detect.Schema__Comprehend__Detect_Sentiment                   import Schema__Comprehend__Detect_Sentiment
+from osbot_aws.aws.comprehend.schemas.detect.Schema__Comprehend__Detect_Key_Phrases                 import Schema__Comprehend__Detect_Key_Phrases
+from osbot_aws.aws.comprehend.schemas.detect.Schema__Comprehend__Detect_Entities                    import Schema__Comprehend__Detect_Entities
+from osbot_aws.aws.comprehend.schemas.detect.Schema__Comprehend__Detect_Dominant_Language           import Schema__Comprehend__Detect_Dominant_Language
+from osbot_aws.aws.comprehend.schemas.detect.Schema__Comprehend__Detect_Pii_Entities                import Schema__Comprehend__Detect_Pii_Entities
+from osbot_aws.aws.comprehend.schemas.detect.Schema__Comprehend__Detect_Syntax                      import Schema__Comprehend__Detect_Syntax
+from osbot_aws.aws.comprehend.schemas.detect.Schema__Comprehend__Detect_Toxic_Content               import Schema__Comprehend__Detect_Toxic_Content
 from osbot_aws.aws.comprehend.schemas.enums.Enum__Comprehend__Entity_Type                           import Enum__Comprehend__Entity_Type
 from osbot_aws.aws.comprehend.schemas.enums.Enum__Comprehend__Language_Code                         import Enum__Comprehend__Language_Code
 from osbot_aws.aws.comprehend.schemas.enums.Enum__Comprehend__Part_Of_Speech_Tag                    import Enum__Comprehend__Part_Of_Speech_Tag
@@ -22,34 +23,44 @@ from osbot_aws.aws.comprehend.schemas.enums.Enum__Comprehend__Detect_Sentiment__
 from osbot_aws.aws.comprehend.schemas.safe_str.Safe_Str__AWS_Comprehend__Text                       import Safe_Str__Comprehend__Text
 
 
-class test_Comprehend(TestCase):
+class test_Comprehend__Detect(TestCase):
 
     @classmethod
     def setUpClass(cls):
         if in_github_action():
             pytest.skip("Doesn't work when running all tests")              # todo: fix issue caused by the use of localstack has a target
-        cls.comprehend = Comprehend__with_temp_role()
+        cls.comprehend        = Comprehend__with_temp_role()
+        cls.comprehend_detect = cls.comprehend.detect()
 
     def test__init__(self):
-        with self.comprehend as _:
-            assert type(_) is Comprehend__with_temp_role
-            assert base_types(_) == [Comprehend, Type_Safe, object]
+        with self.comprehend_detect as _:
+            assert type(_) is Comprehend__Detect
+            assert base_types(_) == [Type_Safe, object]
 
     def test_client(self):
-        with self.comprehend as _:
-            client = _.client()
+        with self.comprehend_detect as _:
+            client = _.client
+            assert type(_)                is Comprehend__Detect
+            assert base_types(_)          == [Type_Safe, object]
             assert type_full_name(client) == 'botocore.client.Comprehend'
+            assert base_types(client)     == [BaseClient, object]
+
+        with self.comprehend_detect as _:
+            client = _.client
+            assert type(_)                is Comprehend__Detect
+            assert base_types(_)          == [Type_Safe, object]
+            assert type_full_name(client) == 'botocore.client.Comprehend'
+            assert base_types(client)     == [BaseClient, object]
 
     # ============================================================================
     # SENTIMENT DETECTION TESTS
     # ============================================================================
 
     def test_detect_sentiment(self):                                                        # Validate AWS Comprehend sentiment detection
-        with self.comprehend as _:
+        with self.comprehend_detect as _:
             result = _.detect_sentiment('Hello World')
             assert type(result) is Schema__Comprehend__Detect_Sentiment
 
-            result.print_obj()
             assert result.obj() == __(duration  = __LESS_THAN__(0.5)                ,
                                       sentiment = 'Positive'                         ,
                                       score     = __(mixed    = __CLOSE_TO__(0.001 , tolerance=0.0005) ,   # 0.0010159355588257313     ,
@@ -59,7 +70,7 @@ class test_Comprehend(TestCase):
 
 
     def test_detect_sentiment__type_conversion(self):                                      # Test auto-conversion of raw types
-        with self.comprehend as _:
+        with self.comprehend_detect as _:
             result = _.detect_sentiment('test text')
             assert type(result.sentiment) is Enum__Comprehend__Detect_Sentiment__Sentiment
             assert type(result.score.positive) is Safe_Float__Probability_Score
@@ -70,7 +81,7 @@ class test_Comprehend(TestCase):
                                             positive = __BETWEEN__(0.0, 0.1))           # 0.0158331710845232
 
     def test_detect_sentiment__negative(self):                                             # Test detection of negative sentiment
-        with self.comprehend as _:
+        with self.comprehend_detect as _:
             text   = 'This is terrible and awful'
             result = _.detect_sentiment(text=text)
 
@@ -83,7 +94,7 @@ class test_Comprehend(TestCase):
                                           duration  = __SKIP__    )
 
     def test_detect_sentiment__with_language_code(self):                                   # Test sentiment detection with explicit language code
-        with self.comprehend as _:
+        with self.comprehend_detect as _:
             result = _.detect_sentiment('Hola mundo', language_code=Enum__Comprehend__Language_Code.SPANISH)
             assert type(result)     is Schema__Comprehend__Detect_Sentiment
             assert result.sentiment == 'Neutral'
@@ -94,7 +105,7 @@ class test_Comprehend(TestCase):
     # ============================================================================
 
     def test_detect_key_phrases(self):                                                     # Test extraction of key phrases from text
-        with self.comprehend as _:
+        with self.comprehend_detect as _:
             text   = "AWS Lambda is a serverless compute service that runs code in response to events."
             result = _.detect_key_phrases(text)
 
@@ -123,7 +134,7 @@ class test_Comprehend(TestCase):
 
 
     def test_detect_key_phrases__simple_text(self):                                        # Test key phrase detection with simple text
-        with self.comprehend as _:
+        with self.comprehend_detect as _:
             result = _.detect_key_phrases("The quick brown fox jumps over the lazy dog.")
             assert type(result)            is Schema__Comprehend__Detect_Key_Phrases
             assert result.obj()            == __(key_phrases = [__(text         = 'The quick brown fox'     ,
@@ -148,7 +159,7 @@ class test_Comprehend(TestCase):
     # ============================================================================
 
     def test_detect_entities(self):                                                        # Test named entity recognition (NER)
-        with self.comprehend as _:
+        with self.comprehend_detect as _:
             text   = "Amazon Web Services was founded by Jeff Bezos in Seattle, Washington in 2006."
             result = _.detect_entities(text)
 
@@ -177,7 +188,7 @@ class test_Comprehend(TestCase):
 
 
     def test_detect_entities__locations(self):                                             # Test detection of location entities
-        with self.comprehend as _:
+        with self.comprehend_detect as _:
             text      = "I traveled from Paris to Tokyo through London."
             result    = _.detect_entities(text)
 
@@ -200,7 +211,7 @@ class test_Comprehend(TestCase):
 
 
     def test_detect_entities__dates_and_quantities(self):                                  # Test detection of dates and quantities
-        with self.comprehend as _:
+        with self.comprehend_detect as _:
             text         = "On January 15, 2024, we sold 100 units for $50 each."
             result       = _.detect_entities(text)
 
@@ -232,7 +243,7 @@ class test_Comprehend(TestCase):
     # ============================================================================
 
     def test_detect_dominant_language(self):                                               # Test automatic language detection
-        with self.comprehend as _:
+        with self.comprehend_detect as _:
             result = _.detect_dominant_language("Hello World")
 
             assert type(result)  is Schema__Comprehend__Detect_Dominant_Language
@@ -243,11 +254,11 @@ class test_Comprehend(TestCase):
 
 
     def test_detect_dominant_language__spanish(self):                                      # Test language detection for Spanish text
-        with self.comprehend as _:
+        with self.comprehend_detect as _:
             result = _.detect_dominant_language("Hola mundo, ¿cómo estás?")
 
             assert type(result)                      is Schema__Comprehend__Detect_Dominant_Language
-            assert result.languages[0].language_code == Enum__Comprehend__Language_Code.SPANISH
+            assert result.languages[0].language_code == 'es'
             assert result.obj()                      == __(languages = [__(language_code = 'es'                   ,
                                                                            score         = __GREATER_THAN__(0.9) )],    # 0.9850438237190247
                                                            duration  = __SKIP__                                    )
@@ -255,7 +266,7 @@ class test_Comprehend(TestCase):
 
 
     def test_detect_dominant_language__french(self):                                       # Test language detection for French text
-        with self.comprehend as _:
+        with self.comprehend_detect as _:
             result         = _.detect_dominant_language("Bonjour le monde, comment allez-vous?")
             first_language = result.languages[0]
 
@@ -267,11 +278,11 @@ class test_Comprehend(TestCase):
 
 
 
-            assert first_language.language_code == Enum__Comprehend__Language_Code.FRENCH
+            assert first_language.language_code == 'fr'
             assert first_language.score          > 0.8
 
     def test_detect_dominant_language__multi_candidate(self):                              # Test language detection returns multiple candidates sorted by confidence
-        with self.comprehend as _:
+        with self.comprehend_detect as _:
             result = _.detect_dominant_language("Hola my friend, como estas today?")
             assert result.obj() == __(languages = [ __(language_code = 'en'                    ,
                                                        score         = __GREATER_THAN__(0.8))  ,    # 0.8779959082603455
@@ -285,7 +296,7 @@ class test_Comprehend(TestCase):
     # ============================================================================
 
     def test_detect_pii_entities(self):                                                    # Test PII detection for privacy compliance
-        with self.comprehend as _:
+        with self.comprehend_detect as _:
             text   = "My email is john.doe@example.com and my phone is 555-1234."
             result = _.detect_pii_entities(text)
 
@@ -305,7 +316,7 @@ class test_Comprehend(TestCase):
 
 
     def test_detect_pii_entities__financial_info(self):                                    # Test detection of financial PII
-        with self.comprehend as _:
+        with self.comprehend_detect as _:
             text   = "Credit card: 4532-1234-5678-9010"
             result = _.detect_pii_entities(text)
 
@@ -317,7 +328,7 @@ class test_Comprehend(TestCase):
                                        duration = __SKIP__)
 
     def test_detect_pii_entities__ssn(self):                                               # Test detection of SSN
-        with self.comprehend as _:
+        with self.comprehend_detect as _:
             text   = "My SSN is 123-45-6789"
             result = _.detect_pii_entities(text)
 
@@ -334,7 +345,7 @@ class test_Comprehend(TestCase):
 
 
     def test_detect_pii_entities__no_pii(self):                                            # Test text with no PII returns empty list
-        with self.comprehend as _:
+        with self.comprehend_detect as _:
             text   = "The weather is nice today."
             result = _.detect_pii_entities(text)
 
@@ -349,7 +360,7 @@ class test_Comprehend(TestCase):
     # ============================================================================
 
     def test_detect_syntax(self):                                                          # Test part-of-speech tagging
-        with self.comprehend as _:
+        with self.comprehend_detect as _:
             text   = "The quick brown fox jumps."
             result = _.detect_syntax(text)
 
@@ -406,7 +417,7 @@ class test_Comprehend(TestCase):
                 assert type(token.part_of_speech.tag) is Enum__Comprehend__Part_Of_Speech_Tag
 
     def test_detect_syntax__pos_tags(self):                                                # Test that common POS tags are detected correctly
-        with self.comprehend as _:
+        with self.comprehend_detect as _:
             text     = "The cat sleeps quietly."
             result   = _.detect_syntax(text)
             pos_tags = [token.part_of_speech.tag for token   in result.syntax_tokens]
@@ -453,7 +464,7 @@ class test_Comprehend(TestCase):
 
 
     def test_detect_syntax__token_offsets(self):                                           # Test that token offsets are correct
-        with self.comprehend as _:
+        with self.comprehend_detect as _:
             text   = "Hello world"
             result = _.detect_syntax(text)
 
@@ -486,7 +497,7 @@ class test_Comprehend(TestCase):
     # ============================================================================
 
     def test_detect_toxic_content(self):                                                   # Test toxic content detection for content moderation
-        with self.comprehend as _:
+        with self.comprehend_detect as _:
             text   = "You are an doughnut and I don't like you."
             result = _.detect_toxic_content(text)
 
@@ -520,7 +531,7 @@ class test_Comprehend(TestCase):
                     assert type(label.name) is Enum__Comprehend__Toxic_Content_Label
 
     def test_detect_toxic_content__clean_text(self):                                       # Test that clean text has low/no toxicity scores
-        with self.comprehend as _:
+        with self.comprehend_detect as _:
             text   = "The weather is beautiful today. I hope you have a great day!"
             result = _.detect_toxic_content(text)
 
@@ -553,7 +564,7 @@ class test_Comprehend(TestCase):
                 assert len(high_confidence_toxic) == 0
 
     def test_detect_toxic_content__profanity(self):                                        # Test detection of profanity
-        with self.comprehend as _:
+        with self.comprehend_detect as _:
             text   = "This is absolutely cr*p."
             result = _.detect_toxic_content(text)
 
@@ -587,23 +598,23 @@ class test_Comprehend(TestCase):
     # ============================================================================
 
     def test_detect_sentiment__empty_like_text(self):                                      # Test handling of minimal text
-        with self.comprehend as _:
+        with self.comprehend_detect as _:
             result = _.detect_sentiment("Hi")
             assert type(result) is Schema__Comprehend__Detect_Sentiment
 
     def test_detect_key_phrases__single_word(self):                                        # Test key phrase detection with single word
-        with self.comprehend as _:
+        with self.comprehend_detect as _:
             result = _.detect_key_phrases("Hello")
             assert type(result) is Schema__Comprehend__Detect_Key_Phrases
 
     def test_detect_entities__no_entities(self):                                           # Test entity detection with text containing no named entities
-        with self.comprehend as _:
+        with self.comprehend_detect as _:
             text   = "It was nice."
             result = _.detect_entities(text)
             assert type(result) is Schema__Comprehend__Detect_Entities
 
     def test_multiple_operations_on_same_text(self):                                       # Test running multiple operations on the same text
-        with self.comprehend as _:
+        with self.comprehend_detect as _:
             text = "Amazon was founded by Jeff Bezos in Seattle."
 
             sentiment_result = _.detect_sentiment(text)
