@@ -7,6 +7,7 @@ from osbot_utils.type_safe.Type_Safe                                            
 from osbot_aws.aws.comprehend.Comprehend__Base                                                      import Comprehend__Base
 from osbot_aws.aws.comprehend.Comprehend__Batch                                                     import Comprehend__Batch
 from osbot_aws.aws.comprehend.Comprehend__Batch__with_temp_role                                     import Comprehend__Batch__with_temp_role
+from osbot_aws.aws.comprehend.Comprehend__IAM__Temp_Role import Comprehend__IAM__Temp_Role
 from osbot_aws.aws.comprehend.schemas.batch.Schema__Comprehend__Batch__Detect_Sentiment             import Schema__Comprehend__Batch__Detect_Sentiment
 from osbot_aws.aws.comprehend.schemas.batch.Schema__Comprehend__Batch__Detect_Entities              import Schema__Comprehend__Batch__Detect_Entities
 from osbot_aws.aws.comprehend.schemas.batch.Schema__Comprehend__Batch__Detect_Key_Phrases           import Schema__Comprehend__Batch__Detect_Key_Phrases
@@ -26,7 +27,11 @@ class test_Comprehend__Batch(TestCase):
     def test__init__(self):                                                 # Test basic initialization and inheritance
         with self.comprehend_batch as _:
             assert type(_)         is Comprehend__Batch__with_temp_role
-            assert base_types(_)   == [Comprehend__Batch, Comprehend__Base, Type_Safe, object]
+            assert base_types(_)   == [Comprehend__IAM__Temp_Role,
+                                       Comprehend__Batch         ,
+                                       Type_Safe                 , object,
+                                       Comprehend__Base          ,
+                                       Type_Safe                 , object]
 
     def test_client(self):                                                  # Test client creation
         with self.comprehend_batch as _:
