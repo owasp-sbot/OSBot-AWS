@@ -1,4 +1,5 @@
 from osbot_utils.testing.__                  import __
+from osbot_utils.testing.__helpers           import dict_to_obj
 from osbot_aws.testing.TestCase__S3__Temp_DB import TestCase__S3__Temp_DB
 from osbot_utils.utils.Misc                  import random_text
 from osbot_aws.utils.AWS_Sanitization        import str_to_valid_s3_bucket_name
