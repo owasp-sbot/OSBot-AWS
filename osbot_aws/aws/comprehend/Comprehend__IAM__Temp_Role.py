@@ -2,6 +2,9 @@ from osbot_utils.type_safe.Type_Safe                import Type_Safe
 from osbot_aws.aws.iam.IAM_Assume_Role              import IAM_Assume_Role
 from osbot_utils.decorators.methods.cache_on_self   import cache_on_self
 from osbot_utils.utils.Env                          import load_dotenv
+from osbot_aws.aws.comprehend.Comprehend__Batch     import Comprehend__Batch
+from osbot_aws.aws.comprehend.Comprehend            import Comprehend
+
 
 
 class Comprehend__IAM__Temp_Role(Type_Safe):
@@ -34,3 +37,12 @@ class Comprehend__IAM__Temp_Role(Type_Safe):
     def client(self):   # Create Comprehend client using temporary IAM role credentials.
         service = "comprehend"
         return self.iam_assume_role().boto3_client(service_name=service)
+
+
+# todo: see if there is a way to create these class (and use-case) without needing to create these extra classes
+
+class Comprehend__Batch__with_temp_role(Comprehend__IAM__Temp_Role, Comprehend__Batch):
+    pass
+
+class Comprehend__with_temp_role(Comprehend__IAM__Temp_Role, Comprehend):
+    pass

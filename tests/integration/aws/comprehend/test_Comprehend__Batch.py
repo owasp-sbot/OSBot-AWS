@@ -6,8 +6,7 @@ from osbot_utils.utils.Objects                                                  
 from osbot_utils.type_safe.Type_Safe                                                                import Type_Safe
 from osbot_aws.aws.comprehend.Comprehend__Base                                                      import Comprehend__Base
 from osbot_aws.aws.comprehend.Comprehend__Batch                                                     import Comprehend__Batch
-from osbot_aws.aws.comprehend.Comprehend__Batch__with_temp_role                                     import Comprehend__Batch__with_temp_role
-from osbot_aws.aws.comprehend.Comprehend__IAM__Temp_Role import Comprehend__IAM__Temp_Role
+from osbot_aws.aws.comprehend.Comprehend__IAM__Temp_Role                                            import Comprehend__IAM__Temp_Role, Comprehend__Batch__with_temp_role
 from osbot_aws.aws.comprehend.schemas.batch.Schema__Comprehend__Batch__Detect_Sentiment             import Schema__Comprehend__Batch__Detect_Sentiment
 from osbot_aws.aws.comprehend.schemas.batch.Schema__Comprehend__Batch__Detect_Entities              import Schema__Comprehend__Batch__Detect_Entities
 from osbot_aws.aws.comprehend.schemas.batch.Schema__Comprehend__Batch__Detect_Key_Phrases           import Schema__Comprehend__Batch__Detect_Key_Phrases

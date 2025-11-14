@@ -5,7 +5,7 @@ from osbot_utils.type_safe.primitives.domains.numerical.safe_float.Safe_Float__P
 from osbot_utils.testing.__                                                                         import __, __LESS_THAN__, __GREATER_THAN__, __BETWEEN__, __CLOSE_TO__, __SKIP__
 from osbot_utils.utils.Env                                                                          import in_github_action
 from osbot_aws.aws.comprehend.Comprehend                                                            import Comprehend__Detect
-from osbot_aws.aws.comprehend.Comprehend__with_temp_role                                            import Comprehend__with_temp_role
+from osbot_aws.aws.comprehend.Comprehend__IAM__Temp_Role                                            import Comprehend__with_temp_role
 from osbot_aws.aws.comprehend.schemas.detect.Schema__Comprehend__Detect_Sentiment                   import Schema__Comprehend__Detect_Sentiment
 from osbot_aws.aws.comprehend.schemas.detect.Schema__Comprehend__Detect_Key_Phrases                 import Schema__Comprehend__Detect_Key_Phrases
 from osbot_aws.aws.comprehend.schemas.detect.Schema__Comprehend__Detect_Entities                    import Schema__Comprehend__Detect_Entities
